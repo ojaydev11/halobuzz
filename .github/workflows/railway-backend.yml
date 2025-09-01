@@ -1,0 +1,44 @@
+name: Deploy Backend to Railway
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - "backend/**"
+      - ".github/workflows/railway-backend.yml"
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - name: Node setup
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+      - run: npm run build
+      - name: Security tests
+        run: npm test --if-present
+      - name: Deploy to Railway
+        uses: railwayapp/action-deploy@v2
+        with:
+          service: backend
+          path: backend
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+  seed:
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Seed DB (idempotent)
+        uses: railwayapp/action-deploy@v2
+        with:
+          service: backend
+          command: node dist/scripts/seeds/index.js
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}

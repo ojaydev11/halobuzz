@@ -1,0 +1,22 @@
+name: Deploy Admin to Vercel
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - "admin/**"
+      - ".github/workflows/vercel-admin.yml"
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-args: "--prod"
+          working-directory: ./admin
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}

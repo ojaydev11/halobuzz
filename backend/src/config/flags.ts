@@ -237,6 +237,10 @@ class FeatureFlagsService {
   async isKycRequiredForHosts(): Promise<boolean> {
     return this.getFlag('kycRequiredForHosts');
   }
+
+  async isBattleBoostEnabled(): Promise<boolean> {
+    return this.getFlag('battleBoostEnabled');
+  }
 }
 
 export const featureFlags = new FeatureFlagsService();

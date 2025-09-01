@@ -86,10 +86,7 @@ LOG_LEVEL=info
    - AI Engine: `https://<ai-engine>.railway.app/healthz`
 
 ### 4. Seed Production Database
-```bash
-# From your local machine
-railway run -s backend -- bash -lc "node dist/scripts/seeds/index.js"
-```
+Seed runs via workflow after deploy; idempotent. The GitHub Actions workflow automatically seeds the database after successful deployment.
 
 ## Scaling Notes
 

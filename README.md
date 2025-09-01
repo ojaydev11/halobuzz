@@ -150,43 +150,36 @@ docker compose -f docker-compose.prod.yml up -d
 curl http://localhost:5010/healthz
 ```
 
+## Deploy via GitHub Actions
+
+### Automated Deployment Workflows
+- **Railway Backend Deploy** - Deploys backend to Railway on push to main
+- **Railway AI Engine Deploy** - Deploys AI engine to Railway on push to main  
+- **Hosted Smoke Tests** - Verifies live deployment security and functionality
+- **Vercel Admin Deploy** - Optional admin dashboard deployment to Vercel
+
+### Required GitHub Secrets
+Add these secrets in GitHub → Settings → Secrets → Actions:
+
+**Railway Deployment:**
+- `RAILWAY_TOKEN` - Your Railway API token
+- `BACKEND_URL` - https://<backend>.railway.app
+- `AI_URL` - https://<ai-engine>.railway.app
+- `AI_ENGINE_SECRET` - Shared secret for AI engine authentication
+
+**Optional Vercel Deployment:**
+- `VERCEL_TOKEN` - Your Vercel API token
+- `VERCEL_ORG_ID` - Your Vercel organization ID
+- `VERCEL_PROJECT_ID` - Your Vercel project ID
+
 ### CI/CD Pipeline
 GitHub Actions workflow automatically:
 - Runs tests on PR/push
-- Builds Docker images
-- Deploys to staging/production
-- Runs smoke tests
+- Builds and deploys to Railway
+- Seeds production database
+- Runs hosted smoke tests
+- Verifies security controls
 - Updates documentation
-
-### Required Secrets
-Add these GitHub Actions secrets (Settings → Secrets and variables → Actions):
-
-**Backend:**
-- BACKEND_ENV
-- MONGODB_URI
-- REDIS_URL
-- JWT_SECRET
-
-**AI Engine:**
-- AI_ENV
-- OPENAI_API_KEY
-
-**Mobile:**
-- EAS_TOKEN
-- EXPO_PUBLIC_API_URL
-
-**Payments:**
-- STRIPE_SECRET_KEY
-- ESEWA_SECRET
-- KHALTI_SECRET_KEY
-
-**Media & Storage:**
-- AGORA_APP_ID
-- AGORA_APP_CERT
-- S3_ACCESS_KEY
-- S3_SECRET_KEY
-- S3_BUCKET
-- S3_REGION
 
 ## 🔒 Production Hardening
 

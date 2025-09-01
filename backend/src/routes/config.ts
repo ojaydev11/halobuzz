@@ -19,7 +19,8 @@ router.get('/', async (req, res) => {
 
     // Get feature flags that should be exposed to clients
     const publicFlags = {
-      gamesEnabled: await featureFlags.isGamesEnabled(),
+      gamesEnabledGlobal: await featureFlags.isGamesEnabled(),
+      battleBoostEnabled: await featureFlags.isBattleBoostEnabled(),
       paymentsEnabled: await featureFlags.isPaymentsEnabled(),
       maintenanceMode: await featureFlags.isMaintenanceMode(),
       registrationPaused: await featureFlags.isRegistrationPaused(),
@@ -29,7 +30,7 @@ router.get('/', async (req, res) => {
 
     // Check country-specific games availability
     const gamesEnabledForCountry = await riskControlsService.isGamesEnabledForCountry(userCountry);
-    publicFlags.gamesEnabled = publicFlags.gamesEnabled && gamesEnabledForCountry;
+    publicFlags.gamesEnabledGlobal = publicFlags.gamesEnabledGlobal && gamesEnabledForCountry;
 
     // Get user session status if authenticated
     let sessionStatus = null;

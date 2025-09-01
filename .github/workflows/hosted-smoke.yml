@@ -1,0 +1,75 @@
+name: Hosted Smoke
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows: ["Deploy Backend to Railway", "Deploy AI Engine to Railway"]
+    types: [completed]
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install deps
+        run: sudo apt-get update && sudo apt-get install -y jq
+      - name: Health
+        run: |
+          curl -fsS "$BACKEND_URL/healthz"
+        env:
+          BACKEND_URL: ${{ secrets.BACKEND_URL }}
+      - name: Login & store token
+        id: login
+        run: |
+          TOKEN=$(curl -fsS -X POST "$BACKEND_URL/auth/login" \
+            -H 'Content-Type: application/json' \
+            -d '{"email":"test@hb.com","password":"StrongP@ss1"}' | jq -r .accessToken)
+          if [ -z "$TOKEN" ] || [ "$TOKEN" = "null" ]; then echo "No token"; exit 1; fi
+          echo "token=$TOKEN" >> $GITHUB_OUTPUT
+        env:
+          BACKEND_URL: ${{ secrets.BACKEND_URL }}
+      - name: OG tiers + subscribe + dev credit
+        run: |
+          curl -fsS "$BACKEND_URL/og/tiers" > /dev/null
+          curl -fsS -X POST "$BACKEND_URL/og/subscribe" \
+            -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+            -d '{"tier":1}' > /dev/null
+          curl -fsS -X POST "$BACKEND_URL/wallet/dev/credit" \
+            -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+            -d '{"coins":10000}' > /dev/null
+        env:
+          BACKEND_URL: ${{ secrets.BACKEND_URL }}
+          TOKEN: ${{ steps.login.outputs.token }}
+      - name: Create stream → gift → throne
+        id: flow
+        run: |
+          STREAM_ID=$(curl -fsS -X POST "$BACKEND_URL/streams" \
+            -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+            -d '{"mode":"video","title":"Hello HB","isAnonymous":false}' | jq -r '._id // .id // .data.stream.id')
+          [ -z "$STREAM_ID" ] && echo "No stream id" && exit 1
+          GIFT_ID=$(curl -fsS "$BACKEND_URL/gifts?active=true" | jq -r '.[0]._id // .[0].id')
+          curl -fsS -X POST "$BACKEND_URL/streams/$STREAM_ID/gift" \
+            -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+            -d "{\"giftId\":\"$GIFT_ID\",\"qty\":1}" > /dev/null
+          curl -fsS -X POST "$BACKEND_URL/streams/$STREAM_ID/throne/claim" \
+            -H "Authorization: Bearer $TOKEN" > /dev/null
+          echo "stream=$STREAM_ID" >> $GITHUB_OUTPUT
+        env:
+          BACKEND_URL: ${{ secrets.BACKEND_URL }}
+          TOKEN: ${{ steps.login.outputs.token }}
+      - name: AI battle-boost should fail without secret
+        run: |
+          code=$(curl -o /dev/null -s -w "%{http_code}\n" -X POST "$AI_URL/internal/engagement/battle-boost" \
+            -H "Content-Type: application/json" \
+            -d "{\"streamId\":\"$STREAM_ID\",\"multiplier\":2,\"durationSec\":60}")
+          if [ "$code" -eq 200 ]; then echo "AI accepted without secret"; exit 1; fi
+        env:
+          AI_URL: ${{ secrets.AI_URL }}
+          STREAM_ID: ${{ steps.flow.outputs.stream }}
+      - name: AI battle-boost with secret (should 200)
+        run: |
+          curl -fsS -X POST "$AI_URL/internal/engagement/battle-boost" \
+            -H "x-ai-secret: $AI_ENGINE_SECRET" \
+            -H "Content-Type: application/json" \
+            -d "{\"streamId\":\"$STREAM_ID\",\"multiplier\":2,\"durationSec\":60}" > /dev/null
+        env:
+          AI_URL: ${{ secrets.AI_URL }}
+          AI_ENGINE_SECRET: ${{ secrets.AI_ENGINE_SECRET }}
+          STREAM_ID: ${{ steps.flow.outputs.stream }}

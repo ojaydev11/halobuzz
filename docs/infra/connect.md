@@ -14,6 +14,29 @@ Before starting, ensure you have:
 - [ ] AWS S3 bucket (file storage)
 - [ ] All production secrets generated (32+ characters each)
 
+## GitHub Actions + Secrets
+
+### Required GitHub Secrets
+Add these secrets in GitHub → Settings → Secrets → Actions:
+
+**Railway Deployment:**
+- `RAILWAY_TOKEN` - Your Railway API token
+- `BACKEND_URL` - https://<backend>.railway.app
+- `AI_URL` - https://<ai-engine>.railway.app
+- `AI_ENGINE_SECRET` - Shared secret for AI engine authentication
+
+**Optional Vercel Deployment:**
+- `VERCEL_TOKEN` - Your Vercel API token
+- `VERCEL_ORG_ID` - Your Vercel organization ID
+- `VERCEL_PROJECT_ID` - Your Vercel project ID
+
+### GitHub Actions Workflows
+The repository includes these automated workflows:
+- **Railway Backend Deploy** (`.github/workflows/railway-backend.yml`) - Deploys backend on push to main
+- **Railway AI Engine Deploy** (`.github/workflows/railway-ai.yml`) - Deploys AI engine on push to main
+- **Hosted Smoke Tests** (`.github/workflows/hosted-smoke.yml`) - Verifies live deployment security
+- **Vercel Admin Deploy** (`.github/workflows/vercel-admin.yml`) - Optional admin dashboard deployment
+
 ## Step 1: GitHub Setup
 
 ### 1.1 Initialize Repository (if needed)

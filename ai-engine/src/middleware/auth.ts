@@ -10,6 +10,67 @@ export interface AuthenticatedRequest extends Request {
 }
 
 /**
+ * Middleware to authenticate internal API requests using x-ai-secret header
+ */
+export const authenticateAIEngine = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    const aiSecret = req.headers['x-ai-secret'] as string;
+    const expectedSecret = process.env.AI_ENGINE_SECRET;
+
+    if (!expectedSecret) {
+      logger.error('AI_ENGINE_SECRET not configured');
+      return res.status(500).json({
+        success: false,
+        error: 'AI engine configuration error'
+      });
+    }
+
+    if (!aiSecret) {
+      logger.warn('Missing x-ai-secret header', {
+        ip: req.ip,
+        path: req.path
+      });
+      return res.status(401).json({
+        success: false,
+        error: 'Missing x-ai-secret header'
+      });
+    }
+
+    if (aiSecret !== expectedSecret) {
+      logger.warn('Invalid AI engine secret provided', {
+        ip: req.ip,
+        path: req.path
+      });
+      return res.status(401).json({
+        success: false,
+        error: 'Invalid AI engine secret'
+      });
+    }
+
+    // Set user context for internal services
+    req.user = {
+      id: 'ai-engine-service',
+      role: 'ai-engine',
+      permissions: ['moderation', 'engagement', 'reputation']
+    };
+
+    logger.info('AI engine request authenticated', {
+      ip: req.ip,
+      path: req.path,
+      method: req.method
+    });
+
+    next();
+  } catch (error) {
+    logger.error('AI engine authentication middleware error:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Authentication service error'
+    });
+  }
+};
+
+/**
  * Middleware to authenticate internal API requests using secret key
  */
 export const authenticateInternalAPI = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { EngagementService } from '../services/EngagementService';
-import { authenticateInternalAPI, validateRequestBody, rateLimiter } from '../middleware/auth';
+import { authenticateAIEngine, validateRequestBody, rateLimiter } from '../middleware/auth';
 import { EngagementRequest } from '../models/types';
 import logger from '../utils/logger';
 import Joi from 'joi';
@@ -47,7 +47,7 @@ const battleBoostSchema = Joi.object({
 });
 
 // Apply middleware to all routes
-router.use(authenticateInternalAPI);
+router.use(authenticateAIEngine);
 router.use(rateLimiter);
 
 /**
