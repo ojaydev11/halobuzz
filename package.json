@@ -13,11 +13,14 @@
     "lint": "eslint . --ext .ts,.tsx --max-warnings=0",
     "typecheck": "tsc -b backend ai-engine",
     "test": "npm -w backend run test && npm -w ai-engine run test",
+    "test:security": "powershell -ExecutionPolicy Bypass -File scripts/test-security.ps1",
+    "test:security:quick": "powershell -ExecutionPolicy Bypass -File scripts/test-security.ps1 -Quick",
+    "test:security:lint": "powershell -ExecutionPolicy Bypass -File scripts/test-security.ps1 -LintOnly",
     "dev:backend": "npm --prefix backend run dev",
     "dev:ai": "npm --prefix ai-engine run dev",
     "dev:mobile": "npm --prefix mobile start",
     "seed": "npm --prefix backend run seed",
-    "smoke": "bash scripts/smoke.sh || sh scripts/smoke.sh"
+    "smoke": "bash scripts/smoke.sh || powershell -File scripts/smoke.ps1"
   },
   "devDependencies": {
     "concurrently": "^8.2.2",

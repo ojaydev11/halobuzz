@@ -1,81 +1,36 @@
-# Vercel Deployment Guide - Admin Dashboard
+# Vercel Deployment Guide
 
-This guide covers deploying the HaloBuzz admin dashboard to Vercel.
+## Overview
+Vercel hosts the HaloBuzz admin dashboard (Next.js application).
 
-## Prerequisites
+## Deployment
 
-- Vercel account
-- GitHub repository with HaloBuzz code
-- Backend API deployed on Railway
-- Domain for admin panel (optional)
+### 1. Import Project
+1. Go to [Vercel Dashboard](https://vercel.com/dashboard)
+2. Click "New Project"
+3. Import from GitHub repository
+4. Select the `admin/` folder as root directory
+5. Framework preset: Next.js (auto-detected)
 
-## Service Overview
+### 2. Environment Variables
+Add the following environment variables in Vercel dashboard:
 
-The admin dashboard is a Next.js application located in the `admin/` folder that provides:
-- User management
-- Content moderation
-- Analytics dashboard
-- System configuration
-- Security monitoring
-
-## 1. Project Setup
-
-### Create Vercel Project
-
-1. Go to Vercel dashboard
-2. Click "Add New..." → "Project"
-3. Import your HaloBuzz GitHub repository
-4. Framework Preset: Next.js
-5. Root Directory: `admin`
-6. Name: `halobuzz-admin`
-
-### Build Configuration
-
-Vercel auto-detects Next.js. The build settings should be:
-- **Framework**: Next.js
-- **Root Directory**: `admin`
-- **Build Command**: `npm run build`
-- **Output Directory**: `.next`
-- **Install Command**: `npm ci`
-
-## 2. Environment Variables
-
-Set these environment variables in Vercel project settings:
-
-### Core Configuration
 ```bash
-NODE_ENV=production
-NEXT_PUBLIC_API_BASE=https://halobuzz-backend.railway.app
-NEXT_PUBLIC_APP_NAME=HaloBuzz Admin
-NEXT_PUBLIC_VERSION=0.1.0
+# API Configuration
+NEXT_PUBLIC_API_BASE=https://<backend>.railway.app
+
+# Optional: Analytics
+NEXT_PUBLIC_VERCEL_ANALYTICS_ID=<your-analytics-id>
 ```
 
-### Authentication & Security
-```bash
-ADMIN_JWT_SECRET=your-super-secure-admin-jwt-secret-minimum-32-chars
-ADMIN_TOTP_REQUIRED=true
-NEXTAUTH_URL=https://your-admin-domain.vercel.app
-NEXTAUTH_SECRET=your-nextauth-secret-minimum-32-chars
-```
+### 3. Build Settings
+- **Build Command**: `npm run build` (default)
+- **Output Directory**: `.next` (default)
+- **Install Command**: `npm install` (default)
 
-### API Integration
-```bash
-BACKEND_API_KEY=your-backend-api-key
-BACKEND_WEBHOOK_SECRET=your-webhook-secret
-```
+## Security Headers
 
-### Feature Flags
-```bash
-NEXT_PUBLIC_ENABLE_2FA=true
-NEXT_PUBLIC_ENABLE_AUDIT_LOGS=true
-NEXT_PUBLIC_ENABLE_REAL_TIME=true
-```
-
-## 3. Security Configuration
-
-### Headers Configuration
-
-The `vercel.json` file includes security headers:
+The `admin/vercel.json` file configures security headers:
 
 ```json
 {
@@ -88,16 +43,16 @@ The `vercel.json` file includes security headers:
           "value": "DENY"
         },
         {
-          "key": "X-Content-Type-Options", 
+          "key": "X-Content-Type-Options",
           "value": "nosniff"
         },
         {
-          "key": "X-XSS-Protection",
-          "value": "1; mode=block"
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
         },
         {
-          "key": "Referrer-Policy",
-          "value": "no-referrer"
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://<backend>.railway.app; frame-ancestors 'none';"
         }
       ]
     }
@@ -105,69 +60,44 @@ The `vercel.json` file includes security headers:
 }
 ```
 
-### Content Security Policy
+### CSP Configuration
+Update the `Content-Security-Policy` header with your actual backend URL:
+- Replace `<backend>.railway.app` with your actual Railway backend URL
+- Add any additional domains for external resources if needed
 
-CSP is configured in the middleware to allow:
-- Self-hosted scripts and styles
-- Google Fonts
-- Backend API connections
-- No inline scripts (except Next.js required)
+## CORS Configuration
 
-### Authentication Flow
-
-1. **Login**: Username/password authentication
-2. **2FA**: TOTP verification (if enabled)
-3. **Session**: Secure JWT tokens with CSRF protection
-4. **Auto-logout**: Session timeout and cleanup
-
-## 4. CORS Configuration
-
-Update your Railway backend `CORS_ORIGIN` to include the Vercel domain:
+### Backend CORS Setup
+Ensure your Railway backend includes Vercel domains in `CORS_ORIGIN`:
 
 ```bash
-CORS_ORIGIN=https://your-admin-domain.vercel.app,https://halobuzz-admin.vercel.app
+CORS_ORIGIN=https://<your-admin>.vercel.app,https://<preview>--<your-admin>.vercel.app
 ```
 
-## 5. Custom Domain Setup
+### Preview Deployments
+- Vercel automatically creates preview deployments for pull requests
+- Each preview gets a unique URL: `https://<preview>--<your-admin>.vercel.app`
+- Include preview URLs in backend CORS configuration
 
-### Add Custom Domain
+## Caching Configuration
 
-1. Go to Vercel project settings
-2. Navigate to "Domains"
-3. Add your custom domain (e.g., `admin.halobuzz.com`)
-4. Configure DNS as instructed by Vercel
+### Static Assets
+- Vercel automatically caches static assets (CSS, JS, images)
+- Cache duration: 1 year for immutable assets
+- Automatic cache invalidation on new deployments
 
-### DNS Configuration
+### API Routes
+- API routes are not cached by default
+- Dynamic content served fresh on each request
 
-For `admin.halobuzz.com`:
-```
-Type: CNAME
-Name: admin
-Value: cname.vercel-dns.com
-```
-
-### SSL Certificate
-
-Vercel automatically provisions SSL certificates for all domains.
-
-## 6. Performance Optimization
-
-### Caching Strategy
+### Custom Cache Rules
+The `vercel.json` file includes cache rules:
 
 ```json
 {
   "headers": [
     {
-      "source": "/api/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-store, no-cache, must-revalidate"
-        }
-      ]
-    },
-    {
-      "source": "/_next/static/(.*)",
+      "source": "/static/(.*)",
       "headers": [
         {
           "key": "Cache-Control",
@@ -179,252 +109,116 @@ Vercel automatically provisions SSL certificates for all domains.
 }
 ```
 
-### Image Optimization
+## Authentication
 
-Next.js Image component is configured for optimal loading:
-- Automatic WebP conversion
-- Responsive image sizing
-- Lazy loading by default
+### Admin Access
+1. Deploy the admin dashboard
+2. Visit `https://<your-admin>.vercel.app/login`
+3. Use an email address listed in `ADMIN_EMAILS` environment variable
+4. Login with your registered credentials
 
-### Bundle Analysis
+### Session Management
+- Sessions managed by backend API
+- JWT tokens stored in httpOnly cookies
+- Automatic token refresh handled by frontend
 
-Monitor bundle size:
-```bash
-npm install --save-dev @next/bundle-analyzer
-```
-
-Add to `next.config.js`:
-```javascript
-const withBundleAnalyzer = require('@next/bundle-analyzer')({
-  enabled: process.env.ANALYZE === 'true',
-});
-
-module.exports = withBundleAnalyzer({
-  // Next.js config
-});
-```
-
-## 7. Monitoring and Analytics
+## Monitoring
 
 ### Vercel Analytics
+1. Enable Vercel Analytics in dashboard
+2. Add `NEXT_PUBLIC_VERCEL_ANALYTICS_ID` environment variable
+3. Monitor page views, performance metrics
 
-Enable Vercel Analytics in project settings for:
-- Page views
-- Performance metrics
-- User sessions
-- Core Web Vitals
+### Error Tracking
+- Vercel automatically tracks build and runtime errors
+- Access error logs in Vercel dashboard
+- Set up error notifications for critical issues
 
-### Error Monitoring
+### Performance Monitoring
+- Core Web Vitals automatically tracked
+- Performance insights available in Vercel dashboard
+- Monitor for performance regressions
 
-Consider integrating Sentry for error tracking:
-
-```bash
-npm install @sentry/nextjs
-```
-
-### Uptime Monitoring
-
-Set up external monitoring for:
-- `/login` page availability
-- `/api/health` endpoint
-- Authentication flow
-
-## 8. Deployment Pipeline
+## Deployment Workflow
 
 ### Automatic Deployments
+- **Production**: Deploys on push to main/master branch
+- **Preview**: Deploys on pull requests
+- **Manual**: Can trigger deployments from dashboard
 
-Vercel automatically deploys on git push to main branch.
+### Build Process
+1. Install dependencies (`npm install`)
+2. Run build command (`npm run build`)
+3. Deploy to Vercel edge network
+4. Update DNS (if custom domain configured)
 
-### Preview Deployments
+## Custom Domain
 
-- Pull requests get preview URLs
-- Test changes before merging
-- Environment variables are inherited
+### Setup
+1. Go to Project Settings → Domains
+2. Add your custom domain
+3. Configure DNS records as instructed
+4. SSL certificate automatically provisioned
 
-### Production Deployments
-
-1. **Automatic**: Push to main branch
-2. **Manual**: Use Vercel CLI or dashboard
-3. **Rollback**: Instant rollback in dashboard
-
-## 9. Environment-Specific Configuration
-
-### Development
-```bash
-NODE_ENV=development
-NEXT_PUBLIC_API_BASE=http://localhost:3000
-ADMIN_TOTP_REQUIRED=false
+### DNS Configuration
+```
+Type: CNAME
+Name: admin (or subdomain of choice)
+Value: cname.vercel-dns.com
 ```
 
-### Staging
-```bash
-NODE_ENV=staging
-NEXT_PUBLIC_API_BASE=https://halobuzz-backend-staging.railway.app
-ADMIN_TOTP_REQUIRED=true
-```
-
-### Production
-```bash
-NODE_ENV=production
-NEXT_PUBLIC_API_BASE=https://halobuzz-backend.railway.app
-ADMIN_TOTP_REQUIRED=true
-```
-
-## 10. Security Best Practices
-
-### Access Control
-
-- Admin users only
-- Role-based permissions
-- Session timeout (30 minutes)
-- IP-based restrictions (optional)
-
-### Data Protection
-
-- No sensitive data in client-side code
-- Secure cookie settings
-- CSRF protection on all forms
-- Input validation and sanitization
-
-### Audit Logging
-
-All admin actions are logged:
-- User management changes
-- System configuration updates
-- Security events
-- Data exports
-
-## 11. Backup and Recovery
-
-### Code Backup
-
-- GitHub repository (primary)
-- Vercel deployment history
-- Local development backups
-
-### Configuration Backup
-
-- Environment variables documented
-- Deployment settings exported
-- DNS configuration documented
-
-### Recovery Procedures
-
-1. **Code Issues**: Rollback to previous deployment
-2. **Configuration Issues**: Restore from documented settings
-3. **Domain Issues**: Update DNS configuration
-4. **Security Issues**: Rotate secrets and redeploy
-
-## 12. Cost Optimization
-
-### Vercel Pricing
-
-- **Hobby**: Free for personal projects
-- **Pro**: $20/month per team member
-- **Enterprise**: Custom pricing
-
-### Usage Optimization
-
-- **Function Execution**: Optimize API routes
-- **Bandwidth**: Use CDN for static assets
-- **Build Time**: Optimize build process
-
-## 13. Troubleshooting
+## Troubleshooting
 
 ### Common Issues
 
-**Build Failures:**
-- Check Node.js version compatibility
-- Verify TypeScript compilation
-- Review dependency versions
+1. **Build Failures**
+   - Check build logs in Vercel dashboard
+   - Verify all dependencies in `package.json`
+   - Ensure TypeScript compilation passes
 
-**Runtime Errors:**
-- Check environment variables
-- Verify API connectivity
-- Review browser console errors
+2. **Environment Variables**
+   - Verify all required env vars are set
+   - Check variable names match exactly
+   - Redeploy after adding new variables
 
-**Authentication Issues:**
-- Verify JWT secrets match backend
-- Check CORS configuration
-- Review cookie settings
+3. **CORS Errors**
+   - Verify backend `CORS_ORIGIN` includes Vercel domain
+   - Check for trailing slashes in URLs
+   - Ensure HTTPS is used for production
 
-### Debug Tools
+4. **Authentication Issues**
+   - Verify `ADMIN_EMAILS` includes your email
+   - Check backend authentication endpoints
+   - Clear browser cookies and retry
 
-- **Vercel Logs**: Function execution logs
-- **Browser DevTools**: Client-side debugging
-- **Network Tab**: API request inspection
+### Debug Commands
+```bash
+# Local development
+npm run dev
 
-## 14. Performance Monitoring
+# Build locally
+npm run build
 
-### Core Web Vitals
+# Start production build
+npm start
 
-Monitor these metrics:
-- **LCP** (Largest Contentful Paint): < 2.5s
-- **FID** (First Input Delay): < 100ms
-- **CLS** (Cumulative Layout Shift): < 0.1
+# Check build output
+npm run build && ls -la .next/
+```
 
-### Performance Budget
+## Performance Optimization
 
-Set limits for:
-- JavaScript bundle size: < 200KB
-- CSS bundle size: < 50KB
-- Total page size: < 500KB
-- Time to Interactive: < 3s
+### Image Optimization
+- Use Next.js Image component for automatic optimization
+- Images served from Vercel's global CDN
+- Automatic WebP conversion when supported
 
-## 15. Compliance and Legal
+### Code Splitting
+- Automatic code splitting by Next.js
+- Dynamic imports for route-based splitting
+- Optimized bundle sizes
 
-### Data Handling
-
-- No PII stored in client
-- Secure data transmission
-- Audit trail for all actions
-- GDPR compliance features
-
-### Security Headers
-
-All required security headers are configured:
-- HSTS for HTTPS enforcement
-- CSP for XSS protection
-- Frame options for clickjacking protection
-- Content type sniffing protection
-
-## 16. Deployment Checklist
-
-Before going live:
-
-- [ ] All environment variables configured
-- [ ] CORS settings updated in backend
-- [ ] Custom domain configured and verified
-- [ ] SSL certificate active
-- [ ] Security headers tested
-- [ ] Authentication flow tested
-- [ ] 2FA setup tested (if enabled)
-- [ ] API connectivity verified
-- [ ] Performance metrics within targets
-- [ ] Error monitoring configured
-- [ ] Backup procedures documented
-- [ ] Access controls configured
-- [ ] Audit logging enabled
-
-## 17. Post-Deployment
-
-### Monitoring Setup
-
-1. Configure uptime monitoring
-2. Set up error alerts
-3. Monitor performance metrics
-4. Review security logs regularly
-
-### Maintenance Tasks
-
-- Regular dependency updates
-- Security patch reviews
-- Performance optimization
-- User access reviews
-
-### Documentation Updates
-
-- Keep deployment docs current
-- Update environment variable docs
-- Maintain troubleshooting guides
-- Document configuration changes
+### Edge Functions
+- API routes run on Vercel's edge network
+- Reduced latency for global users
+- Automatic scaling based on demand

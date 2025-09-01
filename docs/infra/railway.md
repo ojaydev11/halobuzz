@@ -1,334 +1,180 @@
 # Railway Deployment Guide
 
-This guide covers deploying the HaloBuzz backend and AI engine to Railway.
+## Overview
+Railway hosts the backend API and AI engine services for HaloBuzz production.
 
-## Prerequisites
+## Services
 
-- Railway account
-- GitHub repository with HaloBuzz code
-- MongoDB Atlas cluster (or Railway MongoDB addon)
-- Redis instance (Railway Redis addon recommended)
-- Stripe account for payments
-- AWS S3 bucket for file storage
+### 1. Backend Service
+- **Path**: `backend/`
+- **Dockerfile**: Uses existing `backend/Dockerfile`
+- **Port**: 5010
+- **Health Check**: `/healthz`
 
-## Services Overview
+### 2. AI Engine Service
+- **Path**: `ai-engine/`
+- **Dockerfile**: Uses existing `ai-engine/Dockerfile`
+- **Port**: 5020
+- **Health Check**: `/healthz`
 
-HaloBuzz requires 2 Railway services:
-1. **Backend API** (`backend/` folder)
-2. **AI Engine** (`ai-engine/` folder)
+## Environment Variables
 
-## 1. Backend Service Deployment
-
-### Create Backend Service
-
-1. Go to Railway dashboard
-2. Click "New Project" → "Deploy from GitHub repo"
-3. Select your HaloBuzz repository
-4. Choose "Deploy from a folder" → `backend`
-5. Name the service: `halobuzz-backend`
-
-### Environment Variables (Backend)
-
-Set these environment variables in Railway:
-
-#### Core Configuration
+### Backend Service
 ```bash
+# Core
 NODE_ENV=production
-PORT=3000
-API_VERSION=v1
+PORT=5010
+MONGODB_URI=mongodb+srv://<user>:<pass>@<cluster>.mongodb.net/halobuzz?retryWrites=true&w=majority
+REDIS_URL=redis://<user>:<pass>@<host>:<port>
+JWT_SECRET=<64-character-random-string>
+CORS_ORIGIN=https://<your-admin>.vercel.app,https://<preview>--<your-admin>.vercel.app
 
-# Database
-DATABASE_URL=mongodb+srv://username:password@cluster.mongodb.net/halobuzz?retryWrites=true&w=majority
-REDIS_URL=redis://default:password@redis-hostname:port
+# Agora (Video Streaming)
+AGORA_APP_ID=<your-agora-app-id>
+AGORA_APP_CERT=<your-agora-app-certificate>
 
-# Security
-JWT_SECRET=your-super-secure-jwt-secret-minimum-32-chars
-JWT_REFRESH_SECRET=your-super-secure-refresh-secret-minimum-32-chars
-ADMIN_JWT_SECRET=your-super-secure-admin-jwt-secret-minimum-32-chars
-AI_SERVICE_SECRET=your-super-secure-ai-service-secret-minimum-32-chars
+# AWS S3 (File Storage)
+S3_BUCKET=<your-s3-bucket>
+S3_REGION=<your-aws-region>
+S3_ACCESS_KEY=<your-aws-access-key>
+S3_SECRET_KEY=<your-aws-secret-key>
 
-# CORS and Security
-CORS_ORIGIN=https://your-admin-domain.vercel.app,https://your-app-domain.com
-ALLOWED_BACKEND_IPS=10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
-RATE_LIMIT_WINDOW_MS=900000
-RATE_LIMIT_MAX_REQUESTS=100
+# Payment Providers
+ESEWA_MERCHANT_ID=<your-esewa-merchant-id>
+ESEWA_SECRET=<your-esewa-secret>
+KHALTI_PUBLIC_KEY=<your-khalti-public-key>
+KHALTI_SECRET_KEY=<your-khalti-secret-key>
+STRIPE_SECRET_KEY=<your-stripe-secret-key>
+
+# AI Engine Integration
+AI_ENGINE_URL=https://<ai-engine>.railway.app
+AI_ENGINE_SECRET=<same-64-character-random-string>
+
+# System
+TZ=Australia/Sydney
+ADMIN_EMAILS=<you@domain.com,other@domain.com>
 ```
 
-#### Payment Configuration
+### AI Engine Service
 ```bash
-# Stripe
-STRIPE_SECRET_KEY=sk_live_...
-STRIPE_WEBHOOK_SECRET=whsec_...
-STRIPE_PUBLISHABLE_KEY=pk_live_...
-
-# PayPal (optional)
-PAYPAL_CLIENT_ID=your-paypal-client-id
-PAYPAL_CLIENT_SECRET=your-paypal-client-secret
-PAYPAL_MODE=live
+# Core
+PORT=5020
+AI_ENGINE_SECRET=<same-64-character-random-string>
+LOG_LEVEL=info
 ```
 
-#### File Storage (AWS S3)
+## Deployment Steps
+
+### 1. Create Services
+1. Go to [Railway Dashboard](https://railway.app/dashboard)
+2. Create new project
+3. Add service from GitHub repo
+4. Select `backend/` folder for backend service
+5. Add another service from same repo
+6. Select `ai-engine/` folder for AI engine service
+
+### 2. Configure Environment Variables
+1. For each service, go to Variables tab
+2. Add all environment variables listed above
+3. Ensure `AI_ENGINE_SECRET` matches between both services
+
+### 3. Deploy
+1. Railway will automatically build and deploy on push
+2. Check logs for successful deployment
+3. Verify health endpoints:
+   - Backend: `https://<backend>.railway.app/healthz`
+   - AI Engine: `https://<ai-engine>.railway.app/healthz`
+
+### 4. Seed Production Database
 ```bash
-AWS_ACCESS_KEY_ID=your-aws-access-key
-AWS_SECRET_ACCESS_KEY=your-aws-secret-key
-AWS_REGION=us-east-1
-AWS_S3_BUCKET=your-s3-bucket-name
+# From your local machine
+railway run -s backend -- bash -lc "node dist/scripts/seeds/index.js"
 ```
 
-#### Communication Services
-```bash
-# Twilio (SMS/Voice)
-TWILIO_ACCOUNT_SID=your-twilio-account-sid
-TWILIO_AUTH_TOKEN=your-twilio-auth-token
-TWILIO_PHONE_NUMBER=+1234567890
+## Scaling Notes
 
-# Email (NodeMailer)
-EMAIL_HOST=smtp.gmail.com
-EMAIL_PORT=587
-EMAIL_USER=your-email@gmail.com
-EMAIL_PASS=your-app-password
-```
+### Redis Adapter for Multi-Instance Sockets
+When scaling to multiple backend instances:
 
-#### Agora (Live Streaming)
-```bash
-AGORA_APP_ID=your-agora-app-id
-AGORA_APP_CERTIFICATE=your-agora-app-certificate
-```
+1. **Redis Adapter Setup**:
+   ```bash
+   # Add to backend environment
+   REDIS_ADAPTER_URL=<same-redis-url>
+   ```
 
-#### Feature Flags
-```bash
-ADMIN_TOTP_REQUIRED=true
-GAMES_ENABLED_GLOBAL=true
-HIGH_SPENDER_CONTROLS=true
-FRAUD_DETECTION_ENABLED=true
-NEPAL_COMPLIANCE_MODE=true
-```
+2. **Socket.IO Configuration**:
+   - Backend already configured with Redis adapter
+   - Multiple instances will share socket state via Redis
+   - No additional configuration needed
 
-### Build Configuration
+### Resource Limits
+- **Backend**: 1GB RAM, 1 CPU (can scale to 2GB, 2 CPU for high load)
+- **AI Engine**: 512MB RAM, 0.5 CPU (sufficient for current AI features)
 
-Railway will auto-detect the Node.js app. Ensure your `package.json` has:
-
-```json
-{
-  "scripts": {
-    "build": "tsc",
-    "start": "node dist/index.js"
-  }
-}
-```
+## Monitoring
 
 ### Health Checks
+- Backend: `GET /healthz` - Returns 200 if healthy
+- AI Engine: `GET /healthz` - Returns 200 if healthy
 
-Railway will monitor the `/healthz` endpoint automatically.
+### Logs
+- Access via Railway dashboard
+- Key metrics to monitor:
+  - Rate limit hits
+  - Moderation warnings
+  - Cron job executions (OG bonus at 00:05 Australia/Sydney)
+  - Payment webhook processing
+  - AI engine engagement triggers
 
-## 2. AI Engine Service Deployment
+### Alerts
+Set up alerts for:
+- 5xx errors
+- High latency (>2s response time)
+- Failed health checks
+- Database connection issues
 
-### Create AI Engine Service
+## Security
 
-1. In the same Railway project, click "Add Service"
-2. Choose "Deploy from GitHub repo" → select same repo
-3. Choose "Deploy from a folder" → `ai-engine`
-4. Name the service: `halobuzz-ai-engine`
+### Network Security
+- Services communicate via internal Railway network
+- External access only through configured CORS origins
+- AI engine only accessible from backend service
 
-### Environment Variables (AI Engine)
+### Secrets Management
+- All sensitive data stored in Railway environment variables
+- Never commit secrets to repository
+- Rotate secrets regularly
 
-```bash
-NODE_ENV=production
-PORT=4000
-
-# Security
-AI_SERVICE_SECRET=your-super-secure-ai-service-secret-minimum-32-chars
-ALLOWED_BACKEND_IPS=10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
-
-# Backend Communication
-BACKEND_URL=https://halobuzz-backend.railway.app
-
-# AI Services
-OPENAI_API_KEY=sk-...
-OPENAI_MODEL=gpt-4
-```
-
-## 3. Database Setup
-
-### MongoDB Atlas
-
-1. Create MongoDB Atlas cluster
-2. Create database user with read/write permissions
-3. Whitelist Railway IP ranges (or use 0.0.0.0/0 for simplicity)
-4. Get connection string and set as `DATABASE_URL`
-
-### Redis (Railway Addon)
-
-1. In Railway project, click "Add Service"
-2. Choose "Add Database" → Redis
-3. Copy the Redis URL to `REDIS_URL` in backend service
-
-## 4. Networking Configuration
-
-### Internal Communication
-
-Railway services can communicate internally using:
-- Backend URL: `https://halobuzz-backend.railway.app`
-- AI Engine URL: `https://halobuzz-ai-engine.railway.app`
-
-### External Access
-
-Both services get public URLs:
-- Backend: `https://halobuzz-backend.railway.app`
-- AI Engine: `https://halobuzz-ai-engine.railway.app` (should be protected)
-
-### Security Considerations
-
-1. **AI Engine Protection**: The AI engine should only accept requests from the backend
-2. **CORS Configuration**: Set `CORS_ORIGIN` to include your admin panel domain
-3. **Rate Limiting**: Configured automatically in the application
-4. **HTTPS**: Railway provides HTTPS certificates automatically
-
-## 5. Scaling Configuration
-
-### Resource Allocation
-
-For production workloads:
-
-**Backend Service:**
-- Memory: 1GB minimum
-- CPU: 1 vCPU minimum
-- Instances: Start with 1, scale based on load
-
-**AI Engine Service:**
-- Memory: 2GB minimum (for TensorFlow/AI models)
-- CPU: 2 vCPU minimum
-- Instances: Start with 1
-
-### Horizontal Scaling
-
-When scaling beyond 1 instance:
-
-1. **Socket.IO Clustering**: Add Redis adapter for Socket.IO
-2. **Session Storage**: Use Redis for session storage
-3. **File Uploads**: Use S3 for all file storage (no local storage)
-
-Add to backend environment:
-```bash
-REDIS_ADAPTER_ENABLED=true
-SESSION_STORE=redis
-```
-
-## 6. Monitoring and Logging
-
-### Railway Metrics
-
-Railway provides:
-- CPU and memory usage
-- Request metrics
-- Error rates
-- Response times
-
-### Application Logging
-
-Logs are automatically collected. Key log levels:
-- `ERROR`: Critical errors requiring attention
-- `WARN`: Security warnings, rate limits
-- `INFO`: Normal operations, user actions
-- `DEBUG`: Development debugging (disabled in production)
-
-### Health Monitoring
-
-Both services expose health endpoints:
-- Backend: `GET /healthz`
-- AI Engine: `GET /health`
-
-Set up external monitoring (e.g., UptimeRobot) to monitor these endpoints.
-
-## 7. Deployment Pipeline
-
-### Automatic Deployments
-
-Railway automatically deploys on git push to the main branch.
-
-### Manual Deployments
-
-1. Go to Railway dashboard
-2. Select the service
-3. Click "Deploy" → choose commit/branch
-
-### Rollback
-
-1. Go to "Deployments" tab in Railway
-2. Click "Redeploy" on a previous successful deployment
-
-## 8. Domain Configuration
-
-### Custom Domains
-
-1. In Railway service settings, go to "Domains"
-2. Add custom domain (e.g., `api.halobuzz.com`)
-3. Update DNS records as instructed
-4. Update `CORS_ORIGIN` environment variable
-
-### SSL Certificates
-
-Railway automatically provisions SSL certificates for all domains.
-
-## 9. Backup Strategy
-
-### Database Backups
-
-- MongoDB Atlas: Enable automated backups
-- Redis: Enable persistence in Railway Redis settings
-
-### Application Data
-
-- File uploads: Stored in S3 (automatically replicated)
-- Logs: Retained by Railway for 7 days (upgrade plan for longer retention)
-
-## 10. Cost Optimization
-
-### Railway Pricing
-
-- **Hobby Plan**: $5/month per service (good for development)
-- **Pro Plan**: $20/month per service (production workloads)
-- **Usage-based**: Additional charges for compute/bandwidth
-
-### Optimization Tips
-
-1. **Right-size resources**: Start small and scale up
-2. **Enable auto-sleep**: For development environments
-3. **Monitor usage**: Use Railway metrics to optimize
-4. **Cache effectively**: Use Redis for caching to reduce database load
-
-## 11. Troubleshooting
+## Troubleshooting
 
 ### Common Issues
 
-**Build Failures:**
-- Check Node.js version compatibility
-- Verify all dependencies are in `package.json`
-- Check TypeScript compilation errors
+1. **CORS Errors**
+   - Verify `CORS_ORIGIN` includes all frontend domains
+   - Check for trailing slashes in URLs
 
-**Runtime Errors:**
-- Verify all environment variables are set
-- Check database connectivity
-- Review application logs in Railway dashboard
+2. **Database Connection**
+   - Verify MongoDB URI format
+   - Check network access from Railway IPs
 
-**Performance Issues:**
-- Monitor CPU/memory usage
-- Check database query performance
-- Review Redis cache hit rates
+3. **Redis Connection**
+   - Verify Redis URL format
+   - Ensure Redis instance is accessible
 
-### Support Resources
+4. **AI Engine Communication**
+   - Verify `AI_ENGINE_URL` points to correct service
+   - Check `AI_ENGINE_SECRET` matches between services
 
-- Railway Documentation: https://docs.railway.app/
-- Railway Discord: https://discord.gg/railway
-- Railway Status: https://status.railway.app/
+### Debug Commands
+```bash
+# Check service logs
+railway logs -s backend
+railway logs -s ai-engine
 
-## 12. Security Checklist
+# Connect to service shell
+railway run -s backend -- bash
+railway run -s ai-engine -- bash
 
-- [ ] All secrets are set as environment variables
-- [ ] CORS is properly configured
-- [ ] Rate limiting is enabled
-- [ ] HTTPS is enforced
-- [ ] Database access is restricted
-- [ ] AI engine is protected from public access
-- [ ] Monitoring and alerting is configured
-- [ ] Backup strategy is implemented
+# Test database connection
+railway run -s backend -- node -e "require('./dist/config/database').connect()"
+```
