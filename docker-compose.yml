@@ -1,0 +1,45 @@
+version: "3.9"
+
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  redis:
+    image: redis:7
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+
+  ai:
+    build:
+      context: ./ai-engine
+    restart: unless-stopped
+    env_file:
+      - .env.ai.local
+    ports:
+      - "5020:5020"
+
+  backend:
+    build:
+      context: ./backend
+    depends_on:
+      - mongo
+      - redis
+      - ai
+    restart: unless-stopped
+    env_file:
+      - .env.backend.local
+    environment:
+      - TZ=Australia/Sydney
+    ports:
+      - "5010:5010"
+
+volumes:
+  mongo_data:
+
+

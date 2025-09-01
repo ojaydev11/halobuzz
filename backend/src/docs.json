@@ -1,0 +1,1008 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "HaloBuzz API",
+    "description": "API documentation for HaloBuzz live streaming platform",
+    "version": "1.0.0",
+    "contact": {
+      "name": "HaloBuzz Support",
+      "email": "support@halobuzz.com"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000/api/v1",
+      "description": "Development server"
+    },
+    {
+      "url": "https://api.halobuzz.com/api/v1",
+      "description": "Production server"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "username": { "type": "string" },
+          "email": { "type": "string" },
+          "phone": { "type": "string" },
+          "avatar": { "type": "string" },
+          "country": { "type": "string" },
+          "ogLevel": { "type": "string", "enum": ["none", "og1", "og2", "og3", "og4", "og5"] },
+          "trust": {
+            "type": "object",
+            "properties": {
+              "score": { "type": "number" },
+              "level": { "type": "string", "enum": ["low", "medium", "high", "verified"] }
+            }
+          },
+          "coins": {
+            "type": "object",
+            "properties": {
+              "balance": { "type": "number" },
+              "bonusBalance": { "type": "number" },
+              "totalEarned": { "type": "number" },
+              "totalSpent": { "type": "number" }
+            }
+          }
+        }
+      },
+      "LiveStream": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "hostId": { "type": "string" },
+          "title": { "type": "string" },
+          "description": { "type": "string" },
+          "status": { "type": "string", "enum": ["live", "ended", "scheduled"] },
+          "category": { "type": "string" },
+          "country": { "type": "string" },
+          "currentViewers": { "type": "number" },
+          "totalViewers": { "type": "number" },
+          "totalCoins": { "type": "number" },
+          "metrics": {
+            "type": "object",
+            "properties": {
+              "giftsCoins": { "type": "number" },
+              "viewerCount": { "type": "number" },
+              "aiEngagementScore": { "type": "number" },
+              "engagementScore": { "type": "number" }
+            }
+          }
+        }
+      },
+      "Gift": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "icon": { "type": "string" },
+          "animation": { "type": "string" },
+          "priceCoins": { "type": "number" },
+          "priceUSD": { "type": "number" },
+          "category": { "type": "string" },
+          "rarity": { "type": "string", "enum": ["common", "rare", "epic", "legendary"] },
+          "isActive": { "type": "boolean" }
+        }
+      },
+      "Transaction": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "userId": { "type": "string" },
+          "type": { "type": "string" },
+          "amount": { "type": "number" },
+          "currency": { "type": "string" },
+          "status": { "type": "string" },
+          "description": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "OGTier": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "tier": { "type": "string" },
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "priceUSD": { "type": "number" },
+          "priceCoins": { "type": "number" },
+          "duration": { "type": "number" },
+          "benefits": {
+            "type": "object",
+            "properties": {
+              "dailyBonus": { "type": "number" },
+              "exclusiveGifts": { "type": "boolean" },
+              "chatPrivileges": { "type": "boolean" },
+              "customEmojis": { "type": "boolean" },
+              "profileBadge": { "type": "boolean" },
+              "prioritySupport": { "type": "boolean" },
+              "adFree": { "type": "boolean" },
+              "customUsername": { "type": "boolean" },
+              "streamSkins": { "type": "boolean" },
+              "giftDiscount": { "type": "number" }
+            }
+          }
+        }
+      },
+      "Throne": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "streamId": { "type": "string" },
+          "userId": { "type": "string" },
+          "username": { "type": "string" },
+          "avatar": { "type": "string" },
+          "ogLevel": { "type": "string" },
+          "totalGifts": { "type": "number" },
+          "totalCoins": { "type": "number" },
+          "expiresAt": { "type": "string", "format": "date-time" },
+          "isActive": { "type": "boolean" }
+        }
+      },
+      "Message": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "roomId": { "type": "string" },
+          "userId": { "type": "string" },
+          "username": { "type": "string" },
+          "avatar": { "type": "string" },
+          "ogLevel": { "type": "string" },
+          "content": { "type": "string" },
+          "type": { "type": "string", "enum": ["public", "private", "gift"] },
+          "isDeleted": { "type": "boolean" },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Game": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "type": { "type": "string" },
+          "isActive": { "type": "boolean" },
+          "minPlayers": { "type": "number" },
+          "maxPlayers": { "type": "number" },
+          "entryFee": { "type": "number" },
+          "prizePool": { "type": "number" },
+          "duration": { "type": "number" },
+          "aiWinRate": { "type": "number" }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "error": { "type": "string" },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "field": { "type": "string" },
+                "message": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/auth/register": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Register a new user",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["username", "email", "password", "phone"],
+                "properties": {
+                  "username": { "type": "string", "minLength": 3, "maxLength": 30 },
+                  "email": { "type": "string", "format": "email" },
+                  "password": { "type": "string", "minLength": 6 },
+                  "phone": { "type": "string" },
+                  "country": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User registered successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "message": { "type": "string" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "user": { "$ref": "#/components/schemas/User" },
+                        "token": { "type": "string" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/schemas/Error" }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Login user",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password"],
+                "properties": {
+                  "email": { "type": "string", "format": "email" },
+                  "password": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "user": { "$ref": "#/components/schemas/User" },
+                        "token": { "type": "string" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/schemas/Error" }
+        }
+      }
+    },
+    "/me": {
+      "get": {
+        "tags": ["User"],
+        "summary": "Get current user profile",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "User profile retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": { "$ref": "#/components/schemas/User" }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/schemas/Error" }
+        }
+      }
+    },
+    "/wallet": {
+      "get": {
+        "tags": ["Wallet"],
+        "summary": "Get user wallet balance",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Wallet balance retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "coins": { "$ref": "#/components/schemas/User/properties/coins" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Wallet"],
+        "summary": "Recharge wallet",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["amount", "paymentMethod"],
+                "properties": {
+                  "amount": { "type": "number", "minimum": 1 },
+                  "paymentMethod": { "type": "string", "enum": ["stripe", "esewa", "khalti"] },
+                  "currency": { "type": "string", "default": "USD" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Recharge initiated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "paymentUrl": { "type": "string" },
+                        "transactionId": { "type": "string" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/streams": {
+      "get": {
+        "tags": ["Streams"],
+        "summary": "Get ranked streams",
+        "parameters": [
+          { "name": "category", "in": "query", "schema": { "type": "string" } },
+          { "name": "country", "in": "query", "schema": { "type": "string" } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 20 } },
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Streams retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "streams": {
+                          "type": "array",
+                          "items": { "$ref": "#/components/schemas/LiveStream" }
+                        },
+                        "pagination": {
+                          "type": "object",
+                          "properties": {
+                            "page": { "type": "integer" },
+                            "limit": { "type": "integer" },
+                            "total": { "type": "integer" },
+                            "pages": { "type": "integer" }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Streams"],
+        "summary": "Create new stream",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["title", "category"],
+                "properties": {
+                  "title": { "type": "string", "minLength": 1, "maxLength": 100 },
+                  "description": { "type": "string", "maxLength": 500 },
+                  "category": { "type": "string" },
+                  "country": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Stream created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "stream": { "$ref": "#/components/schemas/LiveStream" },
+                        "agoraToken": { "type": "string" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/streams/{id}": {
+      "get": {
+        "tags": ["Streams"],
+        "summary": "Get stream by ID",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Stream retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": { "$ref": "#/components/schemas/LiveStream" }
+                  }
+                }
+              }
+            }
+          },
+          "404": { "$ref": "#/components/schemas/Error" }
+        }
+      },
+      "post": {
+        "tags": ["Streams"],
+        "summary": "End stream",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Stream ended",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "message": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/gifts": {
+      "get": {
+        "tags": ["Gifts"],
+        "summary": "Get gifts list",
+        "parameters": [
+          { "name": "category", "in": "query", "schema": { "type": "string" } },
+          { "name": "rarity", "in": "query", "schema": { "type": "string" } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 20 } },
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Gifts retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "gifts": {
+                          "type": "array",
+                          "items": { "$ref": "#/components/schemas/Gift" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/gifts/{id}": {
+      "get": {
+        "tags": ["Gifts"],
+        "summary": "Get gift by ID",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Gift retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": { "$ref": "#/components/schemas/Gift" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/streams/{streamId}/gift": {
+      "post": {
+        "tags": ["Gifts"],
+        "summary": "Send gift to stream",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "streamId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["giftId", "quantity"],
+                "properties": {
+                  "giftId": { "type": "string" },
+                  "quantity": { "type": "integer", "minimum": 1 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Gift sent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "message": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/throne/{streamId}/claim": {
+      "post": {
+        "tags": ["Throne"],
+        "summary": "Claim throne in stream",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "streamId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Throne claimed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": { "$ref": "#/components/schemas/Throne" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/og/tiers": {
+      "get": {
+        "tags": ["OG"],
+        "summary": "Get OG tiers",
+        "responses": {
+          "200": {
+            "description": "OG tiers retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/OGTier" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/og/subscribe": {
+      "post": {
+        "tags": ["OG"],
+        "summary": "Subscribe to OG tier",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["tierId"],
+                "properties": {
+                  "tierId": { "type": "string" },
+                  "paymentMethod": { "type": "string", "enum": ["stripe", "coins"] }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OG subscription successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "message": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/chat/{streamId}": {
+      "get": {
+        "tags": ["Chat"],
+        "summary": "Get chat messages",
+        "parameters": [
+          { "name": "streamId", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 50 } },
+          { "name": "before", "in": "query", "schema": { "type": "string", "format": "date-time" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Chat messages retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Message" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Chat"],
+        "summary": "Send chat message",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "streamId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["content"],
+                "properties": {
+                  "content": { "type": "string", "maxLength": 500 },
+                  "type": { "type": "string", "enum": ["public", "private"], "default": "public" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Message sent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": { "$ref": "#/components/schemas/Message" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reels": {
+      "get": {
+        "tags": ["Reels"],
+        "summary": "Get reels list",
+        "parameters": [
+          { "name": "category", "in": "query", "schema": { "type": "string" } },
+          { "name": "userId", "in": "query", "schema": { "type": "string" } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 20 } },
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reels retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "reels": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": { "type": "string" },
+                              "title": { "type": "string" },
+                              "description": { "type": "string" },
+                              "viewUrl": { "type": "string" },
+                              "metadata": {
+                                "type": "object",
+                                "properties": {
+                                  "views": { "type": "number" },
+                                  "likes": { "type": "number" },
+                                  "shares": { "type": "number" }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reels/upload/presign": {
+      "post": {
+        "tags": ["Reels"],
+        "summary": "Get presigned URL for reel upload",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["fileName", "fileType", "fileSize"],
+                "properties": {
+                  "fileName": { "type": "string" },
+                  "fileType": { "type": "string" },
+                  "fileSize": { "type": "integer" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Presigned URL generated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "uploadUrl": { "type": "string" },
+                        "fileKey": { "type": "string" },
+                        "expiresIn": { "type": "integer" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/games": {
+      "get": {
+        "tags": ["Games"],
+        "summary": "Get games list",
+        "parameters": [
+          { "name": "type", "in": "query", "schema": { "type": "string" } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 20 } },
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "sortBy", "in": "query", "schema": { "type": "string", "enum": ["name", "entryFee", "popularity"] } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Games retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "games": {
+                          "type": "array",
+                          "items": { "$ref": "#/components/schemas/Game" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/games/{id}/play": {
+      "post": {
+        "tags": ["Games"],
+        "summary": "Play game",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["players"],
+                "properties": {
+                  "players": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "userId": { "type": "string" },
+                        "betAmount": { "type": "integer" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Game played",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "message": { "type": "string" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "result": {
+                          "type": "object",
+                          "properties": {
+                            "winners": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "userId": { "type": "string" },
+                                  "username": { "type": "string" },
+                                  "winnings": { "type": "number" }
+                                }
+                              }
+                            },
+                            "totalWinnings": { "type": "number" }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    { "name": "Authentication", "description": "User authentication endpoints" },
+    { "name": "User", "description": "User profile management" },
+    { "name": "Wallet", "description": "Wallet and payment management" },
+    { "name": "Streams", "description": "Live streaming management" },
+    { "name": "Gifts", "description": "Gift system management" },
+    { "name": "Throne", "description": "Halo Throne system" },
+    { "name": "OG", "description": "Original Gangster tier system" },
+    { "name": "Chat", "description": "Chat system management" },
+    { "name": "Reels", "description": "Reels content management" },
+    { "name": "Games", "description": "Gaming system management" }
+  ]
+}

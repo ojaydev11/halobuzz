@@ -1,0 +1,46 @@
+{
+  "name": "halobuzz",
+  "version": "0.1.0",
+  "description": "Nepali-first live streaming and short-video platform",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "ai-engine", 
+    "mobile",
+    "admin"
+  ],
+  "scripts": {
+    "lint": "eslint . --ext .ts,.tsx --max-warnings=0",
+    "typecheck": "tsc -b backend ai-engine",
+    "test": "npm -w backend run test && npm -w ai-engine run test",
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:ai": "npm --prefix ai-engine run dev",
+    "dev:mobile": "npm --prefix mobile start",
+    "seed": "npm --prefix backend run seed",
+    "smoke": "bash scripts/smoke.sh || sh scripts/smoke.sh"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "husky": "^8.0.3",
+    "lint-staged": "^15.2.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/halobuzz/halobuzz-platform.git"
+  },
+  "keywords": [
+    "live-streaming",
+    "short-video", 
+    "nepal",
+    "react-native",
+    "nodejs",
+    "ai",
+    "monetization"
+  ],
+  "author": "HaloBuzz Team",
+  "license": "UNLICENSED"
+}

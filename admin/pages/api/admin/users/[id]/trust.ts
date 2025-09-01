@@ -1,0 +1,21 @@
+import type { NextApiRequest, NextApiResponse } from 'next';
+import { createServerApi } from '../../../../../lib/api';
+
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  const { id } = req.query;
+  if (typeof id !== 'string') return res.status(400).json({ success: false, error: 'Invalid id' });
+  try {
+    const api = createServerApi(req.headers as any);
+    if (req.method === 'POST') {
+      const resp = await api.post(`/admin/users/${id}/trust`, req.body);
+      return res.status(200).json(resp.data);
+    }
+    res.setHeader('Allow', 'POST');
+    return res.status(405).json({ success: false, error: 'Method not allowed' });
+  } catch (error: any) {
+    const status = error?.response?.status || 500;
+    return res.status(status).json({ success: false, error: error?.response?.data?.error || 'Failed' });
+  }
+}
+
+

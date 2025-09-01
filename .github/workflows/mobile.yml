@@ -1,0 +1,94 @@
+name: Mobile EAS CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+
+jobs:
+  build-preview:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Setup Expo and EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EAS_TOKEN }}
+
+      - name: EAS build (preview)
+        run: |
+          eas build --platform all --profile preview --non-interactive --wait --json > builds.json
+
+      - name: Download build artifacts
+        run: |
+          mkdir -p artifacts
+          node -e "const fs=require('fs'); const https=require('https'); const path=require('path'); const data=JSON.parse(fs.readFileSync('builds.json','utf8')); const arr=Array.isArray(data)?data:[data]; const urls=[]; for (const item of arr){ if(item?.artifacts){ const a=item.artifacts; if (a.applicationArchiveUrl) urls.push(a.applicationArchiveUrl); if (a.buildUrl) urls.push(a.buildUrl); if (Array.isArray(a.builds)) { for(const b of a.builds){ if(b?.artifacts?.applicationArchiveUrl) urls.push(b.artifacts.applicationArchiveUrl); if(b?.artifacts?.buildUrl) urls.push(b.artifacts.buildUrl); } } } } function dl(u, cb){ const file=path.join('artifacts', path.basename(u.split('?')[0])); const f=fs.createWriteStream(file); https.get(u, r=>{ if(r.statusCode>=300&&r.statusCode<400&&r.headers.location){ https.get(r.headers.location, rr=>rr.pipe(f).on('finish',()=>cb())); } else { r.pipe(f).on('finish',()=>cb()); } }).on('error',e=>{ console.error(e); cb(); }); } (function next(){ const u=urls.shift(); if(!u){ return; } dl(u, next); })(); console.log('Queued downloads for', urls.length, 'artifacts');"
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-build-preview
+          path: mobile/artifacts
+
+  build-production:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Setup Expo and EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EAS_TOKEN }}
+
+      - name: EAS build (production)
+        run: |
+          eas build --platform all --profile production --non-interactive --wait --json > builds.json
+
+      - name: Download build artifacts
+        run: |
+          mkdir -p artifacts
+          node -e "const fs=require('fs'); const https=require('https'); const path=require('path'); const data=JSON.parse(fs.readFileSync('builds.json','utf8')); const arr=Array.isArray(data)?data:[data]; const urls=[]; for (const item of arr){ if(item?.artifacts){ const a=item.artifacts; if (a.applicationArchiveUrl) urls.push(a.applicationArchiveUrl); if (a.buildUrl) urls.push(a.buildUrl); if (Array.isArray(a.builds)) { for(const b of a.builds){ if(b?.artifacts?.applicationArchiveUrl) urls.push(b.artifacts.applicationArchiveUrl); if(b?.artifacts?.buildUrl) urls.push(b.artifacts.buildUrl); } } } } function dl(u, cb){ const file=path.join('artifacts', path.basename(u.split('?')[0])); const f=fs.createWriteStream(file); https.get(u, r=>{ if(r.statusCode>=300&&r.statusCode<400&&r.headers.location){ https.get(r.headers.location, rr=>rr.pipe(f).on('finish',()=>cb())); } else { r.pipe(f).on('finish',()=>cb()); } }).on('error',e=>{ console.error(e); cb(); }); } (function next(){ const u=urls.shift(); if(!u){ return; } dl(u, next); })(); console.log('Queued downloads for', urls.length, 'artifacts');"
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-build-production
+          path: mobile/artifacts
+
+

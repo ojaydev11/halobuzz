@@ -1,0 +1,67 @@
+name: AI Engine CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test (ai-engine)
+        run: npm -w ai-engine run test --if-present
+
+      - name: Build (ai-engine)
+        run: npm -w ai-engine run build
+
+      - name: Upload ai-engine dist artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ai-engine-dist
+          path: ai-engine/dist
+
+  healthcheck:
+    needs: build-test
+    runs-on: ubuntu-latest
+    if: ${{ secrets.PREVIEW_URL != '' }}
+    env:
+      PREVIEW_URL: ${{ secrets.PREVIEW_URL }}
+    steps:
+      - name: Healthcheck /healthz
+        run: |
+          set -e
+          for i in $(seq 1 10); do
+            echo "Attempt $i"
+            if curl -fsSL "$PREVIEW_URL/healthz" >/dev/null; then
+              echo "Healthy"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "Healthcheck failed"
+          exit 1
+
+
