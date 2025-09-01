@@ -8,9 +8,13 @@ import { ModerationFlag } from '@/models/ModerationFlag';
 import { setupLogger } from '@/config/logger';
 import { getCache, setCache } from '@/config/redis';
 import { reputationService } from '@/services/ReputationService';
+import flagsRouter from './admin/flags';
 
 const logger = setupLogger();
 const router = express.Router();
+
+// Feature flags management
+router.use('/flags', flagsRouter);
 
 // ----- Overview Stats -----
 router.get('/stats', async (req, res) => {

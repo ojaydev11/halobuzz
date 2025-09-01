@@ -1,0 +1,221 @@
+# Dependabot configuration for automated dependency updates
+version: 2
+
+updates:
+  # Backend dependencies
+  - package-ecosystem: "npm"
+    directory: "/backend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "@admin"
+    assignees:
+      - "@admin"
+    commit-message:
+      prefix: "deps(backend)"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "backend"
+      - "security"
+    ignore:
+      # Ignore major version updates for critical dependencies
+      - dependency-name: "express"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "mongoose"
+        update-types: ["version-update:semver-major"]
+    groups:
+      security-updates:
+        patterns:
+          - "helmet"
+          - "express-rate-limit"
+          - "express-validator"
+          - "jsonwebtoken"
+          - "bcryptjs"
+        update-types:
+          - "security-update"
+      dev-dependencies:
+        patterns:
+          - "@types/*"
+          - "eslint*"
+          - "typescript"
+          - "jest"
+        dependency-type: "development"
+
+  # AI Engine dependencies
+  - package-ecosystem: "npm"
+    directory: "/ai-engine"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "@admin"
+    assignees:
+      - "@admin"
+    commit-message:
+      prefix: "deps(ai-engine)"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "ai-engine"
+      - "security"
+    groups:
+      security-updates:
+        patterns:
+          - "helmet"
+          - "express-rate-limit"
+          - "jsonwebtoken"
+        update-types:
+          - "security-update"
+      ai-dependencies:
+        patterns:
+          - "openai"
+          - "@tensorflow/*"
+          - "canvas"
+          - "sharp"
+
+  # Admin panel dependencies
+  - package-ecosystem: "npm"
+    directory: "/admin"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "@admin"
+    assignees:
+      - "@admin"
+    commit-message:
+      prefix: "deps(admin)"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "admin"
+      - "frontend"
+    groups:
+      react-ecosystem:
+        patterns:
+          - "react"
+          - "react-dom"
+          - "next"
+        update-types:
+          - "minor"
+          - "patch"
+      dev-dependencies:
+        patterns:
+          - "@types/*"
+          - "eslint*"
+          - "typescript"
+        dependency-type: "development"
+
+  # Mobile app dependencies
+  - package-ecosystem: "npm"
+    directory: "/mobile"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "@admin"
+    assignees:
+      - "@admin"
+    commit-message:
+      prefix: "deps(mobile)"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "mobile"
+      - "react-native"
+
+  # Root package.json dependencies
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 2
+    reviewers:
+      - "@admin"
+    assignees:
+      - "@admin"
+    commit-message:
+      prefix: "deps(root)"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "root"
+
+  # GitHub Actions dependencies
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 3
+    reviewers:
+      - "@admin"
+    assignees:
+      - "@admin"
+    commit-message:
+      prefix: "deps(actions)"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "github-actions"
+      - "ci/cd"
+
+  # Docker dependencies
+  - package-ecosystem: "docker"
+    directory: "/backend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 2
+    reviewers:
+      - "@admin"
+    assignees:
+      - "@admin"
+    commit-message:
+      prefix: "deps(docker)"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "docker"
+      - "backend"
+
+  - package-ecosystem: "docker"
+    directory: "/ai-engine"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 2
+    reviewers:
+      - "@admin"
+    assignees:
+      - "@admin"
+    commit-message:
+      prefix: "deps(docker)"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "docker"
+      - "ai-engine"
