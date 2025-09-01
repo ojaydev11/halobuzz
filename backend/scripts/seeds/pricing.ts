@@ -500,7 +500,7 @@ pricingSchema.virtual('enabledGateways').get(function() {
 // Method to calculate total price with tax and fees
 pricingSchema.methods.calculateTotalPrice = function(packageIndex: number, gatewayName: string) {
   const pkg = this.coinPackages[packageIndex];
-  const gateway = this.gateways.find(g => g.name === gatewayName);
+  const gateway = this.gateways.find((g: any) => g.name === gatewayName);
   
   if (!pkg || !gateway) {
     throw new Error('Invalid package or gateway');

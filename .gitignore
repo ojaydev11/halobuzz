@@ -9,11 +9,40 @@ build/
 .next/
 out/
 
-# Environment files
+# Environment files - SECURITY CRITICAL
 .env
 .env.local
+.env.development
+.env.production
+.env.test
 .env.*.local
 *.env
+!*.env.example
+!*.env.template
+
+# Configuration files that may contain secrets
+config/local.json
+config/production.json
+config/secrets.json
+
+# Certificates and keys
+*.pem
+*.key
+*.p12
+*.p8
+*.cer
+*.crt
+*.der
+*.pfx
+*.jks
+*.keystore
+
+# SSH keys
+id_rsa
+id_dsa
+id_ecdsa
+id_ed25519
+*.pub
 
 # Logs
 logs/

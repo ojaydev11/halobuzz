@@ -286,7 +286,7 @@ gameSchema.virtual('houseEdge').get(function() {
 
 // Method to calculate expected value
 gameSchema.methods.calculateExpectedValue = function() {
-  const totalPayout = this.payoutTable.reduce((sum, payout) => {
+  const totalPayout = this.payoutTable.reduce((sum: any, payout: any) => {
     return sum + (payout.payout * payout.percentage / 100);
   }, 0);
   return totalPayout - this.entryCoins;
@@ -294,7 +294,7 @@ gameSchema.methods.calculateExpectedValue = function() {
 
 // Method to get payout for rank
 gameSchema.methods.getPayoutForRank = function(rank: number) {
-  const payout = this.payoutTable.find(p => p.rank === rank);
+  const payout = this.payoutTable.find((p: any) => p.rank === rank);
   return payout ? payout.payout : 0;
 };
 

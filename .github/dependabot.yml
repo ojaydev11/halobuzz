@@ -1,0 +1,108 @@
+# Dependabot configuration for HaloBuzz monorepo
+version: 2
+updates:
+  # Backend service dependencies
+  - package-ecosystem: "npm"
+    directory: "/backend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    target-branch: "main"
+    reviewers:
+      - "halobuzz-team"
+    assignees:
+      - "halobuzz-team"
+    commit-message:
+      prefix: "chore(deps):"
+      include: "scope"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "backend"
+    ignore:
+      - dependency-name: "@types/*"
+        update-types: ["version-update:semver-patch"]
+  
+  # AI Engine dependencies
+  - package-ecosystem: "npm"
+    directory: "/ai-engine"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    target-branch: "main"
+    reviewers:
+      - "halobuzz-team"
+    assignees:
+      - "halobuzz-team"
+    commit-message:
+      prefix: "chore(deps):"
+      include: "scope"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "ai-engine"
+    ignore:
+      - dependency-name: "@types/*"
+        update-types: ["version-update:semver-patch"]
+
+  # Admin dashboard dependencies (pnpm)
+  - package-ecosystem: "npm"
+    directory: "/admin"
+    schedule:
+      interval: "weekly"
+      day: "tuesday"
+      time: "09:00"
+    target-branch: "main"
+    reviewers:
+      - "halobuzz-team"
+    assignees:
+      - "halobuzz-team"
+    commit-message:
+      prefix: "chore(deps):"
+      include: "scope"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "admin"
+
+  # Mobile app dependencies (pnpm)
+  - package-ecosystem: "npm"
+    directory: "/mobile"
+    schedule:
+      interval: "weekly"
+      day: "tuesday"
+      time: "09:00"
+    target-branch: "main"
+    reviewers:
+      - "halobuzz-team"
+    assignees:
+      - "halobuzz-team"
+    commit-message:
+      prefix: "chore(deps):"
+      include: "scope"
+    open-pull-requests-limit: 3
+    labels:
+      - "dependencies"
+      - "mobile"
+    ignore:
+      # React Native versions should be updated carefully
+      - dependency-name: "react-native"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+      - dependency-name: "expo"
+        update-types: ["version-update:semver-major"]
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    target-branch: "main"
+    reviewers:
+      - "halobuzz-team"
+    commit-message:
+      prefix: "chore(ci):"
+    labels:
+      - "dependencies"
+      - "github-actions"

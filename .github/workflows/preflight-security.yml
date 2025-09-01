@@ -1,0 +1,190 @@
+name: Preflight Security Check
+
+on:
+  push:
+    branches: [ main, master, develop, "feature/*", "chore/*", "fix/*" ]
+  pull_request:
+    branches: [ main, master, develop ]
+
+jobs:
+  preflight-secrets:
+    name: Block Secrets & Sensitive Files
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 2
+
+    - name: Check for .env files in commit
+      run: |
+        echo "Checking for .env files..."
+        if git diff --name-only HEAD~1 HEAD | grep -E '\.(env|local)$|\.env\.' | grep -v '.env.example'; then
+          echo "❌ SECURITY VIOLATION: .env files detected in commit!"
+          echo "Found files:"
+          git diff --name-only HEAD~1 HEAD | grep -E '\.(env|local)$|\.env\.' | grep -v '.env.example'
+          echo ""
+          echo "Please remove sensitive files and use .env.example for templates."
+          exit 1
+        fi
+        echo "✅ No .env files found"
+
+    - name: Check for common secret patterns
+      run: |
+        echo "Scanning for secret patterns..."
+        # Check for common secret patterns in added/modified files
+        secret_patterns=(
+          "password\s*[=:]\s*['\"][^'\"]*['\"]"
+          "api_key\s*[=:]\s*['\"][^'\"]*['\"]"
+          "secret\s*[=:]\s*['\"][^'\"]*['\"]"
+          "token\s*[=:]\s*['\"][^'\"]*['\"]"
+          "AKIA[0-9A-Z]{16}"
+          "sk_live_[0-9a-zA-Z]{24}"
+          "rk_live_[0-9a-zA-Z]{24}"
+          "sk_test_[0-9a-Z]{24}"
+          "xoxb-[0-9]{13}-[0-9]{13}-[0-9a-zA-Z]{24}"
+          "-----BEGIN PRIVATE KEY-----"
+          "-----BEGIN RSA PRIVATE KEY-----"
+        )
+        
+        violations=0
+        for pattern in "${secret_patterns[@]}"; do
+          if git diff HEAD~1 HEAD | grep -iE "$pattern"; then
+            echo "❌ POTENTIAL SECRET FOUND: $pattern"
+            violations=$((violations + 1))
+          fi
+        done
+        
+        if [ $violations -gt 0 ]; then
+          echo ""
+          echo "❌ SECURITY VIOLATION: $violations potential secret(s) detected!"
+          echo "Please remove secrets and use environment variables instead."
+          exit 1
+        fi
+        echo "✅ No secret patterns detected"
+
+    - name: Check file permissions and paths
+      run: |
+        echo "Checking file permissions..."
+        # Check for suspicious file paths or permissions
+        if git diff --name-only HEAD~1 HEAD | grep -E "(ssh|gpg|pem|key|cert)$|/\.(ssh|gnupg)/"; then
+          echo "❌ SECURITY WARNING: Suspicious files detected!"
+          git diff --name-only HEAD~1 HEAD | grep -E "(ssh|gpg|pem|key|cert)$|/\.(ssh|gnupg)/"
+          echo "Please verify these files don't contain secrets."
+          # Don't exit 1 here as these might be legitimate
+        fi
+        
+        # Check for executable scripts in weird places
+        if git diff --name-only HEAD~1 HEAD | xargs -I {} sh -c 'test -f "{}" && head -1 "{}" | grep -q "^#!" && echo "{}"' | grep -v -E "(scripts/|bin/|\.sh$|\.py$|\.pl$)"; then
+          echo "⚠️  WARNING: Executable files in unusual locations:"
+          git diff --name-only HEAD~1 HEAD | xargs -I {} sh -c 'test -f "{}" && head -1 "{}" | grep -q "^#!" && echo "{}"' | grep -v -E "(scripts/|bin/|\.sh$|\.py$|\.pl$)" || true
+        fi
+        echo "✅ File checks complete"
+
+    - name: Check for hardcoded URLs and IPs
+      run: |
+        echo "Checking for hardcoded production URLs/IPs..."
+        # Check for production URLs that might be accidentally hardcoded
+        prod_patterns=(
+          "https://api\.halobuzz\."
+          "https://admin\.halobuzz\."
+          "https://halobuzz\.com"
+          "192\.168\.[0-9]+\.[0-9]+"
+          "[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+:[0-9]+"
+        )
+        
+        violations=0
+        for pattern in "${prod_patterns[@]}"; do
+          if git diff HEAD~1 HEAD | grep -E "$pattern" | grep -v -E "(\.example|\.template|\.md|/docs/|#.*|//.*|\* )"; then
+            echo "⚠️  POTENTIAL HARDCODED URL/IP: $pattern"
+            violations=$((violations + 1))
+          fi
+        done
+        
+        if [ $violations -gt 0 ]; then
+          echo "⚠️  WARNING: $violations potential hardcoded URLs/IPs found"
+          echo "Consider using environment variables for production URLs"
+          # Don't fail build but warn
+        fi
+        echo "✅ URL/IP checks complete"
+
+  lint-security-basic:
+    name: Basic Security Linting
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        workspace: [backend, ai-engine]
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Check for basic security anti-patterns
+      working-directory: ${{ matrix.workspace }}
+      run: |
+        echo "Checking ${{ matrix.workspace }} for basic security issues..."
+        
+        # Check for eval usage
+        if grep -r "eval(" src/ 2>/dev/null; then
+          echo "❌ WARNING: eval() usage detected (potential security risk)"
+        fi
+        
+        # Check for exec/spawn without sanitization
+        if grep -rE "(exec|spawn)\s*\(" src/ 2>/dev/null | grep -v "child_process" | head -5; then
+          echo "⚠️  WARNING: exec/spawn usage detected - ensure input sanitization"
+        fi
+        
+        # Check for basic SQL injection patterns
+        if grep -rE "query.*\+|SELECT.*\+|INSERT.*\+" src/ 2>/dev/null | head -3; then
+          echo "❌ WARNING: Potential SQL injection pattern detected"
+        fi
+        
+        # Check for missing HTTPS in production configs
+        if grep -r "http://" src/ 2>/dev/null | grep -v "localhost\|127\.0\.0\.1\|test" | head -3; then
+          echo "⚠️  WARNING: HTTP (non-HTTPS) URLs found in source"
+        fi
+        
+        echo "✅ Basic security lint complete for ${{ matrix.workspace }}"
+
+  dependency-security-check:
+    name: Quick Dependency Security Check  
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        workspace: [backend, ai-engine]
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Check package.json for known vulnerable packages
+      working-directory: ${{ matrix.workspace }}
+      run: |
+        echo "Checking ${{ matrix.workspace }} package.json for known vulnerabilities..."
+        
+        # List of packages with known critical vulnerabilities that should never be used
+        vulnerable_packages=("event-stream@3.3.6" "node-ipc@9.2.2" "node-ipc@10.1.1" "ua-parser-js@0.7.29" "ua-parser-js@0.8.0" "ua-parser-js@1.0.0")
+        
+        for pkg in "${vulnerable_packages[@]}"; do
+          if grep -q "$pkg" package.json; then
+            echo "❌ CRITICAL: Known vulnerable package detected: $pkg"
+            exit 1
+          fi
+        done
+        
+        # Check for packages with wildcards or loose version constraints
+        if grep -E "\"[*^~]|latest" package.json; then
+          echo "⚠️  WARNING: Loose version constraints detected:"
+          grep -E "\"[*^~]|latest" package.json || true
+          echo "Consider pinning dependency versions for security"
+        fi
+        
+        echo "✅ Package security check complete for ${{ matrix.workspace }}"
