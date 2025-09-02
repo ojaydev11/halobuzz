@@ -88,6 +88,9 @@ export const setupLogger = (): winston.Logger => {
   return logger;
 };
 
+// Create a singleton logger instance
+export const logger = setupLogger();
+
 // Create a stream object for Morgan HTTP request logging
 export const createMorganStream = () => {
   const logger = setupLogger();

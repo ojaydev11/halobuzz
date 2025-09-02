@@ -17,16 +17,8 @@ router.get('/', async (req, res) => {
       userCountry = user?.country || 'US';
     }
 
-    // Get feature flags that should be exposed to clients
-    const publicFlags = {
-      gamesEnabledGlobal: await featureFlags.isGamesEnabled(),
-      battleBoostEnabled: await featureFlags.isBattleBoostEnabled(),
-      paymentsEnabled: await featureFlags.isPaymentsEnabled(),
-      maintenanceMode: await featureFlags.isMaintenanceMode(),
-      registrationPaused: await featureFlags.isRegistrationPaused(),
-      ageVerificationRequired: await featureFlags.isAgeVerificationRequired(),
-      kycRequiredForHosts: await featureFlags.isKycRequiredForHosts()
-    };
+    // Get safe config subset
+    const publicFlags = await featureFlags.getSafeConfig();
 
     // Check country-specific games availability
     const gamesEnabledForCountry = await riskControlsService.isGamesEnabledForCountry(userCountry);

@@ -29,6 +29,9 @@ export interface IUser extends Document {
   haloThroneExpiresAt?: Date;
   isHaloThroneActive: boolean;
   kycStatus: 'pending' | 'verified' | 'rejected';
+  ageVerified: boolean;
+  totpSecret?: string;
+  boundDevices?: string[];
   kycDocuments?: {
     idCard?: string;
     selfie?: string;
@@ -77,6 +80,21 @@ export interface IUser extends Document {
       totalGifts: number;
       reportCount: number;
     };
+  };
+  karma: {
+    total: number;
+    categories: {
+      helpfulness: number;
+      mentorship: number;
+      creativity: number;
+      positivity: number;
+      cultural_respect: number;
+      community_service: number;
+    };
+    level: 'beginner' | 'helper' | 'guardian' | 'elder' | 'bodhisattva';
+    levelName: string; // Nepali name for the level
+    lastUpdated: Date;
+    milestones: string[]; // Array of milestone IDs achieved
   };
   coins: {
     balance: number;
@@ -225,6 +243,18 @@ const userSchema = new Schema<IUser>({
     enum: ['pending', 'verified', 'rejected'],
     default: 'pending'
   },
+  ageVerified: {
+    type: Boolean,
+    default: false
+  },
+  totpSecret: {
+    type: String,
+    default: null
+  },
+  boundDevices: [{
+    type: String,
+    default: []
+  }],
   kycDocuments: {
     idCard: String,
     selfie: String,
@@ -285,6 +315,25 @@ const userSchema = new Schema<IUser>({
       reportCount: { type: Number, default: 0 }
     }
   },
+  karma: {
+    total: { type: Number, default: 0, min: 0 },
+    categories: {
+      helpfulness: { type: Number, default: 0, min: 0 },
+      mentorship: { type: Number, default: 0, min: 0 },
+      creativity: { type: Number, default: 0, min: 0 },
+      positivity: { type: Number, default: 0, min: 0 },
+      cultural_respect: { type: Number, default: 0, min: 0 },
+      community_service: { type: Number, default: 0, min: 0 }
+    },
+    level: { 
+      type: String, 
+      enum: ['beginner', 'helper', 'guardian', 'elder', 'bodhisattva'], 
+      default: 'beginner' 
+    },
+    levelName: { type: String, default: 'नयाँ साथी (New Friend)' },
+    lastUpdated: { type: Date, default: Date.now },
+    milestones: [{ type: String, default: [] }]
+  },
   coins: {
     balance: { type: Number, default: 0, min: 0 },
     bonusBalance: { type: Number, default: 0, min: 0 },
@@ -312,6 +361,8 @@ userSchema.index({ ogLevel: -1, followers: -1 });
 userSchema.index({ lastActiveAt: -1 });
 userSchema.index({ isVerified: 1, isBanned: 1 });
 userSchema.index({ 'trust.score': -1 }); // For trust score ranking
+userSchema.index({ 'karma.total': -1 }); // For karma ranking
+userSchema.index({ 'karma.level': 1 }); // For karma level filtering
 
 // Pre-save middleware to hash password
 userSchema.pre('save', async function(next) {

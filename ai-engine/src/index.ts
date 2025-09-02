@@ -27,6 +27,10 @@ import {
 import moderationRoutes from './routes/moderation';
 import engagementRoutes from './routes/engagement';
 import reputationRoutes from './routes/reputation';
+import recommendationRoutes from './routes/recommendation';
+import enhancementRoutes from './routes/enhancement';
+import conversationRoutes from './routes/conversation';
+import arRoutes from './routes/ar';
 
 // Import services
 import { ModerationService } from './services/ModerationService';
@@ -151,6 +155,12 @@ app.use('/internal/reputation',
   reputationRoutes
 );
 
+// New AI-powered features routes
+app.use('/api/ai/recommendation', recommendationRoutes);
+app.use('/api/ai/enhancement', enhancementRoutes);
+app.use('/api/ai/conversation', conversationRoutes);
+app.use('/api/ai/ar', arRoutes);
+
 // Socket.IO event handling
 io.on('connection', (socket) => {
   logger.info('Client connected', { socketId: socket.id });
@@ -214,7 +224,11 @@ server.listen(PORT, () => {
     health: '/health',
     moderation: '/internal/moderation/* (PROTECTED)',
     engagement: '/internal/engagement/* (PROTECTED)',
-    reputation: '/internal/reputation/* (PROTECTED)'
+    reputation: '/internal/reputation/* (PROTECTED)',
+    recommendation: '/api/ai/recommendation/* (AI FEATURES)',
+    enhancement: '/api/ai/enhancement/* (AI FEATURES)',
+    conversation: '/api/ai/conversation/* (AI FEATURES)',
+    ar: '/api/ai/ar/* (AI FEATURES)'
   });
   
   logger.info('Security features:', {

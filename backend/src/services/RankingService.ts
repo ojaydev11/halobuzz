@@ -1,6 +1,6 @@
 import { LiveStream } from '../models/LiveStream';
 import { User } from '../models/User';
-import { logger } from '../config/logger';
+import logger from '../utils/logger';
 
 export class RankingService {
   private weights = {

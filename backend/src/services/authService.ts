@@ -1,13 +1,12 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { User, IUser } from '@/models/User';
-import { setupLogger } from '@/config/logger';
+import logger from '../utils/logger';
 import { setCache, getCache } from '@/config/redis';
+import { secrets } from '@/config/secrets';
 import { EmailService } from './emailService';
 import { SMSService } from './smsService';
 import { AIService } from './aiService';
-
-const logger = setupLogger();
 
 export interface LoginCredentials {
   email?: string;
@@ -90,7 +89,7 @@ export class AuthService {
       await setCache(`user:${user._id}`, user.toJSON(), 3600); // 1 hour
 
       // Generate tokens
-      const tokens = await this.generateTokens(user._id.toString());
+      const tokens = await this.generateTokens((user._id as any).toString());
 
       // Send welcome email
       await EmailService.sendWelcomeEmail(user.email, user.username);
@@ -137,8 +136,8 @@ export class AuthService {
         } else {
           // Unban user if ban has expired
           user.isBanned = false;
-          user.banReason = undefined;
-          user.banExpiresAt = undefined;
+          user.banReason = undefined as any;
+          user.banExpiresAt = undefined as any;
           await user.save();
         }
       }
@@ -157,7 +156,7 @@ export class AuthService {
       await setCache(`user:${user._id}`, user.toJSON(), 3600);
 
       // Generate tokens
-      const tokens = await this.generateTokens(user._id.toString());
+      const tokens = await this.generateTokens((user._id as any).toString());
 
       logger.info(`User logged in: ${user.username} (${user.email})`);
 
@@ -190,7 +189,7 @@ export class AuthService {
         await setCache(`user:${existingUser._id}`, existingUser.toJSON(), 3600);
 
         // Generate tokens
-        const tokens = await this.generateTokens(existingUser._id.toString());
+        const tokens = await this.generateTokens((existingUser._id as any).toString());
 
         logger.info(`Social login: ${existingUser.username} via ${data.provider}`);
 
@@ -218,7 +217,7 @@ export class AuthService {
         await setCache(`user:${userWithEmail._id}`, userWithEmail.toJSON(), 3600);
 
         // Generate tokens
-        const tokens = await this.generateTokens(userWithEmail._id.toString());
+        const tokens = await this.generateTokens((userWithEmail._id as any).toString());
 
         logger.info(`Social account linked: ${userWithEmail.username} via ${data.provider}`);
 
@@ -229,7 +228,7 @@ export class AuthService {
       }
 
       // Create new user with social login
-      const username = await this.generateUniqueUsername(data.name || data.email.split('@')[0]);
+      const username = await this.generateUniqueUsername(data.name || data.email?.split('@')[0] || 'user');
       
       const newUser = new User({
         username,
@@ -253,7 +252,7 @@ export class AuthService {
       await setCache(`user:${newUser._id}`, newUser.toJSON(), 3600);
 
       // Generate tokens
-      const tokens = await this.generateTokens(newUser._id.toString());
+      const tokens = await this.generateTokens((newUser._id as any).toString());
 
       logger.info(`New social user created: ${newUser.username} via ${data.provider}`);
 
@@ -287,7 +286,7 @@ export class AuthService {
       }
 
       // Generate new tokens
-      const tokens = await this.generateTokens(user._id.toString());
+      const tokens = await this.generateTokens((user._id as any).toString());
 
       logger.info(`Token refreshed for user: ${user.username}`);
 
@@ -412,13 +411,13 @@ export class AuthService {
   }> {
     const accessToken = jwt.sign(
       { userId },
-      process.env.JWT_SECRET!,
+      secrets.JWT_SECRET as string,
       { expiresIn: this.ACCESS_TOKEN_EXPIRES_IN }
     );
 
     const refreshToken = jwt.sign(
       { userId },
-      process.env.JWT_REFRESH_SECRET!,
+      secrets.JWT_REFRESH_SECRET as string,
       { expiresIn: this.REFRESH_TOKEN_EXPIRES_IN }
     );
 

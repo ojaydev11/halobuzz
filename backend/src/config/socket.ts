@@ -1,10 +1,13 @@
 import { Server, Socket } from 'socket.io';
+import { createAdapter } from '@socket.io/redis-adapter';
+import { createClient } from 'redis';
 import jwt from 'jsonwebtoken';
 import { setupLogger } from './logger';
 import { getCache, setCache } from './redis';
 import { LiveStreamService } from '@/services/liveStreamService';
 import { ChatService } from '@/services/chatService';
 import { NotificationService } from '@/services/notificationService';
+import { socketSecurityService } from '@/services/SocketSecurityService';
 
 const logger = setupLogger();
 
@@ -12,6 +15,37 @@ interface AuthenticatedSocket extends Socket {
   userId?: string;
   user?: any;
 }
+
+// Redis adapter setup for multi-instance scaling
+export const setupRedisAdapter = async (io: Server): Promise<void> => {
+  try {
+    const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
+    
+    // Create Redis clients for pub/sub
+    const pubClient = createClient({ url: redisUrl });
+    const subClient = pubClient.duplicate();
+
+    await Promise.all([
+      pubClient.connect(),
+      subClient.connect()
+    ]);
+
+    // Set up the Redis adapter
+    io.adapter(createAdapter(pubClient, subClient));
+    
+    logger.info('Socket.IO Redis adapter configured successfully');
+  } catch (error) {
+    logger.error('Failed to setup Redis adapter:', error);
+    // Continue without Redis adapter in case of failure
+  }
+};
+
+// Export function to get socket.io instance
+export const getSocketIO = (): Server | null => {
+  // This would typically return the global io instance
+  // For now, return null as it's not set up globally
+  return null;
+};
 
 export const setupSocketIO = (io: Server): void => {
   // Authentication middleware
@@ -39,12 +73,34 @@ export const setupSocketIO = (io: Server): void => {
     }
   });
 
-  io.on('connection', (socket: AuthenticatedSocket) => {
-    logger.info(`User ${socket.userId} connected`);
+  io.on('connection', async (socket: AuthenticatedSocket) => {
+    try {
+      // Check if connection is allowed
+      const connectionCheck = await socketSecurityService.canConnect(socket, socket.userId!);
+      if (!connectionCheck.allowed) {
+        logger.warn(`Connection blocked for user ${socket.userId}: ${connectionCheck.reason}`);
+        socket.emit('error', { 
+          message: connectionCheck.reason,
+          limits: connectionCheck.limits
+        });
+        socket.disconnect(true);
+        return;
+      }
 
-    // Join user to their personal room
-    if (socket.userId) {
-      socket.join(`user:${socket.userId}`);
+      // Register the connection
+      socketSecurityService.registerConnection(socket, socket.userId!);
+      
+      logger.info(`User ${socket.userId} connected`);
+
+      // Join user to their personal room
+      if (socket.userId) {
+        socket.join(`user:${socket.userId}`);
+      }
+    } catch (error) {
+      logger.error('Connection setup error:', error);
+      socket.emit('error', { message: 'Connection setup failed' });
+      socket.disconnect(true);
+      return;
     }
 
     // Stream events
@@ -52,8 +108,19 @@ export const setupSocketIO = (io: Server): void => {
       try {
         const { streamId } = data;
         
+        // Check if user can join room
+        const roomCheck = await socketSecurityService.canJoinRoom(socket.userId!, `stream:${streamId}`);
+        if (!roomCheck.allowed) {
+          socket.emit('error', { 
+            message: roomCheck.reason,
+            limits: roomCheck.limits
+          });
+          return;
+        }
+        
         // Join the live stream room
         socket.join(`stream:${streamId}`);
+        socketSecurityService.recordRoomJoin(socket.userId!, `stream:${streamId}`);
         
         // Update viewer count
         await LiveStreamService.addViewer(streamId, socket.userId!);
@@ -83,6 +150,7 @@ export const setupSocketIO = (io: Server): void => {
         
         // Leave the live stream room
         socket.leave(`stream:${streamId}`);
+        socketSecurityService.recordRoomLeave(socket.userId!, `stream:${streamId}`);
         
         // Update viewer count
         await LiveStreamService.removeViewer(streamId, socket.userId!);
@@ -112,6 +180,19 @@ export const setupSocketIO = (io: Server): void => {
     }) => {
       try {
         const { streamId, message, type } = data;
+        
+        // Check if message can be sent
+        const messageCheck = await socketSecurityService.canSendMessage(socket, socket.userId!, message);
+        if (!messageCheck.allowed) {
+          socket.emit('error', { 
+            message: messageCheck.reason,
+            limits: messageCheck.limits
+          });
+          return;
+        }
+        
+        // Record the message
+        socketSecurityService.recordMessage(socket.userId!);
         
         // Process message through AI moderation
         const moderation = await ChatService.moderateMessage(message);
@@ -363,6 +444,9 @@ export const setupSocketIO = (io: Server): void => {
     socket.on('disconnect', async () => {
       try {
         logger.info(`User ${socket.userId} disconnected`);
+        
+        // Handle socket security cleanup
+        socketSecurityService.handleDisconnection(socket.userId!, socket);
         
         // Clean up any active sessions
         await LiveStreamService.handleUserDisconnect(socket.userId!);

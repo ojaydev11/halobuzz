@@ -1,4 +1,6 @@
-import { logger } from './logger';
+import { setupLogger } from './logger';
+
+const logger = setupLogger();
 import { connectDatabase } from './database';
 import mongoose from 'mongoose';
 
@@ -240,6 +242,70 @@ class FeatureFlagsService {
 
   async isBattleBoostEnabled(): Promise<boolean> {
     return this.getFlag('battleBoostEnabled');
+  }
+
+  // Emergency disable all features
+  async emergencyDisableAll(reason: string, modifiedBy: string = 'emergency'): Promise<void> {
+    try {
+      const criticalFlags = [
+        'gamesEnabledGlobal',
+        'battleBoostEnabled',
+        'giftsEnabled',
+        'paymentsEnabled',
+        'newRegistrationPause'
+      ];
+
+      for (const flagKey of criticalFlags) {
+        await this.setFlag(flagKey, false, modifiedBy);
+      }
+
+      // Set maintenance mode
+      await this.setFlag('maintenanceMode', true, modifiedBy);
+
+      logger.warn(`EMERGENCY DISABLE ALL triggered by ${modifiedBy}. Reason: ${reason}`);
+    } catch (error) {
+      logger.error('Failed to execute emergency disable all:', error);
+      throw error;
+    }
+  }
+
+  // Get safe config subset for public API
+  async getSafeConfig(): Promise<any> {
+    try {
+      const safeFlags = [
+        'gamesEnabledGlobal',
+        'battleBoostEnabled',
+        'festivalMode',
+        'aiModerationStrict',
+        'newRegistrationPause'
+      ];
+
+      const config: any = {};
+      for (const flagKey of safeFlags) {
+        config[flagKey] = await this.getFlag(flagKey);
+      }
+
+      // Add per-country toggles
+      config.perCountryToggles = {
+        nepal: await this.getFlag('nepalComplianceMode'),
+        global: await this.getFlag('globalAgeGate')
+      };
+
+      return config;
+    } catch (error) {
+      logger.error('Failed to get safe config:', error);
+      return {
+        gamesEnabledGlobal: false,
+        battleBoostEnabled: false,
+        festivalMode: false,
+        aiModerationStrict: true,
+        newRegistrationPause: true,
+        perCountryToggles: {
+          nepal: true,
+          global: true
+        }
+      };
+    }
   }
 }
 

@@ -150,15 +150,33 @@ docker compose -f docker-compose.prod.yml up -d
 curl http://localhost:5010/healthz
 ```
 
-## Deploy via GitHub Actions
+## 🚀 Production Deploy (Railway + Vercel)
 
-### Automated Deployment Workflows
+### Quick Deploy Commands
+
+```bash
+# Run hosted smoke tests after deployment
+BACKEND_URL=https://<your-backend>.railway.app \
+AI_URL=https://<your-ai>.railway.app \
+AI_ENGINE_SECRET=<your-secret> \
+./scripts/hosted-smoke.sh
+
+# Windows PowerShell
+$env:BACKEND_URL="https://<your-backend>.railway.app"
+$env:AI_URL="https://<your-ai>.railway.app"
+$env:AI_ENGINE_SECRET="<your-secret>"
+.\scripts\hosted-smoke.ps1
+```
+
+### Deploy via GitHub Actions
+
+#### Automated Deployment Workflows
 - **Railway Backend Deploy** - Deploys backend to Railway on push to main
 - **Railway AI Engine Deploy** - Deploys AI engine to Railway on push to main  
 - **Hosted Smoke Tests** - Verifies live deployment security and functionality
 - **Vercel Admin Deploy** - Optional admin dashboard deployment to Vercel
 
-### Required GitHub Secrets
+#### Required GitHub Secrets
 Add these secrets in GitHub → Settings → Secrets → Actions:
 
 **Railway Deployment:**
@@ -172,7 +190,7 @@ Add these secrets in GitHub → Settings → Secrets → Actions:
 - `VERCEL_ORG_ID` - Your Vercel organization ID
 - `VERCEL_PROJECT_ID` - Your Vercel project ID
 
-### CI/CD Pipeline
+#### CI/CD Pipeline
 GitHub Actions workflow automatically:
 - Runs tests on PR/push
 - Builds and deploys to Railway
@@ -180,6 +198,19 @@ GitHub Actions workflow automatically:
 - Runs hosted smoke tests
 - Verifies security controls
 - Updates documentation
+
+### Production Environment Setup
+
+#### Environment Templates
+Copy and configure these production environment files:
+- `env.backend.production.example` → Backend service variables
+- `env.ai.production.example` → AI Engine service variables  
+- `env.admin.production.example` → Admin dashboard variables
+
+#### Documentation
+- [Production Environment Matrix](docs/infra/prod-env-matrix.md) - Complete env var reference
+- [Rollback Guide](docs/infra/rollback.md) - How to rollback deployments
+- [Deployment Guide](docs/infra/deployment-guide.md) - Step-by-step deployment
 
 ## 🔒 Production Hardening
 

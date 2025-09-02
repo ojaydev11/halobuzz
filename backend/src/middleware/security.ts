@@ -27,7 +27,7 @@ export const trustProxy = (req: Request, res: Response, next: NextFunction) => {
   const realIP = req.headers['x-real-ip'] as string;
   
   if (forwardedFor || realIP) {
-    req.ip = realIP || forwardedFor.split(',')[0].trim();
+    (req as any).clientIP = realIP || forwardedFor.split(',')[0].trim();
   }
   
   next();

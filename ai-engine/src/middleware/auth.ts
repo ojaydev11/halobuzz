@@ -15,7 +15,7 @@ export interface AuthenticatedRequest extends Request {
 export const authenticateAIEngine = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     const aiSecret = req.headers['x-ai-secret'] as string;
-    const expectedSecret = process.env.AI_ENGINE_SECRET;
+    const expectedSecret = process.env.AI_SERVICE_SECRET;
 
     if (!expectedSecret) {
       logger.error('AI_ENGINE_SECRET not configured');

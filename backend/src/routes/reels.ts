@@ -4,6 +4,7 @@ import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { v4 as uuidv4 } from 'uuid';
 import { User } from '../models/User';
+import { Reel } from '../models/Reel';
 import { LiveStream } from '../models/LiveStream';
 import { reputationService } from '../services/ReputationService';
 import { moderationQueue } from '../services/ModerationQueue';
@@ -201,8 +202,8 @@ router.post('/upload/complete', [
       expiresIn: 86400 // 24 hours
     });
 
-    // Create reel record (placeholder - you'll need to create a Reel model)
-    const reelData = {
+    // Create reel record
+    const reel = new Reel({
       userId,
       username: user.username,
       avatar: user.avatar,
@@ -221,13 +222,23 @@ router.post('/upload/complete', [
         views: 0,
         likes: 0,
         shares: 0,
-        comments: 0
+        comments: 0,
+        trendingScore: 0,
+        engagementRate: 0
+      },
+      processing: {
+        status: 'queued',
+        progress: 0,
+        tasks: {
+          transcoding: false,
+          thumbnailGeneration: false,
+          contentModeration: false,
+          aiAnalysis: false
+        }
       }
-    };
+    });
 
-    // TODO: Create Reel model and save to database
-    // const reel = new Reel(reelData);
-    // await reel.save();
+    await reel.save();
 
     // Apply reputation bonus for content creation
     await reputationService.applyReputationDelta(userId, 'reel_uploaded', {
@@ -242,7 +253,7 @@ router.post('/upload/complete', [
       content: title + ' ' + description,
       userId,
       metadata: {
-        reelId: 'temp-id', // Will be updated after reel creation
+        reelId: reel._id,
         fileKey,
         category
       }
@@ -253,14 +264,14 @@ router.post('/upload/complete', [
       message: 'Reel uploaded successfully',
       data: {
         reel: {
-          id: 'temp-id', // Will be updated after reel creation
-          title,
-          description,
-          category,
-          isPublic,
-          status: 'processing',
-          viewUrl,
-          createdAt: new Date()
+          id: reel._id,
+          title: reel.title,
+          description: reel.description,
+          category: reel.category,
+          isPublic: reel.isPublic,
+          status: reel.status,
+          viewUrl: reel.viewUrl,
+          createdAt: reel.createdAt
         }
       }
     });
@@ -309,9 +320,12 @@ router.get('/', async (req, res) => {
         break;
     }
 
-    // TODO: Replace with actual Reel model query
-    const reels: any[] = []; // await Reel.find(filter).sort(sortCriteria).skip(skip).limit(parseInt(limit as string));
-    const total = 0; // await Reel.countDocuments(filter);
+    const reels = await Reel.find(filter)
+      .sort(sortCriteria)
+      .skip(skip)
+      .limit(parseInt(limit as string))
+      .populate('userId', 'username avatar ogLevel');
+    const total = await Reel.countDocuments(filter);
 
     // Generate fresh view URLs for each reel
     const reelsWithUrls = await Promise.all(
@@ -368,8 +382,7 @@ router.get('/trending', async (req, res) => {
   try {
     const { limit = 10, timeFrame = '24h' } = req.query;
 
-    // TODO: Replace with actual Reel model query for trending reels
-    const reels: any[] = []; // await Reel.findTrending(parseInt(limit as string), timeFrame as string);
+    const reels = await (Reel as any).findTrending(parseInt(limit as string), timeFrame as string);
 
     // Generate fresh view URLs
     const reelsWithUrls = await Promise.all(
@@ -420,8 +433,8 @@ router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
 
-    // TODO: Replace with actual Reel model query
-    const reel: any = null; // await Reel.findById(id);
+    const reel = await Reel.findById(id)
+      .populate('userId', 'username avatar ogLevel');
     
     if (!reel) {
       return res.status(404).json({
@@ -441,7 +454,7 @@ router.get('/:id', async (req, res) => {
     });
 
     // Increment view count
-    // await Reel.findByIdAndUpdate(id, { $inc: { 'metadata.views': 1 } });
+    await reel.incrementView();
 
     res.json({
       success: true,
@@ -479,9 +492,11 @@ router.get('/user/:userId', async (req, res) => {
 
     const skip = (parseInt(page as string) - 1) * parseInt(limit as string);
 
-    // TODO: Replace with actual Reel model query
-    const reels: any[] = []; // await Reel.find({ userId }).sort({ createdAt: -1 }).skip(skip).limit(parseInt(limit as string));
-    const total = 0; // await Reel.countDocuments({ userId });
+    const reels = await Reel.find({ userId })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit as string));
+    const total = await Reel.countDocuments({ userId });
 
     // Generate fresh view URLs
     const reelsWithUrls = await Promise.all(
@@ -542,33 +557,29 @@ router.post('/:id/like', async (req, res) => {
       });
     }
 
-    // TODO: Replace with actual Reel model logic
-    // const reel = await Reel.findById(id);
-    // if (!reel) {
-    //   return res.status(404).json({
-    //     success: false,
-    //     error: 'Reel not found'
-    //   });
-    // }
+    const reel = await Reel.findById(id);
+    if (!reel) {
+      return res.status(404).json({
+        success: false,
+        error: 'Reel not found'
+      });
+    }
 
-    // const isLiked = reel.likes.includes(userId);
-    // if (isLiked) {
-    //   await Reel.findByIdAndUpdate(id, {
-    //     $pull: { likes: userId },
-    //     $inc: { 'metadata.likes': -1 }
-    //   });
-    // } else {
-    //   await Reel.findByIdAndUpdate(id, {
-    //     $addToSet: { likes: userId },
-    //     $inc: { 'metadata.likes': 1 }
-    //   });
-    // }
+    const isCurrentlyLiked = reel.likes.includes(userId as any);
+    let isLiked: boolean;
+    
+    if (isCurrentlyLiked) {
+      isLiked = !(await reel.removeLike(userId));
+    } else {
+      isLiked = await reel.addLike(userId);
+    }
 
     res.json({
       success: true,
       message: 'Like status updated',
       data: {
-        isLiked: false // Will be updated based on actual logic
+        isLiked,
+        totalLikes: reel.metadata.likes
       }
     });
 
@@ -594,8 +605,15 @@ router.post('/:id/share', async (req, res) => {
       });
     }
 
-    // TODO: Replace with actual Reel model logic
-    // await Reel.findByIdAndUpdate(id, { $inc: { 'metadata.shares': 1 } });
+    const reel = await Reel.findById(id);
+    if (!reel) {
+      return res.status(404).json({
+        success: false,
+        error: 'Reel not found'
+      });
+    }
+
+    await Reel.findByIdAndUpdate(id, { $inc: { 'metadata.shares': 1 } });
 
     res.json({
       success: true,

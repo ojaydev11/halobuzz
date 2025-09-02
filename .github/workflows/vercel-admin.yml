@@ -6,12 +6,36 @@ on:
     paths:
       - "admin/**"
       - ".github/workflows/vercel-admin.yml"
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: admin
     steps:
       - uses: actions/checkout@v4
-      - uses: amondnet/vercel-action@v25
+      
+      - name: Setup Node 20 + pnpm cache
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: admin/pnpm-lock.yaml
+          
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9
+          
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        
+      - name: Build admin
+        run: pnpm run build
+        
+      - name: Deploy to Vercel
+        uses: amondnet/vercel-action@v25
         with:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-args: "--prod"
@@ -20,3 +44,6 @@ jobs:
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          
+      - name: Output Vercel URL
+        run: echo "🎨 Admin deployed to Vercel (check Vercel dashboard for URL)"

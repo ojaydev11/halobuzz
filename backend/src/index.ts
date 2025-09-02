@@ -13,7 +13,7 @@ import fileType from 'file-type';
 // Import configurations
 import { connectDatabase } from '@/config/database';
 import { connectRedis } from '@/config/redis';
-import { setupSocketIO } from '@/config/socket';
+import { setupSocketIO, setupRedisAdapter } from '@/config/socket';
 import { setupLogger } from '@/config/logger';
 import { validateSecrets } from '@/config/secrets';
 import { featureFlags } from '@/config/flags';
@@ -22,6 +22,13 @@ import { featureFlags } from '@/config/flags';
 import { errorHandler } from '@/middleware/errorHandler';
 import { requestLogger } from '@/middleware/requestLogger';
 import { authMiddleware } from '@/middleware/auth';
+import { metricsMiddleware } from '@/middleware/metrics';
+import { 
+  securityMonitoringMiddleware, 
+  authenticationMonitoringMiddleware, 
+  dataAccessMonitoringMiddleware, 
+  rateLimitMonitoringMiddleware 
+} from '@/middleware/securityMonitoring';
 import {
   requestId,
   trustProxy,
@@ -48,6 +55,27 @@ import reelsRoutes from '@/routes/reels';
 import gamesRoutes from '@/routes/games';
 import adminRoutes from '@/routes/admin';
 import configRoutes from '@/routes/config';
+import kycRoutes from '@/routes/kyc';
+import monitoringRoutes from '@/routes/monitoring';
+import securityRoutes from '@/routes/security';
+
+// New creator economy routes
+import nftRoutes from '@/routes/nft';
+import subscriptionRoutes from '@/routes/subscription';
+import creatorAnalyticsRoutes from '@/routes/creator-analytics';
+import commerceRoutes from '@/routes/commerce';
+
+// Phase 4: Interactive Features routes
+import collaborationRoutes from '@/routes/collaboration';
+import storytellingRoutes from '@/routes/storytelling';
+
+// Phase 5: Web3 & Blockchain Integration routes
+import blockchainRoutes from '@/routes/blockchain';
+import daoRoutes from '@/routes/dao';
+
+// Phase 6: Advanced Discovery & UX routes
+import culturalRoutes from '@/routes/cultural';
+import wellbeingRoutes from '@/routes/wellbeing';
 
 // Load environment variables
 dotenv.config();
@@ -94,11 +122,7 @@ app.use(helmet({
     includeSubDomains: true,
     preload: true
   },
-  referrerPolicy: { policy: "no-referrer" },
-  expectCt: {
-    maxAge: 86400,
-    enforce: true
-  }
+  referrerPolicy: { policy: "no-referrer" }
 }));
 
 // Enhanced CORS configuration
@@ -106,9 +130,9 @@ app.use(cors({
   origin: (origin, callback) => {
     const allowedOrigins = process.env.CORS_ORIGIN?.split(',') || ['http://localhost:3000'];
     if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
+      return callback(null, true);
     } else {
-      callback(new Error('Not allowed by CORS'));
+      return callback(new Error('Not allowed by CORS'));
     }
   },
   credentials: true,
@@ -132,13 +156,22 @@ app.use(sanitizeInput);
 // Device fingerprinting
 app.use(deviceFingerprint);
 
+// Metrics collection middleware
+app.use(metricsMiddleware);
+
+// Security monitoring middleware
+app.use(securityMonitoringMiddleware);
+app.use(authenticationMonitoringMiddleware);
+app.use(dataAccessMonitoringMiddleware);
+app.use(rateLimitMonitoringMiddleware);
+
 // Body parsing middleware with stricter limits
 app.use(express.json({ 
   limit: '512kb',
   verify: (req, res, buf) => {
     // Store raw body for webhook signature verification
-    if (req.path.includes('/webhooks/')) {
-      req.rawBody = buf;
+    if ((req as any).path && (req as any).path.includes('/webhooks/')) {
+      (req as any).rawBody = buf;
     }
   }
 }));
@@ -181,11 +214,29 @@ app.use(`/api/${process.env.API_VERSION || 'v1'}/chat`, authMiddleware, socialLi
 app.use(`/api/${process.env.API_VERSION || 'v1'}/reels`, authMiddleware, reelsRoutes);
 app.use(`/api/${process.env.API_VERSION || 'v1'}/games`, authMiddleware, gamesRoutes);
 app.use(`/api/${process.env.API_VERSION || 'v1'}/config`, authMiddleware, configRoutes);
+app.use(`/api/${process.env.API_VERSION || 'v1'}/kyc`, authMiddleware, kycRoutes);
 import { adminOnly } from '@/middleware/admin';
 app.use(`/api/${process.env.API_VERSION || 'v1'}/admin`, authMiddleware, adminOnly, adminRoutes);
+app.use(`/api/${process.env.API_VERSION || 'v1'}/monitoring`, monitoringRoutes);
+app.use(`/api/${process.env.API_VERSION || 'v1'}/security`, securityRoutes);
 
-// Setup Socket.IO
-setupSocketIO(io);
+// New creator economy routes
+app.use(`/api/${process.env.API_VERSION || 'v1'}/nft`, nftRoutes);
+app.use(`/api/${process.env.API_VERSION || 'v1'}/subscription`, subscriptionRoutes);
+app.use(`/api/${process.env.API_VERSION || 'v1'}/analytics`, creatorAnalyticsRoutes);
+app.use(`/api/${process.env.API_VERSION || 'v1'}/commerce`, commerceRoutes);
+
+// Phase 4: Interactive Features routes
+app.use(`/api/${process.env.API_VERSION || 'v1'}/collaboration`, collaborationRoutes);
+app.use(`/api/${process.env.API_VERSION || 'v1'}/storytelling`, storytellingRoutes);
+
+// Phase 5: Web3 & Blockchain Integration routes
+app.use(`/api/${process.env.API_VERSION || 'v1'}/blockchain`, blockchainRoutes);
+app.use(`/api/${process.env.API_VERSION || 'v1'}/dao`, daoRoutes);
+
+// Phase 6: Advanced Discovery & UX routes
+app.use(`/api/${process.env.API_VERSION || 'v1'}/cultural`, culturalRoutes);
+app.use(`/api/${process.env.API_VERSION || 'v1'}/wellbeing`, wellbeingRoutes);
 
 // Start cron scheduler
 import { cronScheduler } from './cron';
@@ -235,6 +286,11 @@ const startServer = async () => {
     await featureFlags.initializeFlags();
     logger.info('Feature flags initialized successfully');
 
+    // Setup Socket.IO with Redis adapter for multi-instance scaling
+    setupSocketIO(io);
+    await setupRedisAdapter(io);
+    logger.info('Socket.IO configured with Redis adapter');
+
     // Start server
     server.listen(PORT, () => {
       logger.info(`🚀 HaloBuzz Backend Server running on port ${PORT}`);
@@ -248,5 +304,8 @@ const startServer = async () => {
     process.exit(1);
   }
 };
+
+// Export app for testing
+export { app };
 
 startServer();

@@ -63,7 +63,7 @@ export class NotificationService {
 
       // Store in cache for real-time access
       const cacheKey = `notifications:${userId}`;
-      const existingNotifications = await getCache(cacheKey) || [];
+      const existingNotifications = (await getCache(cacheKey) || []) as any[];
       
       existingNotifications.unshift(notificationData);
       
@@ -88,7 +88,7 @@ export class NotificationService {
   static async getUserNotifications(userId: string, limit: number = 20): Promise<any[]> {
     try {
       const cacheKey = `notifications:${userId}`;
-      const notifications = await getCache(cacheKey) || [];
+      const notifications = (await getCache(cacheKey) || []) as any[];
       
       return notifications.slice(0, limit);
     } catch (error) {
@@ -101,9 +101,9 @@ export class NotificationService {
   static async markNotificationAsRead(userId: string, notificationId: string): Promise<boolean> {
     try {
       const cacheKey = `notifications:${userId}`;
-      const notifications = await getCache(cacheKey) || [];
+      const notifications = (await getCache(cacheKey) || []) as any[];
       
-      const notificationIndex = notifications.findIndex(n => n.id === notificationId);
+      const notificationIndex = notifications.findIndex((n: any) => n.id === notificationId);
       if (notificationIndex > -1) {
         notifications[notificationIndex].read = true;
         await setCache(cacheKey, notifications, 3600);
@@ -121,9 +121,9 @@ export class NotificationService {
   static async markAllNotificationsAsRead(userId: string): Promise<void> {
     try {
       const cacheKey = `notifications:${userId}`;
-      const notifications = await getCache(cacheKey) || [];
+      const notifications = (await getCache(cacheKey) || []) as any[];
       
-      notifications.forEach(notification => {
+      notifications.forEach((notification: any) => {
         notification.read = true;
       });
       
@@ -222,9 +222,9 @@ export class NotificationService {
   static async getUnreadNotificationCount(userId: string): Promise<number> {
     try {
       const cacheKey = `notifications:${userId}`;
-      const notifications = await getCache(cacheKey) || [];
+      const notifications = (await getCache(cacheKey) || []) as any[];
       
-      return notifications.filter(n => !n.read).length;
+      return notifications.filter((n: any) => !n.read).length;
     } catch (error) {
       logger.error('Error getting unread notification count:', error);
       return 0;

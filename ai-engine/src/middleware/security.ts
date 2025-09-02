@@ -187,7 +187,8 @@ export const internalIPAllowlist = (req: Request, res: Response, next: NextFunct
   if (!clientIP || !allowedIPs.some(ip => {
     if (ip.includes('/')) {
       // CIDR notation check (simplified)
-      return clientIP.startsWith(ip.split('/')[0].slice(0, -1));
+      const ipPrefix = ip.split('/')[0];
+      return ipPrefix ? clientIP?.startsWith(ipPrefix.slice(0, -1)) || false : false;
     }
     return ip === clientIP;
   })) {
@@ -204,7 +205,7 @@ export const internalIPAllowlist = (req: Request, res: Response, next: NextFunct
     });
   }
 
-  next();
+  return next();
 };
 
 // Rate limiter for internal API endpoints

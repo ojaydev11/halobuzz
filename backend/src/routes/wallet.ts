@@ -3,6 +3,8 @@ import crypto from 'crypto';
 import { body, validationResult } from 'express-validator';
 import { paymentService } from '../services/PaymentService';
 import { PricingService } from '../services/PricingService';
+import { paymentVelocityService } from '../services/PaymentVelocityService';
+import { fraudDetectionService } from '../services/FraudDetectionService';
 import { User } from '../models/User';
 import { Transaction } from '../models/Transaction';
 import { logger } from '../config/logger';
@@ -103,6 +105,59 @@ router.post('/recharge', [
       }
     }
 
+    // Check if user is whitelisted for fraud detection
+    const isWhitelisted = await fraudDetectionService.isUserWhitelisted(userId);
+    
+    if (!isWhitelisted) {
+      // Check velocity limits
+      const velocityCheck = await paymentVelocityService.checkVelocityLimits(userId, amount, paymentMethod);
+      if (!velocityCheck.allowed) {
+        return res.status(429).json({
+          success: false,
+          error: velocityCheck.reason,
+          retryAfter: velocityCheck.retryAfter
+        });
+      }
+
+      // Check fraud detection
+      const fraudCheck = await fraudDetectionService.checkPaymentFraud(
+        userId,
+        amount,
+        paymentMethod,
+        {
+          ip: req.ip,
+          deviceId: req.headers['x-device-id'],
+          userAgent: req.headers['user-agent']
+        }
+      );
+
+      if (fraudCheck.shouldBlock) {
+        logger.warn('Payment blocked due to fraud detection', {
+          userId,
+          amount,
+          paymentMethod,
+          fraudScore: fraudCheck.score,
+          factors: fraudCheck.factors
+        });
+
+        return res.status(403).json({
+          success: false,
+          error: 'Payment blocked due to security concerns. Please contact support.',
+          fraudScore: fraudCheck.score
+        });
+      }
+
+      if (fraudCheck.shouldReview) {
+        logger.warn('Payment flagged for review', {
+          userId,
+          amount,
+          paymentMethod,
+          fraudScore: fraudCheck.score,
+          factors: fraudCheck.factors
+        });
+      }
+    }
+
     // Create transaction record
     const transaction = await paymentService.createTransaction(
       userId,
@@ -137,11 +192,17 @@ router.post('/recharge', [
     }
 
     if (!paymentResult.success) {
+      // Record failed payment attempt
+      await paymentVelocityService.recordPaymentAttempt(userId, amount, paymentMethod, false);
+      
       return res.status(400).json({
         success: false,
         error: paymentResult.error
       });
     }
+
+    // Record successful payment attempt
+    await paymentVelocityService.recordPaymentAttempt(userId, amount, paymentMethod, true);
 
     res.json({
       success: true,

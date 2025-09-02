@@ -4,9 +4,10 @@ import { Game } from '../models/Game';
 import { User } from '../models/User';
 import { Transaction } from '../models/Transaction';
 import { reputationService } from '../services/ReputationService';
+import { gamingControlsService } from '../services/GamingControlsService';
 import { logger } from '../config/logger';
 
-const router = express.Router();
+const router: express.Router = express.Router();
 
 // Get games list
 router.get('/', async (req, res) => {
@@ -211,6 +212,22 @@ router.post('/:id/play', [
       });
     }
 
+    // Check gaming controls
+    const totalBetAmount = players.reduce((sum, player) => sum + player.betAmount, 0);
+    const gamingCheck = await gamingControlsService.canPlayGame(userId, id, totalBetAmount);
+    if (!gamingCheck.allowed) {
+      return res.status(400).json({
+        success: false,
+        error: gamingCheck.reason,
+        limits: gamingCheck.limits
+      });
+    }
+
+    // Start gaming session if not already active
+    if (!gamingControlsService.getActiveSessions().find(s => s.userId === userId)) {
+      gamingControlsService.startSession(userId);
+    }
+
     // Validate player count
     if (players.length < game.minPlayers || players.length > game.maxPlayers) {
       return res.status(400).json({
@@ -300,6 +317,9 @@ router.post('/:id/play', [
     game.metadata.totalWinners += winners.length;
     game.metadata.totalPrizePool += totalWinnings;
     await game.save();
+
+    // Update gaming session
+    gamingControlsService.updateSession(userId, totalBetAmount);
 
     res.json({
       success: true,

@@ -7,6 +7,7 @@ export interface AIModelProvider {
   ageEstimate(faceFrame: Buffer): Promise<AgeEstimateResult>;
   profanityCheck(audio: Buffer): Promise<ProfanityResult>;
   textAnalysis(text: string): Promise<{ sentiment: number; toxicity: number }>;
+  generateText(prompt: string): Promise<string>;
 }
 
 export class LocalAIModelProvider implements AIModelProvider {
@@ -74,6 +75,21 @@ export class LocalAIModelProvider implements AIModelProvider {
       sentiment: Math.random() * 2 - 1, // -1 to 1
       toxicity: Math.random()
     };
+  }
+
+  async generateText(prompt: string): Promise<string> {
+    logger.info('Using local text generation model');
+    
+    // Simulate local model text generation
+    const responses = [
+      'This is a generated response based on your prompt.',
+      'Here is some AI-generated content for you.',
+      'The AI model has processed your request and generated this response.',
+      'Based on the input, here is the generated text.',
+      'This response was created by the local AI model.'
+    ];
+    
+    return responses[Math.floor(Math.random() * responses.length)];
   }
 }
 
@@ -148,6 +164,21 @@ export class OpenAIModelProvider implements AIModelProvider {
       toxicity: Math.random()
     };
   }
+
+  async generateText(prompt: string): Promise<string> {
+    logger.info('Using OpenAI text generation');
+    
+    // Placeholder for OpenAI API integration
+    const responses = [
+      'This is a generated response from OpenAI based on your prompt.',
+      'Here is some AI-generated content from OpenAI.',
+      'The OpenAI model has processed your request and generated this response.',
+      'Based on the input, here is the generated text from OpenAI.',
+      'This response was created by the OpenAI model.'
+    ];
+    
+    return responses[Math.floor(Math.random() * responses.length)];
+  }
 }
 
 export class AIModelManager {
@@ -221,6 +252,16 @@ export class AIModelManager {
       return await provider.textAnalysis(text);
     } catch (error) {
       logger.error(`Text analysis failed with provider ${provider.name}:`, error);
+      throw error;
+    }
+  }
+
+  async generateText(prompt: string, providerName?: string): Promise<string> {
+    const provider = this.getProvider(providerName);
+    try {
+      return await provider.generateText(prompt);
+    } catch (error) {
+      logger.error(`Text generation failed with provider ${provider.name}:`, error);
       throw error;
     }
   }

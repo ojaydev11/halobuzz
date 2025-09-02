@@ -17,13 +17,13 @@ export class LiveStreamService {
       }
 
       // Add viewer to stream
-      if (!stream.viewers.includes(userId)) {
-        stream.viewers.push(userId);
-        stream.metrics.viewers = stream.viewers.length;
+      if (stream.currentViewers < stream.maxViewers) {
+        stream.currentViewers += 1;
+        stream.metrics.viewerCount = stream.currentViewers;
         
         // Update peak viewers
-        if (stream.metrics.viewers > stream.metrics.peakViewers) {
-          stream.metrics.peakViewers = stream.metrics.viewers;
+        if (stream.currentViewers > stream.peakViewers) {
+          stream.peakViewers = stream.currentViewers;
         }
         
         await stream.save();
@@ -46,10 +46,9 @@ export class LiveStreamService {
       }
 
       // Remove viewer from stream
-      const viewerIndex = stream.viewers.indexOf(userId);
-      if (viewerIndex > -1) {
-        stream.viewers.splice(viewerIndex, 1);
-        stream.metrics.viewers = stream.viewers.length;
+      if (stream.currentViewers > 0) {
+        stream.currentViewers -= 1;
+        stream.metrics.viewerCount = stream.currentViewers;
         await stream.save();
         
         // Update cache
@@ -82,12 +81,12 @@ export class LiveStreamService {
         id: stream._id,
         title: stream.title,
         host: stream.hostId,
-        viewers: stream.viewers,
+        viewers: stream.currentViewers,
         metrics: stream.metrics,
         status: stream.status,
         isAnonymous: stream.isAnonymous,
         country: stream.country,
-        agoraChannel: stream.agora.channel
+        agoraChannel: stream.agoraChannel
       };
 
       // Cache for 5 minutes
@@ -112,7 +111,7 @@ export class LiveStreamService {
 
       // Get gift details
       const gift = await Gift.findById(giftId);
-      if (!gift || !gift.active) {
+      if (!gift || !gift.isActive) {
         return { success: false, error: 'Gift not available' };
       }
 
@@ -125,7 +124,7 @@ export class LiveStreamService {
       const totalCost = gift.priceCoins * quantity;
 
       // Check if sender has enough coins
-      if (sender.coins.balance < totalCost) {
+      if ((sender.coins as any).balance < totalCost) {
         return { success: false, error: 'Insufficient coins' };
       }
 
@@ -141,14 +140,14 @@ export class LiveStreamService {
       }
 
       // Deduct coins from sender
-      sender.coins.balance -= totalCost;
-      sender.coins.totalSpent += totalCost;
+      (sender.coins as any).balance -= totalCost;
+      (sender.coins as any).totalSpent += totalCost;
       await sender.save();
 
       // Add coins to host (70% of gift value)
       const hostEarnings = Math.floor(totalCost * 0.7);
-      host.coins.balance += hostEarnings;
-      host.coins.totalEarned += hostEarnings;
+      (host.coins as any).balance += hostEarnings;
+      (host.coins as any).totalEarned += hostEarnings;
       await host.save();
 
       // Update stream metrics
@@ -184,7 +183,7 @@ export class LiveStreamService {
       return {
         success: true,
         giftName: gift.name,
-        animation: gift.animation.lottieUrl
+        animation: (gift as any).animation?.lottieUrl || ''
       };
     } catch (error) {
       logger.error('Error processing gift:', error);
@@ -212,7 +211,7 @@ export class LiveStreamService {
       }
 
       // Check if user is the throne holder for this stream
-      return stream.throne?.holderUserId?.toString() === userId;
+      return (stream as any).throne?.holderUserId?.toString() === userId;
     } catch (error) {
       logger.error('Error checking throne access:', error);
       return false;
@@ -235,7 +234,7 @@ export class LiveStreamService {
       }
 
       // Update stream engagement score
-      stream.rankingInputs.aiEngagementScore += boostAmount;
+      (stream as any).rankingInputs.aiEngagementScore += boostAmount;
       await stream.save();
 
       return { success: true };
@@ -257,8 +256,8 @@ export class LiveStreamService {
       stream.metrics = { ...stream.metrics, ...metrics };
       
       // Update ranking inputs
-      stream.rankingInputs = {
-        viewerCount: stream.metrics.viewers,
+      (stream as any).rankingInputs = {
+        viewerCount: stream.metrics.viewerCount,
         giftsAmount: stream.metrics.giftsCoins,
         aiEngagementScore: stream.metrics.engagementScore || 0
       };
@@ -291,7 +290,7 @@ export class LiveStreamService {
       });
 
       for (const stream of activeStreams) {
-        await this.removeViewer(stream._id.toString(), userId);
+        await this.removeViewer((stream._id as any).toString(), userId);
       }
 
       // Update user's last active time

@@ -59,7 +59,7 @@ router.post('/nsfw-scan', validateRequestBody(nsfwScanSchema), async (req, res) 
     const request: ModerationRequest = req.body;
     const result = await moderationService.processModerationRequest(request);
     
-    res.json(result);
+    return res.json(result);
   } catch (error) {
     logger.error('NSFW scan endpoint error:', error);
     res.status(500).json({
@@ -79,7 +79,7 @@ router.post('/age-estimate', validateRequestBody(ageEstimateSchema), async (req,
     const request: ModerationRequest = req.body;
     const result = await moderationService.processModerationRequest(request);
     
-    res.json(result);
+    return res.json(result);
   } catch (error) {
     logger.error('Age estimate endpoint error:', error);
     res.status(500).json({
@@ -99,7 +99,7 @@ router.post('/profanity-check', validateRequestBody(profanityCheckSchema), async
     const request: ModerationRequest = req.body;
     const result = await moderationService.processModerationRequest(request);
     
-    res.json(result);
+    return res.json(result);
   } catch (error) {
     logger.error('Profanity check endpoint error:', error);
     res.status(500).json({
@@ -119,7 +119,7 @@ router.post('/policy-enforce', validateRequestBody(policyEnforceSchema), async (
     const request: ModerationRequest = req.body;
     const result = await moderationService.processModerationRequest(request);
     
-    res.json(result);
+    return res.json(result);
   } catch (error) {
     logger.error('Policy enforce endpoint error:', error);
     res.status(500).json({
@@ -139,7 +139,7 @@ router.post('/process', async (req, res) => {
     const request: ModerationRequest = req.body;
     const result = await moderationService.processModerationRequest(request);
     
-    res.json(result);
+    return res.json(result);
   } catch (error) {
     logger.error('Generic moderation endpoint error:', error);
     res.status(500).json({
@@ -158,7 +158,7 @@ router.get('/thresholds', async (req, res) => {
   try {
     const thresholds = moderationService.getThresholds();
     
-    res.json({
+    return res.json({
       success: true,
       data: thresholds,
       timestamp: Date.now()
@@ -182,7 +182,7 @@ router.put('/thresholds', async (req, res) => {
     const { thresholds } = req.body;
     moderationService.updateThresholds(thresholds);
     
-    res.json({
+    return res.json({
       success: true,
       message: 'Thresholds updated successfully',
       timestamp: Date.now()
@@ -203,7 +203,7 @@ router.put('/thresholds', async (req, res) => {
  */
 router.get('/health', async (req, res) => {
   try {
-    res.json({
+    return res.json({
       success: true,
       data: {
         service: 'moderation',

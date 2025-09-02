@@ -1,5 +1,5 @@
 // Export all services
-export { authService } from './authService';
+export { AuthService } from './authService';
 export { paymentService } from './PaymentService';
 export { reputationService } from './ReputationService';
 export { rankingService } from './RankingService';

@@ -1,4 +1,6 @@
-import { logger } from './logger';
+import { setupLogger } from './logger';
+
+const logger = setupLogger();
 
 interface SecretsConfig {
   JWT_SECRET: string;

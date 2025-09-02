@@ -170,7 +170,7 @@ export class LoadTestSuite {
     for (let i = 0; i < totalRequests; i += concurrentRequests) {
       const batch = Array(concurrentRequests).fill(null).map((_, index) => {
         const hostId = `host-${i + index}`;
-        const country = ['US', 'BR', 'IN', 'MX', 'CA'][Math.floor(Math.random() * 5)];
+        const country = ['US', 'BR', 'IN', 'MX', 'CA'][Math.floor(Math.random() * 5)] || 'US';
         return this.engagementService.cohost_suggester(hostId, country);
       });
       

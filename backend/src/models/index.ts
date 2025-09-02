@@ -1,6 +1,7 @@
 // Export all models
 export { User, IUser } from './User';
 export { LiveStream, ILiveStream } from './LiveStream';
+export { Reel, IReel } from './Reel';
 export { Gift, IGift } from './Gift';
 export { Transaction, ITransaction } from './Transaction';
 export { OGTier, IOGTier } from './OGTier';

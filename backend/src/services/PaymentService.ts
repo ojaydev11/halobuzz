@@ -2,7 +2,7 @@ import axios from 'axios';
 import Stripe from 'stripe';
 import { Transaction } from '../models/Transaction';
 import { User } from '../models/User';
-import { logger } from '../config/logger';
+import logger from '../utils/logger';
 
 export class PaymentService {
   private stripe: Stripe;
@@ -89,8 +89,10 @@ export class PaymentService {
 
     // Update user coins
     await User.findByIdAndUpdate(userId, {
-      $inc: { 'coins.balance': parseInt(coins) },
-      $inc: { 'coins.totalEarned': parseInt(coins) }
+      $inc: { 
+        'coins.balance': parseInt(coins),
+        'coins.totalEarned': parseInt(coins)
+      }
     });
 
     logger.info(`Stripe payment successful for user ${userId}, amount: ${amount}`);
@@ -121,11 +123,11 @@ export class PaymentService {
   async createEsewaPayment(amount: number, userId: string, coins: number) {
     try {
       const paymentData = {
-        amt: amount,
-        pdc: 0,
-        psc: 0,
-        txAmt: 0,
-        tAmt: amount,
+        amt: amount.toString(),
+        pdc: '0',
+        psc: '0',
+        txAmt: '0',
+        tAmt: amount.toString(),
         pid: `HB_${Date.now()}_${userId}`,
         scd: this.esewaConfig.merchantId,
         su: `${process.env.BASE_URL}/api/v1/payments/esewa/success`,
@@ -175,8 +177,10 @@ export class PaymentService {
 
     // Update user coins
     await User.findByIdAndUpdate(transaction.userId, {
-      $inc: { 'coins.balance': transaction.amount },
-      $inc: { 'coins.totalEarned': transaction.amount }
+      $inc: { 
+        'coins.balance': transaction.amount,
+        'coins.totalEarned': transaction.amount
+      }
     });
 
     logger.info(`eSewa payment successful for user ${transaction.userId}`);
@@ -254,8 +258,10 @@ export class PaymentService {
 
       // Update user coins
       await User.findByIdAndUpdate(transaction.userId, {
-        $inc: { 'coins.balance': transaction.amount },
-        $inc: { 'coins.totalEarned': transaction.amount }
+        $inc: { 
+          'coins.balance': transaction.amount,
+          'coins.totalEarned': transaction.amount
+        }
       });
 
       logger.info(`Khalti payment successful for user ${transaction.userId}`);

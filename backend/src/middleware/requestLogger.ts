@@ -21,7 +21,7 @@ export const requestLogger = (
 
   // Override res.end to log response
   const originalEnd = res.end;
-  res.end = function(chunk?: any, encoding?: any) {
+  res.end = function(chunk?: any, encoding?: any): any {
     const duration = Date.now() - start;
     
     // Log response

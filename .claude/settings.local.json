@@ -8,7 +8,14 @@
       "Bash(npm install:*)",
       "Bash(grep:*)",
       "Bash(git rm:*)",
-      "Bash(git add -A)"
+      "Bash(git add -A)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nchore(security): Complete comprehensive security audit and hardening\n\n🔒 CRITICAL SECURITY FIXES:\n- Remove secrets from repository and update gitignore\n- Implement comprehensive security middleware (HSTS, CSP, XFO, rate limiting)\n- Add payment fraud detection with velocity controls and risk scoring  \n- Secure AI engine with JWT + HMAC authentication and IP allowlisting\n- Deploy feature flags with emergency kill switches\n\n💰 PAYMENT SECURITY:\n- Add 3D Secure support for Stripe payments\n- Implement webhook HMAC verification and idempotency\n- Deploy comprehensive fraud detection with user risk profiling\n- Add velocity limits (hourly recharges, daily spend/loss limits)\n\n🎰 RESPONSIBLE GAMING:\n- Implement spending limits and session time controls\n- Add self-exclusion and admin exclusion capabilities  \n- Deploy reality checks and cooling-off periods\n- Add whale detection and high-spender protections\n\n👶 COMPLIANCE CONTROLS:\n- Implement age verification with document validation\n- Add KYC requirements for live streaming hosts\n- Deploy regional compliance (Nepal ETA 2063, GDPR, CCPA)\n- Add parental consent handling for minors\n\n🤖 AI ENGINE SECURITY:\n- Secure internal endpoints with service JWT validation\n- Add HMAC signature verification for request integrity\n- Implement IP allowlisting for backend service communication\n- Deploy comprehensive audit logging for AI decisions\n\n🔐 AUTHENTICATION & AUTHORIZATION:\n- Enhance JWT with device binding and optional IP pinning\n- Add progressive rate limiting and account lockout\n- Implement admin 2FA with TOTP support\n- Deploy session management with Redis\n\n📊 MONITORING & COMPLIANCE:\n- Add request ID correlation across services\n- Implement comprehensive audit logging\n- Deploy security event monitoring and alerting\n- Add compliance action tracking and reporting\n\n🏗️ INFRASTRUCTURE:\n- Update Dependabot configuration for supply chain security\n- Add CodeQL workflow for automated security analysis  \n- Implement preflight security checks in CI/CD\n- Create comprehensive security documentation\n\n📋 DOCUMENTATION:\n- Complete security hardening checklist\n- Create incident response procedures (SECURITY.md)\n- Document all security controls and compliance measures\n- Add next moves roadmap for continued improvements\n\n✅ AUDIT RESULTS:\n- All critical vulnerabilities resolved\n- Payment security hardened with PCI DSS compliance path\n- Age verification and regional compliance implemented\n- Comprehensive fraud detection deployed\n- Emergency controls and kill switches operational\n\n🚀 Generated with [Claude Code](https://claude.ai/code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(npm run typecheck:*)",
+      "Bash(pnpm add:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm run dev:*)",
+      "Bash(npm ls:*)",
+      "Bash(npm start)"
     ],
     "deny": [],
     "ask": []
