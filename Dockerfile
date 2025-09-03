@@ -17,6 +17,9 @@ RUN pnpm install --frozen-lockfile
 COPY . .
 RUN echo "Current directory: $(pwd)" && ls -la
 RUN echo "Running build command..." && pnpm build
+RUN echo "After build command, checking backend directory:" && ls -la backend/
+RUN echo "Checking if backend/dist exists:" && ls -la backend/dist/ || echo "backend/dist does not exist"
+RUN echo "Checking if backend/package.json exists:" && ls -la backend/package.json || echo "backend/package.json does not exist"
 
 # --- runtime stage ---
 FROM node:20-slim
