@@ -45,5 +45,9 @@ COPY --from=build /usr/src/app/backend/package.json ./
 # Install ts-node for runtime
 RUN npm install -g ts-node
 
+# Debug: Check what's in the dist directory
+RUN echo "Checking dist directory contents:" && ls -la dist/ || echo "dist directory does not exist"
+RUN echo "Checking if index.ts exists:" && ls -la dist/index.ts || echo "index.ts does not exist"
+
 EXPOSE 5020
 CMD ["npx", "ts-node", "dist/index.ts"]
