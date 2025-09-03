@@ -9,6 +9,8 @@ RUN corepack enable && corepack prepare pnpm@9.1.0 --activate
 
 # Install deps
 COPY package.json pnpm-lock.yaml ./
+# Force cache invalidation
+RUN echo "Cache bust: $(date)" > /tmp/cache-bust
 RUN pnpm install --frozen-lockfile
 
 # Build
