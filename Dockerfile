@@ -25,7 +25,7 @@ ENV NODE_ENV=production \
 # Copy built app
 COPY --from=build /usr/src/app/node_modules ./node_modules
 COPY --from=build /usr/src/app/backend/dist ./dist
-COPY --from=build /usr/src/app/backend/package.json ./backend/
+COPY --from=build /usr/src/app/backend/package.json ./
 
 # Install ts-node for runtime
 RUN npm install -g ts-node
