@@ -1,57 +1,30 @@
-FROM node:20-alpine AS builder
+# syntax=docker/dockerfile:1.7
+FROM node:20-slim AS base
+WORKDIR /usr/src/app
 
-WORKDIR /app
+# Enable pnpm via corepack
+ENV PNPM_HOME=/usr/local/share/pnpm
+ENV PATH=$PNPM_HOME:$PATH
+RUN corepack enable && corepack prepare pnpm@9.1.0 --activate
 
-# Build dependencies for native modules (canvas, sharp, tfjs-node)
-RUN apk add --no-cache \
-  python3 \
-  make \
-  g++ \
-  pkgconfig \
-  cairo-dev \
-  pango-dev \
-  jpeg-dev \
-  giflib-dev \
-  librsvg-dev \
-  vips-dev \
-  libc6-compat
+FROM base AS deps
+COPY package.json pnpm-lock.yaml ./
+# use a cached pnpm store for faster installs
+RUN --mount=type=cache,id=pnpm-store,target=/root/.pnpm-store \
+    pnpm install --frozen-lockfile
 
-COPY package.json package-lock.json* ./
+FROM base AS build
+COPY --from=deps /usr/src/app/node_modules ./node_modules
 COPY tsconfig.json ./
 COPY src ./src
+RUN pnpm run build
 
-RUN npm install && npm run build
-
-FROM node:20-alpine AS runner
-
-WORKDIR /app
-
-# Runtime libraries for native modules + curl for healthcheck
-RUN apk add --no-cache \
-  cairo \
-  pango \
-  jpeg \
-  giflib \
-  librsvg \
-  vips \
-  libc6-compat \
-  curl
-
-ENV NODE_ENV=production \
-    PORT=5020
-
-COPY package.json package-lock.json* ./
-COPY --from=builder /app/node_modules ./node_modules
-RUN npm prune --omit=dev --no-audit --no-fund
-
-COPY --from=builder /app/dist ./dist
-
+FROM node:20-slim AS runner
+WORKDIR /usr/src/app
+ENV NODE_ENV=production
+ENV PORT=5020
+COPY --from=build /usr/src/app/dist ./dist
+COPY --from=deps /usr/src/app/node_modules ./node_modules
+COPY package.json ./
 EXPOSE 5020
-
-# Dummy healthcheck hitting root path; succeeds if server accepts connections
-HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
-  CMD curl -sS -o /dev/null http://localhost:5020/ || exit 1
-
-CMD ["node", "dist/index.js"]
-
-
+CMD ["node","dist/index.js"]
