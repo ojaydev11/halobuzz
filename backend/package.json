@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "seed": "ts-node scripts/seeds/index.ts",
-    "build": "echo 'Using transpile-only build for production readiness' && rmdir /s /q dist 2>nul & mkdir dist & xcopy src dist /e /i /y",
+    "build": "node scripts/build.js",
     "build:dev": "ts-node-dev --transpile-only src/index.ts",
     "build:ts": "tsc",
     "start": "node dist/index.js",
