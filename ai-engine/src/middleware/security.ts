@@ -15,6 +15,11 @@ const getClientIp = (req: Request): string | undefined => {
 // Service JWT validation middleware
 export function validateServiceJWT(req: Request, res: Response, next: NextFunction) {
   try {
+    // Skip auth for health check endpoints
+    if (req.path === '/healthz' || req.path === '/health' || req.path === '/') {
+      return next();
+    }
+    
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       logger.warn('Missing or invalid authorization header', {
@@ -175,6 +180,11 @@ export const validateHMACSignature: RequestHandler = (req: Request, res: Respons
 
 // IP allowlist middleware for internal endpoints
 export const internalIPAllowlist: RequestHandler = (req: Request, res: Response, next: NextFunction) => {
+  // Skip IP check for health check endpoints
+  if (req.path === '/healthz' || req.path === '/health' || req.path === '/') {
+    return next();
+  }
+  
   const clientIP = getClientIp(req);
   
   // Get allowed IPs from environment

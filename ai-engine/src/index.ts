@@ -57,7 +57,7 @@ const io = new Server(server, {
   }
 });
 
-const PORT = process.env.PORT || 4000;
+const PORT = Number(process.env.PORT ?? 5020);
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
 // Initialize services
@@ -102,6 +102,11 @@ app.use(sanitizeAIInput);
 // Body parsing with strict limits
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+
+// Simple public health endpoint for probes
+app.get('/healthz', (_req, res) => {
+  res.status(200).json({ status: 'ok' });
+});
 
 // Public health check endpoint (no auth required)
 app.get('/', (req, res) => {
@@ -199,7 +204,7 @@ process.on('SIGINT', () => {
 });
 
 // Start server
-server.listen(PORT, () => {
+server.listen(PORT, '0.0.0.0', () => {
   logger.info('🤖 HaloBuzz AI Engine started', {
     port: PORT,
     environment: NODE_ENV,
@@ -210,6 +215,7 @@ server.listen(PORT, () => {
   });
   
   logger.info('Available endpoints:', {
+    probe: '/healthz (probe)',
     public: '/ (health)',
     health: '/health',
     moderation: '/internal/moderation/* (PROTECTED)',
