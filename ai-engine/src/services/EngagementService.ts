@@ -7,7 +7,7 @@ import {
   ServiceResponse,
   EngagementSpec,
   LanguageCode
-} from '../models/types';
+} from '../models';
 import logger from '../utils/logger';
 import { aiModelManager } from '../utils/ai-models';
 
