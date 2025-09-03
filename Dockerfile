@@ -20,6 +20,8 @@ RUN echo "Checking if backend directory exists:" && ls -la backend/ || echo "bac
 RUN echo "Checking if backend/package.json exists:" && ls -la backend/package.json || echo "backend/package.json does not exist"
 RUN echo "Checking if we're in a monorepo structure:" && find . -name "package.json" -type f
 RUN echo "Checking if backend exists anywhere:" && find . -name "backend" -type d
+RUN echo "Full directory tree:" && find . -type d | head -20
+RUN echo "All files in current directory:" && find . -maxdepth 2 -type f | head -20
 RUN echo "Running build command in backend directory..." && (cd backend && pnpm run build) || echo "Build failed, but continuing..."
 RUN echo "After build command, checking backend directory:" && ls -la backend/ || echo "backend directory does not exist"
 RUN echo "Checking if backend/dist exists:" && ls -la backend/dist/ || echo "backend/dist does not exist"
