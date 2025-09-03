@@ -9,6 +9,7 @@ RUN corepack enable && corepack prepare pnpm@9.1.0 --activate
 
 # Install deps
 COPY package.json pnpm-lock.yaml ./
+COPY backend/package.json backend/pnpm-lock.yaml ./backend/
 RUN pnpm install --frozen-lockfile
 
 # Build
@@ -24,8 +25,12 @@ ENV NODE_ENV=production \
 
 # Copy built app
 COPY --from=build /usr/src/app/node_modules ./node_modules
-COPY --from=build /usr/src/app/dist ./dist
-COPY --from=build /usr/src/app/package.json ./
+COPY --from=build /usr/src/app/backend/node_modules ./backend/node_modules
+COPY --from=build /usr/src/app/backend/dist ./dist
+COPY --from=build /usr/src/app/backend/package.json ./backend/
+
+# Install ts-node for runtime
+RUN npm install -g ts-node
 
 EXPOSE 5020
-CMD ["node","dist/index.js"]
+CMD ["npx", "ts-node", "dist/index.ts"]
