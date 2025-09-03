@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Express } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
@@ -45,7 +45,7 @@ if (!process.env.AI_SERVICE_SECRET) {
   process.exit(1);
 }
 
-const app = express();
+const app: Express = express();
 
 // Trust proxy for Railway
 app.set('trust proxy', 1);

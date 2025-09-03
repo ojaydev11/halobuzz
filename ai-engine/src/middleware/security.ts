@@ -1,12 +1,19 @@
+import type { RequestHandler } from 'express';
 import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
+import jwt, { JwtPayload } from 'jsonwebtoken';
 import crypto from 'crypto';
 import rateLimit from 'express-rate-limit';
 import { v4 as uuidv4 } from 'uuid';
 import logger from '../utils/logger';
 
+// Helper to get client IP safely
+const getClientIp = (req: Request): string | undefined => {
+  const xf = (req.headers['x-forwarded-for'] as string | undefined)?.split(',')[0]?.trim();
+  return xf || req.ip || req.connection?.remoteAddress || undefined;
+};
+
 // Service JWT validation middleware
-export const validateServiceJWT = (req: Request, res: Response, next: NextFunction) => {
+export const validateServiceJWT: RequestHandler = (req: Request, res: Response, next: NextFunction) => {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -33,7 +40,7 @@ export const validateServiceJWT = (req: Request, res: Response, next: NextFuncti
     }
 
     try {
-      const decoded = jwt.verify(token, secret) as any;
+      const decoded = jwt.verify(token, secret) as JwtPayload;
       
       // Verify audience
       if (decoded.aud !== 'ai-engine') {
@@ -62,7 +69,7 @@ export const validateServiceJWT = (req: Request, res: Response, next: NextFuncti
       }
 
       req.serviceAuth = decoded;
-      next();
+      return next();
     } catch (jwtError) {
       logger.warn('JWT validation failed', {
         error: jwtError instanceof Error ? jwtError.message : 'Unknown error',
@@ -84,7 +91,7 @@ export const validateServiceJWT = (req: Request, res: Response, next: NextFuncti
 };
 
 // HMAC signature validation middleware
-export const validateHMACSignature = (req: Request, res: Response, next: NextFunction) => {
+export const validateHMACSignature: RequestHandler = (req: Request, res: Response, next: NextFunction) => {
   try {
     const signature = req.headers['x-signature'] as string;
     const timestamp = req.headers['x-timestamp'] as string;
@@ -155,7 +162,7 @@ export const validateHMACSignature = (req: Request, res: Response, next: NextFun
       });
     }
 
-    next();
+    return next();
   } catch (error) {
     logger.error('HMAC validation error:', error);
     return res.status(500).json({
@@ -166,8 +173,8 @@ export const validateHMACSignature = (req: Request, res: Response, next: NextFun
 };
 
 // IP allowlist middleware for internal endpoints
-export const internalIPAllowlist = (req: Request, res: Response, next: NextFunction) => {
-  const clientIP = req.ip || req.connection.remoteAddress;
+export const internalIPAllowlist: RequestHandler = (req: Request, res: Response, next: NextFunction) => {
+  const clientIP = getClientIp(req);
   
   // Get allowed IPs from environment
   const allowedIPs = process.env.ALLOWED_BACKEND_IPS?.split(',') || [];
@@ -187,7 +194,8 @@ export const internalIPAllowlist = (req: Request, res: Response, next: NextFunct
   if (!clientIP || !allowedIPs.some(ip => {
     if (ip.includes('/')) {
       // CIDR notation check (simplified)
-      return clientIP.startsWith(ip.split('/')[0].slice(0, -1));
+      const ipPart = ip.split('/')[0];
+      return ipPart ? clientIP.startsWith(ipPart.slice(0, -1)) : false;
     }
     return ip === clientIP;
   })) {
@@ -204,7 +212,7 @@ export const internalIPAllowlist = (req: Request, res: Response, next: NextFunct
     });
   }
 
-  next();
+  return next();
 };
 
 // Rate limiter for internal API endpoints
@@ -236,15 +244,15 @@ export const internalAPILimiter = rateLimit({
 });
 
 // Request ID middleware
-export const requestId = (req: Request, res: Response, next: NextFunction) => {
+export const requestId: RequestHandler = (req: Request, res: Response, next: NextFunction) => {
   const requestId = req.headers['x-request-id'] as string || uuidv4();
   req.headers['x-request-id'] = requestId;
   res.setHeader('X-Request-ID', requestId);
-  next();
+  return next();
 };
 
 // Input sanitization for AI service
-export const sanitizeAIInput = (req: Request, res: Response, next: NextFunction) => {
+export const sanitizeAIInput: RequestHandler = (req: Request, res: Response, next: NextFunction) => {
   if (req.body) {
     // Remove potential PII patterns
     const sanitize = (obj: any): any => {
@@ -277,11 +285,11 @@ export const sanitizeAIInput = (req: Request, res: Response, next: NextFunction)
     req.body = sanitize(req.body);
   }
 
-  next();
+  return next();
 };
 
 // Security headers for AI service
-export const aiSecurityHeaders = (req: Request, res: Response, next: NextFunction) => {
+export const aiSecurityHeaders: RequestHandler = (req: Request, res: Response, next: NextFunction) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('X-XSS-Protection', '1; mode=block');
@@ -292,11 +300,11 @@ export const aiSecurityHeaders = (req: Request, res: Response, next: NextFunctio
   // Remove server identification
   res.removeHeader('X-Powered-By');
   
-  next();
+  return next();
 };
 
 // Audit logging for AI decisions
-export const auditAIDecision = (req: Request, res: Response, next: NextFunction) => {
+export const auditAIDecision: RequestHandler = (req: Request, res: Response, next: NextFunction) => {
   const originalSend = res.json;
   
   res.json = function(data: any) {
@@ -317,19 +325,13 @@ export const auditAIDecision = (req: Request, res: Response, next: NextFunction)
     return originalSend.call(this, data);
   };
   
-  next();
+  return next();
 };
 
 declare global {
   namespace Express {
     interface Request {
-      serviceAuth?: {
-        iss: string;
-        aud: string;
-        sub: string;
-        iat: number;
-        exp: number;
-      };
+      serviceAuth?: JwtPayload;
     }
   }
 }

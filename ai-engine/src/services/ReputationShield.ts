@@ -137,7 +137,7 @@ export class ReputationShield {
     try {
       const events = this.eventDatabase.get(userId) || [];
       const sortedEvents = events
-        .sort((a, b) => b.timestamp - a.timestamp)
+        .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
         .slice(0, limit);
 
       logger.info('User events retrieved', { 
@@ -218,7 +218,7 @@ export class ReputationShield {
     const oneDay = 24 * 60 * 60 * 1000;
 
     for (const event of events) {
-      const daysSince = (now - event.timestamp) / oneDay;
+      const daysSince = (now - (event.timestamp || now)) / oneDay;
       const weight = Math.exp(-this.decayRates[event.eventType] * daysSince);
       
       totalScore += event.score * weight;
@@ -237,6 +237,7 @@ export class ReputationShield {
       score: Math.max(0, Math.min(100, finalScore)),
       level,
       totalEvents: events.length,
+      recentEvents: events.filter(e => (now - (e.timestamp || now)) < 7 * 24 * 60 * 60 * 1000).length,
       positiveEvents,
       negativeEvents,
       lastUpdated: now,
@@ -257,7 +258,7 @@ export class ReputationShield {
 
     // Remove events older than 90 days
     const filteredEvents = events.filter(event => {
-      const daysSince = (now - event.timestamp) / oneDay;
+      const daysSince = (now - (event.timestamp || now)) / oneDay;
       return daysSince < 90;
     });
 
@@ -279,6 +280,7 @@ export class ReputationShield {
       score: 50, // Neutral starting score
       level: 'fair',
       totalEvents: 0,
+      recentEvents: 0,
       positiveEvents: 0,
       negativeEvents: 0,
       lastUpdated: Date.now(),
@@ -450,7 +452,7 @@ export class ReputationShield {
     };
 
     for (const score of this.reputationDatabase.values()) {
-      levelDistribution[score.level]++;
+      levelDistribution[score.level as keyof typeof levelDistribution]++;
     }
 
     return {

@@ -1,3 +1,4 @@
+import type { RequestHandler } from 'express';
 import { Request, Response, NextFunction } from 'express';
 import logger from '../utils/logger';
 
@@ -12,7 +13,7 @@ export interface AuthenticatedRequest extends Request {
 /**
  * Middleware to authenticate internal API requests using secret key
  */
-export const authenticateInternalAPI = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+export const authenticateInternalAPI: RequestHandler = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     const authHeader = req.headers.authorization;
     const secretKey = process.env.INTERNAL_API_SECRET_KEY;
@@ -62,7 +63,7 @@ export const authenticateInternalAPI = (req: AuthenticatedRequest, res: Response
       method: req.method
     });
 
-    next();
+    return next();
   } catch (error) {
     logger.error('Authentication middleware error:', error);
     return res.status(500).json({
@@ -75,7 +76,7 @@ export const authenticateInternalAPI = (req: AuthenticatedRequest, res: Response
 /**
  * Middleware to validate request rate limiting
  */
-export const rateLimiter = (req: Request, res: Response, next: NextFunction) => {
+export const rateLimiter: RequestHandler = (req: Request, res: Response, next: NextFunction) => {
   // Simple rate limiting - in production, use Redis or similar
   const clientIP = req.ip;
   const currentTime = Date.now();
@@ -108,13 +109,13 @@ export const rateLimiter = (req: Request, res: Response, next: NextFunction) => 
   clientData.count++;
   rateLimitData.set(clientIP, clientData);
 
-  next();
+  return next();
 };
 
 /**
  * Middleware to validate request body
  */
-export const validateRequestBody = (schema: any) => {
+export const validateRequestBody = (schema: any): RequestHandler => {
   return (req: Request, res: Response, next: NextFunction) => {
     try {
       const { error } = schema.validate(req.body);
@@ -131,7 +132,7 @@ export const validateRequestBody = (schema: any) => {
         });
       }
 
-      next();
+      return next();
     } catch (error) {
       logger.error('Request validation middleware error:', error);
       return res.status(500).json({
@@ -145,7 +146,7 @@ export const validateRequestBody = (schema: any) => {
 /**
  * Middleware to log requests
  */
-export const requestLogger = (req: Request, res: Response, next: NextFunction) => {
+export const requestLogger: RequestHandler = (req: Request, res: Response, next: NextFunction) => {
   const startTime = Date.now();
   
   // Log request
@@ -175,7 +176,7 @@ export const requestLogger = (req: Request, res: Response, next: NextFunction) =
 /**
  * Middleware to handle errors
  */
-export const errorHandler = (error: Error, req: Request, res: Response, next: NextFunction) => {
+export const errorHandler = (error: Error, req: Request, res: Response, next: NextFunction): void => {
   logger.error('Unhandled error:', {
     error: error.message,
     stack: error.stack,
@@ -194,14 +195,14 @@ export const errorHandler = (error: Error, req: Request, res: Response, next: Ne
 /**
  * Middleware to add CORS headers
  */
-export const corsHandler = (req: Request, res: Response, next: NextFunction) => {
+export const corsHandler: RequestHandler = (req: Request, res: Response, next: NextFunction) => {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
   
   if (req.method === 'OPTIONS') {
-    res.sendStatus(200);
+    return res.sendStatus(200);
   } else {
-    next();
+    return next();
   }
 };
