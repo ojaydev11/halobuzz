@@ -10,7 +10,7 @@
     "admin"
   ],
   "scripts": {
-    "build": "npm --prefix backend run build",
+    "build": "pnpm --filter backend run build",
     "lint": "eslint . --ext .ts,.tsx --max-warnings=0",
     "typecheck": "tsc -b backend ai-engine",
     "test": "npm -w backend run test && npm -w ai-engine run test",
