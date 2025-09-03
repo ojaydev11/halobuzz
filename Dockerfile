@@ -16,7 +16,8 @@ RUN pnpm install --frozen-lockfile
 # Build
 COPY . .
 RUN echo "Current directory: $(pwd)" && ls -la
-RUN echo "Running build command in backend directory..." && cd backend && pnpm run build
+RUN echo "Checking if backend directory exists:" && ls -la backend/ || echo "backend directory does not exist"
+RUN echo "Checking if backend/package.json exists:" && ls -la backend/package.json || echo "backend/package.json does not exist"
 RUN echo "After build command, checking backend directory:" && ls -la backend/
 RUN echo "Checking if backend/dist exists:" && ls -la backend/dist/ || echo "backend/dist does not exist"
 
