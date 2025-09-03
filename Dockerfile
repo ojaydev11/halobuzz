@@ -18,9 +18,8 @@ COPY . .
 RUN echo "Current directory: $(pwd)" && ls -la
 RUN echo "Checking if backend directory exists:" && ls -la backend/ || echo "backend directory does not exist"
 RUN echo "Checking if backend/package.json exists:" && ls -la backend/package.json || echo "backend/package.json does not exist"
-RUN echo "Running build command in backend directory..." && cd backend && pnpm run build
-RUN echo "After build command, checking backend directory:" && ls -la backend/
-RUN echo "Checking if backend/dist exists:" && ls -la backend/dist/ || echo "backend/dist does not exist"
+RUN echo "Checking if we're in a monorepo structure:" && find . -name "package.json" -type f
+RUN echo "Checking if backend exists anywhere:" && find . -name "backend" -type d
 
 # --- runtime stage ---
 FROM node:20-slim
