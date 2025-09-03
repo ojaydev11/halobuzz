@@ -1,4 +1,3 @@
-import type { RequestHandler } from 'express';
 import { Request, Response, NextFunction } from 'express';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import crypto from 'crypto';
@@ -13,7 +12,7 @@ const getClientIp = (req: Request): string | undefined => {
 };
 
 // Service JWT validation middleware
-export const validateServiceJWT: RequestHandler = (req: Request, res: Response, next: NextFunction) => {
+export function validateServiceJWT(req: Request, res: Response, next: NextFunction): void {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -22,10 +21,11 @@ export const validateServiceJWT: RequestHandler = (req: Request, res: Response, 
         path: req.path,
         userAgent: req.headers['user-agent']
       });
-      return res.status(401).json({
+      res.status(401).json({
         success: false,
         error: 'Missing or invalid authorization header'
       });
+      return;
     }
 
     const token = authHeader.substring(7);
