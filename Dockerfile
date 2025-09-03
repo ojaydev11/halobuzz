@@ -35,7 +35,7 @@ FROM node:20-slim
 WORKDIR /usr/src/app/backend
 
 ENV NODE_ENV=production \
-    PORT=5020
+    PORT=4000
 
 # Copy built app
 COPY --from=build /usr/src/app/node_modules ./node_modules
@@ -51,5 +51,5 @@ RUN echo "Checking src directory contents:" && ls -la src/ || echo "src director
 RUN echo "Checking if index.ts exists:" && ls -la src/index.ts || echo "index.ts does not exist"
 RUN echo "Checking if tsconfig.json exists:" && ls -la tsconfig.json || echo "tsconfig.json does not exist"
 
-EXPOSE 5020
+EXPOSE 4000
 CMD ["npx", "ts-node", "src/index.ts"]
