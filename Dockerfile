@@ -24,6 +24,7 @@ RUN echo "Running build command in backend directory..." && (cd backend && pnpm 
 RUN echo "After build command, checking backend directory:" && ls -la backend/ || echo "backend directory does not exist"
 RUN echo "Checking if backend/dist exists:" && ls -la backend/dist/ || echo "backend/dist does not exist"
 
+
 # --- runtime stage ---
 FROM node:20-slim
 WORKDIR /usr/src/app
