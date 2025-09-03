@@ -1,45 +1,38 @@
-FROM node:20-alpine AS builder
+# syntax=docker/dockerfile:1
 
-WORKDIR /app
+# --- build stage ---
+FROM node:20-slim AS build
+WORKDIR /usr/src/app
 
-# Install build tools for native modules (sharp, etc.)
-RUN apk add --no-cache python3 make g++
+# Use pnpm via corepack
+RUN corepack enable && corepack prepare pnpm@9.1.0 --activate
 
-# Install pnpm
-RUN npm install -g pnpm
-
+# Copy backend files
 COPY package.json pnpm-lock.yaml ./
-COPY tsconfig.json ./
-COPY src ./src
-COPY scripts ./scripts
+RUN pnpm install --frozen-lockfile
 
-RUN pnpm install --frozen-lockfile && pnpm run build
+# Copy source code
+COPY . .
 
-FROM node:20-alpine AS runner
+# Build
+RUN echo "Current directory: $(pwd)" && ls -la
+RUN echo "Running build command..." && pnpm run build
+RUN echo "After build, checking dist directory:" && ls -la dist/ || echo "dist does not exist"
 
-WORKDIR /app
-
-# Install curl for healthcheck
-RUN apk add --no-cache curl
+# --- runtime stage ---
+FROM node:20-slim
+WORKDIR /usr/src/app
 
 ENV NODE_ENV=production \
-    PORT=5010 \
-    TZ=Australia/Sydney
+    PORT=5020
 
-# Install pnpm in runner stage
-RUN npm install -g pnpm
+# Copy built app
+COPY --from=build /usr/src/app/node_modules ./node_modules
+COPY --from=build /usr/src/app/dist ./dist
+COPY --from=build /usr/src/app/package.json ./
 
-COPY package.json pnpm-lock.yaml ./
-COPY --from=builder /app/node_modules ./node_modules
-RUN pnpm prune --prod
+# Install ts-node for runtime
+RUN npm install -g ts-node
 
-COPY --from=builder /app/dist ./dist
-
-EXPOSE 5010
-
-HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
-  CMD curl -fsS http://localhost:5010/healthz || exit 1
-
+EXPOSE 5020
 CMD ["npx", "ts-node", "dist/index.ts"]
-
-
