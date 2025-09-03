@@ -32,7 +32,7 @@ RUN echo "Checking if backend/dist exists after build:" && ls -la backend/dist/ 
 
 # --- runtime stage ---
 FROM node:20-slim
-WORKDIR /usr/src/app
+WORKDIR /usr/src/app/backend
 
 ENV NODE_ENV=production \
     PORT=5020
@@ -41,6 +41,7 @@ ENV NODE_ENV=production \
 COPY --from=build /usr/src/app/node_modules ./node_modules
 COPY --from=build /usr/src/app/backend/dist ./dist
 COPY --from=build /usr/src/app/backend/package.json ./
+COPY --from=build /usr/src/app/backend/tsconfig.json ./
 
 # Install ts-node for runtime
 RUN npm install -g ts-node
@@ -48,6 +49,7 @@ RUN npm install -g ts-node
 # Debug: Check what's in the dist directory
 RUN echo "Checking dist directory contents:" && ls -la dist/ || echo "dist directory does not exist"
 RUN echo "Checking if index.ts exists:" && ls -la dist/index.ts || echo "index.ts does not exist"
+RUN echo "Checking if tsconfig.json exists:" && ls -la tsconfig.json || echo "tsconfig.json does not exist"
 
 EXPOSE 5020
 CMD ["npx", "ts-node", "dist/index.ts"]
