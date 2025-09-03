@@ -6,7 +6,7 @@ import {
   AIWarningEvent,
   ModerationRequest,
   ServiceResponse
-} from 'models/types';
+} from '../types';
 import { aiModelManager } from '../utils/ai-models';
 import logger from '../utils/logger';
 import { EventEmitter } from 'events';

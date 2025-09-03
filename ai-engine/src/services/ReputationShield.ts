@@ -2,7 +2,7 @@ import {
   ReputationEvent, 
   ReputationScore, 
   ServiceResponse 
-} from 'models/types';
+} from '../types';
 import logger from '../utils/logger';
 
 export class ReputationShield {

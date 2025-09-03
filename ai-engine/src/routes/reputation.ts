@@ -1,7 +1,7 @@
 import { Router, type Request, type Response } from 'express';
 import { ReputationShield } from '../services/ReputationShield';
 import { authenticateInternalAPI, validateRequestBody, rateLimiter } from '../middleware/auth';
-import { ReputationEvent } from 'models/types';
+import { ReputationEvent } from '../types';
 import logger from '../utils/logger';
 import Joi from 'joi';
 

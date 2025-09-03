@@ -17,7 +17,6 @@ FROM base AS build
 COPY --from=deps /usr/src/app/node_modules ./node_modules
 COPY tsconfig.json ./
 COPY src ./src
-RUN ls -la src/models/
 RUN pnpm run build
 
 FROM node:20-slim AS runner
