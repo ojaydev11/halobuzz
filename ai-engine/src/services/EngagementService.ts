@@ -348,13 +348,13 @@ export class EngagementService {
     let compatibility = 0.5; // Base compatibility
 
     // Language compatibility
-    const languageOverlap = candidate.languages.filter(lang => 
+    const languageOverlap = candidate.languages.filter((lang: string) => 
       hostPreferences.languages.includes(lang)
     ).length;
     compatibility += (languageOverlap / Math.max(candidate.languages.length, 1)) * 0.2;
 
     // Specialty compatibility
-    const specialtyOverlap = candidate.specialties.filter(spec => 
+    const specialtyOverlap = candidate.specialties.filter((spec: string) => 
       hostPreferences.specialties.includes(spec)
     ).length;
     compatibility += (specialtyOverlap / Math.max(candidate.specialties.length, 1)) * 0.2;
