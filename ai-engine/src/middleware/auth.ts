@@ -1,4 +1,3 @@
-import type { RequestHandler } from 'express';
 import { Request, Response, NextFunction } from 'express';
 import logger from '../utils/logger';
 
@@ -13,17 +12,18 @@ export interface AuthenticatedRequest extends Request {
 /**
  * Middleware to authenticate internal API requests using secret key
  */
-export const authenticateInternalAPI: RequestHandler = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+export function authenticateInternalAPI(req: AuthenticatedRequest, res: Response, next: NextFunction): void {
   try {
     const authHeader = req.headers.authorization;
     const secretKey = process.env.INTERNAL_API_SECRET_KEY;
 
     if (!secretKey) {
       logger.error('INTERNAL_API_SECRET_KEY not configured');
-      return res.status(500).json({
+      res.status(500).json({
         success: false,
         error: 'Internal server configuration error'
       });
+      return;
     }
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -31,10 +31,11 @@ export const authenticateInternalAPI: RequestHandler = (req: AuthenticatedReques
         ip: req.ip,
         path: req.path
       });
-      return res.status(401).json({
+      res.status(401).json({
         success: false,
         error: 'Missing or invalid authorization header'
       });
+      return;
     }
 
     const token = authHeader.substring(7); // Remove 'Bearer ' prefix
@@ -44,10 +45,11 @@ export const authenticateInternalAPI: RequestHandler = (req: AuthenticatedReques
         ip: req.ip,
         path: req.path
       });
-      return res.status(401).json({
+      res.status(401).json({
         success: false,
         error: 'Invalid authentication token'
       });
+      return;
     }
 
     // Set user context for internal services
@@ -63,20 +65,22 @@ export const authenticateInternalAPI: RequestHandler = (req: AuthenticatedReques
       method: req.method
     });
 
-    return next();
+    next();
+    return;
   } catch (error) {
     logger.error('Authentication middleware error:', error);
-    return res.status(500).json({
+    res.status(500).json({
       success: false,
       error: 'Authentication service error'
     });
+    return;
   }
-};
+}
 
 /**
  * Middleware to validate request rate limiting
  */
-export const rateLimiter: RequestHandler = (req: Request, res: Response, next: NextFunction) => {
+export function rateLimiter(req: Request, res: Response, next: NextFunction): void {
   // Simple rate limiting - in production, use Redis or similar
   const clientIP = req.ip;
   const currentTime = Date.now();
@@ -99,24 +103,26 @@ export const rateLimiter: RequestHandler = (req: Request, res: Response, next: N
   const maxRequests = 100; // 100 requests per minute
   if (clientData.count >= maxRequests) {
     logger.warn('Rate limit exceeded', { ip: clientIP });
-    return res.status(429).json({
+    res.status(429).json({
       success: false,
       error: 'Rate limit exceeded. Please try again later.'
     });
+    return;
   }
 
   // Increment counter
   clientData.count++;
   rateLimitData.set(clientIP, clientData);
 
-  return next();
-};
+  next();
+  return;
+}
 
 /**
  * Middleware to validate request body
  */
-export const validateRequestBody = (schema: any): RequestHandler => {
-  return (req: Request, res: Response, next: NextFunction) => {
+export function validateRequestBody(schema: any) {
+  return (req: Request, res: Response, next: NextFunction): void => {
     try {
       const { error } = schema.validate(req.body);
       
@@ -126,27 +132,30 @@ export const validateRequestBody = (schema: any): RequestHandler => {
           path: req.path
         });
         
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           error: `Validation error: ${error.details[0].message}`
         });
+        return;
       }
 
-      return next();
+      next();
+      return;
     } catch (error) {
       logger.error('Request validation middleware error:', error);
-      return res.status(500).json({
+      res.status(500).json({
         success: false,
         error: 'Validation service error'
       });
+      return;
     }
   };
-};
+}
 
 /**
  * Middleware to log requests
  */
-export const requestLogger: RequestHandler = (req: Request, res: Response, next: NextFunction) => {
+export function requestLogger(req: Request, res: Response, next: NextFunction): void {
   const startTime = Date.now();
   
   // Log request
@@ -171,12 +180,13 @@ export const requestLogger: RequestHandler = (req: Request, res: Response, next:
   });
 
   next();
-};
+  return;
+}
 
 /**
  * Middleware to handle errors
  */
-export const errorHandler = (error: Error, req: Request, res: Response, next: NextFunction): void => {
+export function errorHandler(error: Error, req: Request, res: Response, next: NextFunction): void {
   logger.error('Unhandled error:', {
     error: error.message,
     stack: error.stack,
@@ -190,19 +200,22 @@ export const errorHandler = (error: Error, req: Request, res: Response, next: Ne
     error: 'Internal server error',
     timestamp: Date.now()
   });
-};
+  return;
+}
 
 /**
  * Middleware to add CORS headers
  */
-export const corsHandler: RequestHandler = (req: Request, res: Response, next: NextFunction) => {
+export function corsHandler(req: Request, res: Response, next: NextFunction): void {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
   
   if (req.method === 'OPTIONS') {
-    return res.sendStatus(200);
+    res.sendStatus(200);
+    return;
   } else {
-    return next();
+    next();
+    return;
   }
-};
+}
