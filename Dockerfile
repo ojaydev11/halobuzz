@@ -13,7 +13,8 @@ RUN pnpm install --frozen-lockfile
 
 # Build
 COPY . .
-RUN pnpm build
+RUN echo "Current directory: $(pwd)" && ls -la
+RUN echo "Running build command..." && pnpm build
 
 # --- runtime stage ---
 FROM node:20-slim
