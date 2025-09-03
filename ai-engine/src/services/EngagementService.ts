@@ -7,7 +7,7 @@ import {
   ServiceResponse,
   EngagementSpec,
   LanguageCode
-} from 'models/types';
+} from '../types';
 import logger from '../utils/logger';
 import { aiModelManager } from '../utils/ai-models';
 
@@ -348,7 +348,7 @@ export class EngagementService {
     let compatibility = 0.5; // Base compatibility
 
     // Language compatibility
-    const languageOverlap = candidate.languages.filter((lang: string) => 
+    const languageOverlap = candidate.languages.filter((lang: LanguageCode) => 
       hostPreferences.languages.includes(lang)
     ).length;
     compatibility += (languageOverlap / Math.max(candidate.languages.length, 1)) * 0.2;
