@@ -5,8 +5,8 @@ import {
   PolicyAction, 
   AIWarningEvent,
   ModerationRequest,
-  ServiceResponse 
-} from '../models/types';
+  ServiceResponse
+} from '../types';
 import { aiModelManager } from '../utils/ai-models';
 import logger from '../utils/logger';
 import { EventEmitter } from 'events';
@@ -66,7 +66,7 @@ export class ModerationService extends EventEmitter {
       logger.info('NSFW scan completed', { 
         totalFrames: frames.length, 
         nsfwFrames: results.filter(r => r.label !== 'safe').length,
-        maxScore: Math.max(...results.map(r => r.score))
+        maxScore: Math.max(...results.map(r => r.score || 0))
       });
 
       return results;
@@ -86,9 +86,9 @@ export class ModerationService extends EventEmitter {
       const result = await aiModelManager.ageEstimate(faceFrame);
 
       // Check if age is below threshold
-      if (result.ageEstimate < this.warningThresholds.age) {
+      if ((result.ageEstimate || result.estimatedAge) < this.warningThresholds.age) {
         logger.warn('Potential underage user detected', { 
-          estimatedAge: result.ageEstimate,
+          estimatedAge: result.ageEstimate || result.estimatedAge,
           confidence: result.confidence 
         });
       }
@@ -145,6 +145,8 @@ export class ModerationService extends EventEmitter {
       let action: PolicyAction = {
         action: 'none',
         reason: 'No violations detected',
+        severity: 'low',
+        timestamp: Date.now(),
         confidence: 1.0
       };
 
@@ -157,6 +159,8 @@ export class ModerationService extends EventEmitter {
           action = {
             action: 'ban',
             reason: 'High toxicity content detected',
+            severity: 'high',
+            timestamp: Date.now(),
             duration: 86400, // 24 hours
             confidence: textAnalysis.toxicity
           };
@@ -164,17 +168,21 @@ export class ModerationService extends EventEmitter {
           action = {
             action: 'warn',
             reason: 'Moderate toxicity content detected',
+            severity: 'medium',
+            timestamp: Date.now(),
             confidence: textAnalysis.toxicity
           };
         }
       } else if (subject.nsfwResults) {
         // NSFW content analysis
-        const maxScore = Math.max(...subject.nsfwResults.map((r: NSFWScanResult) => r.score));
+        const maxScore = Math.max(...subject.nsfwResults.map((r: NSFWScanResult) => r.score || 0));
         
         if (maxScore > this.warningThresholds.nsfw) {
           action = {
             action: 'blur',
             reason: 'NSFW content detected',
+            severity: 'high',
+            timestamp: Date.now(),
             confidence: maxScore
           };
         }
@@ -182,10 +190,12 @@ export class ModerationService extends EventEmitter {
         // Age verification
         const ageResult = subject.ageResult as AgeEstimateResult;
         
-        if (ageResult.ageEstimate < this.warningThresholds.age) {
+        if ((ageResult.ageEstimate || ageResult.estimatedAge) < this.warningThresholds.age) {
           action = {
             action: 'ban',
             reason: 'Underage user detected',
+            severity: 'critical',
+            timestamp: Date.now(),
             duration: 604800, // 7 days
             confidence: ageResult.confidence
           };
@@ -194,12 +204,14 @@ export class ModerationService extends EventEmitter {
         // Profanity analysis
         const profanityResult = subject.profanityResult as ProfanityResult;
         
-        if (profanityResult.badnessScore > this.warningThresholds.profanity) {
+        if ((profanityResult.badnessScore || 0) > this.warningThresholds.profanity) {
           action = {
             action: profanityResult.severity === 'critical' ? 'ban' : 'timeout',
             reason: `Profanity detected (${profanityResult.severity})`,
+            severity: profanityResult.severity || 'medium',
+            timestamp: Date.now(),
             duration: profanityResult.severity === 'critical' ? 86400 : 3600,
-            confidence: profanityResult.badnessScore
+            confidence: profanityResult.badnessScore || 0
           };
         }
       }
@@ -209,9 +221,9 @@ export class ModerationService extends EventEmitter {
         const warningEvent: AIWarningEvent = {
           type: 'moderation_warning',
           userId: subject.userId || 'unknown',
-          action,
-          timestamp: Date.now(),
-          sessionId: subject.sessionId
+          severity: action.severity,
+          details: { action },
+          timestamp: Date.now()
         };
 
         this.emit('ai:warning', warningEvent);
@@ -239,19 +251,19 @@ export class ModerationService extends EventEmitter {
 
       switch (request.type) {
         case 'nsfw_scan':
-          result = await this.nsfw_frame_scan(request.data.videoUrl, request.data.streamFrames);
+          result = await this.nsfw_frame_scan(request.data.videoUrl as string, request.data.streamFrames as Buffer[]);
           break;
         case 'age_estimate':
           if (!request.data.faceFrame) {
             throw new Error('faceFrame is required for age estimation');
           }
-          result = await this.age_estimate(request.data.faceFrame);
+          result = await this.age_estimate(request.data.faceFrame as Buffer);
           break;
         case 'profanity_check':
           if (!request.data.realtimeAudio) {
             throw new Error('realtimeAudio is required for profanity check');
           }
-          result = await this.asr_profanity(request.data.realtimeAudio);
+          result = await this.asr_profanity(request.data.realtimeAudio as Buffer);
           break;
         case 'policy_enforce':
           result = await this.policy_enforcer(request.data.subject);
@@ -300,8 +312,8 @@ export class ModerationService extends EventEmitter {
    * Aggregate NSFW scan results
    */
   private aggregateNSFWResults(results: NSFWScanResult[]): NSFWScanResult {
-    const avgScore = results.reduce((sum, r) => sum + r.score, 0) / results.length;
-    const maxScore = Math.max(...results.map(r => r.score));
+    const avgScore = results.reduce((sum, r) => sum + (r.score || 0), 0) / results.length;
+    const maxScore = Math.max(...results.map(r => r.score || 0));
     const nsfwCount = results.filter(r => r.label !== 'safe').length;
     
     let label: NSFWScanResult['label'] = 'safe';
@@ -310,9 +322,12 @@ export class ModerationService extends EventEmitter {
     else if (maxScore > 0.4) label = 'violence';
     
     return {
+      isNSFW: maxScore > 0.6,
+      confidence: avgScore,
+      categories: nsfwCount > 0 ? ['nsfw'] : [],
+      timestamp: Date.now(),
       label,
-      score: maxScore,
-      confidence: avgScore
+      score: maxScore
     };
   }
 

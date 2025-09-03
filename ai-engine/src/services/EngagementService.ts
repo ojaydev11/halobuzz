@@ -4,8 +4,10 @@ import {
   CohostCandidate, 
   FestivalSkin, 
   EngagementRequest,
-  ServiceResponse 
-} from '../models/types';
+  ServiceResponse,
+  EngagementSpec,
+  LanguageCode
+} from '../types';
 import logger from '../utils/logger';
 import { aiModelManager } from '../utils/ai-models';
 
@@ -44,7 +46,8 @@ export class EngagementService {
         return {
           score: 0,
           trend: 'stable',
-          suggestions: ['No events to analyze']
+          suggestions: ['No events to analyze'],
+          boostMultiplier: 1.0
         };
       }
 
@@ -65,7 +68,7 @@ export class EngagementService {
         score,
         trend,
         suggestions,
-        boostMultiplier
+        boostMultiplier: boostMultiplier || 1.0
       };
 
       logger.info('Boredom detection completed', { 
@@ -167,26 +170,27 @@ export class EngagementService {
     try {
       logger.info('Processing engagement request', { requestId, type: request.type });
 
-      let result: any;
+      let result: BoredomAnalysis | CohostCandidate[] | FestivalSkin[] | { success: boolean; message: string };
 
       switch (request.type) {
         case 'boredom_detector':
           if (!request.data.viewerEvents) {
             throw new Error('viewerEvents is required for boredom detection');
           }
-          result = await this.boredom_detector(request.data.viewerEvents);
+          result = await this.boredom_detector(request.data.viewerEvents as BoredomEvent[]);
           break;
         case 'cohost_suggester':
           if (!request.data.hostId || !request.data.country) {
             throw new Error('hostId and country are required for cohost suggestion');
           }
-          result = await this.cohost_suggester(request.data.hostId, request.data.country);
+          result = await this.cohost_suggester(request.data.hostId as string, request.data.country as string);
           break;
         case 'festival_skinner':
           if (!request.data.country || !request.data.date) {
             throw new Error('country and date are required for festival skinning');
           }
-          result = await this.festival_skinner(request.data.country, request.data.date);
+          const festivalResult = await this.festival_skinner(request.data.country as string, request.data.date as string);
+          result = festivalResult ? [festivalResult] : [];
           break;
         default:
           throw new Error(`Unknown engagement request type: ${request.type}`);
@@ -338,19 +342,19 @@ export class EngagementService {
    */
   private calculateCompatibility(
     candidate: CohostCandidate, 
-    hostPreferences: any, 
+    hostPreferences: { languages: LanguageCode[]; specialties: string[]; rating: number; country?: string; preferredCountries?: string[] }, 
     country: string
   ): number {
     let compatibility = 0.5; // Base compatibility
 
     // Language compatibility
-    const languageOverlap = candidate.languages.filter(lang => 
+    const languageOverlap = candidate.languages.filter((lang: LanguageCode) => 
       hostPreferences.languages.includes(lang)
     ).length;
     compatibility += (languageOverlap / Math.max(candidate.languages.length, 1)) * 0.2;
 
     // Specialty compatibility
-    const specialtyOverlap = candidate.specialties.filter(spec => 
+    const specialtyOverlap = candidate.specialties.filter((spec: string) => 
       hostPreferences.specialties.includes(spec)
     ).length;
     compatibility += (specialtyOverlap / Math.max(candidate.specialties.length, 1)) * 0.2;
@@ -360,7 +364,7 @@ export class EngagementService {
     compatibility += (1 - ratingDiff / 5) * 0.1;
 
     // Country preference
-    if (hostPreferences.preferredCountries.includes(country)) {
+    if (hostPreferences.preferredCountries?.includes(country)) {
       compatibility += 0.1;
     }
 
@@ -374,6 +378,7 @@ export class EngagementService {
     // Mock cohost candidates
     const mockCandidates: CohostCandidate[] = [
       {
+        id: 'candidate_001',
         hostId: 'host_001',
         name: 'Alex Gaming',
         avatar: 'https://example.com/avatar1.jpg',
@@ -384,6 +389,7 @@ export class EngagementService {
         specialties: ['Gaming', 'Tech']
       },
       {
+        id: 'candidate_002',
         hostId: 'host_002',
         name: 'Maria Comedy',
         avatar: 'https://example.com/avatar2.jpg',
@@ -394,6 +400,7 @@ export class EngagementService {
         specialties: ['Comedy', 'Lifestyle']
       },
       {
+        id: 'candidate_003',
         hostId: 'host_003',
         name: 'Carlos Music',
         avatar: 'https://example.com/avatar3.jpg',
@@ -406,51 +413,63 @@ export class EngagementService {
     ];
 
     mockCandidates.forEach(candidate => {
-      this.cohostDatabase.set(candidate.hostId, candidate);
+      this.cohostDatabase.set(candidate.id, candidate);
     });
 
     // Mock festival skins
     const mockFestivals: FestivalSkin[] = [
       {
+        id: 'festival_skin_001',
         skinId: 'festival_001',
         name: 'Carnival Celebration',
+        type: 'background',
+        url: 'https://example.com/carnival_skin.jpg',
         description: 'Vibrant carnival-themed skin for Brazilian festivals',
         imageUrl: 'https://example.com/carnival_skin.jpg',
         giftSet: {
+          id: 'gift_set_001',
           giftId: 'gift_001',
           name: 'Carnival Mask',
           description: 'Colorful carnival mask gift',
           imageUrl: 'https://example.com/carnival_mask.jpg',
           rarity: 'rare',
-          value: 100
+          value: 100,
+          items: ['mask', 'feathers', 'colors']
         },
         active: true,
         country: 'BR',
+        festival: 'Carnival',
         startDate: '2024-02-01',
         endDate: '2024-02-15'
       },
       {
+        id: 'festival_skin_002',
         skinId: 'festival_002',
         name: 'Diwali Lights',
+        type: 'background',
+        url: 'https://example.com/diwali_skin.jpg',
         description: 'Beautiful Diwali-themed skin for Indian festivals',
         imageUrl: 'https://example.com/diwali_skin.jpg',
         giftSet: {
+          id: 'gift_set_002',
           giftId: 'gift_002',
           name: 'Diwali Lantern',
           description: 'Glowing Diwali lantern gift',
           imageUrl: 'https://example.com/diwali_lantern.jpg',
           rarity: 'epic',
-          value: 200
+          value: 200,
+          items: ['lantern', 'lights', 'candles']
         },
         active: true,
         country: 'IN',
+        festival: 'Diwali',
         startDate: '2024-11-01',
         endDate: '2024-11-05'
       }
     ];
 
-    this.festivalDatabase.set('BR', [mockFestivals[0]]);
-    this.festivalDatabase.set('IN', [mockFestivals[1]]);
+    this.festivalDatabase.set('BR', [mockFestivals[0]!]);
+    this.festivalDatabase.set('IN', [mockFestivals[1]!]);
   }
 
   /**

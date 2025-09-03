@@ -1,11 +1,11 @@
-import { Router } from 'express';
+import { Router, type Request, type Response } from 'express';
 import { EngagementService } from '../services/EngagementService';
-import { authenticateAIEngine, validateRequestBody, rateLimiter } from '../middleware/auth';
-import { EngagementRequest } from '../models/types';
+import { authenticateInternalAPI, validateRequestBody, rateLimiter } from '../middleware/auth';
+import { EngagementRequest } from '../types';
 import logger from '../utils/logger';
 import Joi from 'joi';
 
-const router = Router();
+const router: Router = Router();
 const engagementService = EngagementService.getInstance();
 
 // Validation schemas
@@ -47,7 +47,7 @@ const battleBoostSchema = Joi.object({
 });
 
 // Apply middleware to all routes
-router.use(authenticateAIEngine);
+router.use(authenticateInternalAPI);
 router.use(rateLimiter);
 
 /**
@@ -59,7 +59,7 @@ router.post('/boredom-detector', validateRequestBody(boredomDetectorSchema), asy
     const request: EngagementRequest = req.body;
     const result = await engagementService.processEngagementRequest(request);
     
-    return res.json(result);
+    res.json(result);
   } catch (error) {
     logger.error('Boredom detector endpoint error:', error);
     res.status(500).json({
@@ -79,7 +79,7 @@ router.post('/cohost-suggester', validateRequestBody(cohostSuggesterSchema), asy
     const request: EngagementRequest = req.body;
     const result = await engagementService.processEngagementRequest(request);
     
-    return res.json(result);
+    res.json(result);
   } catch (error) {
     logger.error('Cohost suggester endpoint error:', error);
     res.status(500).json({
@@ -99,7 +99,7 @@ router.post('/festival-skinner', validateRequestBody(festivalSkinnerSchema), asy
     const request: EngagementRequest = req.body;
     const result = await engagementService.processEngagementRequest(request);
     
-    return res.json(result);
+    res.json(result);
   } catch (error) {
     logger.error('Festival skinner endpoint error:', error);
     res.status(500).json({
@@ -119,7 +119,7 @@ router.post('/process', async (req, res) => {
     const request: EngagementRequest = req.body;
     const result = await engagementService.processEngagementRequest(request);
     
-    return res.json(result);
+    res.json(result);
   } catch (error) {
     logger.error('Generic engagement endpoint error:', error);
     res.status(500).json({
@@ -138,7 +138,7 @@ router.get('/thresholds', async (req, res) => {
   try {
     const thresholds = engagementService.getBoredomThresholds();
     
-    return res.json({
+    res.json({
       success: true,
       data: thresholds,
       timestamp: Date.now()
@@ -162,7 +162,7 @@ router.put('/thresholds', async (req, res) => {
     const { thresholds } = req.body;
     engagementService.updateBoredomThresholds(thresholds);
     
-    return res.json({
+    res.json({
       success: true,
       message: 'Thresholds updated successfully',
       timestamp: Date.now()
@@ -188,7 +188,7 @@ router.post('/battle-boost', validateRequestBody(battleBoostSchema), async (req,
     // Trigger battle boost via socket to backend
     const result = await engagementService.triggerBattleBoost(streamId, multiplier, durationSec);
     
-    return res.json({
+    res.json({
       success: true,
       data: result,
       timestamp: Date.now()
@@ -209,7 +209,7 @@ router.post('/battle-boost', validateRequestBody(battleBoostSchema), async (req,
  */
 router.get('/health', async (req, res) => {
   try {
-    return res.json({
+    res.json({
       success: true,
       data: {
         service: 'engagement',
