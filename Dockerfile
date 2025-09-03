@@ -25,7 +25,7 @@ RUN echo "All files in current directory:" && find . -maxdepth 2 -type f | head 
 RUN echo "Running build command in backend directory..." && (cd backend && pnpm run build) || echo "Build failed, but continuing..."
 RUN echo "After build command, checking backend directory:" && ls -la backend/ || echo "backend directory does not exist"
 RUN echo "Checking if backend/dist exists:" && ls -la backend/dist/ || echo "backend/dist does not exist"
-RUN echo "Creating backend structure for runtime..." && mkdir -p backend && cp package.json backend/ && cp pnpm-lock.yaml backend/ && cp -r src backend/ || echo "Failed to create backend structure"
+RUN echo "Creating backend structure for runtime..." && mkdir -p backend && cp package.json backend/ && cp pnpm-lock.yaml backend/ && cp -r src backend/ && cp -r scripts backend/ || echo "Failed to create backend structure"
 RUN echo "Running build in created backend structure..." && (cd backend && pnpm install --frozen-lockfile && pnpm run build) || echo "Build in created structure failed"
 RUN echo "Checking if backend/dist exists after build:" && ls -la backend/dist/ || echo "backend/dist still does not exist"
 
