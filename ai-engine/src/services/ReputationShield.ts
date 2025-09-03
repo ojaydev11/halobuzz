@@ -2,7 +2,7 @@ import {
   ReputationEvent, 
   ReputationScore, 
   ServiceResponse 
-} from '../models/types';
+} from '../models';
 import logger from '../utils/logger';
 
 export class ReputationShield {
@@ -18,7 +18,7 @@ export class ReputationShield {
     banned: 0
   };
 
-  private decayRates = {
+  private decayRates: Record<'positive' | 'negative' | 'neutral', number> = {
     positive: 0.1, // 10% decay per day
     negative: 0.05, // 5% decay per day
     neutral: 0.15 // 15% decay per day

@@ -5,8 +5,8 @@ import {
   PolicyAction, 
   AIWarningEvent,
   ModerationRequest,
-  ServiceResponse 
-} from '../models/types';
+  ServiceResponse
+} from '../models';
 import { aiModelManager } from '../utils/ai-models';
 import logger from '../utils/logger';
 import { EventEmitter } from 'events';

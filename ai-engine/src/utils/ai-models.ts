@@ -1,4 +1,4 @@
-import { NSFWScanResult, AgeEstimateResult, ProfanityResult } from '../models/types';
+import { NSFWScanResult, AgeEstimateResult, ProfanityResult } from '../models';
 import logger from './logger';
 
 export interface AIModelProvider {
