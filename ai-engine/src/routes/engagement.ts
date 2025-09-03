@@ -1,11 +1,11 @@
-import { Router } from 'express';
+import { Router, type Request, type Response } from 'express';
 import { EngagementService } from '../services/EngagementService';
 import { authenticateInternalAPI, validateRequestBody, rateLimiter } from '../middleware/auth';
 import { EngagementRequest } from '../models/types';
 import logger from '../utils/logger';
 import Joi from 'joi';
 
-const router = Router();
+const router: Router = Router();
 const engagementService = EngagementService.getInstance();
 
 // Validation schemas

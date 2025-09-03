@@ -24,9 +24,12 @@ export class LocalAIModelProvider implements AIModelProvider {
       const label = score > 0.7 ? 'nsfw' : score > 0.4 ? 'explicit' : 'safe';
       
       results.push({
+        isNSFW: score > 0.6,
+        confidence: 0.8 + Math.random() * 0.2,
+        categories: score > 0.6 ? ['nsfw'] : [],
+        timestamp: Date.now(),
         label,
-        score,
-        confidence: 0.8 + Math.random() * 0.2
+        score
       });
     }
     
@@ -41,12 +44,11 @@ export class LocalAIModelProvider implements AIModelProvider {
     const confidence = 0.7 + Math.random() * 0.3;
     
     return {
-      ageEstimate: Math.round(ageEstimate),
+      estimatedAge: Math.round(ageEstimate),
       confidence,
-      ageRange: {
-        min: Math.max(0, ageEstimate - 5),
-        max: Math.min(100, ageEstimate + 5)
-      }
+      isMinor: ageEstimate < 18,
+      timestamp: Date.now(),
+      ageEstimate: Math.round(ageEstimate)
     };
   }
 
@@ -60,9 +62,12 @@ export class LocalAIModelProvider implements AIModelProvider {
                     badnessScore > 0.4 ? 'medium' : 'low';
     
     return {
-      badnessScore,
+      hasProfanity: badnessScore > 0.3,
+      confidence: badnessScore,
       detectedWords: badnessScore > 0.3 ? ['placeholder'] : [],
-      severity
+      timestamp: Date.now(),
+      severity,
+      badnessScore
     };
   }
 
@@ -97,9 +102,12 @@ export class OpenAIModelProvider implements AIModelProvider {
       const label = score > 0.7 ? 'nsfw' : score > 0.4 ? 'explicit' : 'safe';
       
       results.push({
+        isNSFW: score > 0.6,
+        confidence: 0.9 + Math.random() * 0.1,
+        categories: score > 0.6 ? ['nsfw'] : [],
+        timestamp: Date.now(),
         label,
-        score,
-        confidence: 0.9 + Math.random() * 0.1
+        score
       });
     }
     
@@ -114,12 +122,11 @@ export class OpenAIModelProvider implements AIModelProvider {
     const confidence = 0.8 + Math.random() * 0.2;
     
     return {
-      ageEstimate: Math.round(ageEstimate),
+      estimatedAge: Math.round(ageEstimate),
       confidence,
-      ageRange: {
-        min: Math.max(0, ageEstimate - 3),
-        max: Math.min(100, ageEstimate + 3)
-      }
+      isMinor: ageEstimate < 18,
+      timestamp: Date.now(),
+      ageEstimate: Math.round(ageEstimate)
     };
   }
 
@@ -133,9 +140,12 @@ export class OpenAIModelProvider implements AIModelProvider {
                     badnessScore > 0.4 ? 'medium' : 'low';
     
     return {
-      badnessScore,
+      hasProfanity: badnessScore > 0.3,
+      confidence: badnessScore,
       detectedWords: badnessScore > 0.3 ? ['placeholder'] : [],
-      severity
+      timestamp: Date.now(),
+      severity,
+      badnessScore
     };
   }
 
