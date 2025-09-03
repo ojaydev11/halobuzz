@@ -1,7 +1,7 @@
 import { Router, type Request, type Response } from 'express';
 import { ModerationService } from '../services/ModerationService';
 import { authenticateInternalAPI, validateRequestBody, rateLimiter } from '../middleware/auth';
-import { ModerationRequest } from '../models/types';
+import { ModerationRequest } from 'models/types';
 import logger from '../utils/logger';
 import Joi from 'joi';
 
