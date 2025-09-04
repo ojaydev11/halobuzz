@@ -3,27 +3,21 @@
   "version": "0.1.0",
   "description": "Nepali-first live streaming and short-video platform",
   "private": true,
-  "workspaces": [
-    "backend",
-    "ai-engine", 
-    "admin",
-    "apps/halobuzz-mobile"
-  ],
   "scripts": {
-    "build": "pnpm --filter backend run build",
+    "build": "cd backend && npm run build",
     "lint": "eslint . --ext .ts,.tsx --max-warnings=0",
     "typecheck": "tsc -b backend ai-engine",
-    "test": "npm -w backend run test && npm -w ai-engine run test",
+    "test": "cd backend && npm run test && cd ../ai-engine && npm run test",
     "test:security": "powershell -ExecutionPolicy Bypass -File scripts/test-security.ps1",
     "test:security:quick": "powershell -ExecutionPolicy Bypass -File scripts/test-security.ps1 -Quick",
     "test:security:lint": "powershell -ExecutionPolicy Bypass -File scripts/test-security.ps1 -LintOnly",
-    "dev:backend": "npm --prefix backend run dev",
-    "dev:ai": "npm --prefix ai-engine run dev",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:ai": "cd ai-engine && npm run dev",
     "dev:mobile": "cd apps/halobuzz-mobile && npx expo start",
     "mobile:dev": "cd apps/halobuzz-mobile && npx expo start",
     "mobile:build:ios": "cd apps/halobuzz-mobile && npx eas build -p ios --profile preview",
     "mobile:build:ios:dev": "cd apps/halobuzz-mobile && npx eas build -p ios --profile development",
-    "seed": "npm --prefix backend run seed",
+    "seed": "cd backend && npm run seed",
     "smoke": "bash scripts/smoke.sh || powershell -File scripts/smoke.ps1"
   },
   "devDependencies": {
