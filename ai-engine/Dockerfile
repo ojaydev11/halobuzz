@@ -18,13 +18,15 @@ COPY --from=deps /usr/src/app/node_modules ./node_modules
 COPY tsconfig.json ./
 COPY src ./src
 RUN pnpm run build
+RUN ls -la dist/ && echo "Build completed successfully"
 
 FROM node:20-slim AS runner
 WORKDIR /usr/src/app
 ENV NODE_ENV=production
-ENV PORT=5020
+ENV PORT=4000
 COPY --from=build /usr/src/app/dist ./dist
 COPY --from=deps /usr/src/app/node_modules ./node_modules
 COPY package.json ./
-EXPOSE 5020
+RUN ls -la dist/ && echo "Files in dist directory:" && cat dist/index.js | head -20
+EXPOSE 4000
 CMD ["node","dist/index.js"]
