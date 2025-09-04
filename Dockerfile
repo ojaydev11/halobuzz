@@ -29,8 +29,13 @@ WORKDIR /usr/src/app
 ENV NODE_ENV=production \
     PORT=4000
 
-# Install basic dependencies
+# Install basic dependencies and curl for health checks
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 RUN npm install express cors helmet express-rate-limit
+
+# Add health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:4000/api/v1/monitoring/health || exit 1
 
 # Create the fallback server directly in the container
 RUN cat > fallback-server.js << 'EOF'
