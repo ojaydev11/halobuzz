@@ -274,22 +274,51 @@ process.on('SIGINT', () => {
 // Start server
 const startServer = async () => {
   try {
-    // Connect to database
-    await connectDatabase();
-    logger.info('Database connected successfully');
+    // Check required environment variables
+    const requiredEnvVars = ['MONGODB_URI', 'REDIS_URL', 'JWT_SECRET'];
+    const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
+    
+    if (missingVars.length > 0) {
+      logger.warn(`Missing environment variables: ${missingVars.join(', ')}`);
+      logger.warn('Starting server in limited mode - some features may not work');
+    }
 
-    // Connect to Redis
-    await connectRedis();
-    logger.info('Redis connected successfully');
+    // Connect to database (with fallback)
+    try {
+      await connectDatabase();
+      logger.info('Database connected successfully');
+    } catch (error) {
+      logger.warn('Database connection failed:', error.message);
+      logger.warn('Continuing without database - some features will be disabled');
+    }
 
-    // Initialize feature flags
-    await featureFlags.initializeFlags();
-    logger.info('Feature flags initialized successfully');
+    // Connect to Redis (with fallback)
+    try {
+      await connectRedis();
+      logger.info('Redis connected successfully');
+    } catch (error) {
+      logger.warn('Redis connection failed:', error.message);
+      logger.warn('Continuing without Redis - caching and real-time features will be disabled');
+    }
 
-    // Setup Socket.IO with Redis adapter for multi-instance scaling
-    setupSocketIO(io);
-    await setupRedisAdapter(io);
-    logger.info('Socket.IO configured with Redis adapter');
+    // Initialize feature flags (with fallback)
+    try {
+      await featureFlags.initializeFlags();
+      logger.info('Feature flags initialized successfully');
+    } catch (error) {
+      logger.warn('Feature flags initialization failed:', error.message);
+      logger.warn('Continuing with default feature flags');
+    }
+
+    // Setup Socket.IO with Redis adapter for multi-instance scaling (with fallback)
+    try {
+      setupSocketIO(io);
+      await setupRedisAdapter(io);
+      logger.info('Socket.IO configured with Redis adapter');
+    } catch (error) {
+      logger.warn('Socket.IO Redis adapter setup failed:', error.message);
+      logger.warn('Continuing with basic Socket.IO setup');
+    }
 
     // Start server
     server.listen(PORT, () => {
