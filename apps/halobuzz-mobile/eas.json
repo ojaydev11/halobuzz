@@ -14,7 +14,8 @@
       },
       "env": {
         "EXPO_NO_TELEMETRY": "1"
-      }
+      },
+      "prebuildCommand": "npx expo prebuild --clean --platform all"
     },
     "preview": {
       "distribution": "internal",
@@ -27,7 +28,8 @@
       "env": {
         "EXPO_NO_TELEMETRY": "1",
         "EXPO_PUBLIC_API_BASE_URL": "https://halobuzz-api-proxy.ojayshah123.workers.dev/"
-      }
+      },
+      "prebuildCommand": "npx expo prebuild --clean --platform all"
     },
     "production": {
       "ios": {
@@ -35,7 +37,8 @@
       },
       "android": {
         "buildType": "app-bundle"
-      }
+      },
+      "prebuildCommand": "npx expo prebuild --clean --platform all"
     }
   },
   "submit": {
