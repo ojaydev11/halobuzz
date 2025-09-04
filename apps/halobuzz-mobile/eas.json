@@ -25,7 +25,8 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_NO_TELEMETRY": "1"
+        "EXPO_NO_TELEMETRY": "1",
+        "EXPO_PUBLIC_API_BASE_URL": "https://halobuzz-api-proxy.ojayshah123.workers.dev/"
       }
     },
     "production": {
@@ -39,5 +40,13 @@
   },
   "submit": {
     "production": {}
+  },
+  "update": {
+    "preview": {
+      "channel": "preview",
+      "env": {
+        "EXPO_PUBLIC_API_BASE_URL": "https://halobuzz-api-proxy.ojayshah123.workers.dev/"
+      }
+    }
   }
 }
