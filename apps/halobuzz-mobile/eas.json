@@ -8,6 +8,9 @@
       "ios": {
         "resourceClass": "default"
       },
+      "android": {
+        "buildType": "apk"
+      },
       "env": {
         "EXPO_NO_TELEMETRY": "1"
       }
@@ -16,11 +19,17 @@
       "distribution": "internal",
       "ios": {
         "resourceClass": "default"
+      },
+      "android": {
+        "buildType": "apk"
       }
     },
     "production": {
       "ios": {
         "resourceClass": "default"
+      },
+      "android": {
+        "buildType": "aab"
       }
     }
   },
