@@ -75,7 +75,7 @@ app.get('/api/v1/status', (req, res) => {
 });
 
 // Catch-all handler
-app.use('*', (req, res) => {
+app.use((req, res) => {
   res.status(404).json({
     error: 'Endpoint not found',
     message: 'The requested endpoint does not exist',
