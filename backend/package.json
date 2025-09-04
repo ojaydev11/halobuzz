@@ -4,12 +4,12 @@
   "description": "HaloBuzz Backend API and Real-time Services",
   "main": "dist/index.ts",
   "scripts": {
-    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+    "dev": "ts-node-dev --respawn --transpile-only -r tsconfig-paths/register src/index.ts",
     "seed": "ts-node scripts/seeds/index.ts",
     "build": "node scripts/build.js",
     "build:dev": "ts-node-dev --transpile-only src/index.ts",
     "build:ts": "tsc",
-    "start": "npx ts-node dist/index.ts",
+    "start": "npx ts-node -r tsconfig-paths/register dist/index.ts",
     "test": "jest --runInBand",
     "test:watch": "jest --watchAll",
     "test:security": "jest --runInBand src/__tests__/security",
@@ -41,7 +41,6 @@
     "express-rate-limit": "^7.1.5",
     "express-slow-down": "^2.0.1",
     "express-validator": "^7.0.1",
-
     "file-type": "^18.7.0",
     "firebase-admin": "^12.0.0",
     "helmet": "^7.1.0",
@@ -87,6 +86,7 @@
     "ts-jest": "^29.1.1",
     "ts-node": "^10.9.1",
     "ts-node-dev": "^2.0.0",
+    "tsconfig-paths": "^4.2.0",
     "typescript": "^5.3.2"
   },
   "engines": {

@@ -4,31 +4,31 @@ const logger = setupLogger();
 
 interface SecretsConfig {
   JWT_SECRET: string;
-  JWT_REFRESH_SECRET: string;
-  DATABASE_URL: string;
+  JWT_REFRESH_SECRET?: string;
+  MONGODB_URI: string;
   REDIS_URL: string;
-  STRIPE_SECRET_KEY: string;
-  STRIPE_WEBHOOK_SECRET: string;
-  AWS_ACCESS_KEY_ID: string;
-  AWS_SECRET_ACCESS_KEY: string;
-  AI_SERVICE_SECRET: string;
-  ADMIN_JWT_SECRET: string;
+  STRIPE_SECRET_KEY?: string;
+  STRIPE_WEBHOOK_SECRET?: string;
+  AWS_ACCESS_KEY_ID?: string;
+  AWS_SECRET_ACCESS_KEY?: string;
+  AI_ENGINE_SECRET?: string;
+  ADMIN_JWT_SECRET?: string;
 }
 
 const REQUIRED_SECRETS = [
   'JWT_SECRET',
+  'MONGODB_URI',
+  'REDIS_URL'
+];
+
+const OPTIONAL_SECRETS = [
   'JWT_REFRESH_SECRET',
-  'DATABASE_URL',
-  'REDIS_URL',
   'STRIPE_SECRET_KEY',
   'STRIPE_WEBHOOK_SECRET',
   'AWS_ACCESS_KEY_ID',
   'AWS_SECRET_ACCESS_KEY',
-  'AI_SERVICE_SECRET',
-  'ADMIN_JWT_SECRET'
-];
-
-const OPTIONAL_SECRETS = [
+  'AI_ENGINE_SECRET',
+  'ADMIN_JWT_SECRET',
   'PAYPAL_CLIENT_ID',
   'PAYPAL_CLIENT_SECRET',
   'TWILIO_ACCOUNT_SID',
@@ -86,15 +86,15 @@ export function validateSecrets(): SecretsConfig {
 
   return {
     JWT_SECRET: process.env.JWT_SECRET!,
-    JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET!,
-    DATABASE_URL: process.env.DATABASE_URL!,
+    JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET,
+    MONGODB_URI: process.env.MONGODB_URI!,
     REDIS_URL: process.env.REDIS_URL!,
-    STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY!,
-    STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET!,
-    AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID!,
-    AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY!,
-    AI_SERVICE_SECRET: process.env.AI_SERVICE_SECRET!,
-    ADMIN_JWT_SECRET: process.env.ADMIN_JWT_SECRET!
+    STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
+    STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
+    AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID,
+    AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY,
+    AI_ENGINE_SECRET: process.env.AI_ENGINE_SECRET,
+    ADMIN_JWT_SECRET: process.env.ADMIN_JWT_SECRET
   };
 }
 
