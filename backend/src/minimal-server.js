@@ -7,10 +7,15 @@ process.env.PORT = process.env.PORT || '4000';
 const port = Number(process.env.PORT);
 const host = process.env.HOST || '0.0.0.0';
 
+console.log('=== HaloBuzz Minimal Server Starting ===');
 console.log('Starting minimal server...');
 console.log(`Environment: ${process.env.NODE_ENV}`);
 console.log(`Port: ${port}`);
 console.log(`Host: ${host}`);
+console.log(`Node version: ${process.version}`);
+console.log(`Process ID: ${process.pid}`);
+console.log(`Working directory: ${process.cwd()}`);
+console.log('=== Server Configuration Complete ===');
 
 // Create a simple HTTP server
 const server = http.createServer((req, res) => {
