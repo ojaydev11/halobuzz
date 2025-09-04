@@ -19,6 +19,19 @@ export default function DiscoverScreen() {
   const { streams, loading, error, refresh } = useStreams();
   const [refreshing, setRefreshing] = useState(false);
 
+  // Quick smoke test on mount
+  useEffect(() => {
+    const testConnection = async () => {
+      try {
+        const response = await apiClient.simpleHealthCheck();
+        console.log("✅ Backend connection healthy:", response.data?.status);
+      } catch (error) {
+        console.error("❌ Backend connection failed:", error.message);
+      }
+    };
+    testConnection();
+  }, []);
+
   const onRefresh = async () => {
     setRefreshing(true);
     await refresh();

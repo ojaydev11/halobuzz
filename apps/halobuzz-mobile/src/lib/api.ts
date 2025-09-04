@@ -5,7 +5,7 @@ import { ApiResponse, AuthResponse, LoginRequest, RegisterRequest, User } from '
 import { StreamsResponse, CreateStreamRequest, Stream } from '@/types/stream';
 import { HealthStatus } from '@/types/monitoring';
 
-const API_BASE = Constants.expoConfig?.extra?.apiBase || 'https://halobuzz-api-proxy.ojayshah123.workers.dev';
+const API_BASE = (Constants.expoConfig?.extra as any)?.apiBase || 'https://halobuzz-api-proxy.ojayshah123.workers.dev';
 
 class ApiClient {
   private client: AxiosInstance;
