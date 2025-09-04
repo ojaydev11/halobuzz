@@ -6,7 +6,6 @@
   "workspaces": [
     "backend",
     "ai-engine", 
-    "mobile",
     "admin",
     "apps/halobuzz-mobile"
   ],
@@ -20,7 +19,7 @@
     "test:security:lint": "powershell -ExecutionPolicy Bypass -File scripts/test-security.ps1 -LintOnly",
     "dev:backend": "npm --prefix backend run dev",
     "dev:ai": "npm --prefix ai-engine run dev",
-    "dev:mobile": "npm --prefix mobile start",
+    "dev:mobile": "cd apps/halobuzz-mobile && npx expo start",
     "mobile:dev": "cd apps/halobuzz-mobile && npx expo start",
     "mobile:build:ios": "cd apps/halobuzz-mobile && npx eas build -p ios --profile preview",
     "mobile:build:ios:dev": "cd apps/halobuzz-mobile && npx eas build -p ios --profile development",
