@@ -28,5 +28,6 @@ COPY --from=build /usr/src/app/dist ./dist
 COPY --from=deps /usr/src/app/node_modules ./node_modules
 COPY package.json ./
 RUN ls -la dist/ && echo "Files in dist directory:" && cat dist/index.js | head -20
+RUN echo "Testing Node.js execution:" && node --version && echo "Testing if dist/index.js exists:" && ls -la dist/index.js
 EXPOSE 4000
-CMD ["node","dist/index.js"]
+CMD ["sh", "-c", "echo 'Starting AI Engine...' && node dist/index.js || echo 'Node.js failed to start' && exit 1"]
