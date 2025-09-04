@@ -43,9 +43,16 @@ import logger from './utils/logger';
 // Load environment variables
 dotenv.config();
 
+// Debug environment variables
+console.log('🔍 Environment check:');
+console.log(`- NODE_ENV: ${process.env.NODE_ENV}`);
+console.log(`- PORT: ${process.env.PORT}`);
+console.log(`- AI_SERVICE_SECRET: ${process.env.AI_SERVICE_SECRET ? 'SET' : 'NOT SET'}`);
+
 // Validate critical AI service secrets
 if (!process.env.AI_SERVICE_SECRET) {
-  console.error('AI_SERVICE_SECRET is required but not set');
+  console.error('❌ AI_SERVICE_SECRET is required but not set');
+  console.error('Available env vars:', Object.keys(process.env).filter(key => key.includes('AI')));
   process.exit(1);
 }
 
@@ -214,7 +221,9 @@ process.on('SIGINT', () => {
 });
 
 // Start server
+console.log(`🚀 Starting AI Engine on port ${PORT}...`);
 server.listen(PORT, '0.0.0.0', () => {
+  console.log(`✅ AI Engine successfully started on port ${PORT}`);
   logger.info('🤖 HaloBuzz AI Engine started', {
     port: PORT,
     environment: NODE_ENV,
