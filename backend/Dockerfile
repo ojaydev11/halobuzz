@@ -24,7 +24,7 @@ FROM node:20-slim
 WORKDIR /usr/src/app
 
 ENV NODE_ENV=production \
-    PORT=5020
+    PORT=4000
 
 # Copy built app
 COPY --from=build /usr/src/app/node_modules ./node_modules
@@ -34,5 +34,5 @@ COPY --from=build /usr/src/app/package.json ./
 # Install ts-node for runtime
 RUN npm install -g ts-node
 
-EXPOSE 5020
+EXPOSE 4000
 CMD ["npx", "ts-node", "dist/index.ts"]

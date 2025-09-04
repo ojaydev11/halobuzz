@@ -95,7 +95,8 @@ const io = new Server(server, {
   }
 });
 
-const PORT = process.env.PORT || 3000;
+const port = Number(process.env.PORT || 4000);
+const host = process.env.HOST || '0.0.0.0';
 const logger = setupLogger();
 
 // Enhanced security middleware
@@ -321,8 +322,8 @@ const startServer = async () => {
     }
 
     // Start server
-    server.listen(PORT, '0.0.0.0', () => {
-      logger.info(`🚀 HaloBuzz Backend Server running on port ${PORT}`);
+    server.listen(port, host, () => {
+      logger.info(`🚀 HaloBuzz Backend Server running on http://${host}:${port}`);
       logger.info(`Environment: ${process.env.NODE_ENV}`);
       logger.info(`API Version: ${process.env.API_VERSION || 'v1'}`);
       logger.info(`Security hardening: ENABLED`);
