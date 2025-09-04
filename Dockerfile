@@ -39,17 +39,12 @@ ENV NODE_ENV=production \
 
 # Copy built app
 COPY --from=build /usr/src/app/node_modules ./node_modules
-COPY --from=build /usr/src/app/backend/src ./src
+COPY --from=build /usr/src/app/backend/dist ./dist
 COPY --from=build /usr/src/app/backend/package.json ./
-COPY --from=build /usr/src/app/backend/tsconfig.json ./
 
-# Install ts-node for runtime
-RUN npm install -g ts-node
-
-# Debug: Check what's in the src directory
-RUN echo "Checking src directory contents:" && ls -la src/ || echo "src directory does not exist"
-RUN echo "Checking if index.ts exists:" && ls -la src/index.ts || echo "index.ts does not exist"
-RUN echo "Checking if tsconfig.json exists:" && ls -la tsconfig.json || echo "tsconfig.json does not exist"
+# Debug: Check what's in the dist directory
+RUN echo "Checking dist directory contents:" && ls -la dist/ || echo "dist directory does not exist"
+RUN echo "Checking if minimal-server.js exists:" && ls -la dist/minimal-server.js || echo "minimal-server.js does not exist"
 
 EXPOSE 4000
-CMD ["npx", "ts-node", "src/index.ts"]
+CMD ["node", "dist/minimal-server.js"]
