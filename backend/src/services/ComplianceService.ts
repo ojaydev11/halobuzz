@@ -1,4 +1,4 @@
-import logger from '../utils/logger';
+import { logger } from '../config/logger';
 import mongoose from 'mongoose';
 import { User } from '@/models/User';
 import { featureFlags } from '@/config/flags';

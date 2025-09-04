@@ -1,6 +1,6 @@
 import express from 'express';
 import { authenticateToken } from '../middleware/auth';
-import { rateLimiter } from '../middleware/rateLimiter';
+import { socialLimiter } from '../middleware/security';
 import LiveCommerceService from '../services/commerce/LiveCommerceService';
 import { logger } from '../config/logger';
 
@@ -9,7 +9,7 @@ const commerceService = LiveCommerceService.getInstance();
 
 // Apply middleware
 router.use(authenticateToken);
-router.use(rateLimiter);
+router.use(socialLimiter);
 
 /**
  * @route POST /api/commerce/product

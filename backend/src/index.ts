@@ -66,16 +66,16 @@ import creatorAnalyticsRoutes from '@/routes/creator-analytics';
 import commerceRoutes from '@/routes/commerce';
 
 // Phase 4: Interactive Features routes
-import collaborationRoutes from '@/routes/collaboration';
-import storytellingRoutes from '@/routes/storytelling';
+// import collaborationRoutes from '@/routes/collaboration';
+// import storytellingRoutes from '@/routes/storytelling';
 
 // Phase 5: Web3 & Blockchain Integration routes
-import blockchainRoutes from '@/routes/blockchain';
-import daoRoutes from '@/routes/dao';
+// import blockchainRoutes from '@/routes/blockchain';
+// import daoRoutes from '@/routes/dao';
 
 // Phase 6: Advanced Discovery & UX routes
-import culturalRoutes from '@/routes/cultural';
-import wellbeingRoutes from '@/routes/wellbeing';
+// import culturalRoutes from '@/routes/cultural';
+// import wellbeingRoutes from '@/routes/wellbeing';
 
 // Load environment variables
 dotenv.config();
@@ -228,20 +228,20 @@ app.use(`/api/${process.env.API_VERSION || 'v1'}/analytics`, creatorAnalyticsRou
 app.use(`/api/${process.env.API_VERSION || 'v1'}/commerce`, commerceRoutes);
 
 // Phase 4: Interactive Features routes
-app.use(`/api/${process.env.API_VERSION || 'v1'}/collaboration`, collaborationRoutes);
-app.use(`/api/${process.env.API_VERSION || 'v1'}/storytelling`, storytellingRoutes);
+// app.use(`/api/${process.env.API_VERSION || 'v1'}/collaboration`, collaborationRoutes);
+// app.use(`/api/${process.env.API_VERSION || 'v1'}/storytelling`, storytellingRoutes);
 
 // Phase 5: Web3 & Blockchain Integration routes
-app.use(`/api/${process.env.API_VERSION || 'v1'}/blockchain`, blockchainRoutes);
-app.use(`/api/${process.env.API_VERSION || 'v1'}/dao`, daoRoutes);
+// app.use(`/api/${process.env.API_VERSION || 'v1'}/blockchain`, blockchainRoutes);
+// app.use(`/api/${process.env.API_VERSION || 'v1'}/dao`, daoRoutes);
 
 // Phase 6: Advanced Discovery & UX routes
-app.use(`/api/${process.env.API_VERSION || 'v1'}/cultural`, culturalRoutes);
-app.use(`/api/${process.env.API_VERSION || 'v1'}/wellbeing`, wellbeingRoutes);
+// app.use(`/api/${process.env.API_VERSION || 'v1'}/cultural`, culturalRoutes);
+// app.use(`/api/${process.env.API_VERSION || 'v1'}/wellbeing`, wellbeingRoutes);
 
 // Start cron scheduler
-import { cronScheduler } from './cron';
-cronScheduler.start();
+// import { cronScheduler } from './cron';
+// cronScheduler.start();
 
 // Error handling middleware
 app.use(errorHandler);

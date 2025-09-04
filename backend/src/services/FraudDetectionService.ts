@@ -1,6 +1,6 @@
 import { User } from '../models/User';
 import { Transaction } from '../models/Transaction';
-import logger from '../utils/logger';
+import { logger } from '../config/logger';
 import { getCache, setCache } from '../config/redis';
 
 interface FraudScore {

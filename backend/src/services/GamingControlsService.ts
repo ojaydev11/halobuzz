@@ -1,7 +1,7 @@
 import { User } from '../models/User';
 import { Game } from '../models/Game';
 import { Transaction } from '../models/Transaction';
-import logger from '../utils/logger';
+import { logger } from '../config/logger';
 
 export interface GamingLimits {
   dailySpendLimit: number;

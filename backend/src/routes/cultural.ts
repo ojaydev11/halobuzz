@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { CulturalIntelligenceService } from '@/services/cultural/CulturalIntelligenceService';
 import { authenticateToken } from '@/middleware/auth';
-import { rateLimiter } from '@/middleware/rateLimiter';
+import { socialLimiter } from '@/middleware/security';
 import { logger } from '@/config/logger';
 
 const router = Router();
@@ -9,7 +9,7 @@ const culturalService = CulturalIntelligenceService.getInstance();
 
 // Apply authentication and rate limiting to all routes
 router.use(authenticateToken);
-router.use(rateLimiter);
+router.use(socialLimiter);
 
 /**
  * @route POST /api/v1/cultural/profile

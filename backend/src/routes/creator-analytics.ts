@@ -1,6 +1,6 @@
 import express from 'express';
 import { authenticateToken } from '../middleware/auth';
-import { rateLimiter } from '../middleware/rateLimiter';
+import { socialLimiter } from '../middleware/security';
 import CreatorAnalyticsService from '../services/creator-analytics/CreatorAnalyticsService';
 import { logger } from '../config/logger';
 
@@ -9,7 +9,7 @@ const analyticsService = CreatorAnalyticsService.getInstance();
 
 // Apply middleware
 router.use(authenticateToken);
-router.use(rateLimiter);
+router.use(socialLimiter);
 
 /**
  * @route GET /api/analytics/creator/:creatorId/performance

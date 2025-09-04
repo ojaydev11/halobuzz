@@ -4,7 +4,7 @@ import { LiveStream } from '../models/LiveStream';
 import { Message } from '../models/Message';
 import { ReputationEvent } from '../models/ReputationEvent';
 import { reputationService } from './ReputationService';
-import logger from '../utils/logger';
+import { logger } from '../config/logger';
 
 export class ModerationQueue {
   private actionSeverity = {

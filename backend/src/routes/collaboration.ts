@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { CollaborativeContentService } from '@/services/collaboration/CollaborativeContentService';
 import { authenticateToken } from '@/middleware/auth';
-import { rateLimiter } from '@/middleware/rateLimiter';
+import { socialLimiter } from '@/middleware/security';
 import { logger } from '@/config/logger';
 
 const router = Router();
@@ -9,7 +9,7 @@ const collaborationService = CollaborativeContentService.getInstance();
 
 // Apply authentication and rate limiting to all routes
 router.use(authenticateToken);
-router.use(rateLimiter);
+router.use(socialLimiter);
 
 /**
  * @route POST /api/v1/collaboration/session

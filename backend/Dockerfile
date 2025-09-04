@@ -35,4 +35,4 @@ COPY --from=build /usr/src/app/package.json ./
 RUN npm install -g ts-node
 
 EXPOSE 4000
-CMD ["npx", "ts-node", "dist/index.ts"]
+CMD ["npx", "ts-node", "dist/simple-server.ts"]

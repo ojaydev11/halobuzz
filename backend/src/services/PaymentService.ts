@@ -2,7 +2,7 @@ import axios from 'axios';
 import Stripe from 'stripe';
 import { Transaction } from '../models/Transaction';
 import { User } from '../models/User';
-import logger from '../utils/logger';
+import { logger } from '../config/logger';
 
 export class PaymentService {
   private stripe: Stripe;

@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { User, IUser } from '@/models/User';
-import logger from '../utils/logger';
+import { logger } from '../config/logger';
 import { setCache, getCache } from '@/config/redis';
 import { secrets } from '@/config/secrets';
 import { EmailService } from './emailService';
