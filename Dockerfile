@@ -47,7 +47,7 @@ RUN npm install -g ts-node tsconfig-paths
 
 # Debug: Check what's in the dist directory
 RUN echo "Checking dist directory contents:" && ls -la dist/ || echo "dist directory does not exist"
-RUN echo "Checking if index.ts exists:" && ls -la dist/index.ts || echo "index.ts does not exist"
+RUN echo "Checking if fallback-server.ts exists:" && ls -la dist/fallback-server.ts || echo "fallback-server.ts does not exist"
 
 EXPOSE 4000
-CMD ["npx", "ts-node", "-r", "tsconfig-paths/register", "dist/index.ts"]
+CMD ["npx", "ts-node", "-r", "tsconfig-paths/register", "dist/fallback-server.ts"]

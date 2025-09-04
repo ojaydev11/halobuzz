@@ -289,7 +289,7 @@ const startServer = async () => {
       await connectDatabase();
       logger.info('Database connected successfully');
     } catch (error) {
-      logger.warn('Database connection failed:', error.message);
+      logger.warn('Database connection failed:', error instanceof Error ? error.message : String(error));
       logger.warn('Continuing without database - some features will be disabled');
     }
 
@@ -298,7 +298,7 @@ const startServer = async () => {
       await connectRedis();
       logger.info('Redis connected successfully');
     } catch (error) {
-      logger.warn('Redis connection failed:', error.message);
+      logger.warn('Redis connection failed:', error instanceof Error ? error.message : String(error));
       logger.warn('Continuing without Redis - caching and real-time features will be disabled');
     }
 
@@ -307,7 +307,7 @@ const startServer = async () => {
       await featureFlags.initializeFlags();
       logger.info('Feature flags initialized successfully');
     } catch (error) {
-      logger.warn('Feature flags initialization failed:', error.message);
+      logger.warn('Feature flags initialization failed:', error instanceof Error ? error.message : String(error));
       logger.warn('Continuing with default feature flags');
     }
 
@@ -317,7 +317,7 @@ const startServer = async () => {
       await setupRedisAdapter(io);
       logger.info('Socket.IO configured with Redis adapter');
     } catch (error) {
-      logger.warn('Socket.IO Redis adapter setup failed:', error.message);
+      logger.warn('Socket.IO Redis adapter setup failed:', error instanceof Error ? error.message : String(error));
       logger.warn('Continuing with basic Socket.IO setup');
     }
 
