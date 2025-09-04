@@ -5,7 +5,11 @@ import { ApiResponse, AuthResponse, LoginRequest, RegisterRequest, User } from '
 import { StreamsResponse, CreateStreamRequest, Stream } from '@/types/stream';
 import { HealthStatus } from '@/types/monitoring';
 
-const API_BASE = (Constants.expoConfig?.extra as any)?.apiBase || 'https://halobuzz-api-proxy.ojayshah123.workers.dev';
+const API_BASE = 
+  process.env.EXPO_PUBLIC_API_BASE_URL ??
+  (Constants.expoConfig?.extra as any)?.apiBaseUrl ??
+  (Constants.expoConfig?.extra as any)?.apiBase ??
+  'https://halobuzz-api-proxy.ojayshah123.workers.dev/';
 
 class ApiClient {
   private client: AxiosInstance;
@@ -143,3 +147,10 @@ class ApiClient {
 
 export const apiClient = new ApiClient();
 export default apiClient;
+
+// Simple health check function for smoke testing
+export async function health() {
+  const r = await fetch(`${API_BASE}api/v1/monitoring/health`);
+  if (!r.ok) throw new Error(`Health failed: ${r.status}`);
+  return r.json();
+}

@@ -12,7 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useStreams } from '@/hooks/useStreams';
 import { Stream } from '@/types/stream';
-import { apiClient } from '@/lib/api';
+import { apiClient, health } from '@/lib/api';
 import { HealthStatus } from '@/types/monitoring';
 
 export default function DiscoverScreen() {
@@ -21,15 +21,14 @@ export default function DiscoverScreen() {
 
   // Quick smoke test on mount
   useEffect(() => {
-    const testConnection = async () => {
+    (async () => {
       try {
-        const response = await apiClient.simpleHealthCheck();
-        console.log("✅ Backend connection healthy:", response.data?.status);
-      } catch (error) {
-        console.error("❌ Backend connection failed:", error.message);
+        const data = await health();
+        console.log("✅ Backend health:", data);
+      } catch (e) {
+        console.log("❌ Backend health failed:", e);
       }
-    };
-    testConnection();
+    })();
   }, []);
 
   const onRefresh = async () => {

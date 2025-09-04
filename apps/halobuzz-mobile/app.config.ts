@@ -58,6 +58,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   scheme: "halobuzz",
   extra: {
+    // Expo public env var (preferred for OTA updates)
+    apiBaseUrl: process.env.EXPO_PUBLIC_API_BASE_URL,
+    // Fallback for non-OTA dev builds
     apiBase: process.env.HALOBUZZ_API_BASE || "https://halobuzz-api-proxy.ojayshah123.workers.dev",
     agoraAppId: process.env.AGORA_APP_ID || "",
     paymentsEnabled: process.env.PAYMENTS_ENABLED === "true",
