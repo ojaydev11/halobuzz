@@ -18,7 +18,7 @@ export const authenticateAIEngine = (req: AuthenticatedRequest, res: Response, n
     const expectedSecret = process.env.AI_SERVICE_SECRET;
 
     if (!expectedSecret) {
-      logger.error('AI_ENGINE_SECRET not configured');
+      logger.error('AI_SERVICE_SECRET not configured');
       return res.status(500).json({
         success: false,
         error: 'AI engine configuration error'
