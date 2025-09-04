@@ -321,7 +321,7 @@ const startServer = async () => {
     }
 
     // Start server
-    server.listen(PORT, () => {
+    server.listen(PORT, '0.0.0.0', () => {
       logger.info(`🚀 HaloBuzz Backend Server running on port ${PORT}`);
       logger.info(`Environment: ${process.env.NODE_ENV}`);
       logger.info(`API Version: ${process.env.API_VERSION || 'v1'}`);
