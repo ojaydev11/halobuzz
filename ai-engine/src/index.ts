@@ -61,7 +61,7 @@ const io = new Server(server, {
   }
 });
 
-const PORT = Number(process.env.PORT ?? 5020);
+const PORT = Number(process.env.PORT ?? 4000);
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
 // Initialize services
