@@ -29,5 +29,6 @@ COPY --from=deps /usr/src/app/node_modules ./node_modules
 COPY package.json ./
 RUN ls -la dist/ && echo "Files in dist directory:" && cat dist/index.js | head -20
 RUN echo "Testing Node.js execution:" && node --version && echo "Testing if dist/index.js exists:" && ls -la dist/index.js
+RUN echo "Testing if dist/minimal.js exists:" && ls -la dist/minimal.js && echo "Minimal.js content preview:" && cat dist/minimal.js | head -20
 EXPOSE 4000
-CMD ["sh", "-c", "echo 'Starting AI Engine...' && node dist/minimal.js || echo 'Node.js failed to start' && exit 1"]
+CMD ["sh", "-c", "echo 'Starting AI Engine...' && echo 'Testing minimal.js syntax:' && node -c dist/minimal.js && echo 'Syntax OK, starting server...' && node dist/minimal.js || echo 'Node.js failed to start' && exit 1"]
