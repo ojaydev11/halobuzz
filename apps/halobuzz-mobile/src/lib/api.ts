@@ -3,6 +3,7 @@ import Constants from 'expo-constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ApiResponse, AuthResponse, LoginRequest, RegisterRequest, User } from '@/types/auth';
 import { StreamsResponse, CreateStreamRequest, Stream } from '@/types/stream';
+import { HealthStatus } from '@/types/monitoring';
 
 const API_BASE = Constants.expoConfig?.extra?.apiBase || 'https://halobuzz-api-proxy.ojayshah123.workers.dev';
 
@@ -127,9 +128,15 @@ class ApiClient {
     return response.data;
   }
 
-  // Health check
-  async healthCheck(): Promise<ApiResponse<{ status: string }>> {
-    const response = await this.client.get('/health');
+  // Health check - comprehensive monitoring endpoint
+  async healthCheck(): Promise<ApiResponse<HealthStatus>> {
+    const response = await this.client.get('/api/v1/monitoring/health');
+    return response.data;
+  }
+
+  // Simple health check for basic connectivity
+  async simpleHealthCheck(): Promise<ApiResponse<{ status: string }>> {
+    const response = await this.client.get('/healthz');
     return response.data;
   }
 }

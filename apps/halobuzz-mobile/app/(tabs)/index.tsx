@@ -7,10 +7,13 @@ import {
   StyleSheet,
   RefreshControl,
   Image,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useStreams } from '@/hooks/useStreams';
 import { Stream } from '@/types/stream';
+import { apiClient } from '@/lib/api';
+import { HealthStatus } from '@/types/monitoring';
 
 export default function DiscoverScreen() {
   const { streams, loading, error, refresh } = useStreams();
@@ -20,6 +23,51 @@ export default function DiscoverScreen() {
     setRefreshing(true);
     await refresh();
     setRefreshing(false);
+  };
+
+  const testHealthCheck = async () => {
+    try {
+      console.log('Testing health check...');
+      const response = await apiClient.healthCheck();
+      console.log('Health check response:', response);
+      
+      if (response.success && response.data) {
+        const healthStatus = response.data;
+        const statusEmoji = healthStatus.status === 'healthy' ? '✅' : 
+                           healthStatus.status === 'warning' ? '⚠️' : '❌';
+        
+        Alert.alert(
+          'Health Check Result',
+          `${statusEmoji} Status: ${healthStatus.status.toUpperCase()}\n\n` +
+          healthStatus.checks.map(check => 
+            `${check.name}: ${check.status} - ${check.message}`
+          ).join('\n'),
+          [{ text: 'OK' }]
+        );
+      } else {
+        Alert.alert('Health Check Failed', 'Could not retrieve health status');
+      }
+    } catch (error) {
+      console.error('Health check error:', error);
+      Alert.alert('Health Check Error', `Failed to connect: ${error.message}`);
+    }
+  };
+
+  const testSimpleHealthCheck = async () => {
+    try {
+      console.log('Testing simple health check...');
+      const response = await apiClient.simpleHealthCheck();
+      console.log('Simple health check response:', response);
+      
+      Alert.alert(
+        'Simple Health Check',
+        `Status: ${response.data?.status || 'Unknown'}`,
+        [{ text: 'OK' }]
+      );
+    } catch (error) {
+      console.error('Simple health check error:', error);
+      Alert.alert('Simple Health Check Error', `Failed to connect: ${error.message}`);
+    }
   };
 
   const renderStream = ({ item }: { item: Stream }) => (
@@ -73,8 +121,20 @@ export default function DiscoverScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Discover</Text>
-        <Text style={styles.headerSubtitle}>Find live streams</Text>
+        <View style={styles.headerTop}>
+          <View>
+            <Text style={styles.headerTitle}>Discover</Text>
+            <Text style={styles.headerSubtitle}>Find live streams</Text>
+          </View>
+          <View style={styles.debugButtons}>
+            <TouchableOpacity style={styles.debugButton} onPress={testSimpleHealthCheck}>
+              <Text style={styles.debugButtonText}>Health</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.debugButton} onPress={testHealthCheck}>
+              <Text style={styles.debugButtonText}>Full</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
       </View>
 
       <FlatList
@@ -100,6 +160,11 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingBottom: 10,
   },
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
   headerTitle: {
     fontSize: 28,
     fontWeight: 'bold',
@@ -109,6 +174,21 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#888',
     marginTop: 4,
+  },
+  debugButtons: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  debugButton: {
+    backgroundColor: '#007AFF',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  debugButtonText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
   },
   listContainer: {
     padding: 20,
