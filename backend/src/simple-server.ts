@@ -7,6 +7,10 @@ import dotenv from 'dotenv';
 // Load environment variables
 dotenv.config();
 
+// Set default environment variables if not provided
+process.env.NODE_ENV = process.env.NODE_ENV || 'production';
+process.env.PORT = process.env.PORT || '4000';
+
 const app = express();
 const server = createServer(app);
 
@@ -50,6 +54,26 @@ server.listen(port, host, () => {
   console.log(`🚀 HaloBuzz Backend Server running on http://${host}:${port}`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`Health check available at: http://${host}:${port}/healthz`);
+  console.log(`Process ID: ${process.pid}`);
+  console.log(`Node version: ${process.version}`);
+});
+
+// Handle server errors
+server.on('error', (error) => {
+  console.error('Server error:', error);
+  process.exit(1);
+});
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+  process.exit(1);
+});
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  process.exit(1);
 });
 
 // Graceful shutdown
