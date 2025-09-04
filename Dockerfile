@@ -7,47 +7,37 @@ WORKDIR /usr/src/app
 # Use pnpm via corepack
 RUN corepack enable && corepack prepare pnpm@9.1.0 --activate
 
-# Install deps
-COPY package.json pnpm-lock.yaml ./
-# Force cache invalidation
-RUN echo "Cache bust: $(date)" > /tmp/cache-bust
+# Copy backend files
+COPY backend/package.json backend/pnpm-lock.yaml backend/tsconfig.json ./
+COPY backend/src ./src
+COPY backend/scripts ./scripts
+
+# Install dependencies
 RUN pnpm install --frozen-lockfile
 
-# Build
-COPY . .
-RUN echo "Current directory: $(pwd)" && ls -la
-RUN echo "Checking if backend directory exists:" && ls -la backend/ || echo "backend directory does not exist"
-RUN echo "Checking if backend/package.json exists:" && ls -la backend/package.json || echo "backend/package.json does not exist"
-RUN echo "Checking if we're in a monorepo structure:" && find . -name "package.json" -type f
-RUN echo "Checking if backend exists anywhere:" && find . -name "backend" -type d
-RUN echo "Full directory tree:" && find . -type d | head -20
-RUN echo "All files in current directory:" && find . -maxdepth 2 -type f | head -20
-RUN echo "Running build command in backend directory..." && (cd backend && pnpm run build) || echo "Build failed, but continuing..."
-RUN echo "After build command, checking backend directory:" && ls -la backend/ || echo "backend directory does not exist"
-RUN echo "Checking if backend/dist exists:" && ls -la backend/dist/ || echo "backend/dist does not exist"
-RUN echo "Creating backend structure for runtime..." && mkdir -p backend && cp package.json backend/ && cp pnpm-lock.yaml backend/ && cp tsconfig.json backend/ && cp -r src backend/ && cp -r scripts backend/ || echo "Failed to create backend structure"
-RUN echo "Running build in created backend structure..." && (cd backend && pnpm install --frozen-lockfile && pnpm run build) || echo "Build in created structure failed"
-RUN echo "Checking if backend/dist exists after build:" && ls -la backend/dist/ || echo "backend/dist still does not exist"
+# Build the TypeScript code
+RUN pnpm run build
+
+# Verify build output
+RUN echo "Build completed. Checking dist directory:" && ls -la dist/
 
 
 # --- runtime stage ---
 FROM node:20-slim
-WORKDIR /usr/src/app/backend
+WORKDIR /usr/src/app
 
 ENV NODE_ENV=production \
     PORT=4000
 
-# Copy built app
-COPY --from=build /usr/src/app/node_modules ./node_modules
-COPY --from=build /usr/src/app/backend/dist ./dist
-COPY --from=build /usr/src/app/backend/package.json ./
+# Install basic dependencies
+RUN npm install express cors helmet express-rate-limit
 
-# Install ts-node and tsconfig-paths for runtime
-RUN npm install -g ts-node tsconfig-paths
+# Copy the fallback server
+COPY backend/dist/fallback-server.js ./fallback-server.js
 
-# Debug: Check what's in the dist directory
-RUN echo "Checking dist directory contents:" && ls -la dist/ || echo "dist directory does not exist"
-RUN echo "Checking if fallback-server.ts exists:" && ls -la dist/fallback-server.ts || echo "fallback-server.ts does not exist"
+# Debug: Check what's in the directory
+RUN echo "Checking directory contents:" && ls -la
+RUN echo "Checking if fallback-server.js exists:" && ls -la fallback-server.js || echo "fallback-server.js does not exist"
 
 EXPOSE 4000
-CMD ["npx", "ts-node", "-r", "tsconfig-paths/register", "dist/fallback-server.ts"]
+CMD ["node", "fallback-server.js"]

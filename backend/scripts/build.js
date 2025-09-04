@@ -33,23 +33,18 @@ function copyRecursive(src, dest) {
 }
 
 try {
-  // Use ts-node to compile with transpile-only mode
-  console.log('Compiling TypeScript (transpile-only mode)...');
-  execSync('npx ts-node --transpile-only -r tsconfig-paths/register -e "console.log(\'Compilation successful\')"', { 
+  // Compile TypeScript to JavaScript
+  console.log('Compiling TypeScript to JavaScript...');
+  execSync('npx tsc', { 
     cwd: path.join(__dirname, '..'),
     stdio: 'inherit'
   });
   
-  // Copy source files to dist (since we're using transpile-only)
-  console.log('Copying source files to dist...');
-  const srcDir = path.join(__dirname, '..', 'src');
-  copyRecursive(srcDir, distDir);
-  
   console.log('TypeScript compilation completed successfully');
   
-  // Resolve path aliases
+  // Resolve path aliases in compiled JavaScript
   console.log('Resolving path aliases...');
-  execSync('npx tsc-alias', { 
+  execSync('npx tsc-alias -p tsconfig.json --outDir dist', { 
     cwd: path.join(__dirname, '..'),
     stdio: 'inherit'
   });
