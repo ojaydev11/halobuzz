@@ -42,9 +42,12 @@ COPY --from=build /usr/src/app/node_modules ./node_modules
 COPY --from=build /usr/src/app/backend/dist ./dist
 COPY --from=build /usr/src/app/backend/package.json ./
 
+# Install ts-node and tsconfig-paths for runtime
+RUN npm install -g ts-node tsconfig-paths
+
 # Debug: Check what's in the dist directory
 RUN echo "Checking dist directory contents:" && ls -la dist/ || echo "dist directory does not exist"
-RUN echo "Checking if minimal-server.js exists:" && ls -la dist/minimal-server.js || echo "minimal-server.js does not exist"
+RUN echo "Checking if index.ts exists:" && ls -la dist/index.ts || echo "index.ts does not exist"
 
 EXPOSE 4000
-CMD ["node", "dist/minimal-server.js"]
+CMD ["npx", "ts-node", "-r", "tsconfig-paths/register", "dist/index.ts"]
