@@ -1,4 +1,5 @@
-import express from 'express';
+import express, { Response } from 'express';
+import { AuthenticatedRequest } from '../middleware/auth';
 import crypto from 'crypto';
 import { body, validationResult } from 'express-validator';
 import { paymentService } from '../services/PaymentService';
@@ -13,7 +14,7 @@ import { WebhookEvent } from '../models/WebhookEvent';
 const router = express.Router();
 
 // Get wallet info
-router.get('/', async (req, res) => {
+router.get('/', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.user?.userId;
 
@@ -33,7 +34,7 @@ router.get('/', async (req, res) => {
     }
 
     // Get recent transactions
-    const recentTransactions = await Transaction.findUserTransactions(userId, 10);
+    const recentTransactions = await Transaction.find({ userId }).sort({ createdAt: -1 }).limit(10);
 
     res.json({
       success: true,
@@ -68,7 +69,7 @@ router.post('/recharge', [
   body('coins')
     .isInt({ min: 1 })
     .withMessage('Valid coin amount is required')
-], async (req, res) => {
+], async (req: AuthenticatedRequest, res: Response) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -225,7 +226,7 @@ router.post('/recharge', [
 });
 
 // Get transaction history
-router.get('/transactions', async (req, res) => {
+router.get('/transactions', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.user?.userId;
     const { limit = 20, page = 1 } = req.query;
@@ -238,7 +239,7 @@ router.get('/transactions', async (req, res) => {
     }
 
     const skip = (parseInt(page as string) - 1) * parseInt(limit as string);
-    const transactions = await Transaction.findUserTransactions(userId, parseInt(limit as string));
+    const transactions = await Transaction.find({ userId }).sort({ createdAt: -1 }).limit(parseInt(limit as string));
     const total = await Transaction.countDocuments({ userId });
 
     res.json({
@@ -264,7 +265,7 @@ router.get('/transactions', async (req, res) => {
 });
 
 // eSewa webhook
-router.post('/webhooks/esewa', express.raw({ type: '*/*' }), async (req, res) => {
+router.post('/webhooks/esewa', express.raw({ type: '*/*' }), async (req: AuthenticatedRequest, res: Response) => {
   try {
     const raw = req.body as Buffer;
     const text = raw.toString('utf8');
@@ -323,7 +324,7 @@ router.post('/webhooks/esewa', express.raw({ type: '*/*' }), async (req, res) =>
 });
 
 // Khalti webhook
-router.post('/webhooks/khalti', express.raw({ type: '*/*' }), async (req, res) => {
+router.post('/webhooks/khalti', express.raw({ type: '*/*' }), async (req: AuthenticatedRequest, res: Response) => {
   try {
     const raw = req.body as Buffer;
     const text = raw.toString('utf8');
@@ -382,7 +383,7 @@ router.post('/webhooks/khalti', express.raw({ type: '*/*' }), async (req, res) =
 });
 
 // Stripe webhook
-router.post('/webhooks/stripe', express.raw({ type: 'application/json' }), async (req, res) => {
+router.post('/webhooks/stripe', express.raw({ type: 'application/json' }), async (req: AuthenticatedRequest, res: Response) => {
   try {
     const sig = req.headers['stripe-signature'];
     const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -395,12 +396,12 @@ router.post('/webhooks/stripe', express.raw({ type: 'application/json' }), async
     }
 
     // Verify webhook signature
-    const { stripe } = await import('stripe');
-    const stripeInstance = new stripe(process.env.STRIPE_SECRET_KEY!);
+    const Stripe = (await import('stripe')).default;
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
     
     let event;
     try {
-      event = stripeInstance.webhooks.constructEvent(req.body, sig, endpointSecret);
+      event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
     } catch (err) {
       return res.status(400).json({
         success: false,
@@ -443,7 +444,7 @@ if (process.env.NODE_ENV === 'development') {
     body('coins')
       .isInt({ min: 1 })
       .withMessage('Valid coin amount is required')
-  ], async (req, res) => {
+  ], async (req: AuthenticatedRequest, res: Response) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {

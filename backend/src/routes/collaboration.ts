@@ -1,6 +1,7 @@
-import { Router, Request, Response } from 'express';
+import { Router, Response } from 'express';
+import { AuthenticatedRequest } from '@/middleware/auth';
 import { CollaborativeContentService } from '@/services/collaboration/CollaborativeContentService';
-import { authenticateToken } from '@/middleware/auth';
+import { authMiddleware } from '@/middleware/auth';
 import { socialLimiter } from '@/middleware/security';
 import { logger } from '@/config/logger';
 
@@ -8,14 +9,14 @@ const router = Router();
 const collaborationService = CollaborativeContentService.getInstance();
 
 // Apply authentication and rate limiting to all routes
-router.use(authenticateToken);
+router.use(authMiddleware);
 router.use(socialLimiter);
 
 /**
  * @route POST /api/v1/collaboration/session
  * @desc Create a new collaboration session
  */
-router.post('/session', async (req: Request, res: Response) => {
+router.post('/session', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { contentType, content, duration } = req.body;
     const userId = req.user?.userId;
@@ -49,7 +50,7 @@ router.post('/session', async (req: Request, res: Response) => {
  * @route POST /api/v1/collaboration/:sessionId/invite
  * @desc Invite users to collaborate
  */
-router.post('/:sessionId/invite', async (req: Request, res: Response) => {
+router.post('/:sessionId/invite', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { sessionId } = req.params;
     const { invitees } = req.body;
@@ -83,7 +84,7 @@ router.post('/:sessionId/invite', async (req: Request, res: Response) => {
  * @route POST /api/v1/collaboration/invite/:inviteId/accept
  * @desc Accept collaboration invite
  */
-router.post('/invite/:inviteId/accept', async (req: Request, res: Response) => {
+router.post('/invite/:inviteId/accept', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { inviteId } = req.params;
     const userId = req.user?.userId;
@@ -108,7 +109,7 @@ router.post('/invite/:inviteId/accept', async (req: Request, res: Response) => {
  * @route POST /api/v1/collaboration/:sessionId/edit
  * @desc Apply real-time edit
  */
-router.post('/:sessionId/edit', async (req: Request, res: Response) => {
+router.post('/:sessionId/edit', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { sessionId } = req.params;
     const { editType, changes } = req.body;
@@ -143,7 +144,7 @@ router.post('/:sessionId/edit', async (req: Request, res: Response) => {
  * @route POST /api/v1/collaboration/:sessionId/comment
  * @desc Add comment to collaboration
  */
-router.post('/:sessionId/comment', async (req: Request, res: Response) => {
+router.post('/:sessionId/comment', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { sessionId } = req.params;
     const { comment, timestamp } = req.body;
@@ -178,7 +179,7 @@ router.post('/:sessionId/comment', async (req: Request, res: Response) => {
  * @route GET /api/v1/collaboration/:sessionId
  * @desc Get collaboration session
  */
-router.get('/:sessionId', async (req: Request, res: Response) => {
+router.get('/:sessionId', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { sessionId } = req.params;
     const userId = req.user?.userId;
@@ -212,7 +213,7 @@ router.get('/:sessionId', async (req: Request, res: Response) => {
  * @route GET /api/v1/collaboration/user/sessions
  * @desc Get user's collaboration sessions
  */
-router.get('/user/sessions', async (req: Request, res: Response) => {
+router.get('/user/sessions', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.user?.userId;
 
@@ -236,7 +237,7 @@ router.get('/user/sessions', async (req: Request, res: Response) => {
  * @route POST /api/v1/collaboration/:sessionId/complete
  * @desc Complete collaboration session
  */
-router.post('/:sessionId/complete', async (req: Request, res: Response) => {
+router.post('/:sessionId/complete', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { sessionId } = req.params;
     const userId = req.user?.userId;
@@ -261,7 +262,7 @@ router.post('/:sessionId/complete', async (req: Request, res: Response) => {
  * @route GET /api/v1/collaboration/:sessionId/analytics
  * @desc Get collaboration analytics
  */
-router.get('/:sessionId/analytics', async (req: Request, res: Response) => {
+router.get('/:sessionId/analytics', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { sessionId } = req.params;
     const userId = req.user?.userId;

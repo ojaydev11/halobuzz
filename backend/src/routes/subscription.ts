@@ -1,4 +1,5 @@
-import express from 'express';
+import express, { Response } from 'express';
+import { AuthenticatedRequest } from '../middleware/auth';
 import { authMiddleware } from '../middleware/auth';
 import { socialLimiter } from '../middleware/security';
 import AdvancedSubscriptionService from '../services/subscription/SubscriptionService';
@@ -16,7 +17,7 @@ router.use(socialLimiter);
  * @desc Create a new subscription tier
  * @access Private (Creator)
  */
-router.post('/tier', async (req, res) => {
+router.post('/tier', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const creatorId = req.user.id;
     const tierData = req.body;
@@ -59,7 +60,7 @@ router.post('/tier', async (req, res) => {
  * @desc Get creator's subscription tiers
  * @access Public
  */
-router.get('/creator/:creatorId/tiers', async (req, res) => {
+router.get('/creator/:creatorId/tiers', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { creatorId } = req.params;
 
@@ -83,7 +84,7 @@ router.get('/creator/:creatorId/tiers', async (req, res) => {
  * @desc Subscribe to a creator's tier
  * @access Private
  */
-router.post('/subscribe', async (req, res) => {
+router.post('/subscribe', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { creatorId, tierId, paymentMethod } = req.body;
     const subscriberId = req.user.id;
@@ -131,7 +132,7 @@ router.post('/subscribe', async (req, res) => {
  * @desc Cancel a subscription
  * @access Private
  */
-router.post('/:subscriptionId/cancel', async (req, res) => {
+router.post('/:subscriptionId/cancel', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { subscriptionId } = req.params;
     const { reason } = req.body;
@@ -174,7 +175,7 @@ router.post('/:subscriptionId/cancel', async (req, res) => {
  * @desc Get user's subscriptions
  * @access Private
  */
-router.get('/user/:userId/subscriptions', async (req, res) => {
+router.get('/user/:userId/subscriptions', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { userId } = req.params;
     const requestingUserId = req.user.id;
@@ -207,7 +208,7 @@ router.get('/user/:userId/subscriptions', async (req, res) => {
  * @desc Get creator's subscriber analytics
  * @access Private (Creator)
  */
-router.get('/creator/:creatorId/analytics', async (req, res) => {
+router.get('/creator/:creatorId/analytics', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { creatorId } = req.params;
     const requestingUserId = req.user.id;
@@ -240,7 +241,7 @@ router.get('/creator/:creatorId/analytics', async (req, res) => {
  * @desc Deliver exclusive content to subscribers
  * @access Private (Creator)
  */
-router.post('/content/exclusive', async (req, res) => {
+router.post('/content/exclusive', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { tierId, content } = req.body;
     const creatorId = req.user.id;
@@ -286,7 +287,7 @@ router.post('/content/exclusive', async (req, res) => {
  * @desc Get revenue forecast for creator
  * @access Private (Creator)
  */
-router.get('/creator/:creatorId/forecast', async (req, res) => {
+router.get('/creator/:creatorId/forecast', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { creatorId } = req.params;
     const { timeframe = '12months' } = req.query;
@@ -320,7 +321,7 @@ router.get('/creator/:creatorId/forecast', async (req, res) => {
  * @desc Update subscription tier
  * @access Private (Creator)
  */
-router.put('/tier/:tierId', async (req, res) => {
+router.put('/tier/:tierId', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { tierId } = req.params;
     const updates = req.body;
@@ -348,7 +349,7 @@ router.put('/tier/:tierId', async (req, res) => {
  * @desc Delete subscription tier
  * @access Private (Creator)
  */
-router.delete('/tier/:tierId', async (req, res) => {
+router.delete('/tier/:tierId', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { tierId } = req.params;
     const creatorId = req.user.id;
@@ -375,7 +376,7 @@ router.delete('/tier/:tierId', async (req, res) => {
  * @desc Get exclusive content details
  * @access Private (Subscriber)
  */
-router.get('/content/:contentId', async (req, res) => {
+router.get('/content/:contentId', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { contentId } = req.params;
     const userId = req.user.id;
@@ -402,7 +403,7 @@ router.get('/content/:contentId', async (req, res) => {
  * @desc Get creator's exclusive content (for subscribers)
  * @access Private (Subscriber)
  */
-router.get('/creator/:creatorId/content', async (req, res) => {
+router.get('/creator/:creatorId/content', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { creatorId } = req.params;
     const { page = 1, limit = 20 } = req.query;
@@ -434,7 +435,7 @@ router.get('/creator/:creatorId/content', async (req, res) => {
  * @desc Get global subscription statistics
  * @access Public
  */
-router.get('/stats/global', async (req, res) => {
+router.get('/stats/global', async (req: AuthenticatedRequest, res: Response) => {
   try {
     // Mock implementation - in real app, return global subscription stats
     const stats = {

@@ -1,4 +1,5 @@
-import express from 'express';
+import express, { Response } from 'express';
+import { AuthenticatedRequest } from '../middleware/auth';
 import { body, validationResult } from 'express-validator';
 import { ageKycService } from '../services/AgeKycService';
 import { setupLogger } from '../config/logger';
@@ -13,7 +14,7 @@ router.post('/submit', [
   requireAgeVerification,
   body('idCard').isString().notEmpty().withMessage('ID card image is required'),
   body('selfie').isString().notEmpty().withMessage('Selfie image is required')
-], async (req, res) => {
+], async (req: AuthenticatedRequest, res: Response) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -55,7 +56,7 @@ router.post('/submit', [
 });
 
 // Get KYC status
-router.get('/status', async (req, res) => {
+router.get('/status', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.user?.userId;
     if (!userId) {
@@ -94,7 +95,7 @@ router.get('/status', async (req, res) => {
 });
 
 // Check access permissions
-router.get('/access', async (req, res) => {
+router.get('/access', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.user?.userId;
     if (!userId) {
@@ -132,7 +133,7 @@ router.get('/access', async (req, res) => {
 // Update date of birth (for age verification)
 router.put('/date-of-birth', [
   body('dateOfBirth').isISO8601().withMessage('Valid date of birth is required')
-], async (req, res) => {
+], async (req: AuthenticatedRequest, res: Response) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {

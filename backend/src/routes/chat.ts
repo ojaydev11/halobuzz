@@ -1,15 +1,16 @@
-import express from 'express';
+import express, { Response } from 'express';
 import { body, validationResult } from 'express-validator';
 import { Message } from '../models/Message';
 import { User } from '../models/User';
 import { LiveStream } from '../models/LiveStream';
 import { moderationQueue } from '../services/ModerationQueue';
 import { logger } from '../config/logger';
+import { AuthenticatedRequest } from '../middleware/auth';
 
 const router = express.Router();
 
 // Get messages for a stream
-router.get('/:streamId', async (req, res) => {
+router.get('/:streamId', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { streamId } = req.params;
     const { limit = 50, page = 1, type } = req.query;
@@ -18,9 +19,9 @@ router.get('/:streamId', async (req, res) => {
 
     let messages;
     if (type === 'gift') {
-      messages = await Message.findGiftMessages(streamId, parseInt(limit as string));
+      messages = await Message.find({ roomId: streamId, type: 'gift', isDeleted: false }).sort({ createdAt: -1 }).limit(parseInt(limit as string));
     } else {
-      messages = await Message.findByRoom(streamId, parseInt(limit as string), skip);
+      messages = await Message.find({ roomId: streamId, isDeleted: false }).sort({ createdAt: -1 }).skip(skip).limit(parseInt(limit as string));
     }
 
     const total = await Message.countDocuments({ 
@@ -70,7 +71,7 @@ router.post('/:streamId/send', [
     .optional()
     .isIn(['text', 'emoji'])
     .withMessage('Valid message type is required')
-], async (req, res) => {
+], async (req: AuthenticatedRequest, res: Response) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -178,7 +179,7 @@ router.post('/:streamId/send', [
 });
 
 // Delete message (OG4/5 privilege)
-router.delete('/:messageId', async (req, res) => {
+router.delete('/:messageId', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { messageId } = req.params;
     const userId = req.user?.userId;
@@ -225,7 +226,7 @@ router.delete('/:messageId', async (req, res) => {
     }
 
     // Soft delete message
-    message.softDelete(userId);
+    (message as any).softDelete(userId);
     await message.save();
 
     res.json({
@@ -243,12 +244,12 @@ router.delete('/:messageId', async (req, res) => {
 });
 
 // Get messages with mentions
-router.get('/mentions/:username', async (req, res) => {
+router.get('/mentions/:username', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { username } = req.params;
     const { limit = 20 } = req.query;
 
-    const messages = await Message.findWithMentions(username, parseInt(limit as string));
+    const messages = await Message.find({ 'metadata.mentions': username, isDeleted: false }).sort({ createdAt: -1 }).limit(parseInt(limit as string));
 
     res.json({
       success: true,
@@ -277,7 +278,7 @@ router.get('/mentions/:username', async (req, res) => {
 });
 
 // Pin message (OG4/5 privilege)
-router.post('/:messageId/pin', async (req, res) => {
+router.post('/:messageId/pin', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { messageId } = req.params;
     const userId = req.user?.userId;
@@ -333,7 +334,7 @@ router.post('/:messageId/pin', async (req, res) => {
 });
 
 // Get chat statistics
-router.get('/:streamId/stats', async (req, res) => {
+router.get('/:streamId/stats', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { streamId } = req.params;
 

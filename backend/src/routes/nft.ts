@@ -1,4 +1,5 @@
-import express from 'express';
+import express, { Response } from 'express';
+import { AuthenticatedRequest } from '../middleware/auth';
 import { authMiddleware } from '../middleware/auth';
 import { socialLimiter } from '../middleware/security';
 import NFTMarketplaceService from '../services/nft/NFTMarketplaceService';
@@ -16,7 +17,7 @@ router.use(socialLimiter);
  * @desc Mint a new NFT from creator content
  * @access Private
  */
-router.post('/mint', async (req, res) => {
+router.post('/mint', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { content, metadata } = req.body;
     const creatorId = req.user.id;
@@ -58,7 +59,7 @@ router.post('/mint', async (req, res) => {
  * @desc Purchase an NFT
  * @access Private
  */
-router.post('/purchase', async (req, res) => {
+router.post('/purchase', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { nftId } = req.body;
     const buyerId = req.user.id;
@@ -100,7 +101,7 @@ router.post('/purchase', async (req, res) => {
  * @desc Get NFT details
  * @access Public
  */
-router.get('/:nftId', async (req, res) => {
+router.get('/:nftId', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { nftId } = req.params;
 
@@ -131,7 +132,7 @@ router.get('/:nftId', async (req, res) => {
  * @desc List NFT for sale
  * @access Private
  */
-router.post('/:nftId/list', async (req, res) => {
+router.post('/:nftId/list', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { nftId } = req.params;
     const { price } = req.body;
@@ -182,7 +183,7 @@ router.post('/:nftId/list', async (req, res) => {
  * @desc Create auction for NFT
  * @access Private
  */
-router.post('/:nftId/auction', async (req, res) => {
+router.post('/:nftId/auction', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { nftId } = req.params;
     const { startPrice, reservePrice, durationHours } = req.body;
@@ -234,7 +235,7 @@ router.post('/:nftId/auction', async (req, res) => {
  * @desc Place bid on auction
  * @access Private
  */
-router.post('/:nftId/bid', async (req, res) => {
+router.post('/:nftId/bid', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { nftId } = req.params;
     const { amount } = req.body;
@@ -286,7 +287,7 @@ router.post('/:nftId/bid', async (req, res) => {
  * @desc Get marketplace statistics
  * @access Public
  */
-router.get('/marketplace/stats', async (req, res) => {
+router.get('/marketplace/stats', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const stats = await nftService.getNFTMarketplaceStats();
 
@@ -308,7 +309,7 @@ router.get('/marketplace/stats', async (req, res) => {
  * @desc Get NFTs by creator
  * @access Public
  */
-router.get('/creator/:creatorId', async (req, res) => {
+router.get('/creator/:creatorId', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { creatorId } = req.params;
     const { page = 1, limit = 20, status } = req.query;
@@ -341,7 +342,7 @@ router.get('/creator/:creatorId', async (req, res) => {
  * @desc Get NFTs owned by user
  * @access Private
  */
-router.get('/user/:userId/owned', async (req, res) => {
+router.get('/user/:userId/owned', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { userId } = req.params;
     const requestingUserId = req.user.id;
@@ -384,7 +385,7 @@ router.get('/user/:userId/owned', async (req, res) => {
  * @desc Get trending NFTs
  * @access Public
  */
-router.get('/trending', async (req, res) => {
+router.get('/trending', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { limit = 20 } = req.query;
 
@@ -412,7 +413,7 @@ router.get('/trending', async (req, res) => {
  * @desc Search NFTs
  * @access Public
  */
-router.get('/search', async (req, res) => {
+router.get('/search', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { q, category, rarity, minPrice, maxPrice, sortBy = 'createdAt', sortOrder = 'desc' } = req.query;
     const { page = 1, limit = 20 } = req.query;

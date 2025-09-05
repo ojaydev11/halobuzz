@@ -1,4 +1,5 @@
-import express from 'express';
+import express, { Response } from 'express';
+import { AuthenticatedRequest } from '../middleware/auth';
 import { body, validationResult } from 'express-validator';
 import { Throne } from '../models/Throne';
 import { User } from '../models/User';
@@ -9,7 +10,7 @@ import { logger } from '../config/logger';
 const router = express.Router();
 
 // Claim throne
-router.post('/:streamId/claim', async (req, res) => {
+router.post('/:streamId/claim', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { streamId } = req.params;
     const userId = req.user?.userId;
@@ -55,7 +56,7 @@ router.post('/:streamId/claim', async (req, res) => {
     }
 
     // Check if throne already exists for this stream
-    const existingThrone = await Throne.findActiveForStream(streamId);
+    const existingThrone = await Throne.findOne({ streamId, isActive: true, expiresAt: { $gt: new Date() } });
     if (existingThrone) {
       return res.status(400).json({
         success: false,
@@ -123,11 +124,11 @@ router.post('/:streamId/claim', async (req, res) => {
 });
 
 // Get active throne for stream
-router.get('/:streamId', async (req, res) => {
+router.get('/:streamId', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { streamId } = req.params;
 
-    const throne = await Throne.findActiveForStream(streamId);
+    const throne = await Throne.findOne({ streamId, isActive: true, expiresAt: { $gt: new Date() } });
 
     if (!throne) {
       return res.status(404).json({
@@ -165,14 +166,14 @@ router.get('/:streamId', async (req, res) => {
 });
 
 // Get user's throne history
-router.get('/user/:userId', async (req, res) => {
+router.get('/user/:userId', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { userId } = req.params;
     const { limit = 20, page = 1 } = req.query;
 
     const skip = (parseInt(page as string) - 1) * parseInt(limit as string);
 
-    const thrones = await Throne.findUserHistory(userId, parseInt(limit as string));
+    const thrones = await Throne.find({ userId }).sort({ createdAt: -1 }).limit(parseInt(limit as string));
     const total = await Throne.countDocuments({ userId });
 
     res.json({
@@ -208,11 +209,11 @@ router.get('/user/:userId', async (req, res) => {
 });
 
 // Get top thrones
-router.get('/top', async (req, res) => {
+router.get('/top', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { limit = 10 } = req.query;
 
-    const thrones = await Throne.findTopThrones(parseInt(limit as string));
+    const thrones = await Throne.find({ isActive: false }).sort({ totalCoins: -1, totalGifts: -1 }).limit(parseInt(limit as string));
 
     res.json({
       success: true,
@@ -250,7 +251,7 @@ router.post('/:throneId/gift', [
   body('coins')
     .isInt({ min: 1 })
     .withMessage('Valid coin amount is required')
-], async (req, res) => {
+], async (req: AuthenticatedRequest, res: Response) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -279,7 +280,7 @@ router.post('/:throneId/gift', [
     }
 
     // Add gift to throne
-    throne.addGift(coins, giftId);
+    (throne as any).addGift(coins, giftId);
     await throne.save();
 
     res.json({

@@ -1,5 +1,6 @@
-import express from 'express';
-import { authenticateToken } from '../middleware/auth';
+import express, { Response } from 'express';
+import { AuthenticatedRequest } from '../middleware/auth';
+import { authMiddleware } from '../middleware/auth';
 import { socialLimiter } from '../middleware/security';
 import LiveCommerceService from '../services/commerce/LiveCommerceService';
 import { logger } from '../config/logger';
@@ -8,7 +9,7 @@ const router = express.Router();
 const commerceService = LiveCommerceService.getInstance();
 
 // Apply middleware
-router.use(authenticateToken);
+router.use(authMiddleware);
 router.use(socialLimiter);
 
 /**
@@ -16,7 +17,7 @@ router.use(socialLimiter);
  * @desc Create a new shoppable product
  * @access Private (Creator)
  */
-router.post('/product', async (req, res) => {
+router.post('/product', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const productData = req.body;
     const creatorId = req.user.id;
@@ -70,7 +71,7 @@ router.post('/product', async (req, res) => {
  * @desc Add product to live stream
  * @access Private (Creator)
  */
-router.post('/stream/:streamId/product', async (req, res) => {
+router.post('/stream/:streamId/product', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { streamId } = req.params;
     const { productId } = req.body;
@@ -114,7 +115,7 @@ router.post('/stream/:streamId/product', async (req, res) => {
  * @desc Process live checkout
  * @access Private
  */
-router.post('/checkout', async (req, res) => {
+router.post('/checkout', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { productId, streamId, quantity = 1, paymentMethod } = req.body;
     const buyerId = req.user.id;
@@ -164,7 +165,7 @@ router.post('/checkout', async (req, res) => {
  * @desc Initiate group buy
  * @access Private
  */
-router.post('/group-buy', async (req, res) => {
+router.post('/group-buy', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { productId, targetQuantity, discountTiers } = req.body;
     const initiatorId = req.user.id;
@@ -212,7 +213,7 @@ router.post('/group-buy', async (req, res) => {
  * @desc Join group buy
  * @access Private
  */
-router.post('/group-buy/:groupBuyId/join', async (req, res) => {
+router.post('/group-buy/:groupBuyId/join', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { groupBuyId } = req.params;
     const { quantity } = req.body;
@@ -264,7 +265,7 @@ router.post('/group-buy/:groupBuyId/join', async (req, res) => {
  * @desc Get live shopping session
  * @access Public
  */
-router.get('/stream/:streamId/session', async (req, res) => {
+router.get('/stream/:streamId/session', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { streamId } = req.params;
 
@@ -288,7 +289,7 @@ router.get('/stream/:streamId/session', async (req, res) => {
  * @desc Get commerce analytics
  * @access Private (Creator)
  */
-router.get('/analytics', async (req, res) => {
+router.get('/analytics', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { timeframe = '30days' } = req.query;
     const creatorId = req.user.id;
@@ -313,7 +314,7 @@ router.get('/analytics', async (req, res) => {
  * @desc Get products (with filters)
  * @access Public
  */
-router.get('/products', async (req, res) => {
+router.get('/products', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { 
       creatorId, 
@@ -364,7 +365,7 @@ router.get('/products', async (req, res) => {
  * @desc Get product details
  * @access Public
  */
-router.get('/product/:productId', async (req, res) => {
+router.get('/product/:productId', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { productId } = req.params;
 
@@ -398,7 +399,7 @@ router.get('/product/:productId', async (req, res) => {
  * @desc Update product
  * @access Private (Creator)
  */
-router.put('/product/:productId', async (req, res) => {
+router.put('/product/:productId', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { productId } = req.params;
     const updates = req.body;
@@ -439,7 +440,7 @@ router.put('/product/:productId', async (req, res) => {
  * @desc Delete product
  * @access Private (Creator)
  */
-router.delete('/product/:productId', async (req, res) => {
+router.delete('/product/:productId', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { productId } = req.params;
     const userId = req.user.id;
@@ -472,7 +473,7 @@ router.delete('/product/:productId', async (req, res) => {
  * @desc Get group buy details
  * @access Public
  */
-router.get('/group-buy/:groupBuyId', async (req, res) => {
+router.get('/group-buy/:groupBuyId', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { groupBuyId } = req.params;
 
@@ -506,7 +507,7 @@ router.get('/group-buy/:groupBuyId', async (req, res) => {
  * @desc Get checkout details
  * @access Private
  */
-router.get('/checkout/:checkoutId', async (req, res) => {
+router.get('/checkout/:checkoutId', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { checkoutId } = req.params;
     const userId = req.user.id;
@@ -542,7 +543,7 @@ router.get('/checkout/:checkoutId', async (req, res) => {
  * @desc Get trending products
  * @access Public
  */
-router.get('/trending', async (req, res) => {
+router.get('/trending', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { limit = 20 } = req.query;
 
