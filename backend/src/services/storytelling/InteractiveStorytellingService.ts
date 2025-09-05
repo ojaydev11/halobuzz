@@ -188,8 +188,8 @@ const StoryProgressSchema = new Schema<StoryProgress>({
 });
 
 // Models
-const StoryModel = model<Story & Document>('Story', StorySchema);
-const StoryProgressModel = model<StoryProgress & Document>('StoryProgress', StoryProgressSchema);
+const StoryModel = model<Story>('Story', StorySchema);
+const StoryProgressModel = model<StoryProgress>('StoryProgress', StoryProgressSchema);
 
 export class InteractiveStorytellingService {
   private static instance: InteractiveStorytellingService;
@@ -246,7 +246,8 @@ export class InteractiveStorytellingService {
       const createdStory = await StoryModel.create(story);
       
       // Cache story for quick access
-      await redisClient.setex(
+      const redisClient = getRedisClient();
+      await redisClient.setEx(
         `story:${storyId}`,
         3600,
         JSON.stringify(story)
@@ -302,10 +303,11 @@ export class InteractiveStorytellingService {
 
       story.chapters.push(chapter);
       story.updatedAt = new Date();
-      await story.save();
+      await StoryModel.findByIdAndUpdate((story as any)._id, story);
 
       // Update cache
-      await redisClient.setex(
+      const redisClient = getRedisClient();
+      await redisClient.setEx(
         `story:${storyId}`,
         3600,
         JSON.stringify(story)
@@ -359,22 +361,26 @@ export class InteractiveStorytellingService {
 
       chapter.choices.push(choice);
       story.updatedAt = new Date();
-      await story.save();
+      await StoryModel.findByIdAndUpdate((story as any)._id, story);
 
       // Update cache
-      await redisClient.setex(
+      const redisClient = getRedisClient();
+      await redisClient.setEx(
         `story:${storyId}`,
         3600,
         JSON.stringify(story)
       );
 
       // Emit real-time update
-      io.to(`story:${storyId}`).emit('choice_added', {
-        chapterId,
-        choiceId,
-        text,
-        createdBy: userId
-      });
+      const io = getSocketIO();
+      if (io) {
+        io.to(`story:${storyId}`).emit('choice_added', {
+          chapterId,
+          choiceId,
+          text,
+          createdBy: userId
+        });
+      }
 
       logger.info('Choice added to chapter', { storyId, chapterId, choiceId });
       return choice;
@@ -445,22 +451,26 @@ export class InteractiveStorytellingService {
 
       story.totalInteractions += 1;
       story.updatedAt = new Date();
-      await story.save();
+      await StoryModel.findByIdAndUpdate((story as any)._id, story);
 
       // Update cache
-      await redisClient.setex(
+      const redisClient = getRedisClient();
+      await redisClient.setEx(
         `story:${storyId}`,
         3600,
         JSON.stringify(story)
       );
 
       // Emit real-time update
-      io.to(`story:${storyId}`).emit('vote_cast', {
-        chapterId,
-        userId,
-        choiceId,
-        contentId
-      });
+      const io = getSocketIO();
+      if (io) {
+        io.to(`story:${storyId}`).emit('vote_cast', {
+          chapterId,
+          userId,
+          choiceId,
+          contentId
+        });
+      }
 
       logger.info('Vote cast', { storyId, chapterId, userId, choiceId, contentId });
     } catch (error) {
@@ -511,23 +521,27 @@ export class InteractiveStorytellingService {
       chapter.userContent.push(userContent);
       story.totalInteractions += 1;
       story.updatedAt = new Date();
-      await story.save();
+      await StoryModel.findByIdAndUpdate((story as any)._id, story);
 
       // Update cache
-      await redisClient.setex(
+      const redisClient = getRedisClient();
+      await redisClient.setEx(
         `story:${storyId}`,
         3600,
         JSON.stringify(story)
       );
 
       // Emit real-time update
-      io.to(`story:${storyId}`).emit('user_content_submitted', {
-        chapterId,
-        contentId,
-        userId,
-        type,
-        content
-      });
+      const io = getSocketIO();
+      if (io) {
+        io.to(`story:${storyId}`).emit('user_content_submitted', {
+          chapterId,
+          contentId,
+          userId,
+          type,
+          content
+        });
+      }
 
       logger.info('User content submitted', { storyId, chapterId, contentId, userId });
       return userContent;
@@ -567,10 +581,11 @@ export class InteractiveStorytellingService {
       // Move to next chapter
       story.currentChapter += 1;
       story.updatedAt = new Date();
-      await story.save();
+      await StoryModel.findByIdAndUpdate((story as any)._id, story);
 
       // Update cache
-      await redisClient.setex(
+      const redisClient = getRedisClient();
+      await redisClient.setEx(
         `story:${storyId}`,
         3600,
         JSON.stringify(story)
@@ -579,12 +594,15 @@ export class InteractiveStorytellingService {
       const nextChapter = story.chapters[story.currentChapter];
       if (nextChapter) {
         // Emit real-time update
-        io.to(`story:${storyId}`).emit('chapter_progressed', {
-          storyId,
-          newChapter: story.currentChapter,
-          popularChoice: popularChoice.choiceId,
-          nextChapter: nextChapter.chapterId
-        });
+        const io = getSocketIO();
+        if (io) {
+          io.to(`story:${storyId}`).emit('chapter_progressed', {
+            storyId,
+            newChapter: story.currentChapter,
+            popularChoice: popularChoice.choiceId,
+            nextChapter: nextChapter.chapterId
+          });
+        }
       }
 
       logger.info('Progressed to next chapter', { storyId, userId, newChapter: story.currentChapter });
@@ -601,6 +619,7 @@ export class InteractiveStorytellingService {
   async getStory(storyId: string): Promise<Story | null> {
     try {
       // Try cache first
+      const redisClient = getRedisClient();
       const cached = await redisClient.get(`story:${storyId}`);
       if (cached) {
         return JSON.parse(cached);
@@ -610,7 +629,7 @@ export class InteractiveStorytellingService {
       const story = await StoryModel.findOne({ storyId });
       if (story) {
         // Cache for future requests
-        await redisClient.setex(
+        await redisClient.setEx(
           `story:${storyId}`,
           3600,
           JSON.stringify(story)
@@ -653,7 +672,7 @@ export class InteractiveStorytellingService {
         progress.currentChapter = chapterNumber;
         progress.choices.push({ chapterId: storyId, choiceId });
         progress.lastActivity = new Date();
-        await progress.save();
+        await StoryProgressModel.findByIdAndUpdate(progress._id, progress);
       } else {
         const newProgress: StoryProgress = {
           userId,

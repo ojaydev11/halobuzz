@@ -1,7 +1,7 @@
 import { Schema, model, Document } from 'mongoose';
 import { logger } from '@/config/logger';
-import { redisClient } from '@/config/redis';
-import { io } from '@/config/socket';
+import { getRedisClient } from '@/config/redis';
+import { getSocketIO } from '@/config/socket';
 
 // Interfaces
 export interface DAOProposal {
@@ -228,10 +228,10 @@ const DAOMemberSchema = new Schema<DAOMember>({
 });
 
 // Models
-const DAOProposalModel = model<DAOProposal & Document>('DAOProposal', DAOProposalSchema);
-const DAODelegationModel = model<DAODelegation & Document>('DAODelegation', DAODelegationSchema);
-const DAOTreasuryModel = model<DAOTreasury & Document>('DAOTreasury', DAOTreasurySchema);
-const DAOMemberModel = model<DAOMember & Document>('DAOMember', DAOMemberSchema);
+const DAOProposalModel = model<DAOProposal>('DAOProposal', DAOProposalSchema);
+const DAODelegationModel = model<DAODelegation>('DAODelegation', DAODelegationSchema);
+const DAOTreasuryModel = model<DAOTreasury>('DAOTreasury', DAOTreasurySchema);
+const DAOMemberModel = model<DAOMember>('DAOMember', DAOMemberSchema);
 
 export class DAOGovernanceService {
   private static instance: DAOGovernanceService;
@@ -281,6 +281,8 @@ export class DAOGovernanceService {
         executionDelay: options.executionDelay || 2,
         quorum: options.quorum || 10,
         supportThreshold: options.supportThreshold || 50,
+        startDate: new Date(), // Will be updated when voting starts
+        endDate: new Date(), // Will be updated when voting starts
         votes: [],
         totalVotes: 0,
         supportVotes: 0,
@@ -296,13 +298,16 @@ export class DAOGovernanceService {
       await this.updateMemberStats(proposerId, 'proposal_created');
 
       // Emit real-time event
-      io.emit('dao_proposal_created', {
-        proposalId,
-        proposerId,
-        title,
-        category,
-        type
-      });
+      const io = getSocketIO();
+      if (io) {
+        io.emit('dao_proposal_created', {
+          proposalId,
+          proposerId,
+          title,
+          category,
+          type
+        });
+      }
 
       logger.info('DAO proposal created', { proposalId, proposerId, category, type });
       return createdProposal;
@@ -337,21 +342,25 @@ export class DAOGovernanceService {
       proposal.startDate = startDate;
       proposal.endDate = endDate;
       proposal.updatedAt = new Date();
-      await proposal.save();
+      await DAOProposalModel.findByIdAndUpdate((proposal as any)._id, proposal);
 
       // Cache active proposal
-      await redisClient.setex(
+      const redisClient = getRedisClient();
+      await redisClient.setEx(
         `dao_proposal:${proposalId}`,
         proposal.votingPeriod * 24 * 60 * 60,
         JSON.stringify(proposal)
       );
 
       // Emit real-time event
-      io.emit('dao_voting_started', {
-        proposalId,
-        title: proposal.title,
-        endDate: proposal.endDate
-      });
+      const io = getSocketIO();
+      if (io) {
+        io.emit('dao_voting_started', {
+          proposalId,
+          title: proposal.title,
+          endDate: proposal.endDate
+        });
+      }
 
       logger.info('DAO voting started', { proposalId, endDate });
       return proposal;
@@ -425,18 +434,21 @@ export class DAOGovernanceService {
       }
 
       proposal.updatedAt = new Date();
-      await proposal.save();
+      await DAOProposalModel.findByIdAndUpdate((proposal as any)._id, proposal);
 
       // Update member stats
       await this.updateMemberStats(userId, 'vote_cast');
 
       // Emit real-time event
-      io.emit('dao_vote_cast', {
-        proposalId,
-        userId,
-        choice,
-        votingPower
-      });
+      const io = getSocketIO();
+      if (io) {
+        io.emit('dao_vote_cast', {
+          proposalId,
+          userId,
+          choice,
+          votingPower
+        });
+      }
 
       logger.info('DAO vote cast', { proposalId, userId, choice, votingPower });
       return vote;
@@ -469,14 +481,17 @@ export class DAOGovernanceService {
 
       proposal.status = 'executed';
       proposal.updatedAt = new Date();
-      await proposal.save();
+      await DAOProposalModel.findByIdAndUpdate((proposal as any)._id, proposal);
 
       // Emit real-time event
-      io.emit('dao_proposal_executed', {
-        proposalId,
-        title: proposal.title,
-        executorId
-      });
+      const io = getSocketIO();
+      if (io) {
+        io.emit('dao_proposal_executed', {
+          proposalId,
+          title: proposal.title,
+          executorId
+        });
+      }
 
       logger.info('DAO proposal executed', { proposalId, executorId });
       return proposal;
@@ -526,13 +541,16 @@ export class DAOGovernanceService {
       await this.updateMemberStats(delegateId, 'delegation_received');
 
       // Emit real-time event
-      io.emit('dao_delegation_created', {
-        delegationId,
-        delegatorId,
-        delegateId,
-        amount,
-        coinId
-      });
+      const io = getSocketIO();
+      if (io) {
+        io.emit('dao_delegation_created', {
+          delegationId,
+          delegatorId,
+          delegateId,
+          amount,
+          coinId
+        });
+      }
 
       logger.info('DAO delegation created', { delegationId, delegatorId, delegateId, amount });
       return createdDelegation;
@@ -629,6 +647,7 @@ export class DAOGovernanceService {
   private async getProposal(proposalId: string): Promise<DAOProposal | null> {
     try {
       // Try cache first
+      const redisClient = getRedisClient();
       const cached = await redisClient.get(`dao_proposal:${proposalId}`);
       if (cached) {
         return JSON.parse(cached);
@@ -637,7 +656,7 @@ export class DAOGovernanceService {
       // Fallback to database
       const proposal = await DAOProposalModel.findOne({ proposalId });
       if (proposal) {
-        await redisClient.setex(`dao_proposal:${proposalId}`, 3600, JSON.stringify(proposal));
+        await redisClient.setEx(`dao_proposal:${proposalId}`, 3600, JSON.stringify(proposal));
       }
 
       return proposal;
@@ -738,7 +757,7 @@ export class DAOGovernanceService {
     }
 
     member.lastActivity = new Date();
-    await member.save();
+    await DAOMemberModel.findByIdAndUpdate((member as any)._id, member);
   }
 
   // Mock methods for voting power calculations
