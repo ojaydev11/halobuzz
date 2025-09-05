@@ -20,8 +20,7 @@
         "EXPO_NO_TELEMETRY": "1",
         "NODE_ENV": "development"
       },
-      "prebuildCommand": "npx expo prebuild --clean --platform all",
-      "postInstallCommand": "npm run audit:security"
+      "prebuildCommand": "npx expo prebuild --clean --platform all"
     },
     "preview": {
       "distribution": "internal",
@@ -38,8 +37,7 @@
         "EXPO_PUBLIC_API_BASE_URL": "https://halo-api-production.up.railway.app",
         "NODE_ENV": "production"
       },
-      "prebuildCommand": "npx expo prebuild --clean --platform all",
-      "postInstallCommand": "npm run audit:security && npm run test && npm run typecheck"
+      "prebuildCommand": "npx expo prebuild --clean --platform all"
     },
     "production": {
       "ios": {
@@ -56,8 +54,7 @@
         "EXPO_NO_TELEMETRY": "1",
         "NODE_ENV": "production"
       },
-      "prebuildCommand": "npx expo prebuild --clean --platform all",
-      "postInstallCommand": "npm run audit:security && npm run test && npm run typecheck && npm run lint"
+      "prebuildCommand": "npx expo prebuild --clean --platform all"
     }
   },
   "submit": {
@@ -71,23 +68,6 @@
         "serviceAccountKeyPath": "./google-play-service-account.json",
         "track": "internal",
         "releaseStatus": "draft"
-      }
-    }
-  },
-  "update": {
-    "development": {
-      "channel": "development"
-    },
-    "preview": {
-      "channel": "preview",
-      "env": {
-        "EXPO_PUBLIC_API_BASE_URL": "https://halo-api-production.up.railway.app"
-      }
-    },
-    "production": {
-      "channel": "production",
-      "env": {
-        "EXPO_PUBLIC_API_BASE_URL": "https://halo-api-production.up.railway.app"
       }
     }
   }
