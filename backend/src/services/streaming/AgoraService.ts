@@ -14,8 +14,17 @@ export class AgoraService {
     this.appCertificate = process.env.AGORA_APP_CERTIFICATE!;
     
     if (!this.appId || !this.appCertificate) {
-      throw new Error('Agora credentials not configured');
+      logger.error('Agora credentials missing', {
+        hasAppId: !!this.appId,
+        hasCertificate: !!this.appCertificate
+      });
+      throw new Error('Agora credentials not configured. Please set AGORA_APP_ID and AGORA_APP_CERTIFICATE in environment variables.');
     }
+
+    // Log successful initialization (without exposing sensitive data)
+    logger.info('Agora service initialized', {
+      appId: this.appId.substring(0, 8) + '...' // Only log first 8 chars
+    });
   }
 
   /**
