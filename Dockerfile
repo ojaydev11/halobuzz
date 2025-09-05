@@ -18,7 +18,8 @@ ARG SERVICE_PATH
 WORKDIR /app
 
 # Copy package files for the specified service
-COPY ${SERVICE_PATH}/package*.json ${SERVICE_PATH}/pnpm-lock.yaml ./
+COPY ${SERVICE_PATH}/package*.json ./
+COPY ${SERVICE_PATH}/pnpm-lock.yaml ./ 2>/dev/null || echo "No pnpm-lock.yaml found, using package-lock.json"
 
 # Install dependencies with cache mount
 RUN --mount=type=cache,id=pnpm-store,target=/root/.pnpm-store \

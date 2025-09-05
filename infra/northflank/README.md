@@ -20,6 +20,7 @@ This guide provides exact Northflank settings for deploying all HaloBuzz backend
 - **Dockerfile Path:** `backend/Dockerfile`
 - **Build Context:** `backend/`
 - **Platform:** Linux/amd64
+- **⚠️ IMPORTANT:** Use the individual service Dockerfile, NOT the root Dockerfile
 
 **Container Settings:**
 - **Port:** 4000 (HTTP)
@@ -63,6 +64,7 @@ LOG_LEVEL=info
 - **Dockerfile Path:** `ai-engine/Dockerfile`
 - **Build Context:** `ai-engine/`
 - **Platform:** Linux/amd64
+- **⚠️ IMPORTANT:** Use the individual service Dockerfile, NOT the root Dockerfile
 
 **Container Settings:**
 - **Port:** 4000 (HTTP)
@@ -193,17 +195,24 @@ curl -X POST https://your-backend-url/api/v1/auth/register \
 
 ### Common Issues
 
-1. **404 on auth endpoints:**
+1. **Build failures with "file not found" errors:**
+   - **CAUSE:** Using root Dockerfile instead of service-specific Dockerfile
+   - **SOLUTION:** In Northflank, set:
+     - **Dockerfile Path:** `backend/Dockerfile` (NOT just `Dockerfile`)
+     - **Build Context:** `backend/`
+   - **VERIFY:** Build logs should show files being copied from current directory, not `backend/` subdirectory
+
+2. **404 on auth endpoints:**
    - Check if `API_VERSION=v1` is set
    - Verify the build includes the latest code
    - Check build logs for "Mounting auth routes" message
 
-2. **Health check failing:**
+3. **Health check failing:**
    - Verify the service is binding to `0.0.0.0:4000`
    - Check if the health endpoint is accessible
    - Review service logs for errors
 
-3. **Build failures:**
+4. **Build failures:**
    - Ensure all required files are in the build context
    - Check if `pnpm-lock.yaml` exists
    - Verify TypeScript compilation is successful
