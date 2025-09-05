@@ -18,12 +18,15 @@ export const connectRedis = async (): Promise<void> => {
   const url = new URL(redisUrl);
   const isSecure = url.protocol === 'rediss:' || url.protocol === 'redis+tls:';
   
+  // Extract password from URL if present, otherwise use environment variable
+  const password = url.password || process.env.REDIS_PASSWORD || undefined;
+  
   logger.info(`Connecting to Redis: ${url.protocol}//${url.hostname}:${url.port || (isSecure ? '6380' : '6379')} (SSL: ${isSecure})`);
   
   try {
     // Create Redis client with proper SSL handling
     const clientConfig: any = {
-      password: process.env.REDIS_PASSWORD || undefined,
+      password: password,
       socket: {
         connectTimeout: 10000
       }
@@ -80,7 +83,7 @@ export const connectRedis = async (): Promise<void> => {
         const fallbackUrl = redisUrl.replace('rediss://', 'redis://');
         redisClient = createClient({
           url: fallbackUrl,
-          password: process.env.REDIS_PASSWORD || undefined,
+          password: password,
           socket: {
             connectTimeout: 10000
           }

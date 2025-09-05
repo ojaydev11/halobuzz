@@ -15,7 +15,7 @@ import listEndpoints from 'express-list-endpoints';
 dotenv.config();
 
 // Set max listeners to prevent memory leak warnings
-process.setMaxListeners(20);
+process.setMaxListeners(25);
 
 // Handle uncaught exceptions and unhandled rejections
 let isShuttingDown = false;

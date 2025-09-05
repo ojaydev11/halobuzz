@@ -24,11 +24,14 @@ export const setupRedisAdapter = async (io: Server): Promise<void> => {
     const url = new URL(redisUrl);
     const isSecure = url.protocol === 'rediss:' || url.protocol === 'redis+tls:';
     
+    // Extract password from URL if present, otherwise use environment variable
+    const password = url.password || process.env.REDIS_PASSWORD || undefined;
+    
     logger.info(`Setting up Redis adapter: ${url.protocol}//${url.hostname}:${url.port || (isSecure ? '6380' : '6379')} (SSL: ${isSecure})`);
     
     // Create Redis client configuration with proper SSL handling
     const clientConfig: any = {
-      password: process.env.REDIS_PASSWORD || undefined,
+      password: password,
       socket: {
         connectTimeout: 10000
       }
