@@ -3,7 +3,6 @@ import Constants from 'expo-constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ApiResponse, AuthResponse, LoginRequest, RegisterRequest, User } from '@/types/auth';
 import { StreamsResponse, CreateStreamRequest, Stream } from '@/types/stream';
-import { routeDiscovery } from './routeDiscovery';
 import { toast } from './toast';
 
 // Get API configuration from environment
@@ -146,23 +145,8 @@ class ApiClient {
         return null;
       }
       
-      // Use route discovery for refresh endpoint
-      const refreshRoute = await routeDiscovery.discoverRoute(
-        API_BASE,
-        'auth',
-        'refresh',
-        'POST',
-        { token: refreshToken },
-        API_PREFIX
-      );
-      
-      const response = await axios.post(`${API_BASE}${refreshRoute}`, 
-        { token: refreshToken },
-        {
-          headers: { 'Content-Type': 'application/json' },
-          timeout: 10000
-        }
-      );
+      // Use direct route instead of discovery
+      const response = await this.client.post('/auth/refresh', { token: refreshToken });
       
       if (response.data?.success && response.data?.data?.token) {
         const newToken = response.data.data.token;
@@ -280,8 +264,7 @@ class ApiClient {
 
   async refreshToken(token: string): Promise<ApiResponse<{ token: string }>> {
     try {
-      const refreshRoute = routeDiscovery.getRoute(API_BASE, 'auth', 'refresh', 'POST');
-      const response = await this.client.post(refreshRoute, { token });
+      const response = await this.client.post('/auth/refresh', { token });
       return response.data;
     } catch (error) {
       throw this.formatError(error);
@@ -290,8 +273,7 @@ class ApiClient {
 
   async logout(): Promise<ApiResponse<null>> {
     try {
-      const logoutRoute = routeDiscovery.getRoute(API_BASE, 'auth', 'logout', 'POST');
-      const response = await this.client.post(logoutRoute);
+      const response = await this.client.post('/auth/logout');
       await this.clearAuth();
       return response.data;
     } catch (error) {
@@ -309,8 +291,7 @@ class ApiClient {
     sortBy?: string;
   }): Promise<ApiResponse<StreamsResponse>> {
     try {
-      const streamsRoute = routeDiscovery.getRoute(API_BASE, 'streams', 'list', 'GET');
-      const response = await this.client.get(streamsRoute, { params });
+      const response = await this.client.get('/streams', { params });
       return response.data;
     } catch (error) {
       const networkError = this.formatError(error);
@@ -321,8 +302,7 @@ class ApiClient {
 
   async getTrendingStreams(limit: number = 10): Promise<ApiResponse<Stream[]>> {
     try {
-      const trendingRoute = routeDiscovery.getRoute(API_BASE, 'streams', 'trending', 'GET');
-      const response = await this.client.get(trendingRoute, { params: { limit } });
+      const response = await this.client.get('/streams/trending', { params: { limit } });
       return response.data;
     } catch (error) {
       const networkError = this.formatError(error);
@@ -333,8 +313,7 @@ class ApiClient {
 
   async getStreamById(id: string): Promise<ApiResponse<{ stream: Stream }>> {
     try {
-      const streamsRoute = routeDiscovery.getRoute(API_BASE, 'streams', 'get', 'GET');
-      const response = await this.client.get(`${streamsRoute}/${id}`);
+      const response = await this.client.get(`/streams/${id}`);
       return response.data;
     } catch (error) {
       const networkError = this.formatError(error);
@@ -345,8 +324,7 @@ class ApiClient {
 
   async createStream(streamData: CreateStreamRequest): Promise<ApiResponse<{ stream: Stream }>> {
     try {
-      const streamsRoute = routeDiscovery.getRoute(API_BASE, 'streams', 'create', 'POST');
-      const response = await this.client.post(streamsRoute, streamData);
+      const response = await this.client.post('/streams', streamData);
       return response.data;
     } catch (error) {
       const networkError = this.formatError(error);
@@ -357,8 +335,7 @@ class ApiClient {
 
   async endStream(id: string): Promise<ApiResponse<{ stream: Stream }>> {
     try {
-      const streamsRoute = routeDiscovery.getRoute(API_BASE, 'streams', 'get', 'POST');
-      const response = await this.client.post(`${streamsRoute}/${id}/end`);
+      const response = await this.client.post(`/streams/${id}/end`);
       return response.data;
     } catch (error) {
       const networkError = this.formatError(error);
@@ -372,8 +349,7 @@ class ApiClient {
     page?: number;
   }): Promise<ApiResponse<StreamsResponse>> {
     try {
-      const streamsRoute = routeDiscovery.getRoute(API_BASE, 'streams', 'list', 'GET');
-      const response = await this.client.get(`${streamsRoute}/user/${userId}`, { params });
+      const response = await this.client.get(`/streams/user/${userId}`, { params });
       return response.data;
     } catch (error) {
       const networkError = this.formatError(error);
@@ -385,8 +361,7 @@ class ApiClient {
   // Health check
   async healthCheck(): Promise<ApiResponse<{ status: string }>> {
     try {
-      const healthRoute = routeDiscovery.getRoute(API_BASE, 'health', 'check', 'GET');
-      const response = await this.client.get(healthRoute, {
+      const response = await this.client.get('/monitoring/health', {
         timeout: 5000
       });
       return response.data;
@@ -413,14 +388,14 @@ class ApiClient {
     }
   }
 
-  // Utility method to clear route cache
+  // Utility method to clear route cache (no longer needed with direct routes)
   async clearRouteCache(): Promise<void> {
-    await routeDiscovery.clearCache();
+    // No longer needed since we use direct routes
   }
 
-  // Get discovered routes for debugging
+  // Get discovered routes for debugging (no longer needed with direct routes)
   getDiscoveredRoutes(): any {
-    return routeDiscovery.getDiscoveredRoutes();
+    return {};
   }
 }
 
