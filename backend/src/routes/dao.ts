@@ -1,6 +1,7 @@
-import { Router, Request, Response } from 'express';
+import { Router, Response } from 'express';
+import { AuthenticatedRequest } from '@/middleware/auth';
 import { DAOGovernanceService } from '@/services/dao/DAOGovernanceService';
-import { authenticateToken } from '@/middleware/auth';
+import { authMiddleware } from '@/middleware/auth';
 import { socialLimiter } from '@/middleware/security';
 import { logger } from '@/config/logger';
 
@@ -8,14 +9,14 @@ const router = Router();
 const daoService = DAOGovernanceService.getInstance();
 
 // Apply authentication and rate limiting to all routes
-router.use(authenticateToken);
+router.use(authMiddleware);
 router.use(socialLimiter);
 
 /**
  * @route POST /api/v1/dao/proposal
  * @desc Create a new DAO proposal
  */
-router.post('/proposal', async (req: Request, res: Response) => {
+router.post('/proposal', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { title, description, category, type, options } = req.body;
     const userId = req.user?.userId;
@@ -51,7 +52,7 @@ router.post('/proposal', async (req: Request, res: Response) => {
  * @route POST /api/v1/dao/proposal/:proposalId/start-voting
  * @desc Start voting on a proposal
  */
-router.post('/proposal/:proposalId/start-voting', async (req: Request, res: Response) => {
+router.post('/proposal/:proposalId/start-voting', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { proposalId } = req.params;
     const userId = req.user?.userId;
@@ -76,7 +77,7 @@ router.post('/proposal/:proposalId/start-voting', async (req: Request, res: Resp
  * @route POST /api/v1/dao/proposal/:proposalId/vote
  * @desc Cast a vote on a proposal
  */
-router.post('/proposal/:proposalId/vote', async (req: Request, res: Response) => {
+router.post('/proposal/:proposalId/vote', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { proposalId } = req.params;
     const { choice } = req.body;
@@ -106,7 +107,7 @@ router.post('/proposal/:proposalId/vote', async (req: Request, res: Response) =>
  * @route POST /api/v1/dao/proposal/:proposalId/execute
  * @desc Execute a passed proposal
  */
-router.post('/proposal/:proposalId/execute', async (req: Request, res: Response) => {
+router.post('/proposal/:proposalId/execute', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { proposalId } = req.params;
     const userId = req.user?.userId;
@@ -131,7 +132,7 @@ router.post('/proposal/:proposalId/execute', async (req: Request, res: Response)
  * @route POST /api/v1/dao/delegate
  * @desc Delegate voting power
  */
-router.post('/delegate', async (req: Request, res: Response) => {
+router.post('/delegate', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { delegateId, amount, coinId, expiresAt } = req.body;
     const userId = req.user?.userId;
@@ -166,7 +167,7 @@ router.post('/delegate', async (req: Request, res: Response) => {
  * @route GET /api/v1/dao/treasury
  * @desc Get DAO treasury
  */
-router.get('/treasury', async (req: Request, res: Response) => {
+router.get('/treasury', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { treasuryId } = req.query;
     const userId = req.user?.userId;
@@ -191,7 +192,7 @@ router.get('/treasury', async (req: Request, res: Response) => {
  * @route GET /api/v1/dao/analytics
  * @desc Get DAO analytics
  */
-router.get('/analytics', async (req: Request, res: Response) => {
+router.get('/analytics', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.user?.userId;
 
@@ -215,7 +216,7 @@ router.get('/analytics', async (req: Request, res: Response) => {
  * @route GET /api/v1/dao/proposals/active
  * @desc Get active proposals
  */
-router.get('/proposals/active', async (req: Request, res: Response) => {
+router.get('/proposals/active', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.user?.userId;
 

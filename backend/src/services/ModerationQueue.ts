@@ -56,8 +56,8 @@ export class ModerationQueue {
         return { success: false, error: 'Flag not found' };
       }
 
-      flag.assignModerator(moderatorId);
-      await flag.save();
+      (flag as any).assignedModerator = moderatorId;
+      await ModerationFlag.findByIdAndUpdate(flagId, { assignedModerator: moderatorId });
 
       logger.info(`Moderator ${moderatorId} assigned to flag ${flagId}`);
       return { success: true };
@@ -75,12 +75,24 @@ export class ModerationQueue {
       }
 
       // Resolve the flag
-      flag.resolve(action, {
+      (flag as any).status = 'resolved';
+      (flag as any).resolution = {
+        action,
         reason: details.reason,
         duration: details.duration,
-        notified: false
+        notified: false,
+        resolvedAt: new Date()
+      };
+      await ModerationFlag.findByIdAndUpdate(flagId, {
+        status: 'resolved',
+        resolution: {
+          action,
+          reason: details.reason,
+          duration: details.duration,
+          notified: false,
+          resolvedAt: new Date()
+        }
       });
-      await flag.save();
 
       // Apply moderation action
       if (action !== 'none') {
@@ -171,8 +183,12 @@ export class ModerationQueue {
 
     switch (action) {
       case 'delete':
-        message.softDelete('system');
-        await message.save();
+        (message as any).deletedAt = new Date();
+        (message as any).deletedBy = 'system';
+        await Message.findByIdAndUpdate((message as any)._id, {
+          deletedAt: new Date(),
+          deletedBy: 'system'
+        });
         break;
       case 'warn':
         // Send warning to message sender
@@ -225,7 +241,7 @@ export class ModerationQueue {
 
   async getPendingFlags(limit: number = 50) {
     try {
-      const flags = await ModerationFlag.findPending(limit);
+      const flags = await ModerationFlag.find({ status: 'pending' }).limit(limit);
       return { success: true, data: flags };
     } catch (error) {
       logger.error('Failed to get pending flags:', error);
@@ -235,7 +251,9 @@ export class ModerationQueue {
 
   async getFlagStats() {
     try {
-      const stats = await ModerationFlag.getStats();
+      const stats = await ModerationFlag.aggregate([
+        { $group: { _id: '$status', count: { $sum: 1 } } }
+      ]);
       return { success: true, data: stats };
     } catch (error) {
       logger.error('Failed to get flag stats:', error);
@@ -245,7 +263,7 @@ export class ModerationQueue {
 
   async getUserFlags(userId: string) {
     try {
-      const flags = await ModerationFlag.findByReportedUser(userId);
+      const flags = await ModerationFlag.find({ reportedUser: userId });
       return { success: true, data: flags };
     } catch (error) {
       logger.error('Failed to get user flags:', error);
@@ -255,7 +273,7 @@ export class ModerationQueue {
 
   async getStreamFlags(streamId: string) {
     try {
-      const flags = await ModerationFlag.findByStream(streamId);
+      const flags = await ModerationFlag.find({ streamId });
       return { success: true, data: flags };
     } catch (error) {
       logger.error('Failed to get stream flags:', error);

@@ -135,7 +135,7 @@ export class NepalCulturalService {
   static async getActiveFestivals(): Promise<NepalFestival[]> {
     try {
       const cached = await getCache('nepal:active_festivals');
-      if (cached) return cached;
+      if (cached) return JSON.parse(cached as string);
 
       const now = new Date();
       const activeFestivals = this.festivals.filter(festival => {
@@ -181,7 +181,7 @@ export class NepalCulturalService {
 
       // Get user's region preference
       const user = await User.findById(userId);
-      const userRegion = user?.preferences?.region || 'all';
+      const userRegion = (user as any)?.preferences?.region || 'all';
 
       // Find applicable festival
       const applicableFestival = activeFestivals.find(festival => 

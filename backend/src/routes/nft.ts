@@ -1,5 +1,5 @@
 import express from 'express';
-import { authenticateToken } from '../middleware/auth';
+import { authMiddleware } from '../middleware/auth';
 import { socialLimiter } from '../middleware/security';
 import NFTMarketplaceService from '../services/nft/NFTMarketplaceService';
 import { logger } from '../config/logger';
@@ -8,7 +8,7 @@ const router = express.Router();
 const nftService = NFTMarketplaceService.getInstance();
 
 // Apply middleware
-router.use(authenticateToken);
+router.use(authMiddleware);
 router.use(socialLimiter);
 
 /**

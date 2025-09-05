@@ -1,7 +1,7 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
 export interface ILiveStream extends Document {
-  hostId: string;
+  hostId: mongoose.Types.ObjectId;
   title: string;
   description?: string;
   category: string;
@@ -287,8 +287,8 @@ liveStreamSchema.index({ agoraChannel: 1 }, { unique: true });
 // Pre-save middleware to generate stream key and Agora channel
 liveStreamSchema.pre('save', function(next) {
   if (this.isNew) {
-    this.streamKey = this.generateStreamKey();
-    this.agoraChannel = this.generateAgoraChannel();
+    this.streamKey = (this as any).generateStreamKey();
+    this.agoraChannel = (this as any).generateAgoraChannel();
   }
   next();
 });

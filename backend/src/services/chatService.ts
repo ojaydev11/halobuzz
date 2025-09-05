@@ -99,13 +99,16 @@ export class ChatService {
       }
 
       // Check if user is the sender or has OG4/5 privileges
-      if (message.senderId.toString() !== userId && user.ogLevel < 4) {
+      if ((message as any).senderId.toString() !== userId && user.ogLevel < 4) {
         throw new Error('Cannot delete other users\' messages');
       }
 
-      message.deleted = true;
-      message.ogUnsendable = true;
-      await message.save();
+      (message as any).deletedAt = new Date();
+      (message as any).deletedBy = userId;
+      await Message.findByIdAndUpdate((message as any)._id, {
+        deletedAt: new Date(),
+        deletedBy: userId
+      });
 
       return true;
     } catch (error) {

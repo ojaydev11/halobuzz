@@ -1,7 +1,7 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
 export interface ITransaction extends Document {
-  userId: string;
+  userId: mongoose.Types.ObjectId;
   type: 'recharge' | 'gift_sent' | 'gift_received' | 'og_bonus' | 'refund' | 'withdrawal';
   amount: number;
   currency: 'coins' | 'USD' | 'NPR';

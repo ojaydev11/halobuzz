@@ -89,10 +89,10 @@ export class KarmaReputationService {
       if (isKarmaAction) {
         const karmaResult = await this.communityLoveService.recordCommunityAction({
           userId,
-          type,
+          type: type as 'help_neighbor' | 'teach_skill' | 'mentor_user' | 'donate_time' | 'support_cause' | 'create_positive_content',
           description: this.generateActionDescription(type, metadata, culturalContext),
           impact,
-          verifiedBy
+          verificationRequired: false
         });
 
         if (karmaResult.success) {
@@ -172,7 +172,7 @@ export class KarmaReputationService {
           categories: karmaData.categories,
           level: karmaData.level,
           levelName: this.getKarmaLevelName(karmaData.level),
-          milestones: karmaData.milestones || []
+          milestones: (karmaData as any).milestones || []
         },
         combined: {
           score: combinedScore,
@@ -246,7 +246,7 @@ export class KarmaReputationService {
     error?: string;
   }> {
     try {
-      const culturalEvents = await ReputationEvent.findCulturalEvents(limit);
+      const culturalEvents = await ReputationEvent.find({ type: 'cultural_celebration' }).limit(limit);
       
       return { success: true, data: culturalEvents };
 
@@ -281,9 +281,10 @@ export class KarmaReputationService {
       // Award karma
       const karmaResult = await this.communityLoveService.recordCommunityAction({
         userId,
-        type: 'cultural_celebration',
+        type: 'create_positive_content',
         description: `Festival ${bonusType}: ${festivalName}`,
-        impact: bonus.karma / 5 // Convert to impact scale
+        impact: bonus.karma / 5, // Convert to impact scale
+        verificationRequired: false
       });
 
       // Award reputation

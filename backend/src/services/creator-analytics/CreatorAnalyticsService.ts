@@ -219,7 +219,18 @@ export class CreatorAnalyticsService {
       const performanceTrends = await this.getPerformanceTrends(creatorId, 30);
 
       const metrics: CreatorMetrics = {
-        ...basicMetrics,
+        totalViews: basicMetrics.totalViews || 0,
+        totalLikes: basicMetrics.totalLikes || 0,
+        totalShares: basicMetrics.totalShares || 0,
+        totalComments: basicMetrics.totalComments || 0,
+        totalRevenue: basicMetrics.totalRevenue || 0,
+        contentCount: basicMetrics.contentCount || 0,
+        totalFollowers: 0,
+        totalSubscribers: 0,
+        averageEngagementRate: 0,
+        averageViewDuration: basicMetrics.averageViewDuration || 0,
+        liveStreamCount: 0,
+        nftCount: 0,
         topPerformingContent,
         growthMetrics,
         performanceTrends

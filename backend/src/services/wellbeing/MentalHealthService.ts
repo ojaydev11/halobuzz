@@ -330,12 +330,12 @@ const WellbeingResourceSchema = new Schema<WellbeingResource>({
 });
 
 // Models
-const WellbeingProfileModel = model<WellbeingProfile & Document>('WellbeingProfile', WellbeingProfileSchema);
-const WellbeingCheckModel = model<WellbeingCheck & Document>('WellbeingCheck', WellbeingCheckSchema);
-const WellbeingInterventionModel = model<WellbeingIntervention & Document>('WellbeingIntervention', WellbeingInterventionSchema);
-const WellbeingAlertModel = model<WellbeingAlert & Document>('WellbeingAlert', WellbeingAlertSchema);
-const WellbeingAnalyticsModel = model<WellbeingAnalytics & Document>('WellbeingAnalytics', WellbeingAnalyticsSchema);
-const WellbeingResourceModel = model<WellbeingResource & Document>('WellbeingResource', WellbeingResourceSchema);
+const WellbeingProfileModel = model<WellbeingProfile>('WellbeingProfile', WellbeingProfileSchema);
+const WellbeingCheckModel = model<WellbeingCheck>('WellbeingCheck', WellbeingCheckSchema);
+const WellbeingInterventionModel = model<WellbeingIntervention>('WellbeingIntervention', WellbeingInterventionSchema);
+const WellbeingAlertModel = model<WellbeingAlert>('WellbeingAlert', WellbeingAlertSchema);
+const WellbeingAnalyticsModel = model<WellbeingAnalytics>('WellbeingAnalytics', WellbeingAnalyticsSchema);
+const WellbeingResourceModel = model<WellbeingResource>('WellbeingResource', WellbeingResourceSchema);
 
 export class MentalHealthService {
   private static instance: MentalHealthService;
@@ -365,8 +365,8 @@ export class MentalHealthService {
       if (profile) {
         // Update existing profile
         Object.assign(profile, profileData);
-        profile.updatedAt = new Date();
-        await profile.save();
+        (profile as any).updatedAt = new Date();
+        await WellbeingProfileModel.findByIdAndUpdate((profile as any)._id, profile);
       } else {
         // Create new profile
         const wellbeingProfile: WellbeingProfile = {
@@ -431,20 +431,24 @@ export class MentalHealthService {
       }
 
       // Cache profile
-      await redisClient.setex(
+      const redisClient = getRedisClient();
+      await redisClient.setEx(
         `wellbeing_profile:${userId}`,
         3600,
         JSON.stringify(profile)
       );
 
       // Emit real-time event
-      io.emit('wellbeing_profile_updated', {
-        userId,
-        mentalHealthScore: profile.mentalHealthScore,
-        stressLevel: profile.stressLevel
-      });
+      const io = getSocketIO();
+      if (io) {
+        io.emit('wellbeing_profile_updated', {
+          userId,
+          mentalHealthScore: (profile as any).mentalHealthScore,
+          stressLevel: (profile as any).stressLevel
+        });
+      }
 
-      logger.info('Wellbeing profile created/updated', { userId, mentalHealthScore: profile.mentalHealthScore });
+      logger.info('Wellbeing profile created/updated', { userId, mentalHealthScore: (profile as any).mentalHealthScore });
       return profile;
     } catch (error) {
       logger.error('Error creating wellbeing profile', { error, userId });
@@ -496,12 +500,15 @@ export class MentalHealthService {
       await this.checkForInterventions(userId, overallScore, responses);
 
       // Emit real-time event
-      io.emit('wellbeing_check_completed', {
-        userId,
-        checkId,
-        overallScore,
-        type
-      });
+      const io = getSocketIO();
+      if (io) {
+        io.emit('wellbeing_check_completed', {
+          userId,
+          checkId,
+          overallScore,
+          type
+        });
+      }
 
       logger.info('Wellbeing check completed', { userId, checkId, overallScore, type });
       return createdCheck;
@@ -550,16 +557,19 @@ export class MentalHealthService {
 
       // Create alert if high priority
       if (priority === 'high' || priority === 'urgent') {
-        await this.createAlert(userId, 'concern', priority, title, { interventionId });
+        await this.createAlert(userId, 'concern', priority === 'urgent' ? 'critical' : priority, title, { interventionId });
       }
 
       // Emit real-time event
-      io.emit('wellbeing_intervention_created', {
-        userId,
-        interventionId,
-        type,
-        priority
-      });
+      const io = getSocketIO();
+      if (io) {
+        io.emit('wellbeing_intervention_created', {
+          userId,
+          interventionId,
+          type,
+          priority
+        });
+      }
 
       logger.info('Wellbeing intervention created', { userId, interventionId, type, priority });
       return createdIntervention;
@@ -584,20 +594,20 @@ export class MentalHealthService {
       }
 
       // Update screen time
-      profile.screenTime.daily += duration;
-      profile.screenTime.weekly += duration;
-      profile.screenTime.average = profile.screenTime.weekly / 7;
-      profile.screenTime.lastUpdated = new Date();
+      (profile as any).screenTime.daily += duration;
+      (profile as any).screenTime.weekly += duration;
+      (profile as any).screenTime.average = (profile as any).screenTime.weekly / 7;
+      (profile as any).screenTime.lastUpdated = new Date();
 
       // Update content consumption
-      const totalConsumption = Object.values(profile.contentConsumption).reduce((sum, val) => sum + val, 0);
-      profile.contentConsumption[category] += duration;
-      profile.contentConsumption.lastUpdated = new Date();
+      const totalConsumption = Object.values((profile as any).contentConsumption).reduce((sum: number, val: any) => sum + val, 0);
+      (profile as any).contentConsumption[category] += duration;
+      (profile as any).contentConsumption.lastUpdated = new Date();
 
       // Check for excessive screen time
       const dailyLimit = 480; // 8 hours
-      if (profile.screenTime.daily > dailyLimit) {
-        profile.riskFactors.excessiveScreenTime = true;
+      if ((profile as any).screenTime.daily > dailyLimit) {
+        (profile as any).riskFactors.excessiveScreenTime = true;
         
         // Create intervention if not already active
         const existingIntervention = await WellbeingInterventionModel.findOne({
@@ -618,11 +628,12 @@ export class MentalHealthService {
         }
       }
 
-      profile.updatedAt = new Date();
-      await profile.save();
+      (profile as any).updatedAt = new Date();
+      await WellbeingProfileModel.findByIdAndUpdate((profile as any)._id, profile);
 
       // Update cache
-      await redisClient.setex(
+      const redisClient = getRedisClient();
+      await redisClient.setEx(
         `wellbeing_profile:${userId}`,
         3600,
         JSON.stringify(profile)
@@ -742,6 +753,7 @@ export class MentalHealthService {
   private async getWellbeingProfile(userId: string): Promise<WellbeingProfile | null> {
     try {
       // Try cache first
+      const redisClient = getRedisClient();
       const cached = await redisClient.get(`wellbeing_profile:${userId}`);
       if (cached) {
         return JSON.parse(cached);
@@ -750,7 +762,7 @@ export class MentalHealthService {
       // Fallback to database
       const profile = await WellbeingProfileModel.findOne({ userId });
       if (profile) {
-        await redisClient.setex(`wellbeing_profile:${userId}`, 3600, JSON.stringify(profile));
+        await redisClient.setEx(`wellbeing_profile:${userId}`, 3600, JSON.stringify(profile));
       }
 
       return profile;
@@ -802,24 +814,24 @@ export class MentalHealthService {
     if (!profile) return;
 
     // Update mental health score
-    profile.mentalHealthScore = score;
+    (profile as any).mentalHealthScore = score;
 
     // Update mood trend
     const moodResponse = responses.find(r => r.category === 'mood');
     if (moodResponse) {
-      profile.moodTrend.current = (moodResponse.answer - 3) * 25; // Convert 1-5 to -50 to 50
-      profile.moodTrend.average = (profile.moodTrend.average + profile.moodTrend.current) / 2;
-      profile.moodTrend.lastUpdated = new Date();
+      (profile as any).moodTrend.current = (moodResponse.answer - 3) * 25; // Convert 1-5 to -50 to 50
+      (profile as any).moodTrend.average = ((profile as any).moodTrend.average + (profile as any).moodTrend.current) / 2;
+      (profile as any).moodTrend.lastUpdated = new Date();
     }
 
     // Update stress level
     const stressResponse = responses.find(r => r.category === 'stress');
     if (stressResponse) {
-      profile.stressLevel = stressResponse.answer * 20; // Convert 1-5 to 20-100
+      (profile as any).stressLevel = stressResponse.answer * 20; // Convert 1-5 to 20-100
     }
 
-    profile.updatedAt = new Date();
-    await profile.save();
+    (profile as any).updatedAt = new Date();
+    await WellbeingProfileModel.findByIdAndUpdate((profile as any)._id, profile);
   }
 
   private async checkForInterventions(userId: string, score: number, responses: any[]): Promise<void> {
@@ -869,13 +881,16 @@ export class MentalHealthService {
     await WellbeingAlertModel.create(alert);
 
     // Emit real-time alert
-    io.emit('wellbeing_alert', {
-      userId,
-      alertId,
-      type,
-      severity,
-      message
-    });
+    const io = getSocketIO();
+    if (io) {
+      io.emit('wellbeing_alert', {
+        userId,
+        alertId,
+        type,
+        severity,
+        message
+      });
+    }
   }
 
   private async assessRisk(userId: string, profile: WellbeingProfile | null): Promise<any> {
@@ -891,15 +906,15 @@ export class MentalHealthService {
     const riskFactors = [];
     const protectiveFactors = [];
 
-    if (profile.riskFactors.excessiveScreenTime) riskFactors.push('Excessive screen time');
-    if (profile.riskFactors.negativeContent) riskFactors.push('Negative content consumption');
-    if (profile.riskFactors.socialIsolation) riskFactors.push('Social isolation');
-    if (profile.riskFactors.stressIndicators) riskFactors.push('High stress indicators');
-    if (profile.riskFactors.sleepDisruption) riskFactors.push('Sleep disruption');
+    if ((profile as any).riskFactors.excessiveScreenTime) riskFactors.push('Excessive screen time');
+    if ((profile as any).riskFactors.negativeContent) riskFactors.push('Negative content consumption');
+    if ((profile as any).riskFactors.socialIsolation) riskFactors.push('Social isolation');
+    if ((profile as any).riskFactors.stressIndicators) riskFactors.push('High stress indicators');
+    if ((profile as any).riskFactors.sleepDisruption) riskFactors.push('Sleep disruption');
 
-    if (profile.mentalHealthScore > 70) protectiveFactors.push('Good mental health score');
-    if (profile.socialEngagement.positive > 60) protectiveFactors.push('Positive social engagement');
-    if (profile.wellbeingFactors.exercise > 60) protectiveFactors.push('Regular exercise');
+    if ((profile as any).mentalHealthScore > 70) protectiveFactors.push('Good mental health score');
+    if ((profile as any).socialEngagement.positive > 60) protectiveFactors.push('Positive social engagement');
+    if ((profile as any).wellbeingFactors.exercise > 60) protectiveFactors.push('Regular exercise');
 
     const overallRisk = riskFactors.length > 2 ? 'high' : riskFactors.length > 0 ? 'medium' : 'low';
 

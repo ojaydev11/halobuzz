@@ -1,6 +1,7 @@
-import { Router, Request, Response } from 'express';
+import { Router, Response } from 'express';
+import { AuthenticatedRequest } from '@/middleware/auth';
 import { InteractiveStorytellingService } from '@/services/storytelling/InteractiveStorytellingService';
-import { authenticateToken } from '@/middleware/auth';
+import { authMiddleware } from '@/middleware/auth';
 import { socialLimiter } from '@/middleware/security';
 import { logger } from '@/config/logger';
 
@@ -8,14 +9,14 @@ const router = Router();
 const storytellingService = InteractiveStorytellingService.getInstance();
 
 // Apply authentication and rate limiting to all routes
-router.use(authenticateToken);
+router.use(authMiddleware);
 router.use(socialLimiter);
 
 /**
  * @route POST /api/v1/storytelling/story
  * @desc Create a new interactive story
  */
-router.post('/story', async (req: Request, res: Response) => {
+router.post('/story', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { title, description, genre, settings } = req.body;
     const userId = req.user?.userId;
@@ -50,7 +51,7 @@ router.post('/story', async (req: Request, res: Response) => {
  * @route POST /api/v1/storytelling/:storyId/chapter
  * @desc Add a chapter to the story
  */
-router.post('/:storyId/chapter', async (req: Request, res: Response) => {
+router.post('/:storyId/chapter', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { storyId } = req.params;
     const { title, content, mediaUrl, timeLimit } = req.body;
@@ -87,7 +88,7 @@ router.post('/:storyId/chapter', async (req: Request, res: Response) => {
  * @route POST /api/v1/storytelling/:storyId/chapter/:chapterId/choice
  * @desc Add a choice to a chapter
  */
-router.post('/:storyId/chapter/:chapterId/choice', async (req: Request, res: Response) => {
+router.post('/:storyId/chapter/:chapterId/choice', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { storyId, chapterId } = req.params;
     const { text, consequence, nextChapterId } = req.body;
@@ -124,7 +125,7 @@ router.post('/:storyId/chapter/:chapterId/choice', async (req: Request, res: Res
  * @route POST /api/v1/storytelling/:storyId/chapter/:chapterId/vote
  * @desc Vote on a choice or user content
  */
-router.post('/:storyId/chapter/:chapterId/vote', async (req: Request, res: Response) => {
+router.post('/:storyId/chapter/:chapterId/vote', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { storyId, chapterId } = req.params;
     const { choiceId, contentId } = req.body;
@@ -154,7 +155,7 @@ router.post('/:storyId/chapter/:chapterId/vote', async (req: Request, res: Respo
  * @route POST /api/v1/storytelling/:storyId/chapter/:chapterId/content
  * @desc Submit user-generated content
  */
-router.post('/:storyId/chapter/:chapterId/content', async (req: Request, res: Response) => {
+router.post('/:storyId/chapter/:chapterId/content', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { storyId, chapterId } = req.params;
     const { type, content, mediaUrl } = req.body;
@@ -191,7 +192,7 @@ router.post('/:storyId/chapter/:chapterId/content', async (req: Request, res: Re
  * @route POST /api/v1/storytelling/:storyId/progress
  * @desc Progress to next chapter
  */
-router.post('/:storyId/progress', async (req: Request, res: Response) => {
+router.post('/:storyId/progress', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { storyId } = req.params;
     const userId = req.user?.userId;
@@ -216,7 +217,7 @@ router.post('/:storyId/progress', async (req: Request, res: Response) => {
  * @route GET /api/v1/storytelling/:storyId
  * @desc Get story with current chapter
  */
-router.get('/:storyId', async (req: Request, res: Response) => {
+router.get('/:storyId', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { storyId } = req.params;
     const userId = req.user?.userId;
@@ -245,7 +246,7 @@ router.get('/:storyId', async (req: Request, res: Response) => {
  * @route GET /api/v1/storytelling/:storyId/progress
  * @desc Get user's story progress
  */
-router.get('/:storyId/progress', async (req: Request, res: Response) => {
+router.get('/:storyId/progress', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { storyId } = req.params;
     const userId = req.user?.userId;
@@ -270,7 +271,7 @@ router.get('/:storyId/progress', async (req: Request, res: Response) => {
  * @route GET /api/v1/storytelling/:storyId/analytics
  * @desc Get story analytics
  */
-router.get('/:storyId/analytics', async (req: Request, res: Response) => {
+router.get('/:storyId/analytics', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { storyId } = req.params;
     const userId = req.user?.userId;
@@ -295,7 +296,7 @@ router.get('/:storyId/analytics', async (req: Request, res: Response) => {
  * @route GET /api/v1/storytelling/trending
  * @desc Get trending stories
  */
-router.get('/trending', async (req: Request, res: Response) => {
+router.get('/trending', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { limit } = req.query;
     const userId = req.user?.userId;

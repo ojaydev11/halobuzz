@@ -1,6 +1,7 @@
-import { Router, Request, Response } from 'express';
+import { Router, Response } from 'express';
+import { AuthenticatedRequest } from '@/middleware/auth';
 import { CulturalIntelligenceService } from '@/services/cultural/CulturalIntelligenceService';
-import { authenticateToken } from '@/middleware/auth';
+import { authMiddleware } from '@/middleware/auth';
 import { socialLimiter } from '@/middleware/security';
 import { logger } from '@/config/logger';
 
@@ -8,14 +9,14 @@ const router = Router();
 const culturalService = CulturalIntelligenceService.getInstance();
 
 // Apply authentication and rate limiting to all routes
-router.use(authenticateToken);
+router.use(authMiddleware);
 router.use(socialLimiter);
 
 /**
  * @route POST /api/v1/cultural/profile
  * @desc Create or update cultural profile
  */
-router.post('/profile', async (req: Request, res: Response) => {
+router.post('/profile', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { primaryCulture, secondaryCultures, languagePreferences, culturalValues, communicationStyle, contentPreferences } = req.body;
     const userId = req.user?.userId;
@@ -51,7 +52,7 @@ router.post('/profile', async (req: Request, res: Response) => {
  * @route POST /api/v1/cultural/content/analyze
  * @desc Analyze content for cultural adaptation
  */
-router.post('/content/analyze', async (req: Request, res: Response) => {
+router.post('/content/analyze', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { contentId, originalCulture, targetCultures, content } = req.body;
     const userId = req.user?.userId;
@@ -85,7 +86,7 @@ router.post('/content/analyze', async (req: Request, res: Response) => {
  * @route POST /api/v1/cultural/recommendations
  * @desc Generate cultural recommendations
  */
-router.post('/recommendations', async (req: Request, res: Response) => {
+router.post('/recommendations', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { contentType, limit } = req.body;
     const userId = req.user?.userId;
@@ -118,7 +119,7 @@ router.post('/recommendations', async (req: Request, res: Response) => {
  * @route POST /api/v1/cultural/engagement/track
  * @desc Track cultural engagement
  */
-router.post('/engagement/track', async (req: Request, res: Response) => {
+router.post('/engagement/track', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { contentId, culture, engagement } = req.body;
     const userId = req.user?.userId;
@@ -147,7 +148,7 @@ router.post('/engagement/track', async (req: Request, res: Response) => {
  * @route GET /api/v1/cultural/analytics
  * @desc Get cultural analytics
  */
-router.get('/analytics', async (req: Request, res: Response) => {
+router.get('/analytics', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.user?.userId;
 
@@ -171,7 +172,7 @@ router.get('/analytics', async (req: Request, res: Response) => {
  * @route GET /api/v1/cultural/bridges
  * @desc Get cultural bridges
  */
-router.get('/bridges', async (req: Request, res: Response) => {
+router.get('/bridges', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { sourceCulture, targetCulture, bridgeType } = req.query;
     const userId = req.user?.userId;

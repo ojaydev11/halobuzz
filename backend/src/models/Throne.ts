@@ -1,8 +1,8 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
 export interface IThrone extends Document {
-  streamId: string;
-  userId: string;
+  streamId: mongoose.Types.ObjectId;
+  userId: mongoose.Types.ObjectId;
   username: string;
   avatar: string;
   ogLevel: number;

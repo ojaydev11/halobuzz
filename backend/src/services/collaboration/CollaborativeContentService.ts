@@ -1,7 +1,7 @@
 import { Schema, model, Document } from 'mongoose';
 import { logger } from '@/config/logger';
-import { redisClient } from '@/config/redis';
-import { io } from '@/config/socket';
+import { getRedisClient } from '@/config/redis';
+import { getSocketIO } from '@/config/socket';
 
 // Interfaces
 export interface CollaborationSession {
@@ -114,9 +114,9 @@ const CollaborationInviteSchema = new Schema<CollaborationInvite>({
 });
 
 // Models
-const CollaborationSessionModel = model<CollaborationSession & Document>('CollaborationSession', CollaborationSessionSchema);
-const RealTimeEditModel = model<RealTimeEdit & Document>('RealTimeEdit', RealTimeEditSchema);
-const CollaborationInviteModel = model<CollaborationInvite & Document>('CollaborationInvite', CollaborationInviteSchema);
+const CollaborationSessionModel = model<CollaborationSession>('CollaborationSession', CollaborationSessionSchema);
+const RealTimeEditModel = model<RealTimeEdit>('RealTimeEdit', RealTimeEditSchema);
+const CollaborationInviteModel = model<CollaborationInvite>('CollaborationInvite', CollaborationInviteSchema);
 
 export class CollaborativeContentService {
   private static instance: CollaborativeContentService;
@@ -152,7 +152,10 @@ export class CollaborativeContentService {
           canComment: [creatorId],
           canView: [creatorId]
         },
-        content,
+        content: {
+          ...content,
+          metadata: content.metadata || {}
+        },
         timeline: [],
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -162,7 +165,8 @@ export class CollaborativeContentService {
       const createdSession = await CollaborationSessionModel.create(session);
       
       // Cache session for real-time access
-      await redisClient.setex(
+      const redisClient = getRedisClient();
+      await redisClient.setEx(
         `collab:session:${sessionId}`,
         3600, // 1 hour cache
         JSON.stringify(session)
@@ -193,7 +197,7 @@ export class CollaborativeContentService {
         throw new Error('Collaboration session not found');
       }
 
-      if (session.creatorId !== inviterId && !session.permissions.canEdit.includes(inviterId)) {
+      if ((session as any).creatorId !== inviterId && !(session as any).permissions.canEdit.includes(inviterId)) {
         throw new Error('Insufficient permissions to invite users');
       }
 
@@ -224,13 +228,16 @@ export class CollaborativeContentService {
         });
 
         // Emit real-time notification
-        io.to(`user:${invitee.userId}`).emit('collaboration_invite', {
-          inviteId,
-          sessionId,
-          inviterId,
-          role: invitee.role,
-          content: session.content
-        });
+        const io = getSocketIO();
+        if (io) {
+          io.to(`user:${invitee.userId}`).emit('collaboration_invite', {
+            inviteId,
+            sessionId,
+            inviterId,
+            role: invitee.role,
+            content: (session as any).content
+          });
+        }
       }
 
       logger.info('Collaboration invites sent', { sessionId, inviteCount: invites.length });
@@ -256,40 +263,40 @@ export class CollaborativeContentService {
         throw new Error('Invite not found or expired');
       }
 
-      if (invite.expiresAt < new Date()) {
-        invite.status = 'expired';
-        await invite.save();
+      if ((invite as any).expiresAt < new Date()) {
+        (invite as any).status = 'expired';
+        await CollaborationInviteModel.findByIdAndUpdate((invite as any)._id, invite);
         throw new Error('Invite has expired');
       }
 
       // Update invite status
-      invite.status = 'accepted';
-      await invite.save();
+      (invite as any).status = 'accepted';
+      await CollaborationInviteModel.findByIdAndUpdate((invite as any)._id, invite);
 
       // Add user to session
-      const session = await this.getCollaborationSession(invite.sessionId);
+      const session = await this.getCollaborationSession((invite as any).sessionId);
       if (!session) {
         throw new Error('Collaboration session not found');
       }
 
       // Add user to participants and permissions
-      if (!session.participants.includes(userId)) {
-        session.participants.push(userId);
+      if (!(session as any).participants.includes(userId)) {
+        (session as any).participants.push(userId);
       }
 
       // Update permissions based on role
-      switch (invite.role) {
+      switch ((invite as any).role) {
         case 'editor':
-          if (!session.permissions.canEdit.includes(userId)) {
-            session.permissions.canEdit.push(userId);
+          if (!(session as any).permissions.canEdit.includes(userId)) {
+            (session as any).permissions.canEdit.push(userId);
           }
-          if (!session.permissions.canComment.includes(userId)) {
-            session.permissions.canComment.push(userId);
+          if (!(session as any).permissions.canComment.includes(userId)) {
+            (session as any).permissions.canComment.push(userId);
           }
           break;
         case 'commenter':
-          if (!session.permissions.canComment.includes(userId)) {
-            session.permissions.canComment.push(userId);
+          if (!(session as any).permissions.canComment.includes(userId)) {
+            (session as any).permissions.canComment.push(userId);
           }
           break;
         case 'viewer':
@@ -297,27 +304,30 @@ export class CollaborativeContentService {
           break;
       }
 
-      if (!session.permissions.canView.includes(userId)) {
-        session.permissions.canView.push(userId);
+      if (!(session as any).permissions.canView.includes(userId)) {
+        (session as any).permissions.canView.push(userId);
       }
 
-      session.updatedAt = new Date();
-      await session.save();
+      (session as any).updatedAt = new Date();
+      await CollaborationSessionModel.findByIdAndUpdate((session as any)._id, session);
 
       // Add to timeline
-      await this.addTimelineEvent(invite.sessionId, userId, 'join', {
-        role: invite.role,
+      await this.addTimelineEvent((invite as any).sessionId, userId, 'join', {
+        role: (invite as any).role,
         via: 'invite'
       });
 
       // Emit real-time update
-      io.to(`collab:${invite.sessionId}`).emit('participant_joined', {
-        userId,
-        role: invite.role,
-        sessionId: invite.sessionId
-      });
+      const io = getSocketIO();
+      if (io) {
+        io.to(`collab:${(invite as any).sessionId}`).emit('participant_joined', {
+          userId,
+          role: (invite as any).role,
+          sessionId: (invite as any).sessionId
+        });
+      }
 
-      logger.info('Collaboration invite accepted', { inviteId, userId, sessionId: invite.sessionId });
+      logger.info('Collaboration invite accepted', { inviteId, userId, sessionId: (invite as any).sessionId });
       return session;
     } catch (error) {
       logger.error('Error accepting collaboration invite', { error, inviteId, userId });
@@ -362,24 +372,24 @@ export class CollaborativeContentService {
       // Apply changes to session content
       switch (editType) {
         case 'text':
-          if (changes.title) session.content.title = changes.title;
-          if (changes.description) session.content.description = changes.description;
+          if (changes.title) (session as any).content.title = changes.title;
+          if (changes.description) (session as any).content.description = changes.description;
           break;
         case 'media':
-          if (changes.mediaUrl) session.content.mediaUrl = changes.mediaUrl;
+          if (changes.mediaUrl) (session as any).content.mediaUrl = changes.mediaUrl;
           break;
         case 'metadata':
-          session.content.metadata = { ...session.content.metadata, ...changes };
+          (session as any).content.metadata = { ...(session as any).content.metadata, ...changes };
           break;
       }
 
-      session.updatedAt = new Date();
-      await session.save();
+      (session as any).updatedAt = new Date();
+      await CollaborationSessionModel.findByIdAndUpdate((session as any)._id, session);
 
       // Save edit record
       const createdEdit = await RealTimeEditModel.create(edit);
-      createdEdit.applied = true;
-      await createdEdit.save();
+      (createdEdit as any).applied = true;
+      await RealTimeEditModel.findByIdAndUpdate((createdEdit as any)._id, createdEdit);
 
       // Add to timeline
       await this.addTimelineEvent(sessionId, userId, 'edit', {
@@ -389,13 +399,16 @@ export class CollaborativeContentService {
       });
 
       // Emit real-time update
-      io.to(`collab:${sessionId}`).emit('content_updated', {
-        editId,
-        userId,
-        editType,
-        changes,
-        timestamp: edit.timestamp
-      });
+      const io = getSocketIO();
+      if (io) {
+        io.to(`collab:${sessionId}`).emit('content_updated', {
+          editId,
+          userId,
+          editType,
+          changes,
+          timestamp: edit.timestamp
+        });
+      }
 
       logger.info('Real-time edit applied', { sessionId, userId, editType, editId });
       return createdEdit;
@@ -430,12 +443,15 @@ export class CollaborativeContentService {
       });
 
       // Emit real-time comment
-      io.to(`collab:${sessionId}`).emit('comment_added', {
-        eventId: event.eventId,
-        userId,
-        comment,
-        timestamp: event.timestamp
-      });
+      const io = getSocketIO();
+      if (io) {
+        io.to(`collab:${sessionId}`).emit('comment_added', {
+          eventId: event.eventId,
+          userId,
+          comment,
+          timestamp: event.timestamp
+        });
+      }
 
       logger.info('Comment added to collaboration', { sessionId, userId, eventId: event.eventId });
       return event;
@@ -451,6 +467,7 @@ export class CollaborativeContentService {
   async getCollaborationSession(sessionId: string): Promise<CollaborationSession | null> {
     try {
       // Try cache first
+      const redisClient = getRedisClient();
       const cached = await redisClient.get(`collab:session:${sessionId}`);
       if (cached) {
         return JSON.parse(cached);
@@ -460,7 +477,8 @@ export class CollaborativeContentService {
       const session = await CollaborationSessionModel.findOne({ sessionId });
       if (session) {
         // Cache for future requests
-        await redisClient.setex(
+        const redisClient = getRedisClient();
+        await redisClient.setEx(
           `collab:session:${sessionId}`,
           3600,
           JSON.stringify(session)
@@ -504,13 +522,13 @@ export class CollaborativeContentService {
         throw new Error('Collaboration session not found');
       }
 
-      if (session.creatorId !== userId) {
+      if ((session as any).creatorId !== userId) {
         throw new Error('Only the creator can complete the session');
       }
 
-      session.status = 'completed';
-      session.updatedAt = new Date();
-      await session.save();
+      (session as any).status = 'completed';
+      (session as any).updatedAt = new Date();
+      await CollaborationSessionModel.findByIdAndUpdate((session as any)._id, session);
 
       // Add to timeline
       await this.addTimelineEvent(sessionId, userId, 'approve', {
@@ -518,13 +536,17 @@ export class CollaborativeContentService {
       });
 
       // Emit completion event
-      io.to(`collab:${sessionId}`).emit('collaboration_completed', {
-        sessionId,
-        completedBy: userId,
-        finalContent: session.content
-      });
+      const io = getSocketIO();
+      if (io) {
+        io.to(`collab:${sessionId}`).emit('collaboration_completed', {
+          sessionId,
+          completedBy: userId,
+          finalContent: (session as any).content
+        });
+      }
 
       // Clear cache
+      const redisClient = getRedisClient();
       await redisClient.del(`collab:session:${sessionId}`);
 
       logger.info('Collaboration session completed', { sessionId, userId });
@@ -546,30 +568,30 @@ export class CollaborativeContentService {
       }
 
       const edits = await RealTimeEditModel.find({ sessionId });
-      const comments = session.timeline.filter(event => event.type === 'comment');
+      const comments = (session as any).timeline.filter((event: any) => event.type === 'comment');
 
       const analytics = {
         sessionId,
-        duration: Date.now() - session.createdAt.getTime(),
-        participantCount: session.participants.length,
+        duration: Date.now() - (session as any).createdAt.getTime(),
+        participantCount: (session as any).participants.length,
         editCount: edits.length,
         commentCount: comments.length,
         editTypes: edits.reduce((acc, edit) => {
-          acc[edit.type] = (acc[edit.type] || 0) + 1;
+          acc[(edit as any).type] = (acc[(edit as any).type] || 0) + 1;
           return acc;
         }, {} as any),
-        participantActivity: session.participants.map(participant => {
-          const participantEdits = edits.filter(edit => edit.userId === participant);
-          const participantComments = comments.filter(comment => comment.userId === participant);
+        participantActivity: (session as any).participants.map((participant: any) => {
+          const participantEdits = edits.filter((edit: any) => edit.userId === participant);
+          const participantComments = comments.filter((comment: any) => comment.userId === participant);
           return {
             userId: participant,
             editCount: participantEdits.length,
             commentCount: participantComments.length,
             lastActivity: participantEdits.length > 0 
-              ? Math.max(...participantEdits.map(e => e.timestamp.getTime()))
+              ? Math.max(...participantEdits.map((e: any) => e.timestamp.getTime()))
               : participantComments.length > 0
-                ? Math.max(...participantComments.map(c => c.timestamp.getTime()))
-                : session.createdAt.getTime()
+                ? Math.max(...participantComments.map((c: any) => c.timestamp.getTime()))
+                : (session as any).createdAt.getTime()
           };
         })
       };

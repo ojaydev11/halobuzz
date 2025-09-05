@@ -17,7 +17,6 @@ export interface IUser extends Document {
   banReason?: string;
   banExpiresAt?: Date;
   lastActiveAt: Date;
-  coins: number;
   totalCoinsEarned: number;
   totalCoinsSpent: number;
   followers: number;
@@ -184,11 +183,6 @@ const userSchema = new Schema<IUser>({
   lastActiveAt: {
     type: Date,
     default: Date.now
-  },
-  coins: {
-    type: Number,
-    default: 0,
-    min: 0
   },
   totalCoinsEarned: {
     type: Number,

@@ -130,7 +130,7 @@ export class CronSecurityService {
       const lockKey = `cron_lock:${jobName}`;
       const existingLock = await getCache(lockKey);
       if (existingLock) {
-        const lockData = JSON.parse(existingLock);
+        const lockData = JSON.parse(existingLock as string);
         const lockAge = Date.now() - lockData.timestamp;
         
         if (lockAge < config.lockTimeout) {

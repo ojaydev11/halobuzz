@@ -1,6 +1,7 @@
-import { Router, Request, Response } from 'express';
+import { Router, Response } from 'express';
+import { AuthenticatedRequest } from '@/middleware/auth';
 import { CreatorCoinService } from '@/services/blockchain/CreatorCoinService';
-import { authenticateToken } from '@/middleware/auth';
+import { authMiddleware } from '@/middleware/auth';
 import { socialLimiter } from '@/middleware/security';
 import { logger } from '@/config/logger';
 
@@ -8,14 +9,14 @@ const router = Router();
 const creatorCoinService = CreatorCoinService.getInstance();
 
 // Apply authentication and rate limiting to all routes
-router.use(authenticateToken);
+router.use(authMiddleware);
 router.use(socialLimiter);
 
 /**
  * @route POST /api/v1/blockchain/creator-coin
  * @desc Create a new creator coin
  */
-router.post('/creator-coin', async (req: Request, res: Response) => {
+router.post('/creator-coin', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { symbol, name, description, totalSupply, network, metadata } = req.body;
     const userId = req.user?.userId;
@@ -52,7 +53,7 @@ router.post('/creator-coin', async (req: Request, res: Response) => {
  * @route POST /api/v1/blockchain/:coinId/buy
  * @desc Buy creator coins
  */
-router.post('/:coinId/buy', async (req: Request, res: Response) => {
+router.post('/:coinId/buy', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { coinId } = req.params;
     const { amount, maxPrice } = req.body;
@@ -87,7 +88,7 @@ router.post('/:coinId/buy', async (req: Request, res: Response) => {
  * @route POST /api/v1/blockchain/:coinId/sell
  * @desc Sell creator coins
  */
-router.post('/:coinId/sell', async (req: Request, res: Response) => {
+router.post('/:coinId/sell', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { coinId } = req.params;
     const { amount, minPrice } = req.body;
@@ -122,7 +123,7 @@ router.post('/:coinId/sell', async (req: Request, res: Response) => {
  * @route POST /api/v1/blockchain/:coinId/staking-pool
  * @desc Create staking pool for creator coin
  */
-router.post('/:coinId/staking-pool', async (req: Request, res: Response) => {
+router.post('/:coinId/staking-pool', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { coinId } = req.params;
     const { name, description, apy, minStakeAmount, lockPeriod, rewardsToken } = req.body;
@@ -160,7 +161,7 @@ router.post('/:coinId/staking-pool', async (req: Request, res: Response) => {
  * @route POST /api/v1/blockchain/staking/:poolId/stake
  * @desc Stake coins in a pool
  */
-router.post('/staking/:poolId/stake', async (req: Request, res: Response) => {
+router.post('/staking/:poolId/stake', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { poolId } = req.params;
     const { amount } = req.body;
@@ -194,7 +195,7 @@ router.post('/staking/:poolId/stake', async (req: Request, res: Response) => {
  * @route POST /api/v1/blockchain/staking/:positionId/claim
  * @desc Claim staking rewards
  */
-router.post('/staking/:positionId/claim', async (req: Request, res: Response) => {
+router.post('/staking/:positionId/claim', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { positionId } = req.params;
     const userId = req.user?.userId;
@@ -219,7 +220,7 @@ router.post('/staking/:positionId/claim', async (req: Request, res: Response) =>
  * @route GET /api/v1/blockchain/:coinId/market-data
  * @desc Get creator coin market data
  */
-router.get('/:coinId/market-data', async (req: Request, res: Response) => {
+router.get('/:coinId/market-data', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { coinId } = req.params;
     const userId = req.user?.userId;
@@ -244,7 +245,7 @@ router.get('/:coinId/market-data', async (req: Request, res: Response) => {
  * @route GET /api/v1/blockchain/trending
  * @desc Get trending creator coins
  */
-router.get('/trending', async (req: Request, res: Response) => {
+router.get('/trending', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { limit } = req.query;
     const userId = req.user?.userId;

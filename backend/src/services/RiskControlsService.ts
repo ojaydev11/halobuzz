@@ -158,7 +158,7 @@ class RiskControlsService {
       }
 
       // Check age verification
-      if (!user.ageVerified || user.age < 18) {
+      if (!(user as any).ageVerified || (user as any).age < 18) {
         return { allowed: false, reason: 'age_verification_required' };
       }
 

@@ -146,11 +146,17 @@ export class ReputationService {
   async updateUserTrustScore(userId: string) {
     try {
       // Get total reputation
-      const reputationResult = await ReputationEvent.getTotalReputation(userId);
+      const reputationResult = await ReputationEvent.aggregate([
+        { $match: { userId } },
+        { $group: { _id: null, totalReputation: { $sum: '$points' } } }
+      ]);
       const totalReputation = reputationResult[0]?.totalReputation || 0;
 
       // Get user's reputation events summary
-      const summary = await ReputationEvent.getUserSummary(userId);
+      const summary = await ReputationEvent.aggregate([
+        { $match: { userId } },
+        { $group: { _id: '$type', count: { $sum: 1 }, totalPoints: { $sum: '$points' } } }
+      ]);
       
       // Calculate trust factors
       const factors = await this.calculateTrustFactors(userId, summary);
@@ -206,9 +212,15 @@ export class ReputationService {
   async getUserReputation(userId: string) {
     try {
       const [totalReputation, summary, recentEvents] = await Promise.all([
-        ReputationEvent.getTotalReputation(userId),
-        ReputationEvent.getUserSummary(userId),
-        ReputationEvent.findByUser(userId, 10)
+        ReputationEvent.aggregate([
+          { $match: { userId } },
+          { $group: { _id: null, totalReputation: { $sum: '$points' } } }
+        ]),
+        ReputationEvent.aggregate([
+          { $match: { userId } },
+          { $group: { _id: '$type', count: { $sum: 1 }, totalPoints: { $sum: '$points' } } }
+        ]),
+        ReputationEvent.find({ userId }).sort({ createdAt: -1 }).limit(10)
       ]);
 
       const user = await User.findById(userId);

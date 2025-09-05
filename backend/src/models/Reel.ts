@@ -408,7 +408,7 @@ reelSchema.pre('save', function(next) {
 });
 
 // Pre-remove middleware to clean up files
-reelSchema.pre('remove', async function(next) {
+reelSchema.pre('deleteOne', async function(next) {
   // TODO: Clean up S3 files when reel is removed
   // await deleteS3Object(this.fileKey);
   next();

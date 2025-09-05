@@ -1,17 +1,17 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
 export interface IModerationFlag extends Document {
-  reporterId: string;
-  reportedUserId?: string;
-  reportedStreamId?: string;
-  reportedMessageId?: string;
+  reporterId: mongoose.Types.ObjectId;
+  reportedUserId?: mongoose.Types.ObjectId;
+  reportedStreamId?: mongoose.Types.ObjectId;
+  reportedMessageId?: mongoose.Types.ObjectId;
   type: 'user' | 'stream' | 'message' | 'content';
   reason: 'inappropriate' | 'spam' | 'harassment' | 'violence' | 'copyright' | 'fake_news' | 'other';
   description: string;
   evidence?: string[]; // URLs to evidence
   status: 'pending' | 'reviewed' | 'resolved' | 'dismissed';
   priority: 'low' | 'medium' | 'high' | 'urgent';
-  assignedModerator?: string;
+  assignedModerator?: mongoose.Types.ObjectId;
   reviewedAt?: Date;
   action?: 'warn' | 'blur' | 'ban' | 'delete' | 'none';
   actionDetails?: {

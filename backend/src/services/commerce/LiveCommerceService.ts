@@ -366,8 +366,8 @@ export class LiveCommerceService {
       this.activeSessions.set(streamId, this.mapToLiveShoppingSession(session));
 
       // Update product stream association
-      product.streamId = streamId;
-      await product.save();
+      (product as any).streamId = streamId;
+      await ProductModel.findByIdAndUpdate((product as any)._id, { streamId });
 
       logger.info('Product added to stream', {
         streamId,
@@ -657,7 +657,7 @@ export class LiveCommerceService {
       const productSales = new Map();
       checkouts.forEach(checkout => {
         const productId = checkout.productId._id.toString();
-        const productName = checkout.productId.name;
+        const productName = (checkout.productId as any).name;
         if (productSales.has(productId)) {
           const existing = productSales.get(productId);
           existing.sales += checkout.quantity;

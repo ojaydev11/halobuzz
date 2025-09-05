@@ -1,7 +1,7 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
 export interface IReputationEvent extends Document {
-  userId: string;
+  userId: mongoose.Types.ObjectId;
   type: 'gift_sent' | 'gift_received' | 'stream_hosted' | 'stream_watched' | 'og_subscription' | 'throne_claimed' | 'game_won' | 'report_received' | 'moderation_action' | 'help_neighbor' | 'teach_skill' | 'mentor_user' | 'donate_time' | 'support_cause' | 'create_positive_content' | 'cultural_celebration' | 'festival_participation' | 'community_challenge' | 'wellness_support';
   delta: number; // positive or negative reputation change
   karmaDelta?: number; // karma points awarded (separate from reputation)

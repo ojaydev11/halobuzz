@@ -1,8 +1,8 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
 export interface IMessage extends Document {
-  roomId: string;
-  userId: string;
+  roomId: mongoose.Types.ObjectId;
+  userId: mongoose.Types.ObjectId;
   username: string;
   avatar: string;
   ogLevel: number;
@@ -10,12 +10,12 @@ export interface IMessage extends Document {
   type: 'text' | 'gift' | 'system' | 'emoji';
   isDeleted: boolean;
   deletedAt?: Date;
-  deletedBy?: string;
+  deletedBy?: mongoose.Types.ObjectId;
   metadata?: {
-    giftId?: string;
+    giftId?: mongoose.Types.ObjectId;
     giftName?: string;
     giftAmount?: number;
-    replyTo?: string;
+    replyTo?: mongoose.Types.ObjectId;
     mentions?: string[];
     emoji?: string;
   };

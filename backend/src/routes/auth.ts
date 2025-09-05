@@ -1,9 +1,10 @@
-import express from 'express';
+import express, { Response } from 'express';
 import { body, validationResult } from 'express-validator';
 import jwt from 'jsonwebtoken';
-import { authService } from '../services/authService';
+import { AuthService } from '../services/authService';
 import { User } from '../models/User';
 import { logger } from '../config/logger';
+import { AuthenticatedRequest } from '../middleware/auth';
 
 const router = express.Router();
 
@@ -30,7 +31,7 @@ router.post('/register', [
   body('language')
     .isLength({ min: 2, max: 5 })
     .withMessage('Valid language code is required')
-], async (req, res) => {
+], async (req: AuthenticatedRequest, res: Response) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -107,7 +108,7 @@ router.post('/login', [
   body('password')
     .notEmpty()
     .withMessage('Password is required')
-], async (req, res) => {
+], async (req: AuthenticatedRequest, res: Response) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -203,7 +204,7 @@ router.post('/kyc', [
   body('selfie')
     .notEmpty()
     .withMessage('Selfie image is required')
-], async (req, res) => {
+], async (req: AuthenticatedRequest, res: Response) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {

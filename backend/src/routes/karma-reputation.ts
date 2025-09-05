@@ -1,24 +1,25 @@
-import { Router, Request, Response } from 'express';
+import { Router, Response } from 'express';
+import { AuthenticatedRequest } from '../middleware/auth';
 import { karmaReputationService } from '../services/KarmaReputationService';
 import { culturalFestivalService } from '../services/cultural/CulturalFestivalService';
 import { CommunityLoveService } from '../services/community/CommunityLoveService';
 import { ReputationService } from '../services/ReputationService';
 import { setupLogger } from '../config/logger';
-import { authenticateToken } from '../middleware/auth';
-import { rateLimit } from '../middleware/rateLimit';
+import { authMiddleware } from '../middleware/auth';
+// import { rateLimit } from '../middleware/rateLimit';
 
 const router = Router();
 const logger = setupLogger();
 
 // Apply authentication to all routes
-router.use(authenticateToken);
+router.use(authMiddleware);
 
 /**
  * @route GET /api/karma-reputation/score/:userId
  * @desc Get unified karma and reputation score for a user
  * @access Private
  */
-router.get('/score/:userId', async (req: Request, res: Response) => {
+router.get('/score/:userId', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { userId } = req.params;
     const requestingUserId = req.user?.id;
@@ -59,7 +60,7 @@ router.get('/score/:userId', async (req: Request, res: Response) => {
  * @desc Get unified karma and reputation leaderboard
  * @access Private
  */
-router.get('/leaderboard', rateLimit(10, 60), async (req: Request, res: Response) => {
+router.get('/leaderboard', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const limit = parseInt(req.query.limit as string) || 50;
     
@@ -98,7 +99,7 @@ router.get('/leaderboard', rateLimit(10, 60), async (req: Request, res: Response
  * @desc Record a karma or reputation action
  * @access Private
  */
-router.post('/action', rateLimit(20, 60), async (req: Request, res: Response) => {
+router.post('/action', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { type, metadata, impact, verifiedBy, culturalContext } = req.body;
     const userId = req.user?.id;
@@ -149,7 +150,7 @@ router.post('/action', rateLimit(20, 60), async (req: Request, res: Response) =>
  * @desc Get recent cultural events and festival participations
  * @access Private
  */
-router.get('/cultural-events', rateLimit(15, 60), async (req: Request, res: Response) => {
+router.get('/cultural-events', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const limit = parseInt(req.query.limit as string) || 20;
     
@@ -181,7 +182,7 @@ router.get('/cultural-events', rateLimit(15, 60), async (req: Request, res: Resp
  * @desc Get all festivals
  * @access Private
  */
-router.get('/festivals', async (req: Request, res: Response) => {
+router.get('/festivals', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const festivals = await culturalFestivalService.getAllFestivals();
     
@@ -204,7 +205,7 @@ router.get('/festivals', async (req: Request, res: Response) => {
  * @desc Get active festivals
  * @access Private
  */
-router.get('/festivals/active', async (req: Request, res: Response) => {
+router.get('/festivals/active', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const festivals = await culturalFestivalService.getActiveFestivals();
     
@@ -227,7 +228,7 @@ router.get('/festivals/active', async (req: Request, res: Response) => {
  * @desc Get upcoming festivals
  * @access Private
  */
-router.get('/festivals/upcoming', async (req: Request, res: Response) => {
+router.get('/festivals/upcoming', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const limit = parseInt(req.query.limit as string) || 5;
     const festivals = await culturalFestivalService.getUpcomingFestivals(limit);
@@ -251,7 +252,7 @@ router.get('/festivals/upcoming', async (req: Request, res: Response) => {
  * @desc Get specific festival details
  * @access Private
  */
-router.get('/festivals/:festivalId', async (req: Request, res: Response) => {
+router.get('/festivals/:festivalId', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { festivalId } = req.params;
     const festival = await culturalFestivalService.getFestivalById(festivalId);
@@ -282,7 +283,7 @@ router.get('/festivals/:festivalId', async (req: Request, res: Response) => {
  * @desc Participate in a festival event
  * @access Private
  */
-router.post('/festivals/:festivalId/participate', rateLimit(10, 300), async (req: Request, res: Response) => {
+router.post('/festivals/:festivalId/participate', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { festivalId } = req.params;
     const { eventId, participationType, culturalNotes } = req.body;
@@ -342,7 +343,7 @@ router.post('/festivals/:festivalId/participate', rateLimit(10, 300), async (req
  * @desc Get festival leaderboard
  * @access Private
  */
-router.get('/festivals/:festivalId/leaderboard', rateLimit(10, 60), async (req: Request, res: Response) => {
+router.get('/festivals/:festivalId/leaderboard', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { festivalId } = req.params;
     const limit = parseInt(req.query.limit as string) || 20;
@@ -375,7 +376,7 @@ router.get('/festivals/:festivalId/leaderboard', rateLimit(10, 60), async (req: 
  * @desc Get festival statistics
  * @access Private
  */
-router.get('/festivals/:festivalId/stats', async (req: Request, res: Response) => {
+router.get('/festivals/:festivalId/stats', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { festivalId } = req.params;
     const result = await culturalFestivalService.getFestivalStats(festivalId);
@@ -406,7 +407,7 @@ router.get('/festivals/:festivalId/stats', async (req: Request, res: Response) =
  * @desc Get karma events by category
  * @access Private
  */
-router.get('/karma/categories/:category', rateLimit(15, 60), async (req: Request, res: Response) => {
+router.get('/karma/categories/:category', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { category } = req.params;
     const limit = parseInt(req.query.limit as string) || 50;
@@ -440,7 +441,7 @@ router.get('/karma/categories/:category', rateLimit(15, 60), async (req: Request
  * @desc Get user's reputation history
  * @access Private
  */
-router.get('/reputation/history/:userId', async (req: Request, res: Response) => {
+router.get('/reputation/history/:userId', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { userId } = req.params;
     const requestingUserId = req.user?.id;
@@ -484,7 +485,7 @@ router.get('/reputation/history/:userId', async (req: Request, res: Response) =>
  * @desc Get community actions and milestones
  * @access Private
  */
-router.get('/community/actions', rateLimit(15, 60), async (req: Request, res: Response) => {
+router.get('/community/actions', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const limit = parseInt(req.query.limit as string) || 20;
     
@@ -509,7 +510,7 @@ router.get('/community/actions', rateLimit(15, 60), async (req: Request, res: Re
  * @desc Get available community milestones
  * @access Private
  */
-router.get('/community/milestones', async (req: Request, res: Response) => {
+router.get('/community/milestones', async (req: AuthenticatedRequest, res: Response) => {
   try {
     // This would typically get available milestones from CommunityLoveService
     const milestones = [
@@ -568,7 +569,7 @@ router.get('/community/milestones', async (req: Request, res: Response) => {
  * @desc Activate a festival (Admin only)
  * @access Private (Admin)
  */
-router.post('/admin/festivals/:festivalId/activate', async (req: Request, res: Response) => {
+router.post('/admin/festivals/:festivalId/activate', async (req: AuthenticatedRequest, res: Response) => {
   try {
     if (!req.user?.isAdmin) {
       return res.status(403).json({
@@ -606,7 +607,7 @@ router.post('/admin/festivals/:festivalId/activate', async (req: Request, res: R
  * @desc Deactivate a festival (Admin only)
  * @access Private (Admin)
  */
-router.post('/admin/festivals/:festivalId/deactivate', async (req: Request, res: Response) => {
+router.post('/admin/festivals/:festivalId/deactivate', async (req: AuthenticatedRequest, res: Response) => {
   try {
     if (!req.user?.isAdmin) {
       return res.status(403).json({
@@ -644,7 +645,7 @@ router.post('/admin/festivals/:festivalId/deactivate', async (req: Request, res:
  * @desc Update festival dates (Admin only)
  * @access Private (Admin)
  */
-router.put('/admin/festivals/:festivalId/dates', async (req: Request, res: Response) => {
+router.put('/admin/festivals/:festivalId/dates', async (req: AuthenticatedRequest, res: Response) => {
   try {
     if (!req.user?.isAdmin) {
       return res.status(403).json({

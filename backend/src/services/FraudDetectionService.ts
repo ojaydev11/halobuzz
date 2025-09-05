@@ -277,7 +277,7 @@ class FraudDetectionService {
     }
   }
 
-  private async getRecentTransactions(userId: string, hours: number): Promise<Transaction[]> {
+  private async getRecentTransactions(userId: string, hours: number): Promise<any[]> {
     try {
       const since = new Date(Date.now() - hours * 60 * 60 * 1000);
       return await Transaction.find({

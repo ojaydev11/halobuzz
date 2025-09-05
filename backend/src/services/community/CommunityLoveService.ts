@@ -226,7 +226,7 @@ export class CommunityLoveService {
   static async getKarmaScore(userId: string): Promise<KarmaScore> {
     try {
       const cached = await getCache(`karma_score:${userId}`);
-      if (cached) return cached;
+      if (cached) return JSON.parse(cached as string);
 
       // Initialize new karma score
       const karmaScore: KarmaScore = {
@@ -573,11 +573,12 @@ export class CommunityLoveService {
     karmaAwarded?: number;
   }> {
     try {
-      const action = await getCache(`community_action:${actionId}`);
-      if (!action) {
+      const actionData = await getCache(`community_action:${actionId}`);
+      if (!actionData) {
         return { success: false, message: 'Action not found' };
       }
 
+      const action = JSON.parse(actionData as string);
       if (action.status !== 'pending') {
         return { success: false, message: 'Action already processed' };
       }

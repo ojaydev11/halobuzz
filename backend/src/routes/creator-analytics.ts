@@ -1,5 +1,6 @@
-import express from 'express';
-import { authenticateToken } from '../middleware/auth';
+import express, { Response } from 'express';
+import { AuthenticatedRequest } from '../middleware/auth';
+import { authMiddleware } from '../middleware/auth';
 import { socialLimiter } from '../middleware/security';
 import CreatorAnalyticsService from '../services/creator-analytics/CreatorAnalyticsService';
 import { logger } from '../config/logger';
@@ -8,7 +9,7 @@ const router = express.Router();
 const analyticsService = CreatorAnalyticsService.getInstance();
 
 // Apply middleware
-router.use(authenticateToken);
+router.use(authMiddleware);
 router.use(socialLimiter);
 
 /**
@@ -16,7 +17,7 @@ router.use(socialLimiter);
  * @desc Get creator performance metrics
  * @access Private (Creator)
  */
-router.get('/creator/:creatorId/performance', async (req, res) => {
+router.get('/creator/:creatorId/performance', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { creatorId } = req.params;
     const requestingUserId = req.user.id;
@@ -49,7 +50,7 @@ router.get('/creator/:creatorId/performance', async (req, res) => {
  * @desc Get audience analytics and insights
  * @access Private (Creator)
  */
-router.get('/creator/:creatorId/audience', async (req, res) => {
+router.get('/creator/:creatorId/audience', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { creatorId } = req.params;
     const requestingUserId = req.user.id;
@@ -82,7 +83,7 @@ router.get('/creator/:creatorId/audience', async (req, res) => {
  * @desc Get content optimization tips
  * @access Private (Creator)
  */
-router.get('/creator/:creatorId/optimization', async (req, res) => {
+router.get('/creator/:creatorId/optimization', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { creatorId } = req.params;
     const requestingUserId = req.user.id;
@@ -115,7 +116,7 @@ router.get('/creator/:creatorId/optimization', async (req, res) => {
  * @desc Get revenue optimization analysis
  * @access Private (Creator)
  */
-router.get('/creator/:creatorId/revenue', async (req, res) => {
+router.get('/creator/:creatorId/revenue', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { creatorId } = req.params;
     const requestingUserId = req.user.id;
@@ -148,7 +149,7 @@ router.get('/creator/:creatorId/revenue', async (req, res) => {
  * @desc Get complete analytics dashboard data
  * @access Private (Creator)
  */
-router.get('/creator/:creatorId/dashboard', async (req, res) => {
+router.get('/creator/:creatorId/dashboard', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { creatorId } = req.params;
     const requestingUserId = req.user.id;
@@ -181,7 +182,7 @@ router.get('/creator/:creatorId/dashboard', async (req, res) => {
  * @desc Get performance trends over time
  * @access Private (Creator)
  */
-router.get('/creator/:creatorId/performance/trends', async (req, res) => {
+router.get('/creator/:creatorId/performance/trends', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { creatorId } = req.params;
     const { days = 30, metric = 'all' } = req.query;
@@ -226,7 +227,7 @@ router.get('/creator/:creatorId/performance/trends', async (req, res) => {
  * @desc Get detailed audience demographics
  * @access Private (Creator)
  */
-router.get('/creator/:creatorId/audience/demographics', async (req, res) => {
+router.get('/creator/:creatorId/audience/demographics', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { creatorId } = req.params;
     const requestingUserId = req.user.id;
@@ -261,7 +262,7 @@ router.get('/creator/:creatorId/audience/demographics', async (req, res) => {
  * @desc Get individual content performance metrics
  * @access Private (Creator)
  */
-router.get('/creator/:creatorId/content/performance', async (req, res) => {
+router.get('/creator/:creatorId/content/performance', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { creatorId } = req.params;
     const { page = 1, limit = 20, sortBy = 'views', sortOrder = 'desc' } = req.query;
@@ -307,7 +308,7 @@ router.get('/creator/:creatorId/content/performance', async (req, res) => {
  * @desc Get detailed engagement analysis
  * @access Private (Creator)
  */
-router.get('/creator/:creatorId/engagement/analysis', async (req, res) => {
+router.get('/creator/:creatorId/engagement/analysis', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { creatorId } = req.params;
     const requestingUserId = req.user.id;
@@ -344,7 +345,7 @@ router.get('/creator/:creatorId/engagement/analysis', async (req, res) => {
  * @desc Get detailed revenue breakdown
  * @access Private (Creator)
  */
-router.get('/creator/:creatorId/revenue/breakdown', async (req, res) => {
+router.get('/creator/:creatorId/revenue/breakdown', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { creatorId } = req.params;
     const { period = 'month' } = req.query;
@@ -382,7 +383,7 @@ router.get('/creator/:creatorId/revenue/breakdown', async (req, res) => {
  * @desc Get key insights summary
  * @access Private (Creator)
  */
-router.get('/creator/:creatorId/insights/summary', async (req, res) => {
+router.get('/creator/:creatorId/insights/summary', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { creatorId } = req.params;
     const requestingUserId = req.user.id;
@@ -448,7 +449,7 @@ router.get('/creator/:creatorId/insights/summary', async (req, res) => {
  * @desc Export analytics data
  * @access Private (Creator)
  */
-router.get('/creator/:creatorId/export', async (req, res) => {
+router.get('/creator/:creatorId/export', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { creatorId } = req.params;
     const { format = 'json', period = '30days' } = req.query;

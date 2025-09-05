@@ -1,7 +1,7 @@
 import { Schema, model, Document } from 'mongoose';
 import { logger } from '@/config/logger';
-import { redisClient } from '@/config/redis';
-import { io } from '@/config/socket';
+import { getRedisClient } from '@/config/redis';
+import { getSocketIO } from '@/config/socket';
 import Web3 from 'web3';
 import { Contract } from 'web3-eth-contract';
 
@@ -262,11 +262,11 @@ const StakingPositionSchema = new Schema<StakingPosition>({
 });
 
 // Models
-const CreatorCoinModel = model<CreatorCoin & Document>('CreatorCoin', CreatorCoinSchema);
-const CoinTransactionModel = model<CoinTransaction & Document>('CoinTransaction', CoinTransactionSchema);
-const CoinHolderModel = model<CoinHolder & Document>('CoinHolder', CoinHolderSchema);
-const StakingPoolModel = model<StakingPool & Document>('StakingPool', StakingPoolSchema);
-const StakingPositionModel = model<StakingPosition & Document>('StakingPosition', StakingPositionSchema);
+const CreatorCoinModel = model<CreatorCoin>('CreatorCoin', CreatorCoinSchema);
+const CoinTransactionModel = model<CoinTransaction>('CoinTransaction', CoinTransactionSchema);
+const CoinHolderModel = model<CoinHolder>('CoinHolder', CoinHolderSchema);
+const StakingPoolModel = model<StakingPool>('StakingPool', StakingPoolSchema);
+const StakingPositionModel = model<StakingPosition>('StakingPosition', StakingPositionSchema);
 
 export class CreatorCoinService {
   private static instance: CreatorCoinService;
@@ -345,20 +345,24 @@ export class CreatorCoinService {
       const createdCoin = await CreatorCoinModel.create(creatorCoin);
       
       // Cache coin data
-      await redisClient.setex(
+      const redisClient = getRedisClient();
+      await redisClient.setEx(
         `creator_coin:${coinId}`,
         3600,
         JSON.stringify(creatorCoin)
       );
 
       // Emit real-time event
-      io.emit('creator_coin_created', {
-        coinId,
-        creatorId,
-        symbol,
-        name,
-        network
-      });
+      const io = getSocketIO();
+      if (io) {
+        io.emit('creator_coin_created', {
+          coinId,
+          creatorId,
+          symbol,
+          name,
+          network
+        });
+      }
 
       logger.info('Creator coin created', { coinId, creatorId, symbol, network });
       return createdCoin;
@@ -435,14 +439,17 @@ export class CreatorCoinService {
       await this.updateCoinMetrics(coinId, amount, currentPrice, 'buy');
 
       // Emit real-time event
-      io.emit('coin_purchased', {
-        transactionId,
-        coinId,
-        userId,
-        amount,
-        price: currentPrice,
-        totalValue
-      });
+      const io = getSocketIO();
+      if (io) {
+        io.emit('coin_purchased', {
+          transactionId,
+          coinId,
+          userId,
+          amount,
+          price: currentPrice,
+          totalValue
+        });
+      }
 
       logger.info('Creator coins purchased', { transactionId, coinId, userId, amount });
       return createdTransaction;
@@ -519,14 +526,17 @@ export class CreatorCoinService {
       await this.updateCoinMetrics(coinId, amount, currentPrice, 'sell');
 
       // Emit real-time event
-      io.emit('coin_sold', {
-        transactionId,
-        coinId,
-        userId,
-        amount,
-        price: currentPrice,
-        totalValue
-      });
+      const io = getSocketIO();
+      if (io) {
+        io.emit('coin_sold', {
+          transactionId,
+          coinId,
+          userId,
+          amount,
+          price: currentPrice,
+          totalValue
+        });
+      }
 
       logger.info('Creator coins sold', { transactionId, coinId, userId, amount });
       return createdTransaction;
@@ -571,13 +581,16 @@ export class CreatorCoinService {
       const createdPool = await StakingPoolModel.create(stakingPool);
 
       // Emit real-time event
-      io.emit('staking_pool_created', {
-        poolId,
-        coinId,
-        name,
-        apy,
-        lockPeriod
-      });
+      const io = getSocketIO();
+      if (io) {
+        io.emit('staking_pool_created', {
+          poolId,
+          coinId,
+          name,
+          apy,
+          lockPeriod
+        });
+      }
 
       logger.info('Staking pool created', { poolId, coinId, apy });
       return createdPool;
@@ -601,36 +614,36 @@ export class CreatorCoinService {
         throw new Error('Staking pool not found');
       }
 
-      if (pool.status !== 'active') {
+      if ((pool as any).status !== 'active') {
         throw new Error('Staking pool is not active');
       }
 
-      if (amount < pool.minStakeAmount) {
+      if (amount < (pool as any).minStakeAmount) {
         throw new Error('Amount is below minimum stake requirement');
       }
 
-      if (pool.maxStakeAmount && amount > pool.maxStakeAmount) {
+      if ((pool as any).maxStakeAmount && amount > (pool as any).maxStakeAmount) {
         throw new Error('Amount exceeds maximum stake limit');
       }
 
       // Check user coin balance
-      const userBalance = await this.getUserCoinBalance(userId, pool.coinId);
+      const userBalance = await this.getUserCoinBalance(userId, (pool as any).coinId);
       if (userBalance < amount) {
         throw new Error('Insufficient coin balance');
       }
 
       const positionId = this.generatePositionId();
-      const endDate = new Date(Date.now() + pool.lockPeriod * 24 * 60 * 60 * 1000);
+      const endDate = new Date(Date.now() + (pool as any).lockPeriod * 24 * 60 * 60 * 1000);
 
       const stakingPosition: StakingPosition = {
         positionId,
         userId,
         poolId,
-        coinId: pool.coinId,
+        coinId: (pool as any).coinId,
         amount,
         startDate: new Date(),
         endDate,
-        apy: pool.apy,
+        apy: (pool as any).apy,
         rewardsEarned: 0,
         rewardsClaimed: 0,
         status: 'active',
@@ -641,21 +654,24 @@ export class CreatorCoinService {
       const createdPosition = await StakingPositionModel.create(stakingPosition);
 
       // Update pool metrics
-      pool.totalStaked += amount;
-      pool.activeStakers += 1;
-      await pool.save();
+      (pool as any).totalStaked += amount;
+      (pool as any).activeStakers += 1;
+      await StakingPoolModel.findByIdAndUpdate((pool as any)._id, pool);
 
       // Lock user's coins
-      await this.lockUserCoins(userId, pool.coinId, amount);
+      await this.lockUserCoins(userId, (pool as any).coinId, amount);
 
       // Emit real-time event
-      io.emit('coins_staked', {
-        positionId,
-        userId,
-        poolId,
-        amount,
-        apy: pool.apy
-      });
+      const io = getSocketIO();
+      if (io) {
+        io.emit('coins_staked', {
+          positionId,
+          userId,
+          poolId,
+          amount,
+          apy: (pool as any).apy
+        });
+      }
 
       logger.info('Coins staked', { positionId, userId, poolId, amount });
       return createdPosition;
@@ -675,35 +691,38 @@ export class CreatorCoinService {
         throw new Error('Staking position not found');
       }
 
-      if (position.status !== 'active') {
+      if ((position as any).status !== 'active') {
         throw new Error('Staking position is not active');
       }
 
       // Calculate rewards
       const daysStaked = Math.floor(
-        (Date.now() - position.startDate.getTime()) / (24 * 60 * 60 * 1000)
+        (Date.now() - (position as any).startDate.getTime()) / (24 * 60 * 60 * 1000)
       );
-      const totalRewards = (position.amount * position.apy * daysStaked) / 36500; // APY as percentage
-      const claimableRewards = totalRewards - position.rewardsClaimed;
+      const totalRewards = ((position as any).amount * (position as any).apy * daysStaked) / 36500; // APY as percentage
+      const claimableRewards = totalRewards - (position as any).rewardsClaimed;
 
       if (claimableRewards <= 0) {
         throw new Error('No rewards to claim');
       }
 
       // Update position
-      position.rewardsEarned = totalRewards;
-      position.rewardsClaimed += claimableRewards;
-      await position.save();
+      (position as any).rewardsEarned = totalRewards;
+      (position as any).rewardsClaimed += claimableRewards;
+      await StakingPositionModel.findByIdAndUpdate((position as any)._id, position);
 
       // Transfer rewards to user
-      await this.transferRewards(userId, position.coinId, claimableRewards);
+      await this.transferRewards(userId, (position as any).coinId, claimableRewards);
 
       // Emit real-time event
-      io.emit('rewards_claimed', {
-        positionId,
-        userId,
-        amount: claimableRewards
-      });
+      const io = getSocketIO();
+      if (io) {
+        io.emit('rewards_claimed', {
+          positionId,
+          userId,
+          amount: claimableRewards
+        });
+      }
 
       logger.info('Staking rewards claimed', { positionId, userId, amount: claimableRewards });
       return claimableRewards;
@@ -731,7 +750,7 @@ export class CreatorCoinService {
         status: 'confirmed'
       });
 
-      const volume24h = yesterdayTransactions.reduce((sum, tx) => sum + tx.totalValue, 0);
+      const volume24h = yesterdayTransactions.reduce((sum, tx) => sum + (tx as any).totalValue, 0);
       const priceChange24h = 0; // Would need historical price data
 
       const marketData: CoinMarketData = {
@@ -775,6 +794,7 @@ export class CreatorCoinService {
   private async getCreatorCoin(coinId: string): Promise<CreatorCoin | null> {
     try {
       // Try cache first
+      const redisClient = getRedisClient();
       const cached = await redisClient.get(`creator_coin:${coinId}`);
       if (cached) {
         return JSON.parse(cached);
@@ -783,7 +803,7 @@ export class CreatorCoinService {
       // Fallback to database
       const coin = await CreatorCoinModel.findOne({ coinId });
       if (coin) {
-        await redisClient.setex(`creator_coin:${coinId}`, 3600, JSON.stringify(coin));
+        await redisClient.setEx(`creator_coin:${coinId}`, 3600, JSON.stringify(coin));
       }
 
       return coin;
@@ -835,17 +855,17 @@ export class CreatorCoinService {
     }
 
     if (type === 'buy') {
-      holder.balance += amount;
-      holder.totalBought += amount;
-      holder.averageBuyPrice = (holder.averageBuyPrice * (holder.totalBought - amount) + price * amount) / holder.totalBought;
+      (holder as any).balance += amount;
+      (holder as any).totalBought += amount;
+      (holder as any).averageBuyPrice = ((holder as any).averageBuyPrice * ((holder as any).totalBought - amount) + price * amount) / (holder as any).totalBought;
     } else {
-      holder.balance -= amount;
-      holder.totalSold += amount;
-      holder.realizedPnL += (price - holder.averageBuyPrice) * amount;
+      (holder as any).balance -= amount;
+      (holder as any).totalSold += amount;
+      (holder as any).realizedPnL += (price - (holder as any).averageBuyPrice) * amount;
     }
 
-    holder.lastActivity = new Date();
-    await holder.save();
+    (holder as any).lastActivity = new Date();
+    await CoinHolderModel.findByIdAndUpdate((holder as any)._id, holder);
   }
 
   private async updateCoinMetrics(
@@ -858,18 +878,19 @@ export class CreatorCoinService {
     if (!coin) return;
 
     if (type === 'buy') {
-      coin.circulatingSupply += amount;
+      (coin as any).circulatingSupply += amount;
     } else {
-      coin.circulatingSupply -= amount;
+      (coin as any).circulatingSupply -= amount;
     }
 
-    coin.marketCap = coin.circulatingSupply * price;
-    coin.volume24h += amount * price;
-    coin.updatedAt = new Date();
-    await coin.save();
+    (coin as any).marketCap = (coin as any).circulatingSupply * price;
+    (coin as any).volume24h += amount * price;
+    (coin as any).updatedAt = new Date();
+    await CreatorCoinModel.findByIdAndUpdate((coin as any)._id, coin);
 
     // Update cache
-    await redisClient.setex(`creator_coin:${coinId}`, 3600, JSON.stringify(coin));
+    const redisClient = getRedisClient();
+    await redisClient.setEx(`creator_coin:${coinId}`, 3600, JSON.stringify(coin));
   }
 
   private async deployCreatorCoinContract(

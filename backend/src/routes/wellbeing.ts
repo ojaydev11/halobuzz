@@ -1,6 +1,7 @@
-import { Router, Request, Response } from 'express';
+import { Router, Response } from 'express';
+import { AuthenticatedRequest } from '@/middleware/auth';
 import { MentalHealthService } from '@/services/wellbeing/MentalHealthService';
-import { authenticateToken } from '@/middleware/auth';
+import { authMiddleware } from '@/middleware/auth';
 import { socialLimiter } from '@/middleware/security';
 import { logger } from '@/config/logger';
 
@@ -8,14 +9,14 @@ const router = Router();
 const mentalHealthService = MentalHealthService.getInstance();
 
 // Apply authentication and rate limiting to all routes
-router.use(authenticateToken);
+router.use(authMiddleware);
 router.use(socialLimiter);
 
 /**
  * @route POST /api/v1/wellbeing/profile
  * @desc Create or update wellbeing profile
  */
-router.post('/profile', async (req: Request, res: Response) => {
+router.post('/profile', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { mentalHealthScore, stressLevel, wellbeingFactors, privacySettings } = req.body;
     const userId = req.user?.userId;
@@ -45,7 +46,7 @@ router.post('/profile', async (req: Request, res: Response) => {
  * @route POST /api/v1/wellbeing/check
  * @desc Complete wellbeing check
  */
-router.post('/check', async (req: Request, res: Response) => {
+router.post('/check', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { type, responses } = req.body;
     const userId = req.user?.userId;
@@ -74,7 +75,7 @@ router.post('/check', async (req: Request, res: Response) => {
  * @route POST /api/v1/wellbeing/intervention
  * @desc Create wellbeing intervention
  */
-router.post('/intervention', async (req: Request, res: Response) => {
+router.post('/intervention', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { type, title, description, action, priority, expiresAt } = req.body;
     const userId = req.user?.userId;
@@ -111,7 +112,7 @@ router.post('/intervention', async (req: Request, res: Response) => {
  * @route POST /api/v1/wellbeing/screen-time/track
  * @desc Track screen time
  */
-router.post('/screen-time/track', async (req: Request, res: Response) => {
+router.post('/screen-time/track', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { duration, category } = req.body;
     const userId = req.user?.userId;
@@ -140,7 +141,7 @@ router.post('/screen-time/track', async (req: Request, res: Response) => {
  * @route GET /api/v1/wellbeing/analytics
  * @desc Get wellbeing analytics
  */
-router.get('/analytics', async (req: Request, res: Response) => {
+router.get('/analytics', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { period } = req.query;
     const userId = req.user?.userId;
@@ -168,7 +169,7 @@ router.get('/analytics', async (req: Request, res: Response) => {
  * @route GET /api/v1/wellbeing/resources
  * @desc Get wellbeing resources
  */
-router.get('/resources', async (req: Request, res: Response) => {
+router.get('/resources', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { category, difficulty } = req.query;
     const userId = req.user?.userId;

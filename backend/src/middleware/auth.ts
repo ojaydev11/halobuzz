@@ -5,14 +5,16 @@ import { setupLogger } from '@/config/logger';
 
 const logger = setupLogger();
 
-interface AuthenticatedRequest extends Request {
+export interface AuthenticatedRequest extends Request {
   user?: {
     userId: string;
+    id: string;
     username: string;
     email: string;
     ogLevel: number;
     isVerified: boolean;
     isBanned: boolean;
+    isAdmin?: boolean;
   };
 }
 
@@ -76,11 +78,13 @@ export const authMiddleware = async (
     // Attach user to request
     req.user = {
       userId: user._id.toString(),
+      id: user._id.toString(),
       username: user.username,
       email: user.email,
       ogLevel: user.ogLevel,
       isVerified: user.isVerified,
-      isBanned: user.isBanned
+      isBanned: user.isBanned,
+      isAdmin: user.ogLevel >= 5 // Assuming OG level 5+ is admin
     };
 
     next();

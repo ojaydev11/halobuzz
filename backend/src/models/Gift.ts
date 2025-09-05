@@ -13,7 +13,7 @@ export interface IGift extends Document {
   isLimited: boolean;
   limitedQuantity?: number;
   soldQuantity: number;
-  festivalId?: string;
+  festivalId?: mongoose.Types.ObjectId;
   ogTierRequired?: number;
   effects: {
     sound: string;
