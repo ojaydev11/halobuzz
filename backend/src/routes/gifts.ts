@@ -7,6 +7,7 @@ import { LiveStream } from '../models/LiveStream';
 import { Transaction } from '../models/Transaction';
 import { reputationService } from '../services/ReputationService';
 import { logger } from '../config/logger';
+import { emitGift } from '../realtime/emitters';
 
 const router = express.Router();
 
@@ -363,6 +364,15 @@ router.post('/:streamId/gift', [
       coins: totalCost,
       giftId: gift._id,
       streamId: stream._id
+    });
+
+    // Emit gift event to WebSocket clients
+    emitGift(stream.agoraChannel, {
+      from: userId,
+      fromUsername: user.username,
+      giftId: gift._id.toString(),
+      qty: quantity,
+      timestamp: Date.now()
     });
 
     res.json({

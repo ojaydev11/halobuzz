@@ -5,9 +5,7 @@ const logger = setupLogger();
 
 export const connectDatabase = async (): Promise<void> => {
   try {
-    const mongoUri = process.env.NODE_ENV === 'production' 
-      ? process.env.MONGODB_URI_PROD 
-      : process.env.MONGODB_URI;
+    const mongoUri = process.env.MONGODB_URI;
 
     if (!mongoUri) {
       throw new Error('MongoDB URI is not defined in environment variables');

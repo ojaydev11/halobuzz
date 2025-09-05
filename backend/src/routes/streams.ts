@@ -6,6 +6,7 @@ import { rankingService } from '../services/RankingService';
 // Agora import - will be dynamically imported when needed
 // import { AgoraToken } from 'agora-access-token';
 import { logger } from '../config/logger';
+import { emitPresence, emitSystem } from '../realtime/emitters';
 
 const router = express.Router();
 
@@ -101,6 +102,15 @@ router.post('/', [
     // Update user's total streams count
     await User.findByIdAndUpdate(userId, {
       $inc: { 'trust.factors.totalStreams': 1 }
+    });
+
+    // Emit system event for stream creation
+    emitSystem(stream.agoraChannel, 'stream_created', {
+      streamId: stream._id.toString(),
+      hostId: userId,
+      hostUsername: user.username,
+      title: stream.title,
+      category: stream.category
     });
 
     res.status(201).json({
@@ -335,6 +345,16 @@ router.post('/:id/end', async (req, res) => {
 
     // Update final metrics
     await rankingService.updateStreamMetrics(stream._id.toString());
+
+    // Emit system event for stream ending
+    emitSystem(stream.agoraChannel, 'stream_ended', {
+      streamId: stream._id.toString(),
+      hostId: userId,
+      duration: stream.duration,
+      totalViewers: stream.totalViewers,
+      totalCoins: stream.totalCoins,
+      totalLikes: stream.totalLikes
+    });
 
     res.json({
       success: true,

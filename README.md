@@ -101,6 +101,13 @@ halobuzz/
 - **Engagement**: Boredom detection, cohost suggestions
 - **Reputation**: Score calculation and decay
 
+### Live Realtime Layer
+- **WebSocket**: Socket.IO with room-based communication
+- **Features**: Real-time chat, gifts, presence tracking, moderation
+- **Security**: JWT authentication, rate limiting, input validation
+- **Monitoring**: Prometheus metrics for connection and event tracking
+- **Transport**: WebSocket primary, polling fallback
+
 ### Mobile
 - **Framework**: React Native + Expo
 - **Platforms**: iOS, Android, iPad

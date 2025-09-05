@@ -96,9 +96,12 @@ USER halobuzz
 # Expose port
 EXPOSE 4000
 
+# Install curl for health checks
+RUN apk add --no-cache curl
+
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=20s --retries=3 \
-  CMD wget -qO- http://127.0.0.1:4000/api/v1/monitoring/health || exit 1
+  CMD curl -f http://127.0.0.1:4000/api/v1/monitoring/health || exit 1
 
 # Start the application
 CMD ["node", "dist/index.js"]

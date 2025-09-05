@@ -1,0 +1,132 @@
+// Metrics temporarily disabled due to missing prom-client dependency
+// This file will be re-enabled once prom-client is added to package.json
+
+// import { register, Counter, Histogram, Gauge } from 'prom-client';
+// import { setupLogger } from '@/config/logger';
+
+// const logger = setupLogger();
+
+// WebSocket connection metrics
+// export const wsConnectionsTotal = new Counter({
+//   name: 'ws_connections_total',
+//   help: 'Total number of WebSocket connections',
+//   labelNames: ['namespace', 'status']
+// });
+
+// export const wsDisconnectsTotal = new Counter({
+//   name: 'ws_disconnects_total',
+//   help: 'Total number of WebSocket disconnections',
+//   labelNames: ['namespace', 'reason']
+// });
+
+// export const wsActiveConnections = new Gauge({
+//   name: 'ws_active_connections',
+//   help: 'Number of active WebSocket connections',
+//   labelNames: ['namespace']
+// });
+
+// export const wsMessagesTotal = new Counter({
+//   name: 'ws_messages_total',
+//   help: 'Total number of WebSocket messages',
+//   labelNames: ['namespace', 'type']
+// });
+
+// export const wsMessageLatency = new Histogram({
+//   name: 'ws_message_latency_seconds',
+//   help: 'WebSocket message processing latency',
+//   labelNames: ['namespace', 'type']
+// });
+
+// export const wsErrorsTotal = new Counter({
+//   name: 'ws_errors_total',
+//   help: 'Total number of WebSocket errors',
+//   labelNames: ['namespace', 'error_type']
+// });
+
+// // Gift metrics
+// export const giftsSentTotal = new Counter({
+//   name: 'gifts_sent_total',
+//   help: 'Total number of gifts sent',
+//   labelNames: ['gift_type', 'sender_tier', 'receiver_tier']
+// });
+
+// export const giftValueTotal = new Counter({
+//   name: 'gift_value_total',
+//   help: 'Total value of gifts sent in coins',
+//   labelNames: ['gift_type']
+// });
+
+// // Stream metrics
+// export const streamsActive = new Gauge({
+//   name: 'streams_active',
+//   help: 'Number of active streams',
+//   labelNames: ['category', 'country']
+// });
+
+// export const streamViewersTotal = new Counter({
+//   name: 'stream_viewers_total',
+//   help: 'Total number of stream viewers',
+//   labelNames: ['stream_id', 'category']
+// });
+
+// export const streamDuration = new Histogram({
+//   name: 'stream_duration_seconds',
+//   help: 'Stream duration in seconds',
+//   labelNames: ['category', 'country']
+// });
+
+// // Chat metrics
+// export const chatMessagesTotal = new Counter({
+//   name: 'chat_messages_total',
+//   help: 'Total number of chat messages',
+//   labelNames: ['stream_id', 'message_type']
+// });
+
+// export const chatModerationActions = new Counter({
+//   name: 'chat_moderation_actions_total',
+//   help: 'Total number of chat moderation actions',
+//   labelNames: ['action_type', 'reason']
+// });
+
+// // User engagement metrics
+// export const userSessionsTotal = new Counter({
+//   name: 'user_sessions_total',
+//   help: 'Total number of user sessions',
+//   labelNames: ['country', 'device_type']
+// });
+
+// export const userEngagementDuration = new Histogram({
+//   name: 'user_engagement_duration_seconds',
+//   help: 'User engagement duration in seconds',
+//   labelNames: ['user_tier', 'activity_type']
+// });
+
+// // System metrics
+// export const systemMemoryUsage = new Gauge({
+//   name: 'system_memory_usage_bytes',
+//   help: 'System memory usage in bytes'
+// });
+
+// export const systemCpuUsage = new Gauge({
+//   name: 'system_cpu_usage_percent',
+//   help: 'System CPU usage percentage'
+// });
+
+// // Initialize metrics
+// export const initializeMetrics = () => {
+//   logger.info('Metrics initialized');
+// };
+
+// // Update system metrics
+// export const updateSystemMetrics = () => {
+//   const memUsage = process.memoryUsage();
+//   systemMemoryUsage.set(memUsage.heapUsed);
+  
+//   // CPU usage would require additional monitoring
+//   // systemCpuUsage.set(cpuUsage);
+// };
+
+// // Get metrics for Prometheus scraping
+// export const getMetrics = () => {
+//   return register.metrics();
+// };

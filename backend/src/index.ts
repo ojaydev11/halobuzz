@@ -11,6 +11,20 @@ import path from 'path';
 import fileType from 'file-type';
 import listEndpoints from 'express-list-endpoints';
 
+// Load environment variables
+dotenv.config();
+
+// Handle uncaught exceptions and unhandled rejections
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  process.exit(1);
+});
+
 // Import configurations
 import { connectDatabase } from '@/config/database';
 import { connectRedis } from '@/config/redis';
@@ -18,6 +32,10 @@ import { setupSocketIO, setupRedisAdapter } from '@/config/socket';
 import { setupLogger } from '@/config/logger';
 import { validateSecrets } from '@/config/secrets';
 import { featureFlags } from '@/config/flags';
+
+// Import realtime layer
+import { createRealtime } from '@/realtime/socket';
+import { setIo } from '@/realtime/emitters';
 
 // Import middleware
 import { errorHandler } from '@/middleware/errorHandler';
@@ -78,9 +96,6 @@ import commerceRoutes from '@/routes/commerce';
 // import culturalRoutes from '@/routes/cultural';
 // import wellbeingRoutes from '@/routes/wellbeing';
 
-// Load environment variables
-dotenv.config();
-
 // Validate critical secrets
 validateSecrets();
 
@@ -89,12 +104,17 @@ const app = express();
 // Trust proxy for Railway/Vercel
 app.set('trust proxy', 1);
 const server = createServer(app);
+
+// Create Socket.IO instance for existing functionality
 const io = new Server(server, {
   cors: {
     origin: process.env.CORS_ORIGIN?.split(',') || ['http://localhost:3000'],
     credentials: true
   }
 });
+
+// Create new realtime layer for live channels
+const liveIo = createRealtime(server);
 
 const port = Number(process.env.PORT || 4000);
 const host = process.env.HOST || '0.0.0.0';
@@ -346,6 +366,15 @@ const startServer = async () => {
     } catch (error) {
       logger.warn('Socket.IO Redis adapter setup failed:', error instanceof Error ? error.message : String(error));
       logger.warn('Continuing with basic Socket.IO setup');
+    }
+
+    // Setup live realtime layer
+    try {
+      setIo(liveIo);
+      logger.info('Live realtime layer configured successfully');
+    } catch (error) {
+      logger.warn('Live realtime layer setup failed:', error instanceof Error ? error.message : String(error));
+      logger.warn('Continuing without live realtime features');
     }
 
     // Start server

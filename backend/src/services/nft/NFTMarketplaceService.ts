@@ -1,6 +1,7 @@
 import logger from '../../utils/logger';
 import mongoose from 'mongoose';
 import crypto from 'crypto';
+import { Transaction } from '../../models/Transaction';
 
 export interface CreatorNFT {
   id: string;
@@ -218,7 +219,7 @@ const auctionSchema = new mongoose.Schema({
 });
 
 const NFTModel = mongoose.model('NFT', nftSchema);
-const TransactionModel = mongoose.model('Transaction', transactionSchema);
+// Using imported Transaction model instead of creating duplicate
 const AuctionModel = mongoose.model('Auction', auctionSchema);
 
 export class NFTMarketplaceService {
@@ -700,7 +701,7 @@ export class NFTMarketplaceService {
   private async createTransaction(transactionData: any): Promise<any> {
     const transactionId = `tx_${Date.now()}_${crypto.randomBytes(8).toString('hex')}`;
     
-    const transaction = new TransactionModel({
+    const transaction = new Transaction({
       id: transactionId,
       ...transactionData
     });
