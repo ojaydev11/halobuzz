@@ -7,6 +7,9 @@ import dotenv from 'dotenv';
 // Load environment variables
 dotenv.config();
 
+// Set max listeners to prevent memory leak warnings
+process.setMaxListeners(20);
+
 // Set default environment variables if not provided
 process.env.NODE_ENV = process.env.NODE_ENV || 'production';
 process.env.PORT = process.env.PORT || '4000';

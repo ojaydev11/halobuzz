@@ -20,9 +20,33 @@ interface AuthenticatedSocket extends Socket {
 export const setupRedisAdapter = async (io: Server): Promise<void> => {
   try {
     const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
+    const url = new URL(redisUrl);
+    const isSecure = url.protocol === 'rediss:' || url.protocol === 'redis+tls:';
     
-    // Create Redis clients for pub/sub
-    const pubClient = createClient({ url: redisUrl });
+    logger.info(`Setting up Redis adapter: ${url.protocol}//${url.hostname}:${url.port || (isSecure ? '6380' : '6379')} (SSL: ${isSecure})`);
+    
+    // Create Redis client configuration with proper SSL handling
+    const clientConfig: any = {
+      password: process.env.REDIS_PASSWORD || undefined,
+      socket: {
+        connectTimeout: 10000
+      }
+    };
+    
+    // Handle SSL/TLS configuration for Redis adapter
+    if (isSecure) {
+      clientConfig.socket.host = url.hostname;
+      clientConfig.socket.port = parseInt(url.port) || 6380;
+      clientConfig.socket.tls = {
+        rejectUnauthorized: false,
+        servername: url.hostname
+      };
+    } else {
+      clientConfig.url = redisUrl;
+    }
+    
+    // Create Redis clients for pub/sub with proper SSL configuration
+    const pubClient = createClient(clientConfig);
     const subClient = pubClient.duplicate();
 
     await Promise.all([
@@ -36,7 +60,30 @@ export const setupRedisAdapter = async (io: Server): Promise<void> => {
     logger.info('Socket.IO Redis adapter configured successfully');
   } catch (error) {
     logger.error('Failed to setup Redis adapter:', error);
+    
+    // If SSL connection failed, try without SSL as fallback
+    if (redisUrl.includes('rediss://')) {
+      try {
+        logger.info('Attempting Redis adapter connection without SSL as fallback...');
+        const fallbackUrl = redisUrl.replace('rediss://', 'redis://');
+        const pubClient = createClient({ url: fallbackUrl });
+        const subClient = pubClient.duplicate();
+
+        await Promise.all([
+          pubClient.connect(),
+          subClient.connect()
+        ]);
+
+        io.adapter(createAdapter(pubClient, subClient));
+        logger.info('Socket.IO Redis adapter configured successfully without SSL');
+        return;
+      } catch (fallbackError) {
+        logger.error('Redis adapter fallback connection also failed:', fallbackError);
+      }
+    }
+    
     // Continue without Redis adapter in case of failure
+    logger.warn('Continuing without Redis adapter - real-time features will be limited to single instance');
   }
 };
 
