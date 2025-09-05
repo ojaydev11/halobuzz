@@ -18,8 +18,9 @@ interface AuthenticatedSocket extends Socket {
 
 // Redis adapter setup for multi-instance scaling
 export const setupRedisAdapter = async (io: Server): Promise<void> => {
+  const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
+  
   try {
-    const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
     const url = new URL(redisUrl);
     const isSecure = url.protocol === 'rediss:' || url.protocol === 'redis+tls:';
     
