@@ -31,8 +31,8 @@ COPY tsconfig*.json ./
 COPY scripts ./scripts
 COPY src ./src
 
-# Build TypeScript to JavaScript
-RUN pnpm run build:ts || node scripts/build.js
+# Build TypeScript to JavaScript using custom build script
+RUN node scripts/build.js
 
 # ---- Runtime stage ----
 FROM node:20-alpine AS runtime
