@@ -19,11 +19,16 @@ WORKDIR /app
 
 # Copy package files for the specified service
 COPY ${SERVICE_PATH}/package*.json ./
-COPY ${SERVICE_PATH}/pnpm-lock.yaml ./ 2>/dev/null || echo "No pnpm-lock.yaml found, using package-lock.json"
+COPY ${SERVICE_PATH}/pnpm-lock.yaml ./
 
 # Install dependencies with cache mount
 RUN --mount=type=cache,id=pnpm-store,target=/root/.pnpm-store \
-    pnpm install --frozen-lockfile
+    if [ -f "pnpm-lock.yaml" ]; then \
+        pnpm install --frozen-lockfile; \
+    else \
+        echo "No pnpm-lock.yaml found, installing without lockfile"; \
+        pnpm install; \
+    fi
 
 # ---- Build stage ----
 FROM base AS build
