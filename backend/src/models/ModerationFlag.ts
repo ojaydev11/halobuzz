@@ -122,7 +122,7 @@ moderationFlagSchema.pre('save', function(next) {
       'fake_news': 'medium',
       'other': 'low'
     };
-    this.priority = priorityMap[this.reason] || 'medium';
+    this.priority = (priorityMap as any)[this.reason] || 'medium';
   }
   next();
 });

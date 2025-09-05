@@ -24,7 +24,7 @@ router.use('/flags', flagsRouter);
 
 // CSRF token endpoint
 router.get('/csrf-token', (req, res) => {
-  const csrfToken = req.session?.csrfToken || 'csrf-token-placeholder';
+  const csrfToken = (req as any).session?.csrfToken || 'csrf-token-placeholder';
   res.json({
     success: true,
     csrfToken
@@ -41,7 +41,7 @@ router.get('/stats', async (req, res) => {
 
     const [dau, mau, coinsSoldAgg, coinsSpentAgg, topHosts, recentViolations] = await Promise.all([
       User.countDocuments({ lastActiveAt: { $gte: dayAgo }, isBanned: false }),
-      User.countDocuments({ lastActiveAt: { $gte: mau ? monthAgo : monthAgo }, isBanned: false }),
+      User.countDocuments({ lastActiveAt: { $gte: monthAgo }, isBanned: false }),
       Transaction.aggregate([
         { $match: { type: 'recharge', status: 'completed' } },
         { $group: { _id: null, total: { $sum: '$amount' } } }

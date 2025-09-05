@@ -6,7 +6,7 @@ export async function throneExpiryJob() {
     logger.info('Starting throne expiry check job');
 
     // Find expired thrones
-    const expiredThrones = await Throne.findExpired();
+    const expiredThrones = await Throne.find({ isActive: true, expiresAt: { $lte: new Date() } });
     
     if (expiredThrones.length === 0) {
       logger.info('No expired thrones found');

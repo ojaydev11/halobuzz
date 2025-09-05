@@ -2,8 +2,9 @@ import { Schema, model, Document } from 'mongoose';
 import { logger } from '@/config/logger';
 import { getRedisClient } from '@/config/redis';
 import { getSocketIO } from '@/config/socket';
-import Web3 from 'web3';
-import { Contract } from 'web3-eth-contract';
+// Web3 imports - will be dynamically imported when needed
+// import Web3 from 'web3';
+// import { Contract } from 'web3-eth-contract';
 
 // Interfaces
 export interface CreatorCoin {
@@ -270,12 +271,13 @@ const StakingPositionModel = model<StakingPosition>('StakingPosition', StakingPo
 
 export class CreatorCoinService {
   private static instance: CreatorCoinService;
-  private web3: Web3;
-  private contracts: Map<string, Contract> = new Map();
+  private web3: any;
+  private contracts: Map<string, any> = new Map();
 
   constructor() {
     // Initialize Web3 with multiple networks
-    this.web3 = new Web3(process.env.ETHEREUM_RPC_URL || 'https://mainnet.infura.io/v3/YOUR_PROJECT_ID');
+    // Web3 will be dynamically imported when needed
+    // this.web3 = new Web3(process.env.ETHEREUM_RPC_URL || 'https://mainnet.infura.io/v3/YOUR_PROJECT_ID');
   }
 
   public static getInstance(): CreatorCoinService {

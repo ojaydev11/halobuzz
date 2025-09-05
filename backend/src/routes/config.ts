@@ -9,7 +9,7 @@ const router = express.Router();
 // Get public configuration for mobile/frontend apps
 router.get('/', async (req, res) => {
   try {
-    const userId = req.user?.id;
+    const userId = (req as any).user?.id;
     let userCountry = 'US'; // Default
     
     if (userId) {
@@ -48,12 +48,12 @@ router.get('/', async (req, res) => {
 
     // Add maintenance message if in maintenance mode
     if (publicFlags.maintenanceMode) {
-      config.maintenanceMessage = 'HaloBuzz is currently under maintenance. Please check back soon.';
+      (config as any).maintenanceMessage = 'HaloBuzz is currently under maintenance. Please check back soon.';
     }
 
     // Add registration pause message
     if (publicFlags.registrationPaused) {
-      config.registrationMessage = 'New user registrations are temporarily paused.';
+      (config as any).registrationMessage = 'New user registrations are temporarily paused.';
     }
 
     res.json({

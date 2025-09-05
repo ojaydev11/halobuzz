@@ -114,7 +114,7 @@ export const paymentLimiter = rateLimit({
     logger.warn('Payment rate limit exceeded', {
       ip: req.ip,
       path: req.path,
-      userId: req.user?.id,
+      userId: (req as any).user?.id,
       userAgent: req.headers['user-agent']
     });
     res.status(429).json({
@@ -138,7 +138,7 @@ export const socialLimiter = rateLimit({
     logger.warn('Social rate limit exceeded', {
       ip: req.ip,
       path: req.path,
-      userId: req.user?.id
+      userId: (req as any).user?.id
     });
     res.status(429).json({
       error: 'Too many social interactions, please slow down.',

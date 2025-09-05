@@ -16,7 +16,7 @@ export const securityMonitoringMiddleware = (req: Request, res: Response, next: 
 
   // Override res.end to capture response details
   const originalEnd = res.end;
-  res.end = function(chunk?: any, encoding?: any) {
+  res.end = function(chunk?: any, encoding?: any): any {
     const responseTime = Date.now() - startTime;
     
     // Check for suspicious activity
@@ -93,7 +93,7 @@ export const authenticationMonitoringMiddleware = (req: Request, res: Response, 
     const startTime = Date.now();
     
     const originalEnd = res.end;
-    res.end = function(chunk?: any, encoding?: any) {
+    res.end = function(chunk?: any, encoding?: any): any {
       const responseTime = Date.now() - startTime;
       
       // Record authentication event
@@ -135,11 +135,11 @@ export const dataAccessMonitoringMiddleware = (req: Request, res: Response, next
   const dataAccessPaths = ['/users', '/transactions', '/admin', '/reports'];
   const isDataAccess = dataAccessPaths.some(path => req.path.includes(path));
   
-  if (isDataAccess && req.user) {
+  if (isDataAccess && (req as any).user) {
     const startTime = Date.now();
     
     const originalEnd = res.end;
-    res.end = function(chunk?: any, encoding?: any) {
+    res.end = function(chunk?: any, encoding?: any): any {
       const responseTime = Date.now() - startTime;
       
       // Count data access attempts
@@ -174,7 +174,7 @@ export const dataAccessMonitoringMiddleware = (req: Request, res: Response, next
 export const rateLimitMonitoringMiddleware = (req: Request, res: Response, next: NextFunction): void => {
   // Monitor rate limiting events
   const originalEnd = res.end;
-  res.end = function(chunk?: any, encoding?: any) {
+  res.end = function(chunk?: any, encoding?: any): any {
     if (res.statusCode === 429) {
       securityMonitoringService.recordSecurityEvent({
         type: 'rate_limit',

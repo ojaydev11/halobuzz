@@ -53,7 +53,7 @@ router.get('/', async (req, res) => {
         .sort(sortCriteria)
         .skip(skip)
         .limit(parseInt(limit as string)),
-      Festival.findActive()
+      Festival.find({ isActive: true, startDate: { $lte: new Date() }, endDate: { $gte: new Date() } })
     ]);
 
     // Merge festival gifts if within festival dates
@@ -123,7 +123,7 @@ router.get('/popular', async (req, res) => {
   try {
     const { limit = 10 } = req.query;
 
-    const gifts = await Gift.findPopular(parseInt(limit as string));
+    const gifts = await Gift.find({ isActive: true }).sort({ sentCount: -1, totalRevenue: -1 }).limit(parseInt(limit as string));
 
     res.json({
       success: true,
@@ -308,11 +308,11 @@ router.post('/:streamId/gift', [
     });
 
     // Update stream metrics
-    stream.addGift(totalCost);
+    (stream as any).addGift(totalCost);
     await stream.save();
 
     // Update gift stats
-    gift.incrementSent(totalCost);
+    (gift as any).incrementSent(totalCost);
     await gift.save();
 
     // Create transaction records
@@ -404,7 +404,7 @@ router.get('/category/:category', async (req, res) => {
     const { category } = req.params;
     const { limit = 20 } = req.query;
 
-    const gifts = await Gift.findByCategory(category);
+    const gifts = await Gift.find({ category, isActive: true }).sort({ sentCount: -1 });
     const limitedGifts = gifts.slice(0, parseInt(limit as string));
 
     res.json({

@@ -182,7 +182,7 @@ router.get('/user/:userId', async (req: AuthenticatedRequest, res: Response) => 
         thrones: thrones.map(throne => ({
           id: throne._id,
           streamId: throne.streamId,
-          streamTitle: throne.streamId?.title,
+          streamTitle: (throne.streamId as any)?.title,
           totalGifts: throne.totalGifts,
           totalCoins: throne.totalCoins,
           expiresAt: throne.expiresAt,
@@ -221,7 +221,7 @@ router.get('/top', async (req: AuthenticatedRequest, res: Response) => {
         thrones: thrones.map(throne => ({
           id: throne._id,
           streamId: throne.streamId,
-          streamTitle: throne.streamId?.title,
+          streamTitle: (throne.streamId as any)?.title,
           userId: throne.userId,
           username: throne.username,
           avatar: throne.avatar,

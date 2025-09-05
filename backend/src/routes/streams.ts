@@ -3,7 +3,8 @@ import { body, validationResult } from 'express-validator';
 import { LiveStream } from '../models/LiveStream';
 import { User } from '../models/User';
 import { rankingService } from '../services/RankingService';
-import { AgoraToken } from 'agora-access-token';
+// Agora import - will be dynamically imported when needed
+// import { AgoraToken } from 'agora-access-token';
 import { logger } from '../config/logger';
 
 const router = express.Router();
@@ -42,7 +43,7 @@ router.post('/', [
       });
     }
 
-    const userId = req.user?.userId;
+    const userId = (req as any).user?.userId;
     if (!userId) {
       return res.status(401).json({
         success: false,
@@ -70,6 +71,7 @@ router.post('/', [
     // Generate Agora token
     const agoraAppId = process.env.AGORA_APP_ID!;
     const agoraAppCertificate = process.env.AGORA_APP_CERTIFICATE!;
+    const { AgoraToken } = await import('agora-access-token') as any;
     const agoraToken = new AgoraToken(agoraAppId, agoraAppCertificate);
     
     const channelName = `halobuzz_${Date.now()}_${Math.random().toString(36).substring(2)}`;
@@ -296,7 +298,7 @@ router.get('/:id', async (req, res) => {
 router.post('/:id/end', async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.user?.userId;
+    const userId = (req as any).user?.userId;
 
     if (!userId) {
       return res.status(401).json({
@@ -328,7 +330,7 @@ router.post('/:id/end', async (req, res) => {
     }
 
     // End the stream
-    stream.endStream();
+    (stream as any).endStream();
     await stream.save();
 
     // Update final metrics

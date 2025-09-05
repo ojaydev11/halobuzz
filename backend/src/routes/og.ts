@@ -11,7 +11,7 @@ const router = express.Router();
 // Get OG tiers
 router.get('/tiers', async (req, res) => {
   try {
-    const tiers = await OGTier.findActive();
+    const tiers = await OGTier.find({ isActive: true }).sort({ tier: 1 });
 
     res.json({
       success: true,
@@ -95,7 +95,7 @@ router.post('/subscribe', [
     }
 
     const { tierId, paymentMethod } = req.body;
-    const userId = req.user?.userId;
+    const userId = (req as any).user?.userId;
 
     if (!userId) {
       return res.status(401).json({
@@ -237,7 +237,7 @@ router.post('/subscribe', [
 // Get user's OG status
 router.get('/status', async (req, res) => {
   try {
-    const userId = req.user?.userId;
+    const userId = (req as any).user?.userId;
 
     if (!userId) {
       return res.status(401).json({
@@ -257,13 +257,13 @@ router.get('/status', async (req, res) => {
     // Get current tier details
     let currentTier = null;
     if (user.ogLevel > 0) {
-      currentTier = await OGTier.findByTier(user.ogLevel);
+      currentTier = await OGTier.findOne({ tier: user.ogLevel, isActive: true });
     }
 
     // Get next tier
     let nextTier = null;
     if (user.ogLevel < 5) {
-      nextTier = await OGTier.findNextTier(user.ogLevel);
+      nextTier = await OGTier.findOne({ tier: { $gt: user.ogLevel }, isActive: true }).sort({ tier: 1 });
     }
 
     res.json({
@@ -303,7 +303,7 @@ router.get('/status', async (req, res) => {
 // Get OG benefits
 router.get('/benefits', async (req, res) => {
   try {
-    const userId = req.user?.userId;
+    const userId = (req as any).user?.userId;
 
     if (!userId) {
       return res.status(401).json({
@@ -329,7 +329,7 @@ router.get('/benefits', async (req, res) => {
       });
     }
 
-    const tier = await OGTier.findByTier(user.ogLevel);
+    const tier = await OGTier.findOne({ tier: user.ogLevel, isActive: true });
     if (!tier) {
       return res.json({
         success: true,

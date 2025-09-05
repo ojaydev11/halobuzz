@@ -22,7 +22,7 @@ export async function ogDailyBonusJob() {
     for (const user of activeOGUsers) {
       try {
         // Get OG tier details
-        const ogTier = await OGTier.findByTier(user.ogLevel);
+        const ogTier = await OGTier.findOne({ tier: user.ogLevel, isActive: true });
         if (!ogTier) {
           logger.warn(`OG tier ${user.ogLevel} not found for user ${user._id}`);
           continue;

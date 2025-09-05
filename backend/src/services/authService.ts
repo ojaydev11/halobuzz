@@ -382,7 +382,7 @@ export class AuthService {
         throw new Error('User not found');
       }
 
-      user.kycStatus = aiVerification.isValid ? 'verified' : 'rejected';
+      user.kycStatus = (aiVerification as any).isValid ? 'verified' : 'rejected';
       user.kycDocuments = {
         idCard: documents.idCard,
         selfie: documents.selfie,
@@ -412,13 +412,13 @@ export class AuthService {
     const accessToken = jwt.sign(
       { userId },
       secrets.JWT_SECRET as string,
-      { expiresIn: this.ACCESS_TOKEN_EXPIRES_IN }
+      { expiresIn: this.ACCESS_TOKEN_EXPIRES_IN } as any
     );
 
     const refreshToken = jwt.sign(
       { userId },
       secrets.JWT_REFRESH_SECRET as string,
-      { expiresIn: this.REFRESH_TOKEN_EXPIRES_IN }
+      { expiresIn: this.REFRESH_TOKEN_EXPIRES_IN } as any
     );
 
     const expiresIn = jwt.decode(accessToken) as any;

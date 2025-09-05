@@ -215,7 +215,7 @@ router.post('/kyc', [
     }
 
     const { idCard, selfie } = req.body;
-    const userId = req.user?.userId; // From auth middleware
+    const userId = (req as any).user?.userId; // From auth middleware
 
     if (!userId) {
       return res.status(401).json({
@@ -261,7 +261,7 @@ router.post('/kyc', [
 // Get current user
 router.get('/me', async (req, res) => {
   try {
-    const userId = req.user?.userId; // From auth middleware
+    const userId = (req as any).user?.userId; // From auth middleware
 
     if (!userId) {
       return res.status(401).json({

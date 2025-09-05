@@ -86,7 +86,7 @@ router.get('/popular', async (req, res) => {
   try {
     const { limit = 10 } = req.query;
 
-    const games = await Game.findPopular(parseInt(limit as string));
+    const games = await Game.find({ isActive: true }).sort({ playCount: -1, rating: -1 }).limit(parseInt(limit as string));
 
     res.json({
       success: true,
@@ -358,7 +358,7 @@ router.get('/type/:type', async (req, res) => {
     const { type } = req.params;
     const { limit = 20 } = req.query;
 
-    const games = await Game.findByType(type);
+    const games = await Game.find({ type, isActive: true }).sort({ playCount: -1 });
     const limitedGames = games.slice(0, parseInt(limit as string));
 
     res.json({

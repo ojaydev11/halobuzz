@@ -152,7 +152,7 @@ router.get('/analytics', async (req: AuthenticatedRequest, res: Response) => {
 
     const analytics = await mentalHealthService.getWellbeingAnalytics(
       userId,
-      (period as string) || 'week'
+      ((period as string) || 'week') as 'year' | 'week' | 'month' | 'quarter'
     );
 
     res.status(200).json({
@@ -179,8 +179,8 @@ router.get('/resources', async (req: AuthenticatedRequest, res: Response) => {
     }
 
     const resources = await mentalHealthService.getWellbeingResources(
-      category as string,
-      difficulty as string
+      category as string as 'general' | 'stress' | 'sleep' | 'social' | 'anxiety' | 'depression',
+      (difficulty as string) as 'beginner' | 'intermediate' | 'advanced'
     );
 
     res.status(200).json({

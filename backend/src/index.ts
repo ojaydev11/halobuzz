@@ -194,6 +194,8 @@ app.get('/healthz', (req, res) => {
 });
 
 // Public health check for monitoring
+const apiVersion = process.env.API_VERSION || 'v1';
+
 app.get(`/api/${apiVersion}/monitoring/health`, (req, res) => {
   res.json({ 
     status: "healthy", 
@@ -228,7 +230,6 @@ app.use(async (req, res, next) => {
 });
 
 // API routes with enhanced security
-const apiVersion = process.env.API_VERSION || 'v1';
 logger.info(`Mounting auth routes at /api/${apiVersion}/auth`);
 app.use(`/api/${apiVersion}/auth`, authLimiter, loginSlowDown, authRoutes);
 app.use(`/api/${apiVersion}/me`, authMiddleware, authRoutes); // GET /me route
