@@ -6,7 +6,7 @@ This guide provides exact Northflank settings for deploying all HaloBuzz backend
 
 | Service | Path | Port | Health Check | Description |
 |---------|------|------|--------------|-------------|
-| **Backend API** | `backend/` | 4000 | `/api/v1/monitoring/health` | Main HaloBuzz Backend API |
+| **Backend API** | `backend/` | 4000 | `/api/v1/health` | Main HaloBuzz Backend API |
 | **AI Engine** | `ai-engine/` | 4000 | `/api/v1/monitoring/health` | AI Services for HaloBuzz |
 
 ## 🐳 Docker Configuration
@@ -24,7 +24,7 @@ This guide provides exact Northflank settings for deploying all HaloBuzz backend
 
 **Container Settings:**
 - **Port:** 4000 (HTTP)
-- **Health Check Path:** `/api/v1/monitoring/health`
+- **Health Check Path:** `/api/v1/health`
 - **Health Check Port:** 4000
 - **Health Check Interval:** 30s
 - **Health Check Timeout:** 3s
@@ -68,7 +68,7 @@ LOG_LEVEL=info
 
 **Container Settings:**
 - **Port:** 4000 (HTTP)
-- **Health Check Path:** `/api/v1/monitoring/health`
+- **Health Check Path:** `/api/v1/health`
 - **Health Check Port:** 4000
 - **Health Check Interval:** 30s
 - **Health Check Timeout:** 3s
@@ -128,7 +128,7 @@ Copy the environment variables from the tables above into each service's environ
 ### 4. Configure Health Checks
 
 For each service:
-- **Path:** `/api/v1/monitoring/health`
+- **Path:** `/api/v1/health`
 - **Port:** 4000
 - **Interval:** 30s
 - **Timeout:** 3s
@@ -164,15 +164,23 @@ If you prefer to use the root Dockerfile for monorepo builds:
 
 ### Health Check
 ```bash
-curl https://your-service-url/api/v1/monitoring/health
+# Basic health check
+curl https://your-service-url/api/v1/health
+
+# Detailed health check with database status
+curl https://your-service-url/api/v1/health/detailed
 ```
 
 Expected response:
 ```json
 {
-  "status": "healthy",
-  "environment": "production",
+  "status": "ok",
   "timestamp": "2024-01-01T00:00:00.000Z",
+  "services": {
+    "database": "ok",
+    "redis": "ok",
+    "api": "ok"
+  },
   "uptime": 123.456
 }
 ```
