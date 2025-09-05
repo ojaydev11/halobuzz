@@ -14,14 +14,23 @@ import listEndpoints from 'express-list-endpoints';
 // Load environment variables
 dotenv.config();
 
+// Set max listeners to prevent memory leak warnings
+process.setMaxListeners(15);
+
 // Handle uncaught exceptions and unhandled rejections
+let isShuttingDown = false;
+
 process.on('uncaughtException', (error) => {
+  if (isShuttingDown) return;
   console.error('Uncaught Exception:', error);
+  isShuttingDown = true;
   process.exit(1);
 });
 
 process.on('unhandledRejection', (reason, promise) => {
+  if (isShuttingDown) return;
   console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  isShuttingDown = true;
   process.exit(1);
 });
 

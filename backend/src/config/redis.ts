@@ -1,4 +1,4 @@
-import Redis from 'redis';
+import { createClient, RedisClientType } from 'redis';
 import { setupLogger } from './logger';
 
 const logger = setupLogger();
@@ -6,7 +6,7 @@ const logger = setupLogger();
 // Check if Redis is enabled
 export const isRedisEnabled = !!process.env.REDIS_URL;
 
-let redisClient: Redis.RedisClientType | null = null;
+let redisClient: RedisClientType | null = null;
 
 export const connectRedis = async (): Promise<void> => {
   if (!isRedisEnabled) {
@@ -17,16 +17,22 @@ export const connectRedis = async (): Promise<void> => {
   try {
     const redisUrl = process.env.REDIS_URL!;
     
-    redisClient = Redis.createClient({
+    // Parse URL to handle SSL/TLS properly
+    const url = new URL(redisUrl);
+    const isSecure = url.protocol === 'rediss:' || url.protocol === 'redis+tls:';
+    
+    redisClient = createClient({
       url: redisUrl,
       password: process.env.REDIS_PASSWORD || undefined,
       socket: {
         connectTimeout: 10000,
+        tls: isSecure ? true : false
       },
     });
 
     redisClient.on('error', (error) => {
       logger.error('Redis connection error:', error);
+      // Don't throw here, let the application continue without Redis
     });
 
     redisClient.on('connect', () => {
@@ -45,11 +51,13 @@ export const connectRedis = async (): Promise<void> => {
 
   } catch (error) {
     logger.error('Failed to connect to Redis:', error);
-    throw error;
+    // Don't throw error, let the application continue without Redis
+    logger.warn('Continuing without Redis - caching and real-time features will be disabled');
+    redisClient = null;
   }
 };
 
-export const getRedisClient = (): Redis.RedisClientType | null => {
+export const getRedisClient = (): RedisClientType | null => {
   if (!isRedisEnabled) {
     return null;
   }
