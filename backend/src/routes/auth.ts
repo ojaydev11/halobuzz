@@ -120,14 +120,23 @@ router.post('/login', [
 
     const { identifier, password } = req.body;
 
-    // Find user by email, username, or phone
-    const user = await User.findOne({
-      $or: [
-        { email: identifier },
-        { username: identifier },
-        { phone: identifier }
-      ]
-    });
+    // Find user by email, username, or phone with timeout handling
+    let user;
+    try {
+      user = await User.findOne({
+        $or: [
+          { email: identifier },
+          { username: identifier },
+          { phone: identifier }
+        ]
+      }).maxTimeMS(5000); // 5 second timeout for user lookup
+    } catch (dbError) {
+      logger.error('Database error during user lookup:', dbError);
+      return res.status(503).json({
+        success: false,
+        error: 'Service temporarily unavailable. Please try again later.'
+      });
+    }
 
     if (!user) {
       return res.status(401).json({
@@ -146,8 +155,18 @@ router.post('/login', [
       });
     }
 
-    // Verify password
-    const isValidPassword = await user.comparePassword(password);
+    // Verify password with timeout handling
+    let isValidPassword;
+    try {
+      isValidPassword = await user.comparePassword(password);
+    } catch (dbError) {
+      logger.error('Database error during password verification:', dbError);
+      return res.status(503).json({
+        success: false,
+        error: 'Service temporarily unavailable. Please try again later.'
+      });
+    }
+
     if (!isValidPassword) {
       return res.status(401).json({
         success: false,
@@ -155,9 +174,14 @@ router.post('/login', [
       });
     }
 
-    // Update last active
-    user.lastActiveAt = new Date();
-    await user.save();
+    // Update last active with timeout handling
+    try {
+      user.lastActiveAt = new Date();
+      await user.save();
+    } catch (dbError) {
+      logger.warn('Failed to update last active time:', dbError);
+      // Continue with login even if this fails
+    }
 
     // Generate JWT token
     const token = jwt.sign(

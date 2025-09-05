@@ -116,14 +116,14 @@ export class AuthService {
    */
   static async login(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
-      // Find user
+      // Find user with timeout handling
       const user = await User.findOne({
         $or: [
           { email: credentials.email?.toLowerCase() },
           { phone: credentials.phone },
           { username: credentials.username }
         ]
-      });
+      }).maxTimeMS(5000); // 5 second timeout
 
       if (!user) {
         throw new Error('Invalid credentials');

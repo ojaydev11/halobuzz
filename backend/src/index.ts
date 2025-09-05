@@ -28,6 +28,7 @@ process.on('unhandledRejection', (reason, promise) => {
 // Import configurations
 import { connectDatabase } from '@/config/database';
 import { connectRedis } from '@/config/redis';
+import healthRoutes from './routes/health';
 import { setupSocketIO, setupRedisAdapter } from '@/config/socket';
 import { setupLogger } from '@/config/logger';
 import { validateSecrets } from '@/config/secrets';
@@ -213,6 +214,7 @@ app.get('/healthz', (req, res) => {
   res.status(200).json({ status: "ok" });
 });
 
+
 // Public health check for monitoring
 const apiVersion = process.env.API_VERSION || 'v1';
 
@@ -225,10 +227,8 @@ app.get(`/api/${apiVersion}/monitoring/health`, (req, res) => {
   });
 });
 
-// Simple health check for Docker/Kubernetes
-app.get('/health', (req, res) => {
-  res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
-});
+// Enhanced health check routes
+app.use('/api/v1', healthRoutes);
 
 // Debug endpoint to list all routes
 app.get('/api/v1/monitoring/routes', (_req, res) => {
