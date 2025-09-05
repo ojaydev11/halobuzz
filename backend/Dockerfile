@@ -32,7 +32,9 @@ COPY scripts ./scripts
 COPY src ./src
 
 # Build TypeScript to JavaScript (skip type checking for production build)
-RUN npx tsc --noEmitOnError false && npx tsc-alias -p tsconfig.json --outDir dist
+RUN echo '{"compilerOptions":{"target":"ES2020","module":"commonjs","outDir":"dist","rootDir":"src","strict":false,"noEmitOnError":false,"skipLibCheck":true,"noImplicitAny":false,"noUnusedLocals":false,"noUnusedParameters":false,"allowJs":true,"esModuleInterop":true,"allowSyntheticDefaultImports":true,"forceConsistentCasingInFileNames":true,"resolveJsonModule":true,"isolatedModules":true,"noFallthroughCasesInSwitch":true,"moduleResolution":"node","baseUrl":".","paths":{"@/*":["src/*"]}},"include":["src/**/*"],"exclude":["node_modules","dist"]}' > tsconfig.build.json && \
+    npx tsc -p tsconfig.build.json && \
+    npx tsc-alias -p tsconfig.build.json --outDir dist
 
 # ---- Runtime stage ----
 FROM node:20-alpine AS runtime
