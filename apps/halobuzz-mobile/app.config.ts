@@ -59,11 +59,11 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   scheme: "halobuzz",
   extra: {
     // Expo public env var (preferred for OTA updates)
-    apiBaseUrl: process.env.EXPO_PUBLIC_API_BASE_URL,
+    apiBaseUrl: process.env.EXPO_PUBLIC_API_BASE_URL || "https://p01--halo-api--6jbmvhzxwv4y.code.run",
     // Fallback for non-OTA dev builds
-    apiBase: process.env.HALOBUZZ_API_BASE || "https://halobuzz-api-proxy.ojayshah123.workers.dev",
+    apiBase: process.env.HALOBUZZ_API_BASE || "https://p01--halo-api--6jbmvhzxwv4y.code.run",
     // API path prefix (e.g., /api, /v1, etc.)
-    apiPrefix: process.env.EXPO_PUBLIC_API_PREFIX || process.env.API_PREFIX || "",
+    apiPrefix: process.env.EXPO_PUBLIC_API_PREFIX || process.env.API_PREFIX || "/api/v1",
     agoraAppId: process.env.AGORA_APP_ID || "",
     paymentsEnabled: process.env.PAYMENTS_ENABLED === "true",
     eas: {

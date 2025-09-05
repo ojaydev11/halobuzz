@@ -7,10 +7,10 @@ import { routeDiscovery } from './routeDiscovery';
 import { toast } from './toast';
 
 // Get API configuration from environment
-const API_BASE = process.env.EXPO_PUBLIC_API_BASE_URL ?? "";
-const API_PREFIX = process.env.EXPO_PUBLIC_API_PREFIX ?? "";
+const API_BASE = process.env.EXPO_PUBLIC_API_BASE_URL ?? "https://p01--halo-api--6jbmvhzxwv4y.code.run";
+const API_PREFIX = process.env.EXPO_PUBLIC_API_PREFIX ?? "/api/v1";
 
-// Ensure API base URL is HTTPS
+// Ensure API base URL is HTTPS for production
 if (!API_BASE.startsWith('https://')) {
   throw new Error('API base URL must use HTTPS for security');
 }
