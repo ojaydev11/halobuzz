@@ -7,7 +7,7 @@ import { routeDiscovery } from './routeDiscovery';
 import { toast } from './toast';
 
 // Get API configuration from environment
-const API_BASE = process.env.EXPO_PUBLIC_API_BASE_URL ?? "https://p01--halo-api--6jbmvhzxwv4y.code.run";
+const API_BASE = process.env.EXPO_PUBLIC_API_BASE_URL ?? "https://halo-api-production.up.railway.app";
 const API_PREFIX = process.env.EXPO_PUBLIC_API_PREFIX ?? "/api/v1";
 
 // Ensure API base URL is HTTPS for production
@@ -199,24 +199,17 @@ class ApiClient {
     }
   }
 
-  // Auth endpoints with route discovery
+  // Auth endpoints with direct routes
   async login(credentials: LoginRequest): Promise<AuthResponse> {
     try {
       if (__DEV__) {
         console.log('Login attempt:', { identifier: credentials.identifier });
+        console.log('API Base:', API_BASE);
+        console.log('API Prefix:', API_PREFIX);
       }
       
-      // Discover login route
-      const loginRoute = await routeDiscovery.discoverRoute(
-        API_BASE,
-        'auth',
-        'login',
-        'POST',
-        credentials,
-        API_PREFIX
-      );
-      
-      const response = await this.client.post(loginRoute, credentials);
+      // Use direct route instead of discovery
+      const response = await this.client.post('/auth/login', credentials);
       
       if (response.data?.success && response.data?.data?.token) {
         await AsyncStorage.setItem('auth_token', response.data.data.token);
@@ -227,6 +220,13 @@ class ApiClient {
       
       return response.data;
     } catch (error) {
+      if (__DEV__) {
+        console.error('Login error details:', error);
+        if (error.response) {
+          console.error('Response data:', error.response.data);
+          console.error('Response status:', error.response.status);
+        }
+      }
       const networkError = this.formatError(error);
       toast.showApiError(networkError);
       throw networkError;
@@ -237,19 +237,12 @@ class ApiClient {
     try {
       if (__DEV__) {
         console.log('Register attempt:', { username: userData.username, email: userData.email });
+        console.log('API Base:', API_BASE);
+        console.log('API Prefix:', API_PREFIX);
       }
       
-      // Discover register route
-      const registerRoute = await routeDiscovery.discoverRoute(
-        API_BASE,
-        'auth',
-        'register',
-        'POST',
-        userData,
-        API_PREFIX
-      );
-      
-      const response = await this.client.post(registerRoute, userData);
+      // Use direct route instead of discovery
+      const response = await this.client.post('/auth/register', userData);
       
       if (response.data?.success && response.data?.data?.token) {
         await AsyncStorage.setItem('auth_token', response.data.data.token);
@@ -260,6 +253,13 @@ class ApiClient {
       
       return response.data;
     } catch (error) {
+      if (__DEV__) {
+        console.error('Register error details:', error);
+        if (error.response) {
+          console.error('Response data:', error.response.data);
+          console.error('Response status:', error.response.status);
+        }
+      }
       const networkError = this.formatError(error);
       toast.showApiError(networkError);
       throw networkError;
@@ -268,9 +268,8 @@ class ApiClient {
 
   async getCurrentUser(): Promise<ApiResponse<{ user: User }>> {
     try {
-      // Use discovered route or fallback
-      const meRoute = routeDiscovery.getRoute(API_BASE, 'auth', 'me', 'GET');
-      const response = await this.client.get(meRoute);
+      // Use direct route
+      const response = await this.client.get('/auth/me');
       return response.data;
     } catch (error) {
       const networkError = this.formatError(error);
