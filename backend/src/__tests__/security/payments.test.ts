@@ -2,17 +2,19 @@ import request from 'supertest';
 import crypto from 'crypto';
 import { app } from '../../index';
 
+// Helper function for creating Stripe webhook signatures
+const createStripeSignature = (payload: string, secret: string) => {
+  const timestamp = Math.floor(Date.now() / 1000);
+  const signedPayload = `${timestamp}.${payload}`;
+  const signature = crypto
+    .createHmac('sha256', secret)
+    .update(signedPayload, 'utf8')
+    .digest('hex');
+  return `t=${timestamp},v1=${signature}`;
+};
+
 describe('Payment Security', () => {
   describe('Webhook Signature Validation', () => {
-    const createStripeSignature = (payload: string, secret: string) => {
-      const timestamp = Math.floor(Date.now() / 1000);
-      const signedPayload = `${timestamp}.${payload}`;
-      const signature = crypto
-        .createHmac('sha256', secret)
-        .update(signedPayload, 'utf8')
-        .digest('hex');
-      return `t=${timestamp},v1=${signature}`;
-    };
 
     it('should reject webhooks without signature', async () => {
       const response = await request(app)

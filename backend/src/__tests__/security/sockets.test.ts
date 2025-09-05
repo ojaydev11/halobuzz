@@ -1,14 +1,14 @@
 // Test file temporarily disabled due to missing socket.io-client dependency
-// import { Server } from 'socket.io';
-// import { createServer } from 'http';
-// import { io as Client, Socket as ClientSocket } from 'socket.io-client';
-// import { setupSocketIO } from '../../config/socket';
+import { Server } from 'socket.io';
+import { createServer } from 'http';
+import { io as Client, Socket as ClientSocket } from 'socket.io-client';
+import { setupSocketIO } from '../../config/socket';
 
 describe.skip('Socket Security', () => {
   // Test file temporarily disabled due to missing socket.io-client dependency
   let httpServer: any;
-  let io: any; // Server;
-  let clientSocket: any; // ClientSocket;
+  let io: Server;
+  let clientSocket: ClientSocket;
   let serverSocket: any;
 
   beforeAll((done) => {
