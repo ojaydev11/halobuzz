@@ -26,7 +26,7 @@ export interface IUser extends Document {
   ogLevel: number;
   ogExpiresAt?: Date;
   haloThroneExpiresAt?: Date;
-  isHaloThroneActive: boolean;
+  isHaloThroneActive: boolean; // Virtual field
   kycStatus: 'pending' | 'verified' | 'rejected';
   ageVerified: boolean;
   totpSecret?: string;
@@ -228,10 +228,6 @@ const userSchema = new Schema<IUser>({
     type: Date,
     default: null
   },
-  isHaloThroneActive: {
-    type: Boolean,
-    default: false
-  },
   kycStatus: {
     type: String,
     enum: ['pending', 'verified', 'rejected'],
@@ -347,9 +343,7 @@ const userSchema = new Schema<IUser>({
 });
 
 // Indexes
-userSchema.index({ username: 1 });
-userSchema.index({ email: 1 }, { unique: true });
-userSchema.index({ phone: 1 }, { unique: true, sparse: true });
+// Note: username, email, and phone already have unique indexes from schema definition
 userSchema.index({ country: 1 });
 userSchema.index({ ogLevel: -1, followers: -1 });
 userSchema.index({ lastActiveAt: -1 });

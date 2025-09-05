@@ -281,8 +281,7 @@ liveStreamSchema.index({ createdAt: -1 });
 liveStreamSchema.index({ currentViewers: -1 });
 liveStreamSchema.index({ totalCoins: -1 });
 liveStreamSchema.index({ 'metrics.giftsCoins': -1 });
-liveStreamSchema.index({ streamKey: 1 }, { unique: true });
-liveStreamSchema.index({ agoraChannel: 1 }, { unique: true });
+// Note: streamKey and agoraChannel already have unique indexes from schema definition
 
 // Pre-save middleware to generate stream key and Agora channel
 liveStreamSchema.pre('save', function(next) {

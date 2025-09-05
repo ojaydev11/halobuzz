@@ -109,7 +109,7 @@ const ogTierSchema = new Schema<IOGTier>({
 });
 
 // Indexes
-ogTierSchema.index({ tier: 1 }, { unique: true });
+// Note: tier already has unique index from schema definition
 ogTierSchema.index({ isActive: 1 });
 ogTierSchema.index({ priceUSD: 1 });
 ogTierSchema.index({ priceCoins: 1 });

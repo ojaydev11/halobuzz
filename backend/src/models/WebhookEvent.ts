@@ -18,7 +18,7 @@ const webhookEventSchema = new Schema<IWebhookEvent>({
   processedAt: { type: Date, default: Date.now }
 }, { timestamps: true });
 
-webhookEventSchema.index({ eventId: 1 }, { unique: true });
+// Note: eventId already has unique index from schema definition
 
 export const WebhookEvent = mongoose.model<IWebhookEvent>('WebhookEvent', webhookEventSchema);
 
