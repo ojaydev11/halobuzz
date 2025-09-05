@@ -5,7 +5,6 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -13,6 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/store/AuthContext';
 import { router } from 'expo-router';
+import { toast } from '@/lib/toast';
 
 export default function RegisterScreen() {
   const [formData, setFormData] = useState({
@@ -35,17 +35,17 @@ export default function RegisterScreen() {
     const { username, email, password, confirmPassword, phone, country, language } = formData;
 
     if (!username.trim() || !email.trim() || !password.trim()) {
-      Alert.alert('Error', 'Please fill in all required fields');
+      toast.error('Please fill in all required fields', 'Missing Information');
       return;
     }
 
     if (password !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match');
+      toast.error('Passwords do not match', 'Password Mismatch');
       return;
     }
 
     if (password.length < 6) {
-      Alert.alert('Error', 'Password must be at least 6 characters');
+      toast.error('Password must be at least 6 characters', 'Password Too Short');
       return;
     }
 
@@ -59,9 +59,11 @@ export default function RegisterScreen() {
         country,
         language,
       });
+      toast.success('Registration successful!', 'Welcome to HaloBuzz');
       router.replace('/(tabs)');
     } catch (error) {
-      Alert.alert('Registration Failed', error instanceof Error ? error.message : 'An error occurred');
+      // Error handling is now done in the API client with toast notifications
+      console.error('Registration error:', error);
     } finally {
       setIsLoading(false);
     }

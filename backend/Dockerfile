@@ -1,38 +1,78 @@
-# syntax=docker/dockerfile:1
+# syntax=docker/dockerfile:1.7
 
-# --- build stage ---
-FROM node:20-slim AS build
-WORKDIR /usr/src/app
+# ---- Build stage ----
+FROM node:20-alpine AS deps
+WORKDIR /app
 
-# Use pnpm via corepack
+# Install pnpm
 RUN corepack enable && corepack prepare pnpm@9.1.0 --activate
 
-# Copy backend files
-COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile
+# Copy package files
+COPY package*.json pnpm-lock.yaml ./
 
-# Copy source code
-COPY . .
+# Install dependencies with cache mount
+RUN --mount=type=cache,id=pnpm-store,target=/root/.pnpm-store \
+    pnpm install --frozen-lockfile
 
-# Build
-RUN echo "Current directory: $(pwd)" && ls -la
-RUN echo "Running build command..." && pnpm run build
-RUN echo "After build, checking dist directory:" && ls -la dist/ || echo "dist does not exist"
+# ---- Build stage ----
+FROM node:20-alpine AS build
+WORKDIR /app
 
-# --- runtime stage ---
-FROM node:20-slim
-WORKDIR /usr/src/app
+# Install pnpm
+RUN corepack enable && corepack prepare pnpm@9.1.0 --activate
 
-ENV NODE_ENV=production \
-    PORT=4000
+# Copy dependencies from deps stage
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/package*.json ./
+COPY --from=deps /app/pnpm-lock.yaml ./
 
-# Copy built app
-COPY --from=build /usr/src/app/node_modules ./node_modules
-COPY --from=build /usr/src/app/dist ./dist
-COPY --from=build /usr/src/app/package.json ./
+# Copy source code and config files
+COPY tsconfig*.json ./
+COPY scripts ./scripts
+COPY src ./src
 
-# Install ts-node for runtime
-RUN npm install -g ts-node
+# Build TypeScript to JavaScript
+RUN pnpm run build:ts || node scripts/build.js
 
+# ---- Runtime stage ----
+FROM node:20-alpine AS runtime
+WORKDIR /app
+
+# Create non-root user
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 --ingroup nodejs halobuzz
+
+# Install pnpm
+RUN corepack enable && corepack prepare pnpm@9.1.0 --activate
+
+# Copy package files
+COPY package*.json pnpm-lock.yaml ./
+
+# Install production dependencies only
+RUN --mount=type=cache,id=pnpm-store,target=/root/.pnpm-store \
+    pnpm install --frozen-lockfile --prod
+
+# Copy built application
+COPY --from=build /app/dist ./dist
+
+# Create logs directory
+RUN mkdir -p logs && chown -R halobuzz:nodejs logs
+
+# Set environment variables
+ENV NODE_ENV=production
+ENV PORT=4000
+ENV API_VERSION=v1
+ENV HOST=0.0.0.0
+
+# Switch to non-root user
+USER halobuzz
+
+# Expose port
 EXPOSE 4000
-CMD ["node", "dist/minimal-server.js"]
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=20s --retries=3 \
+  CMD wget -qO- http://127.0.0.1:4000/api/v1/monitoring/health || exit 1
+
+# Start the application
+CMD ["node", "dist/index.js"]

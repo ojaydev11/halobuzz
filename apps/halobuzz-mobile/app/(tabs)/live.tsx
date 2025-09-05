@@ -7,35 +7,37 @@ import {
   Alert,
   TextInput,
   SafeAreaView,
+  ActivityIndicator,
 } from 'react-native';
 import { useAgora } from '@/hooks/useAgora';
 import { useAuth } from '@/store/AuthContext';
 import { useStreams } from '@/hooks/useStreams';
+import PermissionGate from '@/components/PermissionGate';
+import { secureLogger } from '@/lib/security';
 
 export default function LiveScreen() {
   const [channelName, setChannelName] = useState('');
   const [isHost, setIsHost] = useState(false);
-  const [isJoined, setIsJoined] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
-  const [isCameraOn, setIsCameraOn] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasPermissions, setHasPermissions] = useState(false);
   const { user } = useAuth();
   const { createStream } = useStreams();
   
   const {
+    isJoined,
+    isMuted,
+    isCameraOn,
+    remoteUsers,
+    connectionState,
+    isInitialized,
+    error,
+    initializeEngine,
     joinChannel,
     leaveChannel,
     toggleMute,
     toggleCamera,
-    isJoined: agoraJoined,
-    isMuted: agoraMuted,
-    isCameraOn: agoraCameraOn,
+    switchCamera,
   } = useAgora();
-
-  useEffect(() => {
-    setIsJoined(agoraJoined);
-    setIsMuted(agoraMuted);
-    setIsCameraOn(agoraCameraOn);
-  }, [agoraJoined, agoraMuted, agoraCameraOn]);
 
   const handleJoinChannel = async () => {
     if (!channelName.trim()) {
@@ -43,10 +45,12 @@ export default function LiveScreen() {
       return;
     }
 
+    setIsLoading(true);
     try {
       if (isHost) {
+        secureLogger.log('Creating new stream', { channelName });
         // Create a new stream
-        const stream = await createStream({
+        const streamResponse = await createStream({
           title: `Live Stream - ${channelName}`,
           description: 'Live stream from mobile app',
           category: 'entertainment',
@@ -54,25 +58,39 @@ export default function LiveScreen() {
           isPrivate: false,
         });
         
-        if (stream?.agoraChannel) {
-          await joinChannel(stream.agoraChannel, stream.agoraToken);
+        if (streamResponse?.data?.stream?.agoraChannel) {
+          await joinChannel(
+            streamResponse.data.stream.agoraChannel, 
+            streamResponse.data.stream.agoraToken
+          );
+        } else {
+          throw new Error('Failed to get stream details from server');
         }
       } else {
-        // Join existing channel
+        secureLogger.log('Joining existing channel', { channelName });
+        // Join existing channel - token will be fetched automatically
         await joinChannel(channelName);
       }
     } catch (error) {
-      Alert.alert('Error', 'Failed to join channel');
-      console.error('Join channel error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to join channel';
+      Alert.alert('Error', errorMessage);
+      secureLogger.error('Join channel error', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleLeaveChannel = async () => {
+    setIsLoading(true);
     try {
       await leaveChannel();
+      secureLogger.log('Left channel successfully');
     } catch (error) {
-      Alert.alert('Error', 'Failed to leave channel');
-      console.error('Leave channel error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to leave channel';
+      Alert.alert('Error', errorMessage);
+      secureLogger.error('Leave channel error', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -80,8 +98,9 @@ export default function LiveScreen() {
     try {
       await toggleMute();
     } catch (error) {
-      Alert.alert('Error', 'Failed to toggle mute');
-      console.error('Toggle mute error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to toggle mute';
+      Alert.alert('Error', errorMessage);
+      secureLogger.error('Toggle mute error', error);
     }
   };
 
@@ -89,10 +108,48 @@ export default function LiveScreen() {
     try {
       await toggleCamera();
     } catch (error) {
-      Alert.alert('Error', 'Failed to toggle camera');
-      console.error('Toggle camera error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to toggle camera';
+      Alert.alert('Error', errorMessage);
+      secureLogger.error('Toggle camera error', error);
     }
   };
+  
+  const handleSwitchCamera = async () => {
+    try {
+      await switchCamera();
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to switch camera';
+      Alert.alert('Error', errorMessage);
+      secureLogger.error('Switch camera error', error);
+    }
+  };
+  
+  const handlePermissionGranted = () => {
+    setHasPermissions(true);
+    secureLogger.log('Live streaming permissions granted');
+  };
+  
+  const handlePermissionDenied = () => {
+    setHasPermissions(false);
+    Alert.alert(
+      'Permissions Required',
+      'Camera and microphone access are required for live streaming.',
+      [{ text: 'OK' }]
+    );
+  };
+  
+  if (!hasPermissions) {
+    return (
+      <PermissionGate
+        requiredPermissions={['both']}
+        onPermissionGranted={handlePermissionGranted}
+        onPermissionDenied={handlePermissionDenied}
+        showExplanation={true}
+      >
+        <View />
+      </PermissionGate>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -101,10 +158,38 @@ export default function LiveScreen() {
         <Text style={styles.subtitle}>
           {isHost ? 'Start your stream' : 'Join a live stream'}
         </Text>
+        
+        {/* Connection Status */}
+        <View style={styles.statusContainer}>
+          <View style={[
+            styles.statusIndicator,
+            connectionState === 'connected' ? styles.statusConnected :
+            connectionState === 'connecting' ? styles.statusConnecting :
+            connectionState === 'error' ? styles.statusError :
+            styles.statusDisconnected
+          ]} />
+          <Text style={styles.statusText}>
+            {connectionState === 'connected' ? 'Connected' :
+             connectionState === 'connecting' ? 'Connecting...' :
+             connectionState === 'error' ? 'Connection Error' :
+             'Disconnected'}
+          </Text>
+        </View>
+        
+        {/* Error Display */}
+        {error && (
+          <Text style={styles.errorText}>{error}</Text>
+        )}
       </View>
 
       {!isJoined ? (
         <View style={styles.joinSection}>
+          {isLoading && (
+            <View style={styles.loadingOverlay}>
+              <ActivityIndicator size="large" color="#007AFF" />
+              <Text style={styles.loadingText}>Connecting...</Text>
+            </View>
+          )}
           <View style={styles.inputContainer}>
             <Text style={styles.label}>Channel Name</Text>
             <TextInput
@@ -136,11 +221,14 @@ export default function LiveScreen() {
           </View>
 
           <TouchableOpacity
-            style={styles.joinButton}
+            style={[styles.joinButton, (isLoading || !isInitialized) && styles.joinButtonDisabled]}
             onPress={handleJoinChannel}
+            disabled={isLoading || !isInitialized}
           >
             <Text style={styles.joinButtonText}>
-              {isHost ? 'Start Stream' : 'Join Channel'}
+              {isLoading ? 'Connecting...' :
+               !isInitialized ? 'Initializing...' :
+               isHost ? 'Start Stream' : 'Join Channel'}
             </Text>
           </TouchableOpacity>
         </View>
@@ -150,6 +238,15 @@ export default function LiveScreen() {
             <Text style={styles.videoPlaceholder}>
               {isCameraOn ? 'Video Stream' : 'Camera Off'}
             </Text>
+            
+            {/* Remote Users Count */}
+            {remoteUsers.length > 0 && (
+              <View style={styles.remoteUsersInfo}>
+                <Text style={styles.remoteUsersText}>
+                  {remoteUsers.length} viewer{remoteUsers.length !== 1 ? 's' : ''}
+                </Text>
+              </View>
+            )}
           </View>
 
           <View style={styles.controls}>
@@ -170,12 +267,22 @@ export default function LiveScreen() {
                 {isCameraOn ? 'Camera Off' : 'Camera On'}
               </Text>
             </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={styles.controlButton}
+              onPress={handleSwitchCamera}
+            >
+              <Text style={styles.controlButtonText}>Flip</Text>
+            </TouchableOpacity>
 
             <TouchableOpacity
               style={[styles.controlButton, styles.leaveButton]}
               onPress={handleLeaveChannel}
+              disabled={isLoading}
             >
-              <Text style={styles.controlButtonText}>Leave</Text>
+              <Text style={styles.controlButtonText}>
+                {isLoading ? 'Leaving...' : 'Leave'}
+              </Text>
             </TouchableOpacity>
           </View>
 
@@ -208,10 +315,63 @@ const styles = StyleSheet.create({
     color: '#888',
     marginTop: 4,
   },
+  statusContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 12,
+  },
+  statusIndicator: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 8,
+  },
+  statusConnected: {
+    backgroundColor: '#00ff00',
+  },
+  statusConnecting: {
+    backgroundColor: '#ffaa00',
+  },
+  statusError: {
+    backgroundColor: '#ff0000',
+  },
+  statusDisconnected: {
+    backgroundColor: '#888',
+  },
+  statusText: {
+    fontSize: 14,
+    color: '#ccc',
+  },
+  errorText: {
+    fontSize: 14,
+    color: '#ff0000',
+    marginTop: 8,
+    padding: 12,
+    backgroundColor: 'rgba(255,0,0,0.1)',
+    borderRadius: 8,
+  },
   joinSection: {
     flex: 1,
     padding: 20,
     justifyContent: 'center',
+    position: 'relative',
+  },
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+    borderRadius: 12,
+  },
+  loadingText: {
+    color: '#fff',
+    marginTop: 16,
+    fontSize: 16,
   },
   inputContainer: {
     marginBottom: 30,
@@ -261,6 +421,10 @@ const styles = StyleSheet.create({
     padding: 16,
     alignItems: 'center',
   },
+  joinButtonDisabled: {
+    backgroundColor: '#555',
+    opacity: 0.6,
+  },
   joinButtonText: {
     color: '#fff',
     fontSize: 16,
@@ -277,6 +441,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,
+    position: 'relative',
+  },
+  remoteUsersInfo: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  remoteUsersText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
   },
   videoPlaceholder: {
     fontSize: 18,
@@ -287,6 +466,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     marginBottom: 20,
+    flexWrap: 'wrap',
+    gap: 8,
   },
   controlButton: {
     backgroundColor: '#1a1a1a',

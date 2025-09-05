@@ -1,115 +1,98 @@
-# syntax=docker/dockerfile:1
+# syntax=docker/dockerfile:1.7
 
-# --- build stage ---
-FROM node:20-slim AS build
-WORKDIR /usr/src/app
+# Multi-stage Dockerfile for HaloBuzz Monorepo
+# Build any service by setting SERVICE_PATH build arg
+# Example: docker build --build-arg SERVICE_PATH=backend -t halobuzz-backend .
+# Example: docker build --build-arg SERVICE_PATH=ai-engine -t halobuzz-ai-engine .
 
-# Use pnpm via corepack
+ARG SERVICE_PATH=backend
+FROM node:20-alpine AS base
+WORKDIR /app
+
+# Install pnpm
 RUN corepack enable && corepack prepare pnpm@9.1.0 --activate
 
-# Copy backend files
-COPY backend/package.json backend/pnpm-lock.yaml backend/tsconfig.json ./
-COPY backend/src ./src
-COPY backend/scripts ./scripts
+# ---- Dependencies stage ----
+FROM base AS deps
+ARG SERVICE_PATH
+WORKDIR /app
 
-# Install dependencies
-RUN pnpm install --frozen-lockfile
+# Copy package files for the specified service
+COPY ${SERVICE_PATH}/package*.json ${SERVICE_PATH}/pnpm-lock.yaml ./
 
-# Build the TypeScript code
-RUN pnpm run build
+# Install dependencies with cache mount
+RUN --mount=type=cache,id=pnpm-store,target=/root/.pnpm-store \
+    pnpm install --frozen-lockfile
 
-# Verify build output
-RUN echo "Build completed. Checking dist directory:" && ls -la dist/
+# ---- Build stage ----
+FROM base AS build
+ARG SERVICE_PATH
+WORKDIR /app
 
+# Copy dependencies from deps stage
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/package*.json ./
+COPY --from=deps /app/pnpm-lock.yaml ./
 
-# --- runtime stage ---
-FROM node:20-slim
-WORKDIR /usr/src/app
+# Copy source code and config files for the specified service
+COPY ${SERVICE_PATH}/tsconfig*.json ./
+COPY ${SERVICE_PATH}/src ./src
 
-ENV NODE_ENV=production \
-    PORT=4000
+# Copy scripts if they exist
+COPY ${SERVICE_PATH}/scripts ./scripts 2>/dev/null || true
 
-# Install basic dependencies and curl for health checks
-RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
-RUN npm install express cors helmet express-rate-limit
+# Build TypeScript to JavaScript
+RUN if [ -f "scripts/build.js" ]; then \
+        node scripts/build.js; \
+    else \
+        pnpm run build:ts || pnpm run build; \
+    fi
 
-# Add health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:4000/api/v1/monitoring/health || exit 1
+# ---- Runtime stage ----
+FROM node:20-alpine AS runtime
+ARG SERVICE_PATH
+WORKDIR /app
 
-# Create the fallback server directly in the container
-RUN cat > fallback-server.js << 'EOF'
-const express = require('express');
-const cors = require('cors');
-const helmet = require('helmet');
-const rateLimit = require('express-rate-limit');
+# Create non-root user
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 --ingroup nodejs halobuzz
 
-const app = express();
-const PORT = process.env.PORT || 4000;
+# Install pnpm
+RUN corepack enable && corepack prepare pnpm@9.1.0 --activate
 
-// Middleware
-app.use(helmet());
-app.use(cors());
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true }));
+# Copy package files
+COPY --from=build /app/package*.json ./
+COPY --from=build /app/pnpm-lock.yaml ./
 
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100 // limit each IP to 100 requests per windowMs
-});
-app.use(limiter);
+# Install production dependencies only
+RUN --mount=type=cache,id=pnpm-store,target=/root/.pnpm-store \
+    pnpm install --frozen-lockfile --prod
 
-// Health check endpoint
-app.get('/api/v1/monitoring/health', (req, res) => {
-  res.status(200).json({
-    status: 'healthy',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-    environment: process.env.NODE_ENV || 'development'
-  });
-});
+# Copy built application
+COPY --from=build /app/dist ./dist
 
-// Basic API endpoints
-app.get('/api/v1/status', (req, res) => {
-  res.json({
-    message: 'HaloBuzz Backend API is running',
-    version: '1.0.0',
-    timestamp: new Date().toISOString()
-  });
-});
+# Create logs directory
+RUN mkdir -p logs && chown -R halobuzz:nodejs logs
 
-// Catch-all handler
-app.use((req, res) => {
-  res.status(404).json({
-    error: 'Endpoint not found',
-    message: 'The requested endpoint does not exist',
-    path: req.originalUrl
-  });
-});
+# Set environment variables
+ENV NODE_ENV=production
+ENV PORT=4000
+ENV HOST=0.0.0.0
 
-// Error handler
-app.use((err, req, res, next) => {
-  console.error('Error:', err);
-  res.status(500).json({
-    error: 'Internal server error',
-    message: 'Something went wrong on our end'
-  });
-});
+# Set API_VERSION for backend service
+RUN if [ "$SERVICE_PATH" = "backend" ]; then \
+        echo "ENV API_VERSION=v1" >> /tmp/env; \
+    fi
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`🚀 HaloBuzz Backend Server running on port ${PORT}`);
-  console.log(`📊 Health check available at http://localhost:${PORT}/api/v1/monitoring/health`);
-  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-});
+# Switch to non-root user
+USER halobuzz
 
-module.exports = app;
-EOF
-
-# Debug: Check what's in the directory
-RUN echo "Checking directory contents:" && ls -la
-RUN echo "Checking if fallback-server.js exists:" && ls -la fallback-server.js || echo "fallback-server.js does not exist"
-
+# Expose port
 EXPOSE 4000
-CMD ["node", "fallback-server.js"]
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=20s --retries=3 \
+  CMD wget -qO- http://127.0.0.1:4000/api/v1/monitoring/health || exit 1
+
+# Start the application
+CMD ["node", "dist/index.js"]

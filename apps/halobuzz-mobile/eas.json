@@ -1,52 +1,91 @@
 {
   "cli": {
     "version": ">= 14.0.0",
-    "appVersionSource": "remote"
+    "appVersionSource": "remote",
+    "requireCommit": true
   },
   "build": {
     "development": {
       "distribution": "internal",
+      "developmentClient": true,
       "ios": {
-        "resourceClass": "default"
+        "resourceClass": "default",
+        "simulator": true
       },
       "android": {
-        "buildType": "apk"
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleDebug"
       },
       "env": {
-        "EXPO_NO_TELEMETRY": "1"
+        "EXPO_NO_TELEMETRY": "1",
+        "NODE_ENV": "development"
       },
-      "prebuildCommand": "npx expo prebuild --clean --platform all"
+      "prebuildCommand": "npx expo prebuild --clean --platform all",
+      "postInstallCommand": "npm run audit:security"
     },
     "preview": {
       "distribution": "internal",
       "ios": {
-        "resourceClass": "default"
+        "resourceClass": "default",
+        "buildConfiguration": "Release"
       },
       "android": {
-        "buildType": "apk"
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleRelease"
       },
       "env": {
         "EXPO_NO_TELEMETRY": "1",
-        "EXPO_PUBLIC_API_BASE_URL": "https://halobuzz-api-proxy.ojayshah123.workers.dev/"
+        "EXPO_PUBLIC_API_BASE_URL": "https://halobuzz-api-proxy.ojayshah123.workers.dev/",
+        "NODE_ENV": "production"
       },
-      "prebuildCommand": "npx expo prebuild --clean --platform all"
+      "prebuildCommand": "npx expo prebuild --clean --platform all",
+      "postInstallCommand": "npm run audit:security && npm run test && npm run typecheck"
     },
     "production": {
       "ios": {
-        "resourceClass": "default"
+        "resourceClass": "default",
+        "buildConfiguration": "Release",
+        "autoIncrement": "buildNumber"
       },
       "android": {
-        "buildType": "app-bundle"
+        "buildType": "app-bundle",
+        "gradleCommand": ":app:bundleRelease",
+        "autoIncrement": "versionCode"
       },
-      "prebuildCommand": "npx expo prebuild --clean --platform all"
+      "env": {
+        "EXPO_NO_TELEMETRY": "1",
+        "NODE_ENV": "production"
+      },
+      "prebuildCommand": "npx expo prebuild --clean --platform all",
+      "postInstallCommand": "npm run audit:security && npm run test && npm run typecheck && npm run lint"
     }
   },
   "submit": {
-    "production": {}
+    "production": {
+      "ios": {
+        "appleId": "your-apple-id@example.com",
+        "ascAppId": "your-app-store-connect-app-id",
+        "appleTeamId": "your-apple-team-id"
+      },
+      "android": {
+        "serviceAccountKeyPath": "./google-play-service-account.json",
+        "track": "internal",
+        "releaseStatus": "draft"
+      }
+    }
   },
   "update": {
+    "development": {
+      "channel": "development"
+    },
     "preview": {
       "channel": "preview",
+      "env": {
+        "EXPO_PUBLIC_API_BASE_URL": "https://halobuzz-api-proxy.ojayshah123.workers.dev/"
+      }
+    },
+    "production": {
+      "channel": "production",
       "env": {
         "EXPO_PUBLIC_API_BASE_URL": "https://halobuzz-api-proxy.ojayshah123.workers.dev/"
       }

@@ -9,6 +9,7 @@ import slowDown from 'express-slow-down';
 import dotenv from 'dotenv';
 import path from 'path';
 import fileType from 'file-type';
+import listEndpoints from 'express-list-endpoints';
 
 // Import configurations
 import { connectDatabase } from '@/config/database';
@@ -192,6 +193,29 @@ app.get('/healthz', (req, res) => {
   res.status(200).json({ status: "ok" });
 });
 
+// Public health check for monitoring
+app.get(`/api/${apiVersion}/monitoring/health`, (req, res) => {
+  res.json({ 
+    status: "healthy", 
+    environment: process.env.NODE_ENV || "development",
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
+
+// Debug endpoint to list all routes
+app.get('/api/v1/monitoring/routes', (_req, res) => {
+  res.json({
+    environment: {
+      NODE_ENV: process.env.NODE_ENV,
+      API_VERSION: process.env.API_VERSION || 'v1',
+      PORT: process.env.PORT,
+      HOST: process.env.HOST
+    },
+    routes: listEndpoints(app)
+  });
+});
+
 // Maintenance mode check
 app.use(async (req, res, next) => {
   if (await featureFlags.isMaintenanceMode() && !req.path.includes('/healthz')) {
@@ -204,28 +228,30 @@ app.use(async (req, res, next) => {
 });
 
 // API routes with enhanced security
-app.use(`/api/${process.env.API_VERSION || 'v1'}/auth`, authLimiter, loginSlowDown, authRoutes);
-app.use(`/api/${process.env.API_VERSION || 'v1'}/me`, authMiddleware, authRoutes); // GET /me route
-app.use(`/api/${process.env.API_VERSION || 'v1'}/wallet`, authMiddleware, paymentLimiter, walletRoutes);
-app.use(`/api/${process.env.API_VERSION || 'v1'}/streams`, authMiddleware, socialLimiter, streamsRoutes);
-app.use(`/api/${process.env.API_VERSION || 'v1'}/gifts`, authMiddleware, socialLimiter, giftsRoutes);
-app.use(`/api/${process.env.API_VERSION || 'v1'}/throne`, authMiddleware, socialLimiter, throneRoutes);
-app.use(`/api/${process.env.API_VERSION || 'v1'}/og`, authMiddleware, ogRoutes);
-app.use(`/api/${process.env.API_VERSION || 'v1'}/chat`, authMiddleware, socialLimiter, chatRoutes);
-app.use(`/api/${process.env.API_VERSION || 'v1'}/reels`, authMiddleware, reelsRoutes);
-app.use(`/api/${process.env.API_VERSION || 'v1'}/games`, authMiddleware, gamesRoutes);
-app.use(`/api/${process.env.API_VERSION || 'v1'}/config`, authMiddleware, configRoutes);
-app.use(`/api/${process.env.API_VERSION || 'v1'}/kyc`, authMiddleware, kycRoutes);
+const apiVersion = process.env.API_VERSION || 'v1';
+logger.info(`Mounting auth routes at /api/${apiVersion}/auth`);
+app.use(`/api/${apiVersion}/auth`, authLimiter, loginSlowDown, authRoutes);
+app.use(`/api/${apiVersion}/me`, authMiddleware, authRoutes); // GET /me route
+app.use(`/api/${apiVersion}/wallet`, authMiddleware, paymentLimiter, walletRoutes);
+app.use(`/api/${apiVersion}/streams`, authMiddleware, socialLimiter, streamsRoutes);
+app.use(`/api/${apiVersion}/gifts`, authMiddleware, socialLimiter, giftsRoutes);
+app.use(`/api/${apiVersion}/throne`, authMiddleware, socialLimiter, throneRoutes);
+app.use(`/api/${apiVersion}/og`, authMiddleware, ogRoutes);
+app.use(`/api/${apiVersion}/chat`, authMiddleware, socialLimiter, chatRoutes);
+app.use(`/api/${apiVersion}/reels`, authMiddleware, reelsRoutes);
+app.use(`/api/${apiVersion}/games`, authMiddleware, gamesRoutes);
+app.use(`/api/${apiVersion}/config`, authMiddleware, configRoutes);
+app.use(`/api/${apiVersion}/kyc`, authMiddleware, kycRoutes);
 import { adminOnly } from '@/middleware/admin';
-app.use(`/api/${process.env.API_VERSION || 'v1'}/admin`, authMiddleware, adminOnly, adminRoutes);
-app.use(`/api/${process.env.API_VERSION || 'v1'}/monitoring`, monitoringRoutes);
-app.use(`/api/${process.env.API_VERSION || 'v1'}/security`, securityRoutes);
+app.use(`/api/${apiVersion}/admin`, authMiddleware, adminOnly, adminRoutes);
+app.use(`/api/${apiVersion}/monitoring`, monitoringRoutes);
+app.use(`/api/${apiVersion}/security`, securityRoutes);
 
 // New creator economy routes
-app.use(`/api/${process.env.API_VERSION || 'v1'}/nft`, nftRoutes);
-app.use(`/api/${process.env.API_VERSION || 'v1'}/subscription`, subscriptionRoutes);
-app.use(`/api/${process.env.API_VERSION || 'v1'}/analytics`, creatorAnalyticsRoutes);
-app.use(`/api/${process.env.API_VERSION || 'v1'}/commerce`, commerceRoutes);
+app.use(`/api/${apiVersion}/nft`, nftRoutes);
+app.use(`/api/${apiVersion}/subscription`, subscriptionRoutes);
+app.use(`/api/${apiVersion}/analytics`, creatorAnalyticsRoutes);
+app.use(`/api/${apiVersion}/commerce`, commerceRoutes);
 
 // Phase 4: Interactive Features routes
 // app.use(`/api/${process.env.API_VERSION || 'v1'}/collaboration`, collaborationRoutes);
