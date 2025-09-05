@@ -56,6 +56,14 @@ export const globalLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req: Request) => {
+    // Skip rate limiting for health checks
+    const healthPaths = ['/health', '/healthz', '/api/v1/monitoring/health'];
+    const healthUserAgents = /Health-Check-Agent|kube-probe|liveness|readiness/i;
+    
+    return healthPaths.some(path => req.path.startsWith(path)) || 
+           healthUserAgents.test(req.get('User-Agent') || '');
+  },
   keyGenerator: (req: Request) => {
     return req.ip || req.connection.remoteAddress || 'unknown';
   },

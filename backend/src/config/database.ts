@@ -11,6 +11,10 @@ export const connectDatabase = async (): Promise<void> => {
       throw new Error('MongoDB URI is not defined in environment variables');
     }
 
+    // Log the database name being used (without exposing credentials)
+    const dbName = new URL(mongoUri).pathname.substring(1) || 'default';
+    logger.info(`Connecting to MongoDB database: ${dbName}`);
+
     await mongoose.connect(mongoUri, {
       maxPoolSize: 10,
       serverSelectionTimeoutMS: 5000,
@@ -18,7 +22,7 @@ export const connectDatabase = async (): Promise<void> => {
       bufferCommands: false,
     });
 
-    logger.info('MongoDB connected successfully');
+    logger.info(`MongoDB connected successfully to database: ${mongoose.connection.db?.databaseName || 'unknown'}`);
 
     // Handle connection events
     mongoose.connection.on('error', (error) => {

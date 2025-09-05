@@ -3,11 +3,19 @@ import { setupLogger } from './logger';
 
 const logger = setupLogger();
 
+// Check if Redis is enabled
+export const isRedisEnabled = !!process.env.REDIS_URL;
+
 let redisClient: Redis.RedisClientType | null = null;
 
 export const connectRedis = async (): Promise<void> => {
+  if (!isRedisEnabled) {
+    logger.warn('Redis is disabled - skipping connection');
+    return;
+  }
+  
   try {
-    const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
+    const redisUrl = process.env.REDIS_URL!;
     
     redisClient = Redis.createClient({
       url: redisUrl,
@@ -41,7 +49,10 @@ export const connectRedis = async (): Promise<void> => {
   }
 };
 
-export const getRedisClient = (): Redis.RedisClientType => {
+export const getRedisClient = (): Redis.RedisClientType | null => {
+  if (!isRedisEnabled) {
+    return null;
+  }
   if (!redisClient) {
     throw new Error('Redis client not initialized');
   }
@@ -62,8 +73,10 @@ export const disconnectRedis = async (): Promise<void> => {
 
 // Cache utility functions
 export const setCache = async (key: string, value: any, ttl?: number): Promise<void> => {
+  const client = getRedisClient();
+  if (!client) return;
+  
   try {
-    const client = getRedisClient();
     const serializedValue = JSON.stringify(value);
     
     if (ttl) {
@@ -77,8 +90,10 @@ export const setCache = async (key: string, value: any, ttl?: number): Promise<v
 };
 
 export const getCache = async <T>(key: string): Promise<T | null> => {
+  const client = getRedisClient();
+  if (!client) return null;
+  
   try {
-    const client = getRedisClient();
     const value = await client.get(key);
     
     if (value) {
@@ -93,8 +108,10 @@ export const getCache = async <T>(key: string): Promise<T | null> => {
 };
 
 export const deleteCache = async (key: string): Promise<void> => {
+  const client = getRedisClient();
+  if (!client) return;
+  
   try {
-    const client = getRedisClient();
     await client.del(key);
   } catch (error) {
     logger.error('Error deleting cache:', error);
@@ -102,8 +119,10 @@ export const deleteCache = async (key: string): Promise<void> => {
 };
 
 export const clearCache = async (pattern: string): Promise<void> => {
+  const client = getRedisClient();
+  if (!client) return;
+  
   try {
-    const client = getRedisClient();
     const keys = await client.keys(pattern);
     
     if (keys.length > 0) {
@@ -202,18 +221,31 @@ export const releaseLock = async (lockKey: string): Promise<void> => {
 
 // Cache statistics and monitoring
 export const getCacheStats = async (): Promise<any> => {
+  const client = getRedisClient();
+  if (!client) {
+    return {
+      enabled: false,
+      message: 'Redis not configured',
+      timestamp: new Date().toISOString()
+    };
+  }
+  
   try {
-    const client = getRedisClient();
     const info = await client.info('memory');
     const keyspace = await client.info('keyspace');
     
     return {
+      enabled: true,
       memory: info,
       keyspace: keyspace,
       timestamp: new Date().toISOString()
     };
   } catch (error) {
     logger.error('Error getting cache stats:', error);
-    return null;
+    return {
+      enabled: true,
+      error: error instanceof Error ? error.message : String(error),
+      timestamp: new Date().toISOString()
+    };
   }
 };

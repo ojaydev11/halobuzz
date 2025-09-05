@@ -5,9 +5,12 @@ import { setupLogger } from '@/config/logger';
 const logger = setupLogger();
 
 export const securityMonitoringMiddleware = (req: Request, res: Response, next: NextFunction): void => {
-  // Skip security monitoring for certain paths
-  const skipPaths = ['/health', '/metrics', '/favicon.ico'];
-  if (skipPaths.some(path => req.path.startsWith(path))) {
+  // Skip security monitoring for certain paths and health check probes
+  const skipPaths = ['/health', '/healthz', '/metrics', '/favicon.ico', '/api/v1/monitoring/health'];
+  const healthUserAgents = /Health-Check-Agent|kube-probe|liveness|readiness/i;
+  
+  if (skipPaths.some(path => req.path.startsWith(path)) || 
+      healthUserAgents.test(req.get('User-Agent') || '')) {
     return next();
   }
 
