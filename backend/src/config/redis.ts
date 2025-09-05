@@ -14,21 +14,42 @@ export const connectRedis = async (): Promise<void> => {
     return;
   }
   
+  const redisUrl = process.env.REDIS_URL!;
+  const url = new URL(redisUrl);
+  const isSecure = url.protocol === 'rediss:' || url.protocol === 'redis+tls:';
+  
+  logger.info(`Connecting to Redis: ${url.protocol}//${url.hostname}:${url.port || (isSecure ? '6380' : '6379')} (SSL: ${isSecure})`);
+  
   try {
-    const redisUrl = process.env.REDIS_URL!;
-    
-    // Parse URL to handle SSL/TLS properly
-    const url = new URL(redisUrl);
-    const isSecure = url.protocol === 'rediss:' || url.protocol === 'redis+tls:';
-    
-    redisClient = createClient({
-      url: redisUrl,
+    // Create Redis client with proper SSL handling
+    const clientConfig: any = {
       password: process.env.REDIS_PASSWORD || undefined,
       socket: {
-        connectTimeout: 10000,
-        tls: isSecure ? true : false
-      },
-    });
+        connectTimeout: 10000
+      }
+    };
+    
+    // Handle SSL/TLS configuration
+    if (isSecure) {
+      clientConfig.socket.tls = {
+        rejectUnauthorized: false,
+        servername: url.hostname
+      };
+    }
+    
+    // Use URL or individual components
+    if (isSecure) {
+      clientConfig.socket.host = url.hostname;
+      clientConfig.socket.port = parseInt(url.port) || 6380;
+      clientConfig.socket.tls = {
+        rejectUnauthorized: false,
+        servername: url.hostname
+      };
+    } else {
+      clientConfig.url = redisUrl;
+    }
+    
+    redisClient = createClient(clientConfig);
 
     redisClient.on('error', (error) => {
       logger.error('Redis connection error:', error);
@@ -50,8 +71,34 @@ export const connectRedis = async (): Promise<void> => {
     await redisClient.connect();
 
   } catch (error) {
-    logger.error('Failed to connect to Redis:', error);
-    // Don't throw error, let the application continue without Redis
+    logger.error('Failed to connect to Redis with SSL:', error);
+    
+    // If SSL connection failed, try without SSL as fallback
+    if (isSecure) {
+      try {
+        logger.info('Attempting Redis connection without SSL as fallback...');
+        const fallbackUrl = redisUrl.replace('rediss://', 'redis://');
+        redisClient = createClient({
+          url: fallbackUrl,
+          password: process.env.REDIS_PASSWORD || undefined,
+          socket: {
+            connectTimeout: 10000
+          }
+        });
+        
+        redisClient.on('error', (err) => {
+          logger.error('Redis fallback connection error:', err);
+        });
+        
+        await redisClient.connect();
+        logger.info('Redis connected successfully without SSL');
+        return;
+      } catch (fallbackError) {
+        logger.error('Redis fallback connection also failed:', fallbackError);
+      }
+    }
+    
+    // If all connection attempts failed
     logger.warn('Continuing without Redis - caching and real-time features will be disabled');
     redisClient = null;
   }

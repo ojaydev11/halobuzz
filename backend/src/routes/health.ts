@@ -38,7 +38,9 @@ router.get('/health', async (req: Request, res: Response) => {
     // Check Redis connection
     const redisClient = getRedisClient();
     if (redisClient) {
+      const start = Date.now();
       await redisClient.ping();
+      const responseTime = Date.now() - start;
       health.services.redis = 'ok';
     } else {
       health.services.redis = 'disabled';
