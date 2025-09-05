@@ -26,7 +26,7 @@ cp env.example .env
 ### Step 3: Configure Environment
 Edit `.env` file with your values:
 ```env
-HALOBUZZ_API_BASE=https://halobuzz-api-proxy.ojayshah123.workers.dev
+HALOBUZZ_API_BASE=https://halo-api-production.up.railway.app
 AGORA_APP_ID=YOUR_AGORA_APP_ID
 IOS_BUNDLE_ID=com.halobuzz.app
 PAYMENTS_ENABLED=false

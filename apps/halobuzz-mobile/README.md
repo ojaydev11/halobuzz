@@ -61,7 +61,7 @@ Edit `.env` with your values:
 
 ```env
 # API Configuration
-HALOBUZZ_API_BASE=https://halobuzz-api-proxy.ojayshah123.workers.dev
+HALOBUZZ_API_BASE=https://halo-api-production.up.railway.app
 
 # Agora Configuration (Get from agora.io)
 AGORA_APP_ID=YOUR_AGORA_APP_ID
@@ -271,7 +271,7 @@ npx eas build -p android --profile production
 
 The app connects to the HaloBuzz backend API with comprehensive security:
 
-- **Base URL**: `https://halobuzz-api-proxy.ojayshah123.workers.dev`
+- **Base URL**: `https://halo-api-production.up.railway.app`
 - **Authentication**: JWT tokens with secure storage and automatic refresh
 - **Security**: Request/response validation, PII redaction, error handling
 - **Endpoints**: 
