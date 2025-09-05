@@ -1,45 +1,131 @@
-version: "3.9"
+version: '3.8'
 
 services:
-  mongo:
-    image: mongo:7
-    restart: unless-stopped
+  # MongoDB Database
+  mongodb:
+    image: mongo:6.0
+    container_name: halobuzz-mongodb
+    restart: always
     ports:
       - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=admin123
+      - MONGO_INITDB_DATABASE=halobuzz
     volumes:
-      - mongo_data:/data/db
+      - mongodb_data:/data/db
+    networks:
+      - halobuzz-network
 
+  # Redis Cache
   redis:
-    image: redis:7
-    restart: unless-stopped
+    image: redis:7-alpine
+    container_name: halobuzz-redis
+    restart: always
     ports:
       - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - halobuzz-network
 
-  ai:
-    build:
-      context: ./ai-engine
-    restart: unless-stopped
-    env_file:
-      - .env.ai.local
-    ports:
-      - "5020:5020"
-
+  # Backend API
   backend:
     build:
       context: ./backend
-    depends_on:
-      - mongo
-      - redis
-      - ai
-    restart: unless-stopped
-    env_file:
-      - .env.backend.local
-    environment:
-      - TZ=Australia/Sydney
+      dockerfile: Dockerfile
+    container_name: halobuzz-backend
+    restart: always
     ports:
-      - "5010:5010"
+      - "4000:4000"
+    environment:
+      - NODE_ENV=development
+      - PORT=4000
+      - MONGODB_URI=mongodb://admin:admin123@mongodb:27017/halobuzz?authSource=admin
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=dev_jwt_secret_min_32_characters_long
+      - JWT_REFRESH_SECRET=dev_refresh_secret_min_32_chars
+      - AGORA_APP_ID=${AGORA_APP_ID}
+      - AGORA_APP_CERTIFICATE=${AGORA_APP_CERTIFICATE}
+      - ESEWA_MERCHANT_CODE=HALOBUZZ
+      - KHALTI_SECRET_KEY=test_secret_key_
+      - STRIPE_SECRET_KEY=sk_test_
+      - AI_MODERATION=true
+      - FEATURE_GIFTING=true
+      - FEATURE_REELS=true
+      - PROMETHEUS_ENABLED=true
+    depends_on:
+      - mongodb
+      - redis
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    networks:
+      - halobuzz-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4000/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Admin Dashboard (optional)
+  admin:
+    build:
+      context: ./admin
+      dockerfile: Dockerfile
+    container_name: halobuzz-admin
+    restart: always
+    ports:
+      - "3001:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://backend:4000
+      - NODE_ENV=development
+    depends_on:
+      - backend
+    networks:
+      - halobuzz-network
+
+  # Prometheus Monitoring (optional)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: halobuzz-prometheus
+    restart: always
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    networks:
+      - halobuzz-network
+
+  # Grafana Dashboard (optional)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: halobuzz-grafana
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks:
+      - halobuzz-network
 
 volumes:
-  mongo_data:
+  mongodb_data:
+  redis_data:
+  prometheus_data:
+  grafana_data:
 
-
+networks:
+  halobuzz-network:
+    driver: bridge

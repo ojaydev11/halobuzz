@@ -1,0 +1,461 @@
+{
+  "info": {
+    "name": "HaloBuzz API Collection",
+    "description": "Complete API collection for HaloBuzz live streaming platform",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{authToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Liveness Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/healthz",
+              "host": ["{{baseUrl}}"],
+              "path": ["healthz"]
+            }
+          }
+        },
+        {
+          "name": "Readiness Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/readyz",
+              "host": ["{{baseUrl}}"],
+              "path": ["readyz"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if (response.success) {",
+                  "    pm.environment.set('authToken', response.data.token);",
+                  "    pm.environment.set('userId', response.data.user.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"username\": \"testuser_{{$timestamp}}\",\n    \"email\": \"test_{{$timestamp}}@example.com\",\n    \"password\": \"Test123!\",\n    \"country\": \"NP\",\n    \"language\": \"en\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if (response.success) {",
+                  "    pm.environment.set('authToken', response.data.token);",
+                  "    pm.environment.set('userId', response.data.user.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"identifier\": \"testuser\",\n    \"password\": \"Test123!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "login"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Streaming",
+      "item": [
+        {
+          "name": "Start Stream",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if (response.success) {",
+                  "    pm.environment.set('streamId', response.data.streamId);",
+                  "    pm.environment.set('channelName', response.data.channelName);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"title\": \"Test Stream {{$timestamp}}\",\n    \"category\": \"entertainment\",\n    \"tags\": [\"test\", \"demo\"],\n    \"isAudioOnly\": false,\n    \"isPrivate\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/streams/start",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "streams", "start"]
+            }
+          }
+        },
+        {
+          "name": "Join Stream",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"streamId\": \"{{streamId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/streams/join",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "streams", "join"]
+            }
+          }
+        },
+        {
+          "name": "Leave Stream",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"streamId\": \"{{streamId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/streams/leave",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "streams", "leave"]
+            }
+          }
+        },
+        {
+          "name": "End Stream",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"streamId\": \"{{streamId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/streams/end",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "streams", "end"]
+            }
+          }
+        },
+        {
+          "name": "Get Active Streams",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/streams/active?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "streams", "active"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "category",
+                  "value": "entertainment",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Payments",
+      "item": [
+        {
+          "name": "Get Coin Bundles",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/payments/bundles?country=NP&currency=NPR",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "payments", "bundles"],
+              "query": [
+                {
+                  "key": "country",
+                  "value": "NP"
+                },
+                {
+                  "key": "currency",
+                  "value": "NPR"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Top-up Wallet (eSewa)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"amount\": 100,\n    \"coins\": 500,\n    \"currency\": \"NPR\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/wallet/topup/esewa",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "wallet", "topup", "esewa"]
+            }
+          }
+        },
+        {
+          "name": "Get Wallet Balance",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/wallet/balance",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "wallet", "balance"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Moderation",
+      "item": [
+        {
+          "name": "Scan Content",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "content",
+                  "type": "file",
+                  "src": "sample.jpg"
+                },
+                {
+                  "key": "type",
+                  "value": "stream",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/moderation/scan",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "moderation", "scan"]
+            }
+          }
+        },
+        {
+          "name": "Report Content",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"targetId\": \"{{streamId}}\",\n    \"targetType\": \"stream\",\n    \"reason\": \"inappropriate\",\n    \"description\": \"This stream contains inappropriate content\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/moderation/report",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "moderation", "report"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Gifts",
+      "item": [
+        {
+          "name": "Send Gift",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"streamId\": \"{{streamId}}\",\n    \"giftId\": \"gift_123\",\n    \"quantity\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/gifts/send",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "gifts", "send"]
+            }
+          }
+        },
+        {
+          "name": "Get Stream Leaderboard",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/leaderboards/live/{{streamId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "leaderboards", "live", "{{streamId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Metrics",
+      "item": [
+        {
+          "name": "Get Prometheus Metrics",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/metrics",
+              "host": ["{{baseUrl}}"],
+              "path": ["metrics"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:4000",
+      "type": "string"
+    },
+    {
+      "key": "authToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "userId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "streamId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "channelName",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

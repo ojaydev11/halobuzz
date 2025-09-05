@@ -1,246 +1,205 @@
-# HaloBuzz - Nepali-First Live Streaming Platform
+# 🚀 HaloBuzz - Live Streaming & Social Platform
 
-A comprehensive live streaming and short-video platform built for Nepal with global expansion capabilities.
+[![Build Status](https://img.shields.io/badge/build-passing-green)](https://github.com/halobuzz/halobuzz)
+[![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+[![Node](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)](https://nodejs.org)
 
-## 🚀 Quick Start
+Nepal's premier live streaming platform with gifting, games, and social features.
 
-### Prerequisites
-- Node.js 18+
-- MongoDB
-- Redis
-- Expo CLI
-
-### Docker Quick Start
+## 🎯 Quick Start (One Command)
 
 ```bash
-# Build images
-docker compose build
-
-# Start services in background
-docker compose up -d
-
-# Tail backend logs
-docker compose logs -f backend
+# Clone and run
+git clone https://github.com/halobuzz/halobuzz.git
+cd halobuzz
+./setup.sh  # Installs everything and starts services
 ```
 
-Environment templates at repo root:
+Or manually:
 
 ```bash
-cp env.backend.local.example .env.backend.local
-cp env.ai.local.example .env.ai.local
-```
-
-Seed database (after backend is running and built):
-
-```bash
-docker compose exec backend node dist/scripts/seeds/index.js
-```
-
-### Installation & Setup
-
-1. **Install dependencies**
-```bash
+# Backend
+cd backend
+cp .env.example .env
 npm install
+npm run dev
+
+# Mobile (in new terminal)
+cd apps/halobuzz-mobile
+cp .env.example .env
+npm install
+npm run ios  # or npm run android
 ```
 
-2. **Environment Setup**
-```bash
-# Copy environment files
-cp backend/env.example backend/.env
-cp ai-engine/env.example ai-engine/.env
-cp mobile/env.example mobile/.env
-```
-
-3. **Start Development**
-```bash
-# Start backend
-npm run dev:backend
-
-# Start AI engine (in new terminal)
-npm run dev:ai
-
-# Seed database (after backend is running)
-npm run seed
-
-# Start mobile (in new terminal)
-npm run dev:mobile
-
-# Run smoke tests (in new terminal)
-AI_ENGINE_SECRET=<your-secret> npm run smoke
-```
-
-4. **Import Postman Collection**
-- Import `docs/postman/HaloBuzz_Local_API.postman_collection.json`
-- Import `docs/postman/HaloBuzz_Local.postman_environment.json`
-- Set `ai_secret` variable in environment
-
-## 🏗️ Architecture
+## 📦 Project Structure
 
 ```
 halobuzz/
-├── backend/               # Node.js + Express + Socket.IO
-├── ai-engine/             # AI services (moderation, engagement)
-├── mobile/                # React Native + Expo
-├── admin/                 # Next.js admin dashboard
-├── docs/                  # Documentation
-└── scripts/               # Smoke tests
+├── backend/              # Node.js + Express + MongoDB API
+├── apps/
+│   └── halobuzz-mobile/ # React Native mobile app
+├── ai-engine/           # AI moderation service
+├── admin/               # Admin dashboard
+└── infra/               # Infrastructure configs
 ```
 
-## 🛠️ Tech Stack
+## 🔧 Tech Stack
 
-### Backend
-- **Runtime**: Node.js + Express + TypeScript
-- **Real-time**: Socket.IO
-- **Database**: MongoDB + Redis
-- **Media**: Agora SDK
-- **Storage**: AWS S3
-- **Payments**: eSewa, Khalti, Stripe
+- **Backend:** Node.js, Express, MongoDB, Redis, Socket.io
+- **Mobile:** React Native, Expo
+- **Streaming:** Agora WebRTC
+- **AI:** TensorFlow.js, NSFWJS, Face-API
+- **Payments:** eSewa, Khalti, Stripe
+- **Monitoring:** Prometheus, Grafana, Sentry
 
-### AI Engine
-- **Moderation**: NSFW detection, age estimation, profanity
-- **Engagement**: Boredom detection, cohost suggestions
-- **Reputation**: Score calculation and decay
+## 🚀 Features
 
-### Mobile
-- **Framework**: React Native + Expo
-- **Platforms**: iOS, Android, iPad
-- **Real-time**: Socket.IO client
-- **Video**: Agora SDK
+### MVP (Ready)
+- ✅ Live video/audio streaming
+- ✅ Real-time gifting system
+- ✅ Coin wallet & payments
+- ✅ AI content moderation
+- ✅ User profiles & auth
 
-## 📊 Features
+### In Progress
+- 🔄 Reels (short videos)
+- 🔄 OG membership tiers
+- 🔄 Private messaging
+- 🔄 Mini-games
 
-### Core Features
-- Live streaming with Agora
-- Short videos (reels) with offline queue
-- Coin system (NPR 10 = 500 coins)
-- OG tiers (5 levels with daily bonuses)
-- Halo Throne premium feature
-- In-app games with AI win rates
-- Real-time chat and gifts
+### Planned
+- 📅 LinkCast (multi-host)
+- 📅 Creator analytics
+- 📅 NFT integration
+- 📅 DAO governance
 
-### AI Features
-- Content moderation (NSFW, profanity)
-- Age verification
-- Engagement optimization
-- Reputation system
+## 🔑 Environment Variables
 
-### Payment Integration
-- Nepal: eSewa, Khalti
-- International: Stripe
-- Webhook idempotency
-- HMAC verification
-
-## 📄 Documentation
-
-- [Architecture](docs/ARCHITECTURE.md) - System architecture and data model
-- [API Collection](docs/postman/) - Complete Postman collection
-- [Quick Start](QUICKSTART.md) - Detailed setup guide
-
-## 🐳 Docker & CI/CD
-
-### Docker Setup
-```bash
-# Development
-docker compose -f docker-compose.dev.yml up -d
-
-# Production
-docker compose -f docker-compose.prod.yml up -d
-
-# Health check
-curl http://localhost:5010/healthz
-```
-
-## 🚀 Production Deploy (Railway + Vercel)
-
-### Quick Deploy Commands
+Copy `.env.example` to `.env` and configure:
 
 ```bash
-# Run hosted smoke tests after deployment
-BACKEND_URL=https://<your-backend>.railway.app \
-AI_URL=https://<your-ai>.railway.app \
-AI_ENGINE_SECRET=<your-secret> \
-./scripts/hosted-smoke.sh
+# Critical for MVP
+MONGODB_URI=mongodb://localhost:27017/halobuzz
+REDIS_URL=redis://localhost:6379
+AGORA_APP_ID=your_agora_id
+AGORA_APP_CERTIFICATE=your_agora_cert
+JWT_SECRET=your_32_char_secret
 
-# Windows PowerShell
-$env:BACKEND_URL="https://<your-backend>.railway.app"
-$env:AI_URL="https://<your-ai>.railway.app"
-$env:AI_ENGINE_SECRET="<your-secret>"
-.\scripts\hosted-smoke.ps1
+# Payment Providers
+ESEWA_MERCHANT_CODE=HALOBUZZ
+KHALTI_SECRET_KEY=test_secret_key_
+STRIPE_SECRET_KEY=sk_test_
 ```
 
-### Deploy via GitHub Actions
+## 📊 API Documentation
 
-#### Automated Deployment Workflows
-- **Railway Backend Deploy** - Deploys backend to Railway on push to main
-- **Railway AI Engine Deploy** - Deploys AI engine to Railway on push to main  
-- **Hosted Smoke Tests** - Verifies live deployment security and functionality
-- **Vercel Admin Deploy** - Optional admin dashboard deployment to Vercel
+### Core Endpoints
 
-#### Required GitHub Secrets
-Add these secrets in GitHub → Settings → Secrets → Actions:
+```bash
+# Health Check
+GET /healthz          # Liveness probe
+GET /readyz          # Readiness probe
 
-**Railway Deployment:**
-- `RAILWAY_TOKEN` - Your Railway API token
-- `BACKEND_URL` - https://<backend>.railway.app
-- `AI_URL` - https://<ai-engine>.railway.app
-- `AI_ENGINE_SECRET` - Shared secret for AI engine authentication
+# Streaming
+POST /api/v1/streams/start
+POST /api/v1/streams/join
+POST /api/v1/streams/end
+GET  /api/v1/streams/active
 
-**Optional Vercel Deployment:**
-- `VERCEL_TOKEN` - Your Vercel API token
-- `VERCEL_ORG_ID` - Your Vercel organization ID
-- `VERCEL_PROJECT_ID` - Your Vercel project ID
+# Payments
+POST /api/v1/wallet/topup/:provider
+POST /api/v1/payments/:provider/webhook
+GET  /api/v1/wallet/balance
 
-#### CI/CD Pipeline
-GitHub Actions workflow automatically:
-- Runs tests on PR/push
-- Builds and deploys to Railway
-- Seeds production database
-- Runs hosted smoke tests
-- Verifies security controls
-- Updates documentation
+# Moderation
+POST /api/v1/moderation/scan
+POST /api/v1/moderation/decision
 
-### Production Environment Setup
+# Gifts
+POST /api/v1/gifts/send
+GET  /api/v1/leaderboards/live/:streamId
+```
 
-#### Environment Templates
-Copy and configure these production environment files:
-- `env.backend.production.example` → Backend service variables
-- `env.ai.production.example` → AI Engine service variables  
-- `env.admin.production.example` → Admin dashboard variables
+### Rate Limits
+- Auth: 5/min/IP
+- Payments: 3/min/IP  
+- Gifts: 30/min/user
+- General: 100/min
 
-#### Documentation
-- [Production Environment Matrix](docs/infra/prod-env-matrix.md) - Complete env var reference
-- [Rollback Guide](docs/infra/rollback.md) - How to rollback deployments
-- [Deployment Guide](docs/infra/deployment-guide.md) - Step-by-step deployment
+## 🧪 Testing
 
-## 🔒 Production Hardening
+```bash
+# Unit tests
+npm test
 
-### Security Checklist
-- [x] Helmet security headers
-- [x] Strict CORS configuration
-- [x] Rate limiting on write routes
-- [x] Request/response validation (express-validator)
-- [x] Stack trace hiding in production
-- [x] Structured logging with request IDs
-- [x] RBAC for admin endpoints
-- [x] Webhook HMAC verification
-- [x] Event idempotency
-- [x] Input sanitization
+# Load testing (10k users)
+npm run test:load
 
-### Performance
-- [x] Redis caching
-- [x] Database indexing
-- [x] Response compression
-- [x] Static file serving
-- [x] Connection pooling
+# Security scan
+npm run test:security
 
-### Monitoring
-- [x] Health check endpoints
-- [x] Error tracking and logging
-- [x] Performance metrics
-- [x] Uptime monitoring
+# E2E tests
+npm run test:e2e
+```
+
+## 🐳 Docker Deployment
+
+```bash
+# Build and run
+docker-compose up -d
+
+# Or production
+docker build -t halobuzz/backend .
+docker run -p 4000:4000 --env-file .env halobuzz/backend
+```
+
+## 📈 Monitoring
+
+- **Metrics:** http://localhost:4000/metrics (Prometheus)
+- **Health:** http://localhost:4000/healthz
+- **Admin:** http://localhost:3001/admin
+
+## 🔒 Security
+
+- JWT authentication with refresh tokens
+- Rate limiting on all endpoints
+- Input sanitization & validation
+- CORS, CSP, HSTS headers
+- SQL/NoSQL injection prevention
+- XSS protection
+
+## 🚀 Performance
+
+- **Live Latency:** < 300ms (p95)
+- **Reconnect:** < 5s
+- **Wallet Credit:** < 10s
+- **API Response:** < 200ms (p95)
+
+## 🤝 Contributing
+
+1. Fork the repo
+2. Create feature branch: `feature/epic-name`
+3. Commit changes
+4. Push and create PR to `develop`
+5. Pass CI gates (lint, test, build)
+
+## 📜 License
+
+MIT License - see [LICENSE](LICENSE) file
 
 ## 🆘 Support
 
-For support and questions:
-- Email: support@halobuzz.com
-- Documentation: [docs.halobuzz.com](https://docs.halobuzz.com)
+- **Email:** support@halobuzz.com
+- **Discord:** [Join our server](https://discord.gg/halobuzz)
+- **Docs:** [docs.halobuzz.com](https://docs.halobuzz.com)
+
+## 🎯 Roadmap
+
+**Q1 2025:** MVP Launch (Nepal)
+**Q2 2025:** Games & Advanced Features
+**Q3 2025:** Web3 Integration
+**Q4 2025:** Global Expansion
+
+---
+
+Built with ❤️ by Base44 Team

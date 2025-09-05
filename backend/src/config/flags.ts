@@ -1,313 +1,96 @@
-import { setupLogger } from './logger';
+/**
+ * Feature flags configuration
+ * Controls feature rollout and A/B testing
+ */
 
-const logger = setupLogger();
-import { connectDatabase } from './database';
-import mongoose from 'mongoose';
-
-// Feature flags schema
-const flagSchema = new mongoose.Schema({
-  key: { type: String, required: true, unique: true },
-  value: { type: Boolean, required: true },
-  description: { type: String, required: true },
-  category: { type: String, required: true },
-  lastModified: { type: Date, default: Date.now },
-  modifiedBy: { type: String, default: 'system' }
-});
-
-const FeatureFlag = mongoose.model('FeatureFlag', flagSchema);
-
-// Default feature flags
-const DEFAULT_FLAGS = {
-  // Core features
-  gamesEnabledGlobal: {
-    value: true,
-    description: 'Enable games globally',
-    category: 'core'
-  },
-  giftsEnabled: {
-    value: true,
-    description: 'Enable gift sending',
-    category: 'core'
-  },
-  battleBoostEnabled: {
-    value: true,
-    description: 'Enable battle boost feature',
-    category: 'core'
-  },
-  festivalMode: {
-    value: false,
-    description: 'Enable festival mode',
-    category: 'events'
-  },
+export const featureFlags = {
+  // Core Features
+  AI_MODERATION: process.env.FEATURE_AI_MODERATION === 'true',
+  GIFTING: process.env.FEATURE_GIFTING === 'true',
+  REELS: process.env.FEATURE_REELS === 'true',
+  OG_MEMBERSHIP: process.env.FEATURE_OG_MEMBERSHIP === 'true',
+  MESSAGING: process.env.FEATURE_MESSAGING === 'true',
+  GAMES: process.env.FEATURE_GAMES === 'true',
+  LINKCAST: process.env.FEATURE_LINKCAST === 'true',
   
-  // Moderation and safety
-  aiModerationStrict: {
-    value: true,
-    description: 'Use strict AI moderation',
-    category: 'safety'
-  },
-  ageVerificationRequired: {
-    value: true,
-    description: 'Require age verification for restricted features',
-    category: 'safety'
-  },
-  kycRequiredForHosts: {
-    value: true,
-    description: 'Require KYC verification for live streaming',
-    category: 'safety'
-  },
+  // Payment Features
+  ESEWA_ENABLED: process.env.ESEWA_ENABLED !== 'false',
+  KHALTI_ENABLED: process.env.KHALTI_ENABLED !== 'false',
+  STRIPE_ENABLED: process.env.STRIPE_ENABLED !== 'false',
   
-  // Registration and access
-  newRegistrationPause: {
-    value: false,
-    description: 'Pause new user registrations',
-    category: 'access'
-  },
-  maintenanceMode: {
-    value: false,
-    description: 'Enable maintenance mode',
-    category: 'system'
-  },
+  // Stream Features
+  AUDIO_ONLY_STREAMS: true,
+  ANONYMOUS_STREAMS: true,
+  PRIVATE_STREAMS: true,
+  STREAM_RECORDING: process.env.STREAM_RECORDING === 'true',
   
-  // Payment and financial
-  paymentsEnabled: {
-    value: true,
-    description: 'Enable payment processing',
-    category: 'payments'
-  },
-  highSpenderControls: {
-    value: true,
-    description: 'Enable high spender protection controls',
-    category: 'payments'
-  },
-  fraudDetectionEnabled: {
-    value: true,
-    description: 'Enable payment fraud detection',
-    category: 'payments'
-  },
+  // Social Features
+  FOLLOW_SYSTEM: true,
+  THRONE_SYSTEM: true,
+  BLESSING_MODE: false,
+  REVERSE_GIFT_CHALLENGE: false,
   
-  // Regional compliance
-  nepalComplianceMode: {
-    value: true,
-    description: 'Enable Nepal-specific compliance features',
-    category: 'compliance'
-  },
-  globalAgeGate: {
-    value: true,
-    description: 'Enable global 18+ age gate',
-    category: 'compliance'
-  }
+  // Advanced Features
+  NFT_GIFTS: false,
+  CREATOR_COINS: false,
+  DAO_GOVERNANCE: false,
+  SUBSCRIPTION_TIERS: false,
+  
+  // Security Features
+  KYC_REQUIRED_FOR_WITHDRAWAL: true,
+  AGE_VERIFICATION: true,
+  DEVICE_BINDING: true,
+  TWO_FACTOR_AUTH: true,
+  
+  // Performance Features
+  CDN_ENABLED: process.env.CDN_URL ? true : false,
+  REDIS_CACHE: true,
+  WEBSOCKET_CLUSTERING: false,
+  
+  // Monitoring
+  PROMETHEUS_METRICS: process.env.PROMETHEUS_ENABLED === 'true',
+  SENTRY_LOGGING: process.env.SENTRY_DSN ? true : false,
+  
+  // Development
+  SWAGGER_DOCS: process.env.ENABLE_SWAGGER === 'true',
+  GRAPHQL_PLAYGROUND: process.env.ENABLE_GRAPHQL_PLAYGROUND === 'true',
+  DEBUG_MODE: process.env.DEBUG === 'true'
 };
 
-class FeatureFlagsService {
-  private cache: Map<string, boolean> = new Map();
-  private lastCacheUpdate: number = 0;
-  private readonly CACHE_TTL = 60000; // 1 minute
-
-  async initializeFlags(): Promise<void> {
-    try {
-      // Ensure database is connected
-      if (mongoose.connection.readyState !== 1) {
-        await connectDatabase();
-      }
-
-      // Initialize default flags if they don't exist
-      for (const [key, config] of Object.entries(DEFAULT_FLAGS)) {
-        await FeatureFlag.findOneAndUpdate(
-          { key },
-          {
-            key,
-            value: config.value,
-            description: config.description,
-            category: config.category
-          },
-          { upsert: true, setDefaultsOnInsert: true }
-        );
-      }
-
-      logger.info('Feature flags initialized successfully');
-    } catch (error) {
-      logger.error('Failed to initialize feature flags:', error);
-      throw error;
-    }
-  }
-
-  async getFlag(key: string): Promise<boolean> {
-    try {
-      // Check cache first
-      if (this.isCacheValid() && this.cache.has(key)) {
-        return this.cache.get(key)!;
-      }
-
-      // Fetch from database
-      const flag = await FeatureFlag.findOne({ key });
-      const value = flag ? flag.value : this.getDefaultValue(key);
-      
-      this.cache.set(key, value);
-      this.lastCacheUpdate = Date.now();
-      
-      return value;
-    } catch (error) {
-      logger.error(`Failed to get feature flag ${key}:`, error);
-      return this.getDefaultValue(key);
-    }
-  }
-
-  async setFlag(key: string, value: boolean, modifiedBy: string = 'system'): Promise<void> {
-    try {
-      await FeatureFlag.findOneAndUpdate(
-        { key },
-        { 
-          value, 
-          lastModified: new Date(),
-          modifiedBy
-        },
-        { upsert: false }
-      );
-
-      // Update cache
-      this.cache.set(key, value);
-      this.lastCacheUpdate = Date.now();
-
-      logger.info(`Feature flag ${key} updated to ${value} by ${modifiedBy}`);
-    } catch (error) {
-      logger.error(`Failed to set feature flag ${key}:`, error);
-      throw error;
-    }
-  }
-
-  async getAllFlags(): Promise<any[]> {
-    try {
-      const flags = await FeatureFlag.find({}).sort({ category: 1, key: 1 });
-      return flags;
-    } catch (error) {
-      logger.error('Failed to get all feature flags:', error);
-      return [];
-    }
-  }
-
-  async refreshCache(): Promise<void> {
-    try {
-      const flags = await FeatureFlag.find({});
-      this.cache.clear();
-      
-      for (const flag of flags) {
-        this.cache.set(flag.key, flag.value);
-      }
-      
-      this.lastCacheUpdate = Date.now();
-      logger.info('Feature flags cache refreshed');
-    } catch (error) {
-      logger.error('Failed to refresh feature flags cache:', error);
-    }
-  }
-
-  private isCacheValid(): boolean {
-    return Date.now() - this.lastCacheUpdate < this.CACHE_TTL;
-  }
-
-  private getDefaultValue(key: string): boolean {
-    const defaultFlag = DEFAULT_FLAGS[key as keyof typeof DEFAULT_FLAGS];
-    return defaultFlag ? defaultFlag.value : false;
-  }
-
-  // Convenience methods for common flags
-  async isGamesEnabled(): Promise<boolean> {
-    return this.getFlag('gamesEnabledGlobal');
-  }
-
-  async isMaintenanceMode(): Promise<boolean> {
-    return this.getFlag('maintenanceMode');
-  }
-
-  async isRegistrationPaused(): Promise<boolean> {
-    return this.getFlag('newRegistrationPause');
-  }
-
-  async isPaymentsEnabled(): Promise<boolean> {
-    return this.getFlag('paymentsEnabled');
-  }
-
-  async isHighSpenderControlsEnabled(): Promise<boolean> {
-    return this.getFlag('highSpenderControls');
-  }
-
-  async isAgeVerificationRequired(): Promise<boolean> {
-    return this.getFlag('ageVerificationRequired');
-  }
-
-  async isKycRequiredForHosts(): Promise<boolean> {
-    return this.getFlag('kycRequiredForHosts');
-  }
-
-  async isBattleBoostEnabled(): Promise<boolean> {
-    return this.getFlag('battleBoostEnabled');
-  }
-
-  // Emergency disable all features
-  async emergencyDisableAll(reason: string, modifiedBy: string = 'emergency'): Promise<void> {
-    try {
-      const criticalFlags = [
-        'gamesEnabledGlobal',
-        'battleBoostEnabled',
-        'giftsEnabled',
-        'paymentsEnabled',
-        'newRegistrationPause'
-      ];
-
-      for (const flagKey of criticalFlags) {
-        await this.setFlag(flagKey, false, modifiedBy);
-      }
-
-      // Set maintenance mode
-      await this.setFlag('maintenanceMode', true, modifiedBy);
-
-      logger.warn(`EMERGENCY DISABLE ALL triggered by ${modifiedBy}. Reason: ${reason}`);
-    } catch (error) {
-      logger.error('Failed to execute emergency disable all:', error);
-      throw error;
-    }
-  }
-
-  // Get safe config subset for public API
-  async getSafeConfig(): Promise<any> {
-    try {
-      const safeFlags = [
-        'gamesEnabledGlobal',
-        'battleBoostEnabled',
-        'festivalMode',
-        'aiModerationStrict',
-        'newRegistrationPause'
-      ];
-
-      const config: any = {};
-      for (const flagKey of safeFlags) {
-        config[flagKey] = await this.getFlag(flagKey);
-      }
-
-      // Add per-country toggles
-      config.perCountryToggles = {
-        nepal: await this.getFlag('nepalComplianceMode'),
-        global: await this.getFlag('globalAgeGate')
-      };
-
-      return config;
-    } catch (error) {
-      logger.error('Failed to get safe config:', error);
-      return {
-        gamesEnabledGlobal: false,
-        battleBoostEnabled: false,
-        festivalMode: false,
-        aiModerationStrict: true,
-        newRegistrationPause: true,
-        perCountryToggles: {
-          nepal: true,
-          global: true
-        }
-      };
-    }
-  }
+/**
+ * Get feature flag value
+ */
+export function isFeatureEnabled(feature: keyof typeof featureFlags): boolean {
+  return featureFlags[feature] ?? false;
 }
 
-export const featureFlags = new FeatureFlagsService();
-export { FeatureFlag };
+/**
+ * Check multiple features at once
+ */
+export function areFeaturesEnabled(...features: (keyof typeof featureFlags)[]): boolean {
+  return features.every(feature => isFeatureEnabled(feature));
+}
+
+/**
+ * Get all enabled features
+ */
+export function getEnabledFeatures(): string[] {
+  return Object.entries(featureFlags)
+    .filter(([_, enabled]) => enabled)
+    .map(([feature]) => feature);
+}
+
+/**
+ * Feature flag middleware
+ */
+export function requireFeature(feature: keyof typeof featureFlags) {
+  return (req: any, res: any, next: any) => {
+    if (!isFeatureEnabled(feature)) {
+      return res.status(403).json({
+        success: false,
+        error: `Feature ${feature} is not enabled`
+      });
+    }
+    next();
+  };
+}
