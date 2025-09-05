@@ -156,9 +156,6 @@ importers:
       '@types/nodemailer':
         specifier: ^6.4.14
         version: 6.4.19
-      '@types/socket.io-client':
-        specifier: ^3.0.0
-        version: 3.0.0
       '@types/supertest':
         specifier: ^2.0.16
         version: 2.0.16
@@ -1242,10 +1239,6 @@ packages:
 
   '@types/serve-static@1.15.8':
     resolution: {integrity: sha512-roei0UY3LhpOJvjbIP6ZZFngyLKl5dskOtDhxY5THRSpO+ZI+nzJ+m5yUMzGrp89YRa7lvknKkMYjqQFGwA7Sg==}
-
-  '@types/socket.io-client@3.0.0':
-    resolution: {integrity: sha512-s+IPvFoEIjKA3RdJz/Z2dGR4gLgysKi8owcnrVwNjgvc01Lk68LJDDsG2GRqegFITcxmvCMYM7bhMpwEMlHmDg==}
-    deprecated: This is a stub types definition. socket.io-client provides its own type definitions, so you do not need this installed.
 
   '@types/stack-utils@2.0.3':
     resolution: {integrity: sha512-9aEbYZ3TbYMznPdcdr3SmIrLXwC/AKZXQeCf9Pgao5CKb8CyHuEX5jzWPTkvregvhRJHcpRO6BFoGW9ycaOkYw==}
@@ -5445,14 +5438,6 @@ snapshots:
       '@types/http-errors': 2.0.5
       '@types/node': 20.19.11
       '@types/send': 0.17.5
-
-  '@types/socket.io-client@3.0.0':
-    dependencies:
-      socket.io-client: 4.8.1
-    transitivePeerDependencies:
-      - bufferutil
-      - supports-color
-      - utf-8-validate
 
   '@types/stack-utils@2.0.3': {}
 
