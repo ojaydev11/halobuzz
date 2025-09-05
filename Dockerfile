@@ -77,6 +77,9 @@ RUN --mount=type=cache,id=pnpm-store,target=/root/.pnpm-store \
 # Copy built application
 COPY --from=build /app/dist ./dist
 
+# Install curl for health checks (before switching to non-root user)
+RUN apk add --no-cache curl
+
 # Create logs directory
 RUN mkdir -p logs && chown -R halobuzz:nodejs logs
 
@@ -95,9 +98,6 @@ USER halobuzz
 
 # Expose port
 EXPOSE 4000
-
-# Install curl for health checks
-RUN apk add --no-cache curl
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=20s --retries=3 \
