@@ -35,6 +35,11 @@ export const trustProxy = (req: Request, res: Response, next: NextFunction) => {
 
 // HTTPS enforcement middleware
 export const httpsOnly = (req: Request, res: Response, next: NextFunction) => {
+  // Skip HTTPS redirect for health check endpoints
+  if (req.path === '/healthz' || req.path === '/api/v1/monitoring/health' || req.path.startsWith('/health')) {
+    return next();
+  }
+  
   if (process.env.NODE_ENV === 'production' && !req.secure && req.headers['x-forwarded-proto'] !== 'https') {
     return res.redirect(301, `https://${req.headers.host}${req.url}`);
   }

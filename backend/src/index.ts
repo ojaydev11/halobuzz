@@ -208,7 +208,7 @@ app.use(requestLogger);
 // Static files
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
-// Health check endpoint
+// Health check endpoint (before any middleware that might cause issues)
 app.get('/healthz', (req, res) => {
   res.status(200).json({ status: "ok" });
 });
@@ -223,6 +223,11 @@ app.get(`/api/${apiVersion}/monitoring/health`, (req, res) => {
     timestamp: new Date().toISOString(),
     uptime: process.uptime()
   });
+});
+
+// Simple health check for Docker/Kubernetes
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
 // Debug endpoint to list all routes
