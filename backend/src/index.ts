@@ -188,9 +188,50 @@ app.use(requestLogger);
 // Static files
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
-// Health check endpoint
+// Public health check endpoints (unauthenticated)
 app.get('/healthz', (req, res) => {
-  res.status(200).json({ status: "ok" });
+  // Liveness probe - is the service running?
+  res.status(200).json({ 
+    status: "healthy",
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
+
+app.get('/readyz', async (req, res) => {
+  // Readiness probe - is the service ready to accept traffic?
+  try {
+    // Check database connection
+    const dbStatus = mongoose.connection.readyState === 1;
+    
+    // Check Redis connection
+    const redisStatus = await connectRedis().ping().then(() => true).catch(() => false);
+    
+    if (dbStatus && redisStatus) {
+      res.status(200).json({ 
+        status: "ready",
+        services: {
+          database: "connected",
+          redis: "connected",
+          agora: "configured"
+        },
+        timestamp: new Date().toISOString()
+      });
+    } else {
+      res.status(503).json({ 
+        status: "not_ready",
+        services: {
+          database: dbStatus ? "connected" : "disconnected",
+          redis: redisStatus ? "connected" : "disconnected"
+        }
+      });
+    }
+  } catch (error) {
+    res.status(503).json({ 
+      status: "error",
+      message: error.message 
+    });
+  }
 });
 
 // Public health check for monitoring
