@@ -1,7 +1,7 @@
 import { Schema, model, Document } from 'mongoose';
 import { logger } from '@/config/logger';
-import { redisClient } from '@/config/redis';
-import { io } from '@/config/socket';
+import { getRedisClient } from '@/config/redis';
+import { getSocketIO } from '@/config/socket';
 
 // Interfaces
 export interface CulturalProfile {
@@ -272,11 +272,11 @@ const CulturalAnalyticsSchema = new Schema<CulturalAnalytics>({
 });
 
 // Models
-const CulturalProfileModel = model<CulturalProfile & Document>('CulturalProfile', CulturalProfileSchema);
-const CulturalBridgeModel = model<CulturalBridge & Document>('CulturalBridge', CulturalBridgeSchema);
-const CulturalContentModel = model<CulturalContent & Document>('CulturalContent', CulturalContentSchema);
-const CulturalRecommendationModel = model<CulturalRecommendation & Document>('CulturalRecommendation', CulturalRecommendationSchema);
-const CulturalAnalyticsModel = model<CulturalAnalytics & Document>('CulturalAnalytics', CulturalAnalyticsSchema);
+const CulturalProfileModel = model<CulturalProfile>('CulturalProfile', CulturalProfileSchema);
+const CulturalBridgeModel = model<CulturalBridge>('CulturalBridge', CulturalBridgeSchema);
+const CulturalContentModel = model<CulturalContent>('CulturalContent', CulturalContentSchema);
+const CulturalRecommendationModel = model<CulturalRecommendation>('CulturalRecommendation', CulturalRecommendationSchema);
+const CulturalAnalyticsModel = model<CulturalAnalytics>('CulturalAnalytics', CulturalAnalyticsSchema);
 
 export class CulturalIntelligenceService {
   private static instance: CulturalIntelligenceService;
@@ -308,10 +308,10 @@ export class CulturalIntelligenceService {
       if (profile) {
         // Update existing profile
         Object.assign(profile, profileData);
-        profile.culturalInsights.lastUpdated = new Date();
-        profile.culturalInsights.dataPoints += 1;
-        profile.updatedAt = new Date();
-        await profile.save();
+        (profile as any).culturalInsights.lastUpdated = new Date();
+        (profile as any).culturalInsights.dataPoints += 1;
+        (profile as any).updatedAt = new Date();
+        await CulturalProfileModel.findByIdAndUpdate((profile as any)._id, profile);
       } else {
         // Create new profile
         const culturalProfile: CulturalProfile = {
@@ -362,20 +362,24 @@ export class CulturalIntelligenceService {
       }
 
       // Cache profile
-      await redisClient.setex(
+      const redisClient = getRedisClient();
+      await redisClient.setEx(
         `cultural_profile:${userId}`,
         3600,
         JSON.stringify(profile)
       );
 
       // Emit real-time event
-      io.emit('cultural_profile_updated', {
-        userId,
-        primaryCulture: profile.primaryCulture,
-        confidence: profile.culturalInsights.confidence
-      });
+      const io = getSocketIO();
+      if (io) {
+        io.emit('cultural_profile_updated', {
+          userId,
+                  primaryCulture: (profile as any).primaryCulture,
+        confidence: (profile as any).culturalInsights.confidence
+        });
+      }
 
-      logger.info('Cultural profile created/updated', { userId, primaryCulture: profile.primaryCulture });
+      logger.info('Cultural profile created/updated', { userId, primaryCulture: (profile as any).primaryCulture });
       return profile;
     } catch (error) {
       logger.error('Error creating cultural profile', { error, userId });
@@ -423,7 +427,8 @@ export class CulturalIntelligenceService {
       const createdContent = await CulturalContentModel.create(culturalContent);
 
       // Cache content
-      await redisClient.setex(
+      const redisClient = getRedisClient();
+      await redisClient.setEx(
         `cultural_content:${contentId}`,
         3600,
         JSON.stringify(culturalContent)
@@ -464,7 +469,8 @@ export class CulturalIntelligenceService {
       }
 
       // Cache recommendations
-      await redisClient.setex(
+      const redisClient = getRedisClient();
+      await redisClient.setEx(
         `cultural_recommendations:${userId}`,
         1800, // 30 minutes
         JSON.stringify(recommendations)
@@ -499,7 +505,7 @@ export class CulturalIntelligenceService {
       }
 
       // Update engagement for specific culture
-      let cultureEngagement = culturalContent.engagement.find(e => e.culture === culture);
+      let cultureEngagement = (culturalContent as any).engagement.find((e: any) => e.culture === culture);
       if (!cultureEngagement) {
         cultureEngagement = {
           culture,
@@ -509,7 +515,7 @@ export class CulturalIntelligenceService {
           comments: 0,
           engagementRate: 0
         };
-        culturalContent.engagement.push(cultureEngagement);
+        (culturalContent as any).engagement.push(cultureEngagement);
       }
 
       cultureEngagement.views += engagement.views || 0;
@@ -523,8 +529,8 @@ export class CulturalIntelligenceService {
         ? (totalEngagement / cultureEngagement.views) * 100 
         : 0;
 
-      culturalContent.updatedAt = new Date();
-      await culturalContent.save();
+      (culturalContent as any).updatedAt = new Date();
+      await CulturalContentModel.findByIdAndUpdate((culturalContent as any)._id, culturalContent);
 
       // Update cultural analytics
       await this.updateCulturalAnalytics(userId, culture, engagement);
@@ -572,7 +578,7 @@ export class CulturalIntelligenceService {
           },
           lastUpdated: new Date()
         });
-        await analytics.save();
+        await CulturalAnalyticsModel.findByIdAndUpdate((analytics as any)._id, analytics);
       }
 
       return analytics;
@@ -610,6 +616,7 @@ export class CulturalIntelligenceService {
   private async getCulturalProfile(userId: string): Promise<CulturalProfile | null> {
     try {
       // Try cache first
+      const redisClient = getRedisClient();
       const cached = await redisClient.get(`cultural_profile:${userId}`);
       if (cached) {
         return JSON.parse(cached);
@@ -618,7 +625,7 @@ export class CulturalIntelligenceService {
       // Fallback to database
       const profile = await CulturalProfileModel.findOne({ userId });
       if (profile) {
-        await redisClient.setex(`cultural_profile:${userId}`, 3600, JSON.stringify(profile));
+        await redisClient.setEx(`cultural_profile:${userId}`, 3600, JSON.stringify(profile));
       }
 
       return profile;
@@ -686,22 +693,22 @@ export class CulturalIntelligenceService {
     if (!analytics) return;
 
     // Update cross-cultural engagement
-    const existingCulture = analytics.crossCulturalEngagement.topEngagedCultures.find(
-      c => c.culture === culture
+    const existingCulture = (analytics as any).crossCulturalEngagement.topEngagedCultures.find(
+      (c: any) => c.culture === culture
     );
     
     if (existingCulture) {
       existingCulture.engagement += (engagement.likes || 0) + (engagement.shares || 0) + (engagement.comments || 0);
     } else {
-      analytics.crossCulturalEngagement.topEngagedCultures.push({
+      (analytics as any).crossCulturalEngagement.topEngagedCultures.push({
         culture,
         engagement: (engagement.likes || 0) + (engagement.shares || 0) + (engagement.comments || 0)
       });
     }
 
-    analytics.crossCulturalEngagement.totalCultures = analytics.crossCulturalEngagement.topEngagedCultures.length;
-    analytics.lastUpdated = new Date();
-    await analytics.save();
+    (analytics as any).crossCulturalEngagement.totalCultures = (analytics as any).crossCulturalEngagement.topEngagedCultures.length;
+    (analytics as any).lastUpdated = new Date();
+    await CulturalAnalyticsModel.findByIdAndUpdate((analytics as any)._id, analytics);
   }
 
   private generateRecommendationId(): string {
