@@ -9,7 +9,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 // Set max listeners to prevent memory leak warnings
-process.setMaxListeners(25);
+process.setMaxListeners(30);
 
 const app = express();
 const server = createServer(app);

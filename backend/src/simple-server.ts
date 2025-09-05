@@ -8,7 +8,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 // Set max listeners to prevent memory leak warnings
-process.setMaxListeners(25);
+process.setMaxListeners(30);
 
 // Set default environment variables if not provided
 process.env.NODE_ENV = process.env.NODE_ENV || 'production';
