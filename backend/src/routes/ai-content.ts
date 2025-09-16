@@ -11,7 +11,7 @@ const aiContentService = new AIContentGenerationService();
 // Generate AI video
 router.post('/generate-video', [
   authMiddleware,
-  rateLimiter({ windowMs: 60000, max: 10 }), // 10 requests per minute
+  globalLimiter, // 10 requests per minute
   body('prompt')
     .isString()
     .trim()
@@ -64,7 +64,7 @@ router.post('/generate-video', [
 // Generate AI thumbnail
 router.post('/generate-thumbnail', [
   authMiddleware,
-  rateLimiter({ windowMs: 60000, max: 20 }),
+  globalLimiter,
   body('videoId')
     .isString()
     .withMessage('Video ID is required'),
@@ -98,7 +98,7 @@ router.post('/generate-thumbnail', [
 // Generate AI music
 router.post('/generate-music', [
   authMiddleware,
-  rateLimiter({ windowMs: 60000, max: 15 }),
+  globalLimiter,
   body('prompt')
     .isString()
     .trim()
@@ -143,7 +143,7 @@ router.post('/generate-music', [
 // Generate AI subtitles
 router.post('/generate-subtitles', [
   authMiddleware,
-  rateLimiter({ windowMs: 60000, max: 5 }),
+  globalLimiter,
   body('videoId')
     .isString()
     .withMessage('Video ID is required'),

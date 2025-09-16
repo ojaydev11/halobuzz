@@ -13,7 +13,7 @@ const router = express.Router();
  * @access Private
  */
 router.post('/generate-video',
-  authenticateToken,
+  authMiddleware,
   [
     body('prompt').notEmpty().withMessage('Prompt is required'),
     body('duration').optional().isInt({ min: 10, max: 300 }).withMessage('Duration must be between 10-300 seconds'),
@@ -100,7 +100,7 @@ router.post('/generate-video',
  * @access Private
  */
 router.post('/generate-thumbnail',
-  authenticateToken,
+  authMiddleware,
   [
     body('prompt').notEmpty().withMessage('Prompt is required'),
     body('style').optional().isString().withMessage('Style must be a string')
@@ -182,7 +182,7 @@ router.post('/generate-thumbnail',
  * @access Private
  */
 router.post('/generate-music',
-  authenticateToken,
+  authMiddleware,
   [
     body('prompt').notEmpty().withMessage('Prompt is required'),
     body('duration').optional().isInt({ min: 10, max: 300 }).withMessage('Duration must be between 10-300 seconds'),
@@ -269,7 +269,7 @@ router.post('/generate-music',
  * @access Private
  */
 router.post('/generate-package',
-  authenticateToken,
+  authMiddleware,
   [
     body('prompt').notEmpty().withMessage('Prompt is required'),
     body('duration').optional().isInt({ min: 10, max: 300 }).withMessage('Duration must be between 10-300 seconds'),
@@ -356,7 +356,7 @@ router.post('/generate-package',
  * @access Private
  */
 router.get('/templates',
-  authenticateToken,
+  authMiddleware,
   async (req: AuthenticatedRequest, res: Response) => {
     try {
       const templates = [
@@ -427,7 +427,7 @@ router.get('/templates',
  * @access Private
  */
 router.get('/history',
-  authenticateToken,
+  authMiddleware,
   async (req: AuthenticatedRequest, res: Response) => {
     try {
       const userId = req.user?.id;
