@@ -5,6 +5,7 @@ import { AuthService } from '../services/authService';
 import { User } from '../models/User';
 import { logger } from '../config/logger';
 import { AuthenticatedRequest } from '../middleware/auth';
+import { InputValidator } from '../utils/inputValidator';
 
 const router = express.Router();
 
@@ -71,7 +72,7 @@ router.post('/register', [
     const token = jwt.sign(
       { userId: user._id, username: user.username },
       process.env.JWT_SECRET!,
-      { expiresIn: '7d' }
+      { expiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '1h' }
     );
 
     res.status(201).json({
@@ -187,7 +188,7 @@ router.post('/login', [
     const token = jwt.sign(
       { userId: user._id, username: user.username },
       process.env.JWT_SECRET!,
-      { expiresIn: '7d' }
+      { expiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '1h' }
     );
 
     res.json({

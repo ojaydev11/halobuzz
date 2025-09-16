@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 
 export interface IUser extends Document {
   username: string;
+  displayName?: string;
   email: string;
   phone?: string;
   password: string;
@@ -115,6 +116,11 @@ const userSchema = new Schema<IUser>({
     minlength: 3,
     maxlength: 30,
     match: /^[a-zA-Z0-9_]+$/
+  },
+  displayName: {
+    type: String,
+    trim: true,
+    maxlength: 50
   },
   email: {
     type: String,

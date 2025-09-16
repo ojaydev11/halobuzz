@@ -5,6 +5,42 @@ import { setupLogger } from '../config/logger';
 const logger = setupLogger();
 
 export class ReputationService {
+  async awardPoints(userId: string, action: string, metadata: any = {}) {
+    try {
+      const user = await User.findById(userId);
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      const points = this.calculateReputationPoints(action, metadata);
+      if (points === 0) {
+        return { success: true, points: 0 };
+      }
+
+      // Update user reputation
+      await User.findByIdAndUpdate(userId, {
+        $inc: { 'karma.total': points }
+      });
+
+      // Create reputation event
+      const event = new ReputationEvent({
+        userId,
+        action,
+        points,
+        metadata,
+        timestamp: new Date()
+      });
+
+      await event.save();
+
+      logger.info(`Awarded ${points} reputation points to user ${userId} for ${action}`);
+      return { success: true, points };
+    } catch (error) {
+      logger.error('Failed to award reputation points:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
   private reputationRules = {
     gift_sent: {
       base: 1,

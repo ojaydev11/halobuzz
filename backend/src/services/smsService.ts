@@ -53,8 +53,8 @@ export class SMSService {
       const result = await response.json();
       logger.info('SMS sent successfully', { 
         to: options.to, 
-        sid: result.sid,
-        status: result.status 
+        sid: (result as any).sid,
+        status: (result as any).status 
       });
       return true;
     } catch (error) {

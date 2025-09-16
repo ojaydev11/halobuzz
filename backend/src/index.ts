@@ -56,7 +56,9 @@ import {
   securityMonitoringMiddleware, 
   authenticationMonitoringMiddleware, 
   dataAccessMonitoringMiddleware, 
-  rateLimitMonitoringMiddleware 
+  rateLimitMonitoringMiddleware,
+  suspiciousPatternDetectionMiddleware,
+  fileUploadMonitoringMiddleware
 } from '@/middleware/securityMonitoring';
 import {
   requestId,
@@ -164,22 +166,26 @@ app.use(helmet({
 app.use(cors({
   origin: (origin, callback) => {
     const allowedOrigins = process.env.CORS_ORIGIN?.split(',') || ['http://localhost:3000'];
-    if (!origin || allowedOrigins.includes(origin)) {
+    
+    // Allow requests with no origin (mobile apps, Postman, etc.)
+    if (!origin) {
       return callback(null, true);
-    } else {
-      return callback(new Error('Not allowed by CORS'));
     }
+    
+    // Check if origin is in allowed list
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    
+    // Log blocked origins for security monitoring
+    logger.warn(`CORS blocked origin: ${origin}`);
+    return callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: [
-    'Content-Type', 
-    'Authorization', 
-    'X-Requested-With',
-    'X-Device-ID',
-    'X-Request-ID'
-  ],
-  maxAge: 600 // 10 minutes preflight cache
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-CSRF-Token', 'X-TOTP-Token', 'X-Device-ID'],
+  exposedHeaders: ['X-Request-ID'],
+  maxAge: 86400 // 24 hours
 }));
 
 // Global rate limiting
@@ -199,6 +205,8 @@ app.use(securityMonitoringMiddleware);
 app.use(authenticationMonitoringMiddleware);
 app.use(dataAccessMonitoringMiddleware);
 app.use(rateLimitMonitoringMiddleware);
+app.use(suspiciousPatternDetectionMiddleware);
+app.use(fileUploadMonitoringMiddleware);
 
 // Body parsing middleware with stricter limits
 app.use(express.json({ 

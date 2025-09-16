@@ -17,12 +17,12 @@ interface SecretsConfig {
 
 const REQUIRED_SECRETS = [
   'JWT_SECRET',
+  'JWT_REFRESH_SECRET',
   'MONGODB_URI',
   'REDIS_URL'
 ];
 
 const OPTIONAL_SECRETS = [
-  'JWT_REFRESH_SECRET',
   'STRIPE_SECRET_KEY',
   'STRIPE_WEBHOOK_SECRET',
   'AWS_ACCESS_KEY_ID',
@@ -52,10 +52,10 @@ export function validateSecrets(): SecretsConfig {
     // Check for weak secrets in production
     if (isProduction) {
       if (secret.includes('SECRET') || secret.includes('KEY')) {
-        if (value.length < 32) {
-          weak.push(`${secret} (length: ${value.length}, minimum: 32)`);
+        if (value.length < 64) {
+          weak.push(`${secret} (length: ${value.length}, minimum: 64)`);
         }
-        if (value === 'your-secret-key' || value === 'changeme' || value.includes('test')) {
+        if (value === 'your-secret-key' || value === 'changeme' || value === 'change_me' || value.includes('test') || value.includes('your-super-secure')) {
           weak.push(`${secret} (appears to be a default/test value)`);
         }
       }

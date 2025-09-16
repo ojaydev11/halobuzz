@@ -84,7 +84,7 @@ export const authMiddleware = async (
       ogLevel: user.ogLevel,
       isVerified: user.isVerified,
       isBanned: user.isBanned,
-      isAdmin: user.ogLevel >= 5 // Assuming OG level 5+ is admin
+      isAdmin: false // Admin status is determined by email whitelist, not OG level
     };
 
     next();

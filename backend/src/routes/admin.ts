@@ -9,6 +9,9 @@ import { setupLogger } from '@/config/logger';
 import { getCache, setCache } from '@/config/redis';
 import { reputationService } from '@/services/ReputationService';
 import { requireCSRF, requireDeviceBinding, requireIPPinning } from '@/middleware/admin';
+import { adminLimiter } from '@/middleware/security';
+import speakeasy from 'speakeasy';
+import QRCode from 'qrcode';
 import { ageKycService } from '@/services/AgeKycService';
 import { gamingControlsService } from '@/services/GamingControlsService';
 import { socketSecurityService } from '@/services/SocketSecurityService';
@@ -18,6 +21,9 @@ import flagsRouter from './admin/flags';
 
 const logger = setupLogger();
 const router: express.Router = express.Router();
+
+// Apply admin rate limiting to all admin routes
+router.use(adminLimiter);
 
 // Feature flags management
 router.use('/flags', flagsRouter);
@@ -29,6 +35,98 @@ router.get('/csrf-token', (req, res) => {
     success: true,
     csrfToken
   });
+});
+
+// 2FA Setup endpoint
+router.post('/2fa/setup', async (req, res) => {
+  try {
+    const userId = (req as any).user?.userId;
+    if (!userId) {
+      return res.status(401).json({ success: false, error: 'Authentication required' });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+
+    // Generate TOTP secret
+    const secret = speakeasy.generateSecret({
+      name: `Halobuzz Admin (${user.email})`,
+      account: user.email,
+      length: 32
+    });
+
+    // Generate QR code
+    const qrCodeUrl = await QRCode.toDataURL(secret.otpauth_url!);
+
+    // Store secret temporarily (user needs to verify before saving)
+    await setCache(`2fa-setup:${userId}`, secret.base32, 300); // 5 minutes
+
+    res.json({
+      success: true,
+      data: {
+        secret: secret.base32,
+        qrCode: qrCodeUrl,
+        manualEntryKey: secret.base32
+      }
+    });
+  } catch (error) {
+    logger.error('2FA setup error:', error);
+    res.status(500).json({ success: false, error: 'Failed to setup 2FA' });
+  }
+});
+
+// 2FA Verification endpoint
+router.post('/2fa/verify', [
+  requireCSRF,
+  body('token').isString().isLength({ min: 6, max: 6 }).withMessage('Valid 6-digit token required')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success: false, errors: errors.array() });
+    }
+
+    const userId = (req as any).user?.userId;
+    const { token } = req.body;
+
+    if (!userId) {
+      return res.status(401).json({ success: false, error: 'Authentication required' });
+    }
+
+    // Get temporary secret from cache
+    const tempSecret = await getCache(`2fa-setup:${userId}`);
+    if (!tempSecret) {
+      return res.status(400).json({ success: false, error: '2FA setup session expired' });
+    }
+
+    // Verify token
+    const verified = speakeasy.totp.verify({
+      secret: tempSecret,
+      encoding: 'base32',
+      token: token,
+      window: 2
+    });
+
+    if (!verified) {
+      return res.status(400).json({ success: false, error: 'Invalid token' });
+    }
+
+    // Save secret to user
+    await User.findByIdAndUpdate(userId, { totpSecret: tempSecret });
+    
+    // Clear temporary secret
+    await setCache(`2fa-setup:${userId}`, '', 0);
+
+    res.json({
+      success: true,
+      message: '2FA enabled successfully'
+    });
+  } catch (error) {
+    logger.error('2FA verification error:', error);
+    res.status(500).json({ success: false, error: 'Failed to verify 2FA' });
+  }
 });
 
 // ----- Overview Stats -----

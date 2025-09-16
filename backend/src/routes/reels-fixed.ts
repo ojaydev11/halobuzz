@@ -8,14 +8,11 @@ import { reputationService } from '../services/ReputationService';
 import { moderationQueue } from '../services/ModerationQueue';
 import { s3Service } from '../services/s3Service';
 import { logger } from '../config/logger';
-import { FileValidator } from '../utils/fileValidator';
-import { uploadLimiter } from '../middleware/security';
 
 const router = express.Router();
 
 // Get presigned URL for reel upload
 router.post('/upload/presign', [
-  uploadLimiter,
   body('fileName')
     .isString()
     .trim()
@@ -24,7 +21,7 @@ router.post('/upload/presign', [
   body('fileType')
     .isString()
     .trim()
-    .matches(/^video\/(mp4|mov|avi|mkv|webm|quicktime)$/)
+    .matches(/^video\/(mp4|mov|avi|mkv|webm)$/)
     .withMessage('Valid video file type is required'),
   body('fileSize')
     .isInt({ min: 1024, max: 100 * 1024 * 1024 }) // 1KB to 100MB
@@ -58,24 +55,9 @@ router.post('/upload/presign', [
       });
     }
 
-    // Validate file metadata
-    const validationResult = FileValidator.validateFileMetadata(
-      fileName,
-      fileType,
-      fileSize,
-      'video'
-    );
-
-    if (!validationResult.isValid) {
-      return res.status(400).json({
-        success: false,
-        error: validationResult.error
-      });
-    }
-
-    // Generate safe filename
-    const safeFileName = FileValidator.generateSafeFilename(fileName, userId);
-    const fileKey = `reels/${userId}/${safeFileName}`;
+    // Generate unique file key
+    const fileExtension = fileName.split('.').pop();
+    const fileKey = `reels/${userId}/${uuidv4()}.${fileExtension}`;
 
     // Create presigned URL for upload using S3 service
     const presignedUrl = await s3Service.generatePresignedUploadUrl(

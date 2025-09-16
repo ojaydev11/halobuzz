@@ -10,12 +10,14 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import { useStreams } from '@/hooks/useStreams';
 import { Stream } from '@/types/stream';
 import { apiClient, health } from '@/lib/api';
 import { HealthStatus } from '@/types/monitoring';
 
 export default function DiscoverScreen() {
+  const router = useRouter();
   const { streams, loading, error, refresh } = useStreams();
   const [refreshing, setRefreshing] = useState(false);
 
@@ -83,7 +85,10 @@ export default function DiscoverScreen() {
   };
 
   const renderStream = ({ item }: { item: Stream }) => (
-    <TouchableOpacity style={styles.streamCard}>
+    <TouchableOpacity 
+      style={styles.streamCard}
+      onPress={() => router.push(`/stream/${item.id}`)}
+    >
       <View style={styles.streamThumbnail}>
         {item.thumbnail ? (
           <Image source={{ uri: item.thumbnail }} style={styles.thumbnailImage} />
@@ -97,6 +102,9 @@ export default function DiscoverScreen() {
         </View>
         <View style={styles.viewerCount}>
           <Text style={styles.viewerText}>{item.currentViewers} viewers</Text>
+        </View>
+        <View style={styles.playButton}>
+          <Text style={styles.playButtonText}>▶</Text>
         </View>
       </View>
       
@@ -258,6 +266,22 @@ const styles = StyleSheet.create({
   viewerText: {
     color: '#fff',
     fontSize: 12,
+  },
+  playButton: {
+    position: 'absolute',
+    bottom: 12,
+    right: 12,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    borderRadius: 20,
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  playButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   streamInfo: {
     padding: 16,

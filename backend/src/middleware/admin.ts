@@ -1,5 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import speakeasy from 'speakeasy';
+import QRCode from 'qrcode';
 import { setupLogger } from '@/config/logger';
 import { User } from '@/models/User';
 import { adminAuditService } from '@/services/AdminAuditService';
@@ -54,7 +56,7 @@ export const adminOnly = async (req: AuthenticatedRequest, res: Response, next: 
         return;
       }
 
-      // Verify TOTP token (simplified - in real implementation, use speakeasy)
+      // Verify TOTP token using speakeasy
       const user = await User.findById(req.user.userId).select('totpSecret');
       if (!user || !user.totpSecret) {
         res.status(403).json({ 
@@ -64,16 +66,16 @@ export const adminOnly = async (req: AuthenticatedRequest, res: Response, next: 
         return;
       }
 
-      // In a real implementation, verify the TOTP token here
-      // const isValidTOTP = speakeasy.totp.verify({
-      //   secret: user.totpSecret,
-      //   encoding: 'base32',
-      //   token: totpToken,
-      //   window: 2
-      // });
+      // Verify the TOTP token
+      const isValidTOTP = speakeasy.totp.verify({
+        secret: user.totpSecret,
+        encoding: 'base32',
+        token: totpToken,
+        window: 2
+      });
 
-      // For now, we'll accept any non-empty token
-      if (!totpToken || totpToken.length < 6) {
+      if (!isValidTOTP) {
+        logger.warn(`Invalid TOTP token for admin user ${req.user.userId}`);
         res.status(403).json({ 
           error: 'Invalid 2FA token',
           message: 'Invalid TOTP token provided'

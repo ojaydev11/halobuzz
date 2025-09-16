@@ -397,6 +397,135 @@ class ApiClient {
   getDiscoveredRoutes(): any {
     return {};
   }
+
+  // Search functionality
+  async search(query: string, filters: {
+    type?: 'all' | 'users' | 'streams' | 'reels' | 'hashtags';
+    category?: string;
+    isLive?: boolean;
+    minFollowers?: number;
+    maxFollowers?: number;
+    dateRange?: 'today' | 'week' | 'month' | 'year' | 'all';
+    sortBy?: 'relevance' | 'popularity' | 'date' | 'followers';
+    limit?: number;
+    offset?: number;
+  } = {}): Promise<ApiResponse<any>> {
+    try {
+      const params = new URLSearchParams();
+      params.append('q', query);
+      
+      if (filters.type) params.append('type', filters.type);
+      if (filters.category) params.append('category', filters.category);
+      if (filters.isLive !== undefined) params.append('isLive', filters.isLive.toString());
+      if (filters.minFollowers) params.append('minFollowers', filters.minFollowers.toString());
+      if (filters.maxFollowers) params.append('maxFollowers', filters.maxFollowers.toString());
+      if (filters.dateRange) params.append('dateRange', filters.dateRange);
+      if (filters.sortBy) params.append('sortBy', filters.sortBy);
+      if (filters.limit) params.append('limit', filters.limit.toString());
+      if (filters.offset) params.append('offset', filters.offset.toString());
+
+      const response = await this.client.get(`/search?${params.toString()}`);
+      return response.data;
+    } catch (error) {
+      const networkError = this.formatError(error);
+      throw networkError;
+    }
+  }
+
+  async getSearchSuggestions(query: string, limit: number = 5): Promise<ApiResponse<{ suggestions: string[] }>> {
+    try {
+      const response = await this.client.get(`/search/suggestions?q=${encodeURIComponent(query)}&limit=${limit}`);
+      return response.data;
+    } catch (error) {
+      const networkError = this.formatError(error);
+      throw networkError;
+    }
+  }
+
+  async getTrendingHashtags(limit: number = 10): Promise<ApiResponse<{ hashtags: Array<{ tag: string; count: number; trending: boolean }> }>> {
+    try {
+      const response = await this.client.get(`/search/trending/hashtags?limit=${limit}`);
+      return response.data;
+    } catch (error) {
+      const networkError = this.formatError(error);
+      throw networkError;
+    }
+  }
+
+  async searchUsers(query: string, filters: {
+    minFollowers?: number;
+    maxFollowers?: number;
+    sortBy?: 'relevance' | 'popularity' | 'followers';
+    limit?: number;
+    offset?: number;
+  } = {}): Promise<ApiResponse<{ users: any[] }>> {
+    try {
+      const params = new URLSearchParams();
+      params.append('q', query);
+      
+      if (filters.minFollowers) params.append('minFollowers', filters.minFollowers.toString());
+      if (filters.maxFollowers) params.append('maxFollowers', filters.maxFollowers.toString());
+      if (filters.sortBy) params.append('sortBy', filters.sortBy);
+      if (filters.limit) params.append('limit', filters.limit.toString());
+      if (filters.offset) params.append('offset', filters.offset.toString());
+
+      const response = await this.client.get(`/search/users?${params.toString()}`);
+      return response.data;
+    } catch (error) {
+      const networkError = this.formatError(error);
+      throw networkError;
+    }
+  }
+
+  async searchStreams(query: string, filters: {
+    category?: string;
+    isLive?: boolean;
+    sortBy?: 'relevance' | 'popularity' | 'date';
+    limit?: number;
+    offset?: number;
+  } = {}): Promise<ApiResponse<{ streams: any[] }>> {
+    try {
+      const params = new URLSearchParams();
+      params.append('q', query);
+      
+      if (filters.category) params.append('category', filters.category);
+      if (filters.isLive !== undefined) params.append('isLive', filters.isLive.toString());
+      if (filters.sortBy) params.append('sortBy', filters.sortBy);
+      if (filters.limit) params.append('limit', filters.limit.toString());
+      if (filters.offset) params.append('offset', filters.offset.toString());
+
+      const response = await this.client.get(`/search/streams?${params.toString()}`);
+      return response.data;
+    } catch (error) {
+      const networkError = this.formatError(error);
+      throw networkError;
+    }
+  }
+
+  async searchReels(query: string, filters: {
+    category?: string;
+    dateRange?: 'today' | 'week' | 'month' | 'year' | 'all';
+    sortBy?: 'relevance' | 'popularity' | 'date';
+    limit?: number;
+    offset?: number;
+  } = {}): Promise<ApiResponse<{ reels: any[] }>> {
+    try {
+      const params = new URLSearchParams();
+      params.append('q', query);
+      
+      if (filters.category) params.append('category', filters.category);
+      if (filters.dateRange) params.append('dateRange', filters.dateRange);
+      if (filters.sortBy) params.append('sortBy', filters.sortBy);
+      if (filters.limit) params.append('limit', filters.limit.toString());
+      if (filters.offset) params.append('offset', filters.offset.toString());
+
+      const response = await this.client.get(`/search/reels?${params.toString()}`);
+      return response.data;
+    } catch (error) {
+      const networkError = this.formatError(error);
+      throw networkError;
+    }
+  }
 }
 
 export const apiClient = new ApiClient();

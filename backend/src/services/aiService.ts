@@ -62,7 +62,7 @@ export class AIService {
       }
 
       const data = await response.json();
-      const analysis = data.choices[0]?.message?.content;
+      const analysis = (data as any).choices[0]?.message?.content;
       
       return this.parseAIResponse(analysis, options.type);
     } catch (error) {
@@ -104,7 +104,7 @@ export class AIService {
       };
     } catch (error) {
       logger.warn('Failed to parse AI response, using fallback', { error, analysis });
-      return this.fallbackAnalysis({ content: '', type });
+      return this.fallbackAnalysis({ content: '', type: type as 'moderation' | 'sentiment' | 'content_quality' });
     }
   }
 

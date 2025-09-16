@@ -1,5 +1,5 @@
 import { User } from '../models/User';
-import { Stream } from '../models/Stream';
+import { LiveStream } from '../models/LiveStream';
 import { Transaction } from '../models/Transaction';
 import { logger } from '../config/logger';
 
@@ -275,9 +275,9 @@ export class CreatorEconomyService {
       }
 
       // Get stream statistics
-      const streams = await Stream.find({ hostId: userId });
+      const streams = await LiveStream.find({ hostId: userId });
       const totalStreams = streams.length;
-      const totalViews = streams.reduce((sum, stream) => sum + (stream.totalViews || 0), 0);
+      const totalViews = streams.reduce((sum, stream) => sum + (stream.totalViewers || 0), 0);
       const averageViewerCount = totalStreams > 0 ? totalViews / totalStreams : 0;
 
       // Get transaction statistics

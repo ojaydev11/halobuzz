@@ -65,11 +65,14 @@ export const globalLimiter = rateLimit({
            healthUserAgents.test(req.get('User-Agent') || '');
   },
   keyGenerator: (req: Request) => {
-    return req.ip || req.connection.remoteAddress || 'unknown';
+    // Use user ID if authenticated, otherwise IP
+    const userId = (req as any).user?.userId;
+    return userId ? `user:${userId}` : `ip:${req.ip || req.connection.remoteAddress || 'unknown'}`;
   },
   handler: (req: Request, res: Response) => {
     logger.warn('Rate limit exceeded', {
       ip: req.ip,
+      userId: (req as any).user?.userId,
       path: req.path,
       userAgent: req.headers['user-agent']
     });
@@ -160,6 +163,75 @@ export const socialLimiter = rateLimit({
   }
 });
 
+// File upload rate limiter
+export const uploadLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 10, // 10 uploads per minute
+  message: {
+    error: 'Too many file uploads, please slow down.',
+    retryAfter: 60
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req: Request, res: Response) => {
+    logger.warn('Upload rate limit exceeded', {
+      ip: req.ip,
+      path: req.path,
+      userId: (req as any).user?.id
+    });
+    res.status(429).json({
+      error: 'Too many file uploads, please slow down.',
+      retryAfter: 60
+    });
+  }
+});
+
+// Search rate limiter
+export const searchLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 30, // 30 searches per minute
+  message: {
+    error: 'Too many search requests, please slow down.',
+    retryAfter: 60
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req: Request, res: Response) => {
+    logger.warn('Search rate limit exceeded', {
+      ip: req.ip,
+      path: req.path,
+      userId: (req as any).user?.id
+    });
+    res.status(429).json({
+      error: 'Too many search requests, please slow down.',
+      retryAfter: 60
+    });
+  }
+});
+
+// Admin endpoints rate limiter
+export const adminLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 20, // 20 admin requests per minute
+  message: {
+    error: 'Too many admin requests, please slow down.',
+    retryAfter: 60
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req: Request, res: Response) => {
+    logger.warn('Admin rate limit exceeded', {
+      ip: req.ip,
+      path: req.path,
+      userId: (req as any).user?.id
+    });
+    res.status(429).json({
+      error: 'Too many admin requests, please slow down.',
+      retryAfter: 60
+    });
+  }
+});
+
 // Webhook IP allowlist middleware
 export const webhookIPAllowlist = (allowedIPs: string[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
@@ -200,10 +272,33 @@ export const securityHeaders = (req: Request, res: Response, next: NextFunction)
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('X-XSS-Protection', '1; mode=block');
-  res.setHeader('Referrer-Policy', 'no-referrer');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   res.setHeader('X-DNS-Prefetch-Control', 'off');
   res.setHeader('X-Download-Options', 'noopen');
   res.setHeader('X-Permitted-Cross-Domain-Policies', 'none');
+  
+  // Content Security Policy
+  res.setHeader('Content-Security-Policy', 
+    "default-src 'self'; " +
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
+    "style-src 'self' 'unsafe-inline'; " +
+    "img-src 'self' data: https:; " +
+    "font-src 'self' data:; " +
+    "connect-src 'self' https:; " +
+    "frame-ancestors 'none'; " +
+    "base-uri 'self'; " +
+    "form-action 'self'"
+  );
+  
+  // Strict Transport Security (only in production)
+  if (process.env.NODE_ENV === 'production') {
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+  }
+  
+  // Permissions Policy
+  res.setHeader('Permissions-Policy', 
+    'camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()'
+  );
   
   // Remove server header
   res.removeHeader('X-Powered-By');

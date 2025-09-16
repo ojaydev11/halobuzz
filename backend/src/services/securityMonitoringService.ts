@@ -1,545 +1,579 @@
-import { setupLogger } from '@/config/logger';
-import { getCacheStats } from '@/config/redis';
-import { connectDatabase } from '@/config/database';
-import mongoose from 'mongoose';
-
-const logger = setupLogger();
+import { logger } from '@/config/logger';
+import { Request } from 'express';
 
 export interface SecurityEvent {
   id: string;
   timestamp: Date;
-  type: 'authentication' | 'authorization' | 'injection' | 'xss' | 'csrf' | 'rate_limit' | 'suspicious_activity' | 'data_breach';
+  type: 'authentication' | 'authorization' | 'injection' | 'xss' | 'csrf' | 'rate_limit' | 'suspicious_activity' | 'data_breach' | 'file_upload' | 'admin_action';
   severity: 'low' | 'medium' | 'high' | 'critical';
   source: {
     ip: string;
     userAgent: string;
     userId?: string;
-    sessionId?: string;
+    username?: string;
   };
   details: {
     endpoint: string;
     method: string;
     payload?: any;
-    responseCode: number;
-    description: string;
+    error?: string;
+    riskScore: number;
   };
   metadata: {
+    requestId?: string;
+    sessionId?: string;
+    deviceId?: string;
     country?: string;
-    isp?: string;
-    device?: string;
-    browser?: string;
   };
 }
 
 export interface SecurityAlert {
   id: string;
   timestamp: Date;
-  severity: 'low' | 'medium' | 'high' | 'critical';
   type: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
   message: string;
   source: string;
-  affectedUsers: number;
+  details: any;
   resolved: boolean;
   resolvedAt?: Date;
   resolvedBy?: string;
-}
-
-export interface SecurityMetrics {
-  timestamp: Date;
-  totalEvents: number;
-  eventsByType: Record<string, number>;
-  eventsBySeverity: Record<string, number>;
-  topAttackSources: Array<{
-    ip: string;
-    count: number;
-    country: string;
-  }>;
-  blockedRequests: number;
-  suspiciousLogins: number;
-  dataAccessViolations: number;
-  systemHealth: {
-    database: boolean;
-    redis: boolean;
-    api: boolean;
-  };
 }
 
 export class SecurityMonitoringService {
   private static instance: SecurityMonitoringService;
   private events: SecurityEvent[] = [];
   private alerts: SecurityAlert[] = [];
-  private metrics: SecurityMetrics[] = [];
-  private alertConfig = {
-    criticalThreshold: 10, // events per minute
-    highThreshold: 50,
-    mediumThreshold: 100,
-    lowThreshold: 200,
-    timeWindow: 60, // seconds
-    enabled: true
-  };
+  private suspiciousIPs: Set<string> = new Set();
+  private failedLoginAttempts: Map<string, number> = new Map();
+  private suspiciousPatterns: RegExp[] = [
+    /<script[^>]*>.*?<\/script>/gi,
+    /javascript:/gi,
+    /vbscript:/gi,
+    /onload\s*=/gi,
+    /onerror\s*=/gi,
+    /eval\s*\(/gi,
+    /document\.cookie/gi,
+    /window\.location/gi,
+    /\$ne\s*:\s*null/gi,
+    /\$where\s*:/gi,
+    /union\s+select/gi,
+    /drop\s+table/gi,
+    /delete\s+from/gi,
+    /insert\s+into/gi,
+    /update\s+set/gi
+  ];
 
   private constructor() {}
 
-  public static getInstance(): SecurityMonitoringService {
+  static getInstance(): SecurityMonitoringService {
     if (!SecurityMonitoringService.instance) {
       SecurityMonitoringService.instance = new SecurityMonitoringService();
     }
     return SecurityMonitoringService.instance;
   }
 
-  public async recordSecurityEvent(event: Omit<SecurityEvent, 'id' | 'timestamp'>): Promise<void> {
-    try {
-      const securityEvent: SecurityEvent = {
-        ...event,
-        id: this.generateEventId(),
-        timestamp: new Date()
-      };
+  /**
+   * Logs a security event
+   */
+  logEvent(event: Omit<SecurityEvent, 'id' | 'timestamp'>): void {
+    const securityEvent: SecurityEvent = {
+      id: this.generateEventId(),
+      timestamp: new Date(),
+      ...event
+    };
 
-      // Store event
-      this.events.push(securityEvent);
-      
-      // Keep only last 10000 events
-      if (this.events.length > 10000) {
-        this.events = this.events.slice(-10000);
-      }
+    this.events.push(securityEvent);
 
-      // Log security event
-      logger.warn('Security event recorded:', {
-        type: securityEvent.type,
-        severity: securityEvent.severity,
-        source: securityEvent.source.ip,
-        endpoint: securityEvent.details.endpoint,
-        description: securityEvent.details.description
-      });
+    // Log to console/file
+    logger.warn('Security Event', {
+      id: securityEvent.id,
+      type: securityEvent.type,
+      severity: securityEvent.severity,
+      source: securityEvent.source,
+      details: securityEvent.details,
+      metadata: securityEvent.metadata
+    });
 
-      // Check for alerts
-      await this.checkSecurityAlerts(securityEvent);
+    // Check for suspicious patterns
+    this.analyzeEvent(securityEvent);
 
-      // Update metrics
-      await this.updateSecurityMetrics();
-
-    } catch (error) {
-      logger.error('Error recording security event:', error);
+    // Keep only last 1000 events
+    if (this.events.length > 1000) {
+      this.events = this.events.slice(-1000);
     }
   }
 
-  public async detectSuspiciousActivity(request: any): Promise<boolean> {
-    try {
-      const suspiciousPatterns = [
-        // SQL Injection patterns
-        /['";\\|*\-+=<>!@#$%^&()_+{}\[\]:;",.<>?\/\\~`]/i,
-        
-        // XSS patterns
-        /<script[^>]*>.*?<\/script>/gi,
-        /javascript:/gi,
-        /on\w+\s*=/gi,
-        
-        // Path traversal
-        /\.\.\//g,
-        /\.\.\\/g,
-        
-        // Command injection
-        /[;&|`$()]/g,
-        
-        // LDAP injection
-        /[()=*!&|]/g
-      ];
+  /**
+   * Logs authentication events
+   */
+  logAuthenticationEvent(
+    type: 'login_success' | 'login_failed' | 'logout' | 'token_expired' | 'token_invalid',
+    req: Request,
+    userId?: string,
+    username?: string,
+    error?: string
+  ): void {
+    const severity = type === 'login_success' ? 'low' : 'medium';
+    
+    this.logEvent({
+      type: 'authentication',
+      severity,
+      source: {
+        ip: req.ip || 'unknown',
+        userAgent: req.get('User-Agent') || 'unknown',
+        userId,
+        username
+      },
+      details: {
+        endpoint: req.path,
+        method: req.method,
+        payload: this.sanitizePayload(req.body),
+        error,
+        riskScore: this.calculateRiskScore(req, type)
+      },
+      metadata: {
+        requestId: req.headers['x-request-id'] as string,
+        sessionId: req.headers['x-session-id'] as string,
+        deviceId: req.headers['x-device-id'] as string
+      }
+    });
 
-      const requestData = JSON.stringify({
-        url: request.url,
-        method: request.method,
-        headers: request.headers,
-        body: request.body,
-        query: request.query,
-        params: request.params
-      });
+    // Track failed login attempts
+    if (type === 'login_failed') {
+      const ip = req.ip || 'unknown';
+      const attempts = this.failedLoginAttempts.get(ip) || 0;
+      this.failedLoginAttempts.set(ip, attempts + 1);
 
-      for (const pattern of suspiciousPatterns) {
-        if (pattern.test(requestData)) {
-          await this.recordSecurityEvent({
-            type: 'suspicious_activity',
-            severity: 'high',
-            source: {
-              ip: request.ip || 'unknown',
-              userAgent: request.get('User-Agent') || 'unknown',
-              userId: request.user?.id,
-              sessionId: request.sessionID
-            },
-            details: {
-              endpoint: request.path,
-              method: request.method,
-              payload: requestData,
-              responseCode: 400,
-              description: `Suspicious pattern detected: ${pattern.source}`
-            },
-            metadata: {
-              country: request.geo?.country,
-              isp: request.geo?.isp,
-              device: request.device?.type,
-              browser: request.browser?.name
-            }
-          });
-          
-          return true;
+      // Mark IP as suspicious after 5 failed attempts
+      if (attempts + 1 >= 5) {
+        this.suspiciousIPs.add(ip);
+        this.createAlert('suspicious_ip', 'high', `IP ${ip} has ${attempts + 1} failed login attempts`);
+      }
+    }
+  }
+
+  /**
+   * Logs authorization events
+   */
+  logAuthorizationEvent(
+    type: 'access_granted' | 'access_denied' | 'privilege_escalation' | 'unauthorized_access',
+    req: Request,
+    userId?: string,
+    username?: string,
+    resource?: string,
+    error?: string
+  ): void {
+    const severity = type === 'access_granted' ? 'low' : 'high';
+    
+    this.logEvent({
+      type: 'authorization',
+      severity,
+      source: {
+        ip: req.ip || 'unknown',
+        userAgent: req.get('User-Agent') || 'unknown',
+        userId,
+        username
+      },
+      details: {
+        endpoint: req.path,
+        method: req.method,
+        payload: this.sanitizePayload(req.body),
+        error,
+        riskScore: this.calculateRiskScore(req, type)
+      },
+      metadata: {
+        requestId: req.headers['x-request-id'] as string,
+        sessionId: req.headers['x-session-id'] as string,
+        deviceId: req.headers['x-device-id'] as string
+      }
+    });
+
+    // Create alert for unauthorized access attempts
+    if (type === 'unauthorized_access' || type === 'privilege_escalation') {
+      this.createAlert('unauthorized_access', 'critical', `Unauthorized access attempt by ${username || 'unknown user'} to ${resource || req.path}`);
+    }
+  }
+
+  /**
+   * Logs injection attempts
+   */
+  logInjectionEvent(
+    type: 'nosql_injection' | 'sql_injection' | 'command_injection' | 'ldap_injection',
+    req: Request,
+    payload: any,
+    userId?: string,
+    username?: string
+  ): void {
+    this.logEvent({
+      type: 'injection',
+      severity: 'critical',
+      source: {
+        ip: req.ip || 'unknown',
+        userAgent: req.get('User-Agent') || 'unknown',
+        userId,
+        username
+      },
+      details: {
+        endpoint: req.path,
+        method: req.method,
+        payload: this.sanitizePayload(payload),
+        error: `${type} attempt detected`,
+        riskScore: 100
+      },
+      metadata: {
+        requestId: req.headers['x-request-id'] as string,
+        sessionId: req.headers['x-session-id'] as string,
+        deviceId: req.headers['x-device-id'] as string
+      }
+    });
+
+    // Mark IP as suspicious
+    if (req.ip) {
+      this.suspiciousIPs.add(req.ip);
+    }
+
+    // Create critical alert
+    this.createAlert('injection_attempt', 'critical', `${type} attempt detected from ${req.ip || 'unknown IP'}`);
+  }
+
+  /**
+   * Logs XSS attempts
+   */
+  logXSSEvent(
+    req: Request,
+    payload: any,
+    userId?: string,
+    username?: string
+  ): void {
+    this.logEvent({
+      type: 'xss',
+      severity: 'high',
+      source: {
+        ip: req.ip || 'unknown',
+        userAgent: req.get('User-Agent') || 'unknown',
+        userId,
+        username
+      },
+      details: {
+        endpoint: req.path,
+        method: req.method,
+        payload: this.sanitizePayload(payload),
+        error: 'XSS attempt detected',
+        riskScore: 90
+      },
+      metadata: {
+        requestId: req.headers['x-request-id'] as string,
+        sessionId: req.headers['x-session-id'] as string,
+        deviceId: req.headers['x-device-id'] as string
+      }
+    });
+
+    this.createAlert('xss_attempt', 'high', `XSS attempt detected from ${req.ip || 'unknown IP'}`);
+  }
+
+  /**
+   * Logs file upload events
+   */
+  logFileUploadEvent(
+    type: 'upload_success' | 'upload_failed' | 'malicious_file' | 'oversized_file',
+    req: Request,
+    fileName: string,
+    fileSize: number,
+    fileType: string,
+    userId?: string,
+    username?: string,
+    error?: string
+  ): void {
+    const severity = type === 'upload_success' ? 'low' : 'high';
+    
+    this.logEvent({
+      type: 'file_upload',
+      severity,
+      source: {
+        ip: req.ip || 'unknown',
+        userAgent: req.get('User-Agent') || 'unknown',
+        userId,
+        username
+      },
+      details: {
+        endpoint: req.path,
+        method: req.method,
+        payload: { fileName, fileSize, fileType },
+        error,
+        riskScore: this.calculateRiskScore(req, type)
+      },
+      metadata: {
+        requestId: req.headers['x-request-id'] as string,
+        sessionId: req.headers['x-session-id'] as string,
+        deviceId: req.headers['x-device-id'] as string
+      }
+    });
+
+    if (type === 'malicious_file') {
+      this.createAlert('malicious_file', 'critical', `Malicious file upload attempt: ${fileName}`);
+    }
+  }
+
+  /**
+   * Logs admin actions
+   */
+  logAdminAction(
+    action: string,
+    resource: string,
+    req: Request,
+    userId: string,
+    username: string,
+    success: boolean,
+    error?: string
+  ): void {
+    this.logEvent({
+      type: 'admin_action',
+      severity: success ? 'medium' : 'high',
+      source: {
+        ip: req.ip || 'unknown',
+        userAgent: req.get('User-Agent') || 'unknown',
+        userId,
+        username
+      },
+      details: {
+        endpoint: req.path,
+        method: req.method,
+        payload: { action, resource, success },
+        error,
+        riskScore: this.calculateRiskScore(req, 'admin_action')
+      },
+      metadata: {
+        requestId: req.headers['x-request-id'] as string,
+        sessionId: req.headers['x-session-id'] as string,
+        deviceId: req.headers['x-device-id'] as string
+      }
+    });
+  }
+
+  /**
+   * Analyzes events for suspicious patterns
+   */
+  private analyzeEvent(event: SecurityEvent): void {
+    // Check for suspicious patterns in payload
+    if (event.details.payload) {
+      const payloadStr = JSON.stringify(event.details.payload);
+      
+      for (const pattern of this.suspiciousPatterns) {
+        if (pattern.test(payloadStr)) {
+          this.createAlert('suspicious_pattern', 'medium', `Suspicious pattern detected in ${event.type} event`);
+          break;
         }
       }
+    }
 
-      return false;
-    } catch (error) {
-      logger.error('Error detecting suspicious activity:', error);
-      return false;
+    // Check for high risk score
+    if (event.details.riskScore > 80) {
+      this.createAlert('high_risk_event', 'high', `High risk event detected: ${event.type}`);
+    }
+
+    // Check for suspicious IP
+    if (this.suspiciousIPs.has(event.source.ip)) {
+      this.createAlert('suspicious_ip_access', 'medium', `Access from suspicious IP: ${event.source.ip}`);
     }
   }
 
-  public async detectBruteForce(ip: string, endpoint: string): Promise<boolean> {
-    try {
-      const timeWindow = 5 * 60 * 1000; // 5 minutes
-      const threshold = 5; // 5 failed attempts
-      
-      const recentEvents = this.events.filter(event => 
-        event.source.ip === ip &&
-        event.details.endpoint === endpoint &&
-        event.type === 'authentication' &&
-        event.details.responseCode >= 400 &&
-        (Date.now() - event.timestamp.getTime()) < timeWindow
-      );
+  /**
+   * Creates a security alert
+   */
+  private createAlert(type: string, severity: 'low' | 'medium' | 'high' | 'critical', message: string): void {
+    const alert: SecurityAlert = {
+      id: this.generateEventId(),
+      timestamp: new Date(),
+      type,
+      severity,
+      message,
+      source: 'security_monitor',
+      details: {},
+      resolved: false
+    };
 
-      if (recentEvents.length >= threshold) {
-        await this.recordSecurityEvent({
-          type: 'authentication',
-          severity: 'high',
-          source: {
-            ip,
-            userAgent: 'unknown',
-            sessionId: 'unknown'
-          },
-          details: {
-            endpoint,
-            method: 'POST',
-            responseCode: 429,
-            description: `Brute force attack detected: ${recentEvents.length} failed attempts in ${timeWindow / 1000} seconds`
-          },
-          metadata: {}
-        });
+    this.alerts.push(alert);
 
-        return true;
-      }
+    // Log critical alerts
+    if (severity === 'critical' || severity === 'high') {
+      logger.error('Security Alert', alert);
+    }
 
-      return false;
-    } catch (error) {
-      logger.error('Error detecting brute force:', error);
-      return false;
+    // Keep only last 500 alerts
+    if (this.alerts.length > 500) {
+      this.alerts = this.alerts.slice(-500);
     }
   }
 
-  public async detectDataBreach(userId: string, dataType: string, accessCount: number): Promise<boolean> {
-    try {
-      const timeWindow = 60 * 60 * 1000; // 1 hour
-      const threshold = 1000; // 1000 data access attempts
-      
-      if (accessCount > threshold) {
-        await this.recordSecurityEvent({
-          type: 'data_breach',
-          severity: 'critical',
-          source: {
-            ip: 'unknown',
-            userAgent: 'unknown',
-            userId,
-            sessionId: 'unknown'
-          },
-          details: {
-            endpoint: '/api/data',
-            method: 'GET',
-            payload: { dataType, accessCount },
-            responseCode: 200,
-            description: `Potential data breach detected: ${accessCount} ${dataType} access attempts in ${timeWindow / 1000} seconds`
-          },
-          metadata: {}
-        });
+  /**
+   * Calculates risk score for an event
+   */
+  private calculateRiskScore(req: Request, eventType: string): number {
+    let score = 0;
 
-        return true;
-      }
+    // Base score by event type
+    const baseScores: { [key: string]: number } = {
+      'login_success': 0,
+      'login_failed': 20,
+      'logout': 0,
+      'token_expired': 10,
+      'token_invalid': 30,
+      'access_granted': 0,
+      'access_denied': 40,
+      'privilege_escalation': 90,
+      'unauthorized_access': 100,
+      'injection': 100,
+      'xss': 90,
+      'csrf': 80,
+      'rate_limit': 30,
+      'suspicious_activity': 70,
+      'data_breach': 100,
+      'file_upload': 20,
+      'malicious_file': 100,
+      'admin_action': 50
+    };
 
-      return false;
-    } catch (error) {
-      logger.error('Error detecting data breach:', error);
-      return false;
+    score += baseScores[eventType] || 0;
+
+    // Add score for suspicious IP
+    if (req.ip && this.suspiciousIPs.has(req.ip)) {
+      score += 30;
     }
+
+    // Add score for suspicious user agent
+    const userAgent = req.get('User-Agent') || '';
+    if (userAgent.includes('bot') || userAgent.includes('crawler') || userAgent.length < 10) {
+      score += 20;
+    }
+
+    // Add score for unusual request patterns
+    if (req.path.includes('..') || req.path.includes('admin') || req.path.includes('api')) {
+      score += 10;
+    }
+
+    return Math.min(score, 100);
   }
 
-  private async checkSecurityAlerts(event: SecurityEvent): Promise<void> {
-    try {
-      if (!this.alertConfig.enabled) return;
+  /**
+   * Sanitizes payload for logging
+   */
+  private sanitizePayload(payload: any): any {
+    if (!payload) return payload;
 
-      const timeWindow = this.alertConfig.timeWindow * 1000;
-      const cutoffTime = new Date(Date.now() - timeWindow);
-      
-      // Count events by severity in time window
-      const recentEvents = this.events.filter(e => e.timestamp > cutoffTime);
-      const criticalEvents = recentEvents.filter(e => e.severity === 'critical').length;
-      const highEvents = recentEvents.filter(e => e.severity === 'high').length;
-      const mediumEvents = recentEvents.filter(e => e.severity === 'medium').length;
-      const lowEvents = recentEvents.filter(e => e.severity === 'low').length;
-
-      // Check thresholds
-      if (criticalEvents >= this.alertConfig.criticalThreshold) {
-        await this.createAlert('critical', 'Critical security events threshold exceeded', {
-          events: criticalEvents,
-          threshold: this.alertConfig.criticalThreshold,
-          timeWindow: this.alertConfig.timeWindow
-        });
-      } else if (highEvents >= this.alertConfig.highThreshold) {
-        await this.createAlert('high', 'High severity security events threshold exceeded', {
-          events: highEvents,
-          threshold: this.alertConfig.highThreshold,
-          timeWindow: this.alertConfig.timeWindow
-        });
-      } else if (mediumEvents >= this.alertConfig.mediumThreshold) {
-        await this.createAlert('medium', 'Medium severity security events threshold exceeded', {
-          events: mediumEvents,
-          threshold: this.alertConfig.mediumThreshold,
-          timeWindow: this.alertConfig.timeWindow
-        });
-      } else if (lowEvents >= this.alertConfig.lowThreshold) {
-        await this.createAlert('low', 'Low severity security events threshold exceeded', {
-          events: lowEvents,
-          threshold: this.alertConfig.lowThreshold,
-          timeWindow: this.alertConfig.timeWindow
-        });
-      }
-
-    } catch (error) {
-      logger.error('Error checking security alerts:', error);
-    }
-  }
-
-  private async createAlert(severity: 'low' | 'medium' | 'high' | 'critical', message: string, metadata: any): Promise<void> {
-    try {
-      const alert: SecurityAlert = {
-        id: this.generateAlertId(),
-        timestamp: new Date(),
-        severity,
-        type: 'security_threshold',
-        message,
-        source: 'security_monitoring',
-        affectedUsers: 0,
-        resolved: false
-      };
-
-      this.alerts.push(alert);
-
-      // Keep only last 1000 alerts
-      if (this.alerts.length > 1000) {
-        this.alerts = this.alerts.slice(-1000);
-      }
-
-      // Send alert notification
-      await this.sendAlertNotification(alert, metadata);
-
-      logger.error('Security alert created:', {
-        id: alert.id,
-        severity: alert.severity,
-        message: alert.message,
-        metadata
-      });
-
-    } catch (error) {
-      logger.error('Error creating security alert:', error);
-    }
-  }
-
-  private async sendAlertNotification(alert: SecurityAlert, metadata: any): Promise<void> {
-    try {
-      // Implementation would depend on your notification system
-      // This could include:
-      // - Email notifications
-      // - Slack/Discord webhooks
-      // - SMS alerts for critical issues
-      // - Integration with monitoring services (DataDog, New Relic, etc.)
-      
-      const notification = {
-        alert: alert,
-        metadata: metadata,
-        timestamp: new Date().toISOString()
-      };
-
-      // Example: Send to Slack
-      if (process.env.SLACK_WEBHOOK_URL) {
-        const slackMessage = {
-          text: `🚨 Security Alert: ${alert.message}`,
-          attachments: [{
-            color: this.getSeverityColor(alert.severity),
-            fields: [
-              { title: 'Severity', value: alert.severity.toUpperCase(), short: true },
-              { title: 'Type', value: alert.type, short: true },
-              { title: 'Time', value: alert.timestamp.toISOString(), short: true },
-              { title: 'Details', value: JSON.stringify(metadata, null, 2), short: false }
-            ]
-          }]
-        };
-
-        // Send to Slack webhook
-        // await fetch(process.env.SLACK_WEBHOOK_URL, { ... });
-      }
-
-      // Example: Send email
-      if (process.env.SECURITY_EMAIL) {
-        // Send email notification
-        // await sendEmail(process.env.SECURITY_EMAIL, 'Security Alert', notification);
-      }
-
-    } catch (error) {
-      logger.error('Error sending alert notification:', error);
-    }
-  }
-
-  private getSeverityColor(severity: string): string {
-    switch (severity) {
-      case 'critical': return 'danger';
-      case 'high': return 'warning';
-      case 'medium': return 'good';
-      case 'low': return '#36a64f';
-      default: return '#36a64f';
-    }
-  }
-
-  private async updateSecurityMetrics(): Promise<void> {
-    try {
-      const now = new Date();
-      const timeWindow = 60 * 60 * 1000; // 1 hour
-      const cutoffTime = new Date(now.getTime() - timeWindow);
-      
-      const recentEvents = this.events.filter(e => e.timestamp > cutoffTime);
-      
-      // Group events by type
-      const eventsByType: Record<string, number> = {};
-      recentEvents.forEach(event => {
-        eventsByType[event.type] = (eventsByType[event.type] || 0) + 1;
-      });
-
-      // Group events by severity
-      const eventsBySeverity: Record<string, number> = {};
-      recentEvents.forEach(event => {
-        eventsBySeverity[event.severity] = (eventsBySeverity[event.severity] || 0) + 1;
-      });
-
-      // Get top attack sources
-      const sourceCounts: Record<string, { count: number; country: string }> = {};
-      recentEvents.forEach(event => {
-        const ip = event.source.ip;
-        if (!sourceCounts[ip]) {
-          sourceCounts[ip] = { count: 0, country: event.metadata.country || 'unknown' };
+    const sanitized = JSON.parse(JSON.stringify(payload));
+    
+    // Remove sensitive fields
+    const sensitiveFields = ['password', 'token', 'secret', 'key', 'authorization'];
+    
+    const removeSensitive = (obj: any): any => {
+      if (typeof obj === 'object' && obj !== null) {
+        for (const key in obj) {
+          if (sensitiveFields.some(field => key.toLowerCase().includes(field))) {
+            obj[key] = '[REDACTED]';
+          } else if (typeof obj[key] === 'object') {
+            obj[key] = removeSensitive(obj[key]);
+          }
         }
-        sourceCounts[ip].count++;
-      });
-
-      const topAttackSources = Object.entries(sourceCounts)
-        .map(([ip, data]) => ({ ip, count: data.count, country: data.country }))
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 10);
-
-      const metrics: SecurityMetrics = {
-        timestamp: now,
-        totalEvents: recentEvents.length,
-        eventsByType,
-        eventsBySeverity,
-        topAttackSources,
-        blockedRequests: recentEvents.filter(e => e.details.responseCode >= 400).length,
-        suspiciousLogins: recentEvents.filter(e => e.type === 'authentication' && e.severity === 'high').length,
-        dataAccessViolations: recentEvents.filter(e => e.type === 'data_breach').length,
-        systemHealth: {
-          database: await this.checkDatabaseHealth(),
-          redis: await this.checkRedisHealth(),
-          api: await this.checkApiHealth()
-        }
-      };
-
-      this.metrics.push(metrics);
-      
-      // Keep only last 168 metrics (1 week of hourly metrics)
-      if (this.metrics.length > 168) {
-        this.metrics = this.metrics.slice(-168);
       }
+      return obj;
+    };
 
-    } catch (error) {
-      logger.error('Error updating security metrics:', error);
-    }
+    return removeSensitive(sanitized);
   }
 
-  private async checkDatabaseHealth(): Promise<boolean> {
-    try {
-      const db = mongoose.connection;
-      return db.readyState === 1;
-    } catch (error) {
-      return false;
-    }
-  }
-
-  private async checkRedisHealth(): Promise<boolean> {
-    try {
-      const stats = await getCacheStats();
-      return stats !== null;
-    } catch (error) {
-      return false;
-    }
-  }
-
-  private async checkApiHealth(): Promise<boolean> {
-    try {
-      // Check if API is responding
-      return true;
-    } catch (error) {
-      return false;
-    }
-  }
-
+  /**
+   * Generates unique event ID
+   */
   private generateEventId(): string {
-    return `evt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return `evt_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
   }
 
-  private generateAlertId(): string {
-    return `alert_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-  }
-
-  public getSecurityEvents(limit: number = 100): SecurityEvent[] {
+  /**
+   * Gets recent security events
+   */
+  getRecentEvents(limit: number = 100): SecurityEvent[] {
     return this.events.slice(-limit);
   }
 
-  public getSecurityAlerts(limit: number = 50): SecurityAlert[] {
-    return this.alerts.slice(-limit);
+  /**
+   * Gets unresolved alerts
+   */
+  getUnresolvedAlerts(): SecurityAlert[] {
+    return this.alerts.filter(alert => !alert.resolved);
   }
 
-  public getSecurityMetrics(limit: number = 24): SecurityMetrics[] {
-    return this.metrics.slice(-limit);
+  /**
+   * Gets security statistics
+   */
+  getSecurityStats(): any {
+    const now = new Date();
+    const last24h = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    const last7d = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+    const events24h = this.events.filter(e => e.timestamp >= last24h);
+    const events7d = this.events.filter(e => e.timestamp >= last7d);
+
+    return {
+      totalEvents: this.events.length,
+      events24h: events24h.length,
+      events7d: events7d.length,
+      unresolvedAlerts: this.getUnresolvedAlerts().length,
+      suspiciousIPs: this.suspiciousIPs.size,
+      failedLoginAttempts: Array.from(this.failedLoginAttempts.entries()),
+      eventTypes: this.getEventTypeStats(),
+      severityDistribution: this.getSeverityDistribution()
+    };
   }
 
-  public getLatestSecurityMetrics(): SecurityMetrics | null {
-    return this.metrics.length > 0 ? this.metrics[this.metrics.length - 1] : null;
+  /**
+   * Gets event type statistics
+   */
+  private getEventTypeStats(): { [key: string]: number } {
+    const stats: { [key: string]: number } = {};
+    this.events.forEach(event => {
+      stats[event.type] = (stats[event.type] || 0) + 1;
+    });
+    return stats;
   }
 
-  public updateAlertConfig(newConfig: Partial<typeof this.alertConfig>): void {
-    this.alertConfig = { ...this.alertConfig, ...newConfig };
+  /**
+   * Gets severity distribution
+   */
+  private getSeverityDistribution(): { [key: string]: number } {
+    const distribution: { [key: string]: number } = {};
+    this.events.forEach(event => {
+      distribution[event.severity] = (distribution[event.severity] || 0) + 1;
+    });
+    return distribution;
   }
 
-  public getAlertConfig(): typeof this.alertConfig {
-    return { ...this.alertConfig };
-  }
-
-  public async resolveAlert(alertId: string, resolvedBy: string): Promise<boolean> {
-    try {
-      const alert = this.alerts.find(a => a.id === alertId);
-      if (alert) {
-        alert.resolved = true;
-        alert.resolvedAt = new Date();
-        alert.resolvedBy = resolvedBy;
-        return true;
-      }
-      return false;
-    } catch (error) {
-      logger.error('Error resolving alert:', error);
-      return false;
+  /**
+   * Resolves an alert
+   */
+  resolveAlert(alertId: string, resolvedBy: string): boolean {
+    const alert = this.alerts.find(a => a.id === alertId);
+    if (alert) {
+      alert.resolved = true;
+      alert.resolvedAt = new Date();
+      alert.resolvedBy = resolvedBy;
+      return true;
     }
+    return false;
+  }
+
+  /**
+   * Clears old events and alerts
+   */
+  cleanup(): void {
+    const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000); // 30 days ago
+    
+    this.events = this.events.filter(e => e.timestamp >= cutoff);
+    this.alerts = this.alerts.filter(a => a.timestamp >= cutoff);
+    
+    // Clear old failed login attempts
+    this.failedLoginAttempts.clear();
   }
 }
 
-export const securityMonitoringService = SecurityMonitoringService.getInstance();
+export const securityMonitoring = SecurityMonitoringService.getInstance();

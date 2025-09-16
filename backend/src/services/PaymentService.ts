@@ -315,6 +315,35 @@ export class PaymentService {
     ]);
   }
 
+  // Transaction Management Methods
+  async getTransactionByOrderId(orderId: string) {
+    try {
+      const transaction = await Transaction.findOne({ 
+        transactionId: orderId,
+        status: 'pending'
+      });
+      return transaction;
+    } catch (error) {
+      logger.error('Failed to get transaction by order ID:', error);
+      return null;
+    }
+  }
+
+  async updateUserCoins(userId: string, amount: number) {
+    try {
+      await User.findByIdAndUpdate(userId, {
+        $inc: { 
+          'coins.balance': amount,
+          'coins.totalEarned': amount
+        }
+      });
+      return true;
+    } catch (error) {
+      logger.error('Failed to update user coins:', error);
+      return false;
+    }
+  }
+
   // PayPal Payment Methods
   async createPayPalOrder(amount: number, userId: string, coins: number) {
     try {

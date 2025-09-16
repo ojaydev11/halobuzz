@@ -13,6 +13,38 @@ export class ModerationQueue {
     ban: 3
   };
 
+  async addContentForReview(contentData: {
+    userId: string;
+    contentType: 'reel' | 'stream' | 'message';
+    contentId: string;
+    content: string;
+    metadata?: any;
+  }) {
+    try {
+      const flag = new ModerationFlag({
+        reporterId: 'system',
+        reportedUserId: contentData.userId,
+        type: contentData.contentType,
+        reason: 'content_review',
+        description: `Content review for ${contentData.contentType}`,
+        status: 'pending',
+        priority: 2,
+        metadata: {
+          contentId: contentData.contentId,
+          content: contentData.content,
+          ...contentData.metadata
+        }
+      });
+
+      await flag.save();
+      logger.info(`Content added for review: ${contentData.contentId}`);
+      return { success: true, flagId: flag._id };
+    } catch (error) {
+      logger.error('Failed to add content for review:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
   async createFlag(flagData: {
     reporterId: string;
     reportedUserId?: string;
