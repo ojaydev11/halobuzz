@@ -37,20 +37,20 @@ const TestComponent: React.FC<{ onAuthStateChange?: (isAuthenticated: boolean) =
   }, [isAuthenticated, onAuthStateChange]);
 
   return (
-    <>
+    <div>
       {isAuthenticated ? (
-        <>
-          <text testID="user-info">Welcome {user?.username}</text>
-          <button testID="logout-button" onPress={logout}>
+        <div>
+          <div testID="user-info">Welcome {user?.username}</div>
+          <button testID="logout-button" onClick={logout}>
             Logout
           </button>
-        </>
+        </div>
       ) : (
-        <button testID="login-button" onPress={() => login('test@example.com', 'password')}>
+        <button testID="login-button" onClick={() => login('test@example.com', 'password')}>
           Login
         </button>
       )}
-    </>
+    </div>
   );
 };
 

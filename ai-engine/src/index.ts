@@ -31,6 +31,8 @@ import recommendationRoutes from './routes/recommendation';
 import enhancementRoutes from './routes/enhancement';
 import conversationRoutes from './routes/conversation';
 import arRoutes from './routes/ar';
+import contentGenerationRoutes from './routes/contentGeneration';
+import aiIntelligenceRoutes from './routes/aiIntelligence';
 
 // Import services
 import { ModerationService } from './services/ModerationService';
@@ -172,6 +174,8 @@ app.use('/api/ai/recommendation', recommendationRoutes);
 app.use('/api/ai/enhancement', enhancementRoutes);
 app.use('/api/ai/conversation', conversationRoutes);
 app.use('/api/ai/ar', arRoutes);
+app.use('/api/ai/content-generation', contentGenerationRoutes);
+app.use('/api/ai/intelligence', aiIntelligenceRoutes);
 
 // Socket.IO event handling
 io.on('connection', (socket) => {
@@ -243,7 +247,8 @@ server.listen(PORT, '0.0.0.0', () => {
     recommendation: '/api/ai/recommendation/* (AI FEATURES)',
     enhancement: '/api/ai/enhancement/* (AI FEATURES)',
     conversation: '/api/ai/conversation/* (AI FEATURES)',
-    ar: '/api/ai/ar/* (AI FEATURES)'
+    ar: '/api/ai/ar/* (AI FEATURES)',
+    intelligence: '/api/ai/intelligence/* (TRANSCENDENT AI)'
   });
   
   logger.info('Security features:', {

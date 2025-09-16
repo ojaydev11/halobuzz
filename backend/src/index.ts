@@ -92,6 +92,10 @@ import configRoutes from '@/routes/config';
 import kycRoutes from '@/routes/kyc';
 import monitoringRoutes from '@/routes/monitoring';
 import securityRoutes from '@/routes/security';
+import aiContentStudioRoutes from '@/routes/aiContentStudio';
+
+// New AI services routes
+import aiContentRoutes from '@/routes/ai-content';
 
 // New creator economy routes
 import nftRoutes from '@/routes/nft';
@@ -301,6 +305,12 @@ app.use(`/api/${apiVersion}/nft`, nftRoutes);
 app.use(`/api/${apiVersion}/subscription`, subscriptionRoutes);
 app.use(`/api/${apiVersion}/analytics`, creatorAnalyticsRoutes);
 app.use(`/api/${apiVersion}/commerce`, commerceRoutes);
+
+// AI Content Studio routes
+app.use(`/api/${apiVersion}/ai-content-studio`, aiContentStudioRoutes);
+
+// AI Content Generation routes
+app.use(`/api/${apiVersion}/ai-content`, authMiddleware, aiContentRoutes);
 
 // Phase 4: Interactive Features routes
 // app.use(`/api/${process.env.API_VERSION || 'v1'}/collaboration`, collaborationRoutes);
