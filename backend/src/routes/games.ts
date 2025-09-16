@@ -6,6 +6,7 @@ import { Transaction } from '../models/Transaction';
 import { reputationService } from '../services/ReputationService';
 import { gamingControlsService } from '../services/GamingControlsService';
 import { logger } from '../config/logger';
+import { gamesEngineService } from '@/services/GamesEngineService';
 
 const router: express.Router = express.Router();
 
@@ -271,8 +272,26 @@ router.post('/:id/play', [
       });
     }
 
-    // Simulate game with AI win rate enforcement
-    const gameResult = await simulateGame(game, validatedPlayers);
+    // Use global deterministic round outcome so all users see same result
+    const optionsCount = Math.max(2, Math.min(players.length, 10));
+    const round = await gamesEngineService.getOrCreateRound(String(game._id), game.duration || 60, optionsCount);
+
+    // Determine winners based on round outcome
+    const outcomeIndex = round.outcomeIndex % validatedPlayers.length;
+    const totalBetAmount = validatedPlayers.reduce((sum: number, p: any) => sum + p.betAmount, 0);
+    const prizePool = totalBetAmount + (game.prizePool || 0);
+    const winner = validatedPlayers[outcomeIndex];
+    const winnings = Math.floor(prizePool * 0.6); // 60% to players as specified
+    const house = prizePool - winnings; // 40% to house
+    const gameResult = {
+      winners: [{
+        userId: winner.userId,
+        username: winner.username,
+        betAmount: winner.betAmount,
+        winnings
+      }],
+      totalWinnings: winnings
+    };
 
     // Distribute prizes
     const winners = gameResult.winners;
