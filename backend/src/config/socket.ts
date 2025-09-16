@@ -11,6 +11,9 @@ import { socketSecurityService } from '@/services/SocketSecurityService';
 
 const logger = setupLogger();
 
+// Export a global io instance (will be set during server initialization)
+export let io: Server;
+
 interface AuthenticatedSocket extends Socket {
   userId?: string;
   user?: any;
@@ -98,9 +101,11 @@ export const getSocketIO = (): Server | null => {
   return null;
 };
 
-export const setupSocketIO = (io: Server): void => {
+export const setupSocketIO = (ioInstance: Server): void => {
+  // Set the global io instance
+  io = ioInstance;
   // Authentication middleware
-  io.use(async (socket: AuthenticatedSocket, next) => {
+  ioInstance.use(async (socket: AuthenticatedSocket, next) => {
     try {
       const token = socket.handshake.auth.token || socket.handshake.headers.authorization;
       

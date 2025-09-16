@@ -87,6 +87,8 @@ import configRoutes from '@/routes/config';
 import kycRoutes from '@/routes/kyc';
 import monitoringRoutes from '@/routes/monitoring';
 import securityRoutes from '@/routes/security';
+import linkCastRoutes from '@/routes/linkcast';
+import reverseGiftChallengeRoutes from '@/routes/reverse-gift-challenge';
 
 // New creator economy routes
 import nftRoutes from '@/routes/nft';
@@ -275,6 +277,8 @@ app.use(`/api/${apiVersion}/og`, authMiddleware, ogRoutes);
 app.use(`/api/${apiVersion}/chat`, authMiddleware, socialLimiter, chatRoutes);
 app.use(`/api/${apiVersion}/reels`, authMiddleware, reelsRoutes);
 app.use(`/api/${apiVersion}/games`, authMiddleware, gamesRoutes);
+app.use(`/api/${apiVersion}/linkcast`, authMiddleware, linkCastRoutes);
+app.use(`/api/${apiVersion}/challenges`, authMiddleware, reverseGiftChallengeRoutes);
 app.use(`/api/${apiVersion}/config`, authMiddleware, configRoutes);
 app.use(`/api/${apiVersion}/kyc`, authMiddleware, kycRoutes);
 import { adminOnly } from '@/middleware/admin';

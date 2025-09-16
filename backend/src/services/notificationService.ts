@@ -241,4 +241,20 @@ export class NotificationService {
       logger.error('Error clearing expired notifications:', error);
     }
   }
+  
+  // Add sendNotification method for compatibility
+  static async sendNotification(userId: string, notification: {
+    title: string;
+    body: string;
+    data?: any;
+    type?: string;
+  }): Promise<boolean> {
+    return this.sendPushNotification(userId, {
+      ...notification,
+      type: (notification.type as any) || 'general'
+    });
+  }
 }
+
+// Export singleton instance
+export const notificationService = NotificationService;

@@ -23,3 +23,7 @@ export { ModerationFlag } from './ModerationFlag';
 export type { IModerationFlag } from './ModerationFlag';
 export { Festival } from './Festival';
 export type { IFestival } from './Festival';
+export { LinkCast } from './LinkCast';
+export type { ILinkCast } from './LinkCast';
+export { ReverseGiftChallenge } from './ReverseGiftChallenge';
+export type { IReverseGiftChallenge } from './ReverseGiftChallenge';
