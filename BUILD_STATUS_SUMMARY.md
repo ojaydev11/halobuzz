@@ -130,6 +130,13 @@ EXPO_PUBLIC_API_BASE_URL=https://your-backend-url.com
 AGORA_APP_ID=your_agora_app_id
 ```
 
+#### **AI Engine (.env)**
+```env
+AI_SERVICE_SECRET=your_ai_service_secret
+# Optional alias for compatibility
+AI_ENGINE_SECRET=${AI_SERVICE_SECRET}
+```
+
 ---
 
 ## **✅ VERIFICATION CHECKLIST**

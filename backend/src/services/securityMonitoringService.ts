@@ -50,6 +50,101 @@ export class SecurityMonitoringService {
     await this.checkAlertThresholds(securityEvent);
   }
 
+  // Compatibility wrappers for existing middleware/routes
+  logAuthenticationEvent(
+    eventType: 'login_success' | 'login_failed',
+    req: Request,
+    userId?: string,
+    username?: string,
+    error?: string
+  ): void {
+    void this.logSecurityEvent({
+      type: eventType === 'login_failed' ? 'AUTH_FAILURE' : 'ADMIN_ACTION',
+      severity: eventType === 'login_failed' ? 'MEDIUM' : 'LOW',
+      userId,
+      ipAddress: req.ip || 'unknown',
+      userAgent: req.get('User-Agent') || '',
+      details: {
+        path: req.path,
+        method: req.method,
+        username,
+        error
+      }
+    });
+  }
+
+  logAuthorizationEvent(
+    eventType: 'access_granted' | 'access_denied',
+    req: Request,
+    userId?: string,
+    username?: string,
+    resourcePath?: string,
+    reason?: string
+  ): void {
+    void this.logSecurityEvent({
+      type: eventType === 'access_denied' ? 'SUSPICIOUS_ACTIVITY' : 'ADMIN_ACTION',
+      severity: eventType === 'access_denied' ? 'HIGH' : 'LOW',
+      userId,
+      ipAddress: req.ip || 'unknown',
+      userAgent: req.get('User-Agent') || '',
+      details: {
+        path: resourcePath || req.path,
+        method: req.method,
+        username,
+        reason
+      }
+    });
+  }
+
+  logEvent(event: {
+    type: string;
+    severity: 'low' | 'medium' | 'high' | 'critical';
+    source: { ip?: string; userAgent?: string; userId?: string; username?: string };
+    details?: Record<string, any>;
+    metadata?: Record<string, any>;
+  }): void {
+    const typeMap: Record<string, SecurityEvent['type']> = {
+      rate_limit: 'RATE_LIMIT_EXCEEDED',
+      admin_action: 'ADMIN_ACTION'
+    };
+    const mappedType: SecurityEvent['type'] = typeMap[event.type] || 'SUSPICIOUS_ACTIVITY';
+    const sev = (event.severity || 'low').toUpperCase() as SecurityEvent['severity'];
+
+    void this.logSecurityEvent({
+      type: mappedType,
+      severity: sev,
+      userId: event.source.userId,
+      ipAddress: event.source.ip || 'unknown',
+      userAgent: event.source.userAgent,
+      details: {
+        ...(event.details || {}),
+        metadata: event.metadata
+      }
+    });
+  }
+
+  logXSSEvent(req: Request, payload: any, userId?: string, username?: string): void {
+    void this.logSecurityEvent({
+      type: 'SUSPICIOUS_ACTIVITY',
+      severity: 'HIGH',
+      userId,
+      ipAddress: req.ip || 'unknown',
+      userAgent: req.get('User-Agent') || '',
+      details: { kind: 'xss', payload, path: req.path, method: req.method, username }
+    });
+  }
+
+  logInjectionEvent(kind: 'nosql_injection' | 'sql_injection', req: Request, payload: any, userId?: string, username?: string): void {
+    void this.logSecurityEvent({
+      type: 'SUSPICIOUS_ACTIVITY',
+      severity: 'HIGH',
+      userId,
+      ipAddress: req.ip || 'unknown',
+      userAgent: req.get('User-Agent') || '',
+      details: { kind, payload, path: req.path, method: req.method, username }
+    });
+  }
+
   /**
    * Check if event count exceeds alert thresholds
    */
@@ -132,6 +227,54 @@ export class SecurityMonitoringService {
     }
 
     return filteredEvents;
+  }
+
+  getRecentEvents(limit: number = 50): SecurityEvent[] {
+    const events = [...this.events]
+      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+      .slice(0, limit);
+    return events;
+  }
+
+  getUnresolvedAlerts(): SecurityEvent[] {
+    return this.events.filter(e => !e.resolved && (e.severity === 'HIGH' || e.severity === 'CRITICAL'));
+  }
+
+  resolveAlert(alertId: string, _resolvedBy?: string): boolean {
+    // Synchronously mark as resolved
+    const event = this.events.find(e => e.id === alertId);
+    if (event) {
+      event.resolved = true;
+      logger.info('Security alert resolved', { alertId });
+      return true;
+    }
+    return false;
+  }
+
+  getSecurityStats(): {
+    totalEvents: number;
+    unresolved: number;
+    byType: Record<string, number>;
+    bySeverity: Record<string, number>;
+  } {
+    const byType: Record<string, number> = {};
+    const bySeverity: Record<string, number> = {};
+    for (const e of this.events) {
+      byType[e.type] = (byType[e.type] || 0) + 1;
+      bySeverity[e.severity] = (bySeverity[e.severity] || 0) + 1;
+    }
+    return {
+      totalEvents: this.events.length,
+      unresolved: this.events.filter(e => !e.resolved).length,
+      byType,
+      bySeverity
+    };
+  }
+
+  cleanup(days: number = 30): void {
+    const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
+    this.events = this.events.filter(e => e.timestamp.getTime() >= cutoff);
+    logger.info('Security events cleanup performed', { remaining: this.events.length, days });
   }
 
   /**

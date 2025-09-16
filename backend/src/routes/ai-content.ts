@@ -4,6 +4,7 @@ import { AIContentGenerationService } from '../services/AIContentGenerationServi
 import { authMiddleware } from '../middleware/auth';
 import { globalLimiter } from '../middleware/security';
 import { logger } from '../config/logger';
+import axios from 'axios';
 
 const router = express.Router();
 const aiContentService = new AIContentGenerationService();
@@ -39,6 +40,16 @@ router.post('/generate-video', [
     const creatorId = req.user.id;
 
     logger.info('AI video generation request', { creatorId, prompt, style, duration });
+
+    // Prefer calling AI Engine if configured; fallback to local service
+    if (process.env.AI_ENGINE_URL && (process.env.AI_SERVICE_SECRET || process.env.AI_ENGINE_SECRET)) {
+      const aiResponse = await axios.post(
+        `${process.env.AI_ENGINE_URL}/api/ai/content-generation/text-to-video`,
+        { prompt, userId: creatorId, duration, style },
+        { headers: { 'x-ai-secret': process.env.AI_SERVICE_SECRET || process.env.AI_ENGINE_SECRET } }
+      );
+      return res.json({ success: true, data: aiResponse.data.data || aiResponse.data });
+    }
 
     const result = await aiContentService.generateVideo({
       prompt,
@@ -80,7 +91,17 @@ router.post('/generate-thumbnail', [
 
     logger.info('AI thumbnail generation request', { creatorId, videoId, prompt });
 
-    const thumbnailUrl = await aiContentService.generateThumbnail(videoId, prompt);
+    let thumbnailUrl: string;
+    if (process.env.AI_ENGINE_URL && (process.env.AI_SERVICE_SECRET || process.env.AI_ENGINE_SECRET)) {
+      const aiResponse = await axios.post(
+        `${process.env.AI_ENGINE_URL}/api/ai/content-generation/thumbnail`,
+        { prompt, userId: creatorId, streamId: videoId },
+        { headers: { 'x-ai-secret': process.env.AI_SERVICE_SECRET || process.env.AI_ENGINE_SECRET } }
+      );
+      thumbnailUrl = aiResponse.data?.data?.url || aiResponse.data?.data?.thumbnailUrl || '';
+    } else {
+      thumbnailUrl = await aiContentService.generateThumbnail(videoId, prompt);
+    }
 
     res.json({
       success: true,
@@ -118,6 +139,15 @@ router.post('/generate-music', [
     const creatorId = req.user.id;
 
     logger.info('AI music generation request', { creatorId, prompt, style, duration });
+
+    if (process.env.AI_ENGINE_URL && (process.env.AI_SERVICE_SECRET || process.env.AI_ENGINE_SECRET)) {
+      const aiResponse = await axios.post(
+        `${process.env.AI_ENGINE_URL}/api/ai/content-generation/background-music`,
+        { prompt, userId: creatorId, duration, style },
+        { headers: { 'x-ai-secret': process.env.AI_SERVICE_SECRET || process.env.AI_ENGINE_SECRET } }
+      );
+      return res.json({ success: true, data: aiResponse.data.data || aiResponse.data });
+    }
 
     const result = await aiContentService.generateMusic({
       prompt,

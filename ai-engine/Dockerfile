@@ -59,18 +59,18 @@ RUN mkdir -p logs && chown -R ai-engine:nodejs logs
 
 # Set environment variables
 ENV NODE_ENV=production
-ENV PORT=4000
+ENV PORT=5020
 ENV HOST=0.0.0.0
 
 # Switch to non-root user
 USER ai-engine
 
 # Expose port
-EXPOSE 4000
+EXPOSE 5020
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=20s --retries=3 \
-  CMD wget -qO- http://127.0.0.1:4000/api/v1/monitoring/health || exit 1
+  CMD wget -qO- http://127.0.0.1:${PORT}/health || exit 1
 
 # Start the application
 CMD ["node", "dist/index.js"]

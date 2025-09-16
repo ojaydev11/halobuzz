@@ -15,10 +15,10 @@ export interface AuthenticatedRequest extends Request {
 export const authenticateAIEngine = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     const aiSecret = req.headers['x-ai-secret'] as string;
-    const expectedSecret = process.env.AI_SERVICE_SECRET;
+    const expectedSecret = process.env.AI_SERVICE_SECRET || process.env.AI_ENGINE_SECRET;
 
     if (!expectedSecret) {
-      logger.error('AI_SERVICE_SECRET not configured');
+      logger.error('AI service secret not configured (AI_SERVICE_SECRET/AI_ENGINE_SECRET)');
       return res.status(500).json({
         success: false,
         error: 'AI engine configuration error'
@@ -75,6 +75,22 @@ export const authenticateAIEngine = (req: AuthenticatedRequest, res: Response, n
  */
 export function authenticateInternalAPI(req: AuthenticatedRequest, res: Response, next: NextFunction): void {
   try {
+    // Prefer x-ai-secret for internal service-to-service auth
+    const aiSecretHeader = req.headers['x-ai-secret'] as string | undefined;
+    const aiSecret = process.env.AI_SERVICE_SECRET || process.env.AI_ENGINE_SECRET;
+
+    if (aiSecretHeader && aiSecret && aiSecretHeader === aiSecret) {
+      // Authenticated via x-ai-secret
+      req.user = {
+        id: 'ai-engine-service',
+        role: 'ai-engine',
+        permissions: ['moderation', 'engagement', 'reputation']
+      };
+      logger.info('Internal API authenticated via x-ai-secret', { path: req.path, ip: req.ip });
+      next();
+      return;
+    }
+
     const authHeader = req.headers.authorization;
     const secretKey = process.env.INTERNAL_API_SECRET_KEY;
 

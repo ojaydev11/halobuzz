@@ -327,8 +327,11 @@ export class PredictiveAnalyticsService {
   }
 
   private calculateConfidence(features: any): number {
-    const completeness = Object.values(features).filter((f: any) => (f as number) > 0).length / Object.keys(features).length;
-    const quality = Object.values(features).reduce((sum: number, f: any) => sum + (f as number), 0) / Object.keys(features).length;
+    const numericValues = Object.values(features).map((v: any) => typeof v === 'number' ? v : 0);
+    const numPositive = numericValues.filter((f: number) => f > 0).length;
+    const completeness = numPositive / (numericValues.length || 1);
+    const sumValues = numericValues.reduce((sum: number, f: number) => sum + f, 0);
+    const quality = sumValues / (numericValues.length || 1);
     
     return (completeness + quality) / 2;
   }
