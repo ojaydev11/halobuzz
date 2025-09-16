@@ -81,6 +81,8 @@ import throneRoutes from '@/routes/throne';
 import ogRoutes from '@/routes/og';
 import chatRoutes from '@/routes/chat';
 import reelsRoutes from '@/routes/reels';
+import searchRoutes from '@/routes/search';
+import globalExpansionRoutes from '@/routes/global-expansion';
 import gamesRoutes from '@/routes/games';
 import adminRoutes from '@/routes/admin';
 import configRoutes from '@/routes/config';
@@ -274,6 +276,8 @@ app.use(`/api/${apiVersion}/throne`, authMiddleware, socialLimiter, throneRoutes
 app.use(`/api/${apiVersion}/og`, authMiddleware, ogRoutes);
 app.use(`/api/${apiVersion}/chat`, authMiddleware, socialLimiter, chatRoutes);
 app.use(`/api/${apiVersion}/reels`, authMiddleware, reelsRoutes);
+app.use(`/api/${apiVersion}/search`, searchRoutes);
+app.use(`/api/${apiVersion}/global-expansion`, globalExpansionRoutes);
 app.use(`/api/${apiVersion}/games`, authMiddleware, gamesRoutes);
 app.use(`/api/${apiVersion}/config`, authMiddleware, configRoutes);
 app.use(`/api/${apiVersion}/kyc`, authMiddleware, kycRoutes);
