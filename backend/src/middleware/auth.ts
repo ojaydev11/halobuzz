@@ -18,6 +18,15 @@ export interface AuthenticatedRequest extends Request {
   };
 }
 
+// Alias for compatibility
+export const requireAuth = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  return authMiddleware(req, res, next);
+};
+
 export const authMiddleware = async (
   req: AuthenticatedRequest,
   res: Response,

@@ -10,6 +10,16 @@ export interface ILiveStream extends Document {
   isAnonymous: boolean;
   isPrivate: boolean;
   streamKey: string;
+  anonymousSettings?: {
+    hiddenIdentity: boolean;
+    voiceChanger: 'none' | 'low' | 'medium' | 'high';
+    avatarMask: string;
+    displayName: string;
+    allowDirectMessages: boolean;
+    revealThreshold?: number; // Coins needed to reveal identity
+    autoRevealAt?: Date; // Auto reveal after certain time
+    isRevealed: boolean;
+  };
   agoraChannel: string;
   agoraToken: string;
   status: 'preparing' | 'live' | 'ended' | 'banned';
@@ -126,6 +136,20 @@ const liveStreamSchema = new Schema<ILiveStream>({
     type: String,
     required: true,
     unique: true
+  },
+  anonymousSettings: {
+    hiddenIdentity: { type: Boolean, default: false },
+    voiceChanger: {
+      type: String,
+      enum: ['none', 'low', 'medium', 'high'],
+      default: 'none'
+    },
+    avatarMask: { type: String, default: 'default_mask' },
+    displayName: { type: String, default: 'Anonymous Host' },
+    allowDirectMessages: { type: Boolean, default: false },
+    revealThreshold: { type: Number, min: 0 },
+    autoRevealAt: { type: Date },
+    isRevealed: { type: Boolean, default: false }
   },
   agoraChannel: {
     type: String,
