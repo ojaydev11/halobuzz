@@ -247,7 +247,7 @@ class SettingsManager {
 
     const missingSecrets = requiredSecrets.filter(secret => {
       const value = this.settings[secret as keyof AppSettings];
-      return !value || value === '' || value.includes('change_me');
+      return !value || value === '' || (typeof value === 'string' && value.includes('change_me'));
     });
 
     if (missingSecrets.length > 0) {

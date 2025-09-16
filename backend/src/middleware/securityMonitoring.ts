@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { securityMonitoring } from '@/services/SecurityMonitoringService';
+import { securityMonitoring } from '@/services/securityMonitoringService';
 import { logger } from '@/config/logger';
 
 /**

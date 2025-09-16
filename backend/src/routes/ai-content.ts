@@ -2,7 +2,7 @@ import express from 'express';
 import { body, validationResult } from 'express-validator';
 import { AIContentGenerationService } from '../services/AIContentGenerationService';
 import { authMiddleware } from '../middleware/auth';
-import { rateLimiter } from '../middleware/rateLimiter';
+import { globalLimiter } from '../middleware/security';
 import { logger } from '../config/logger';
 
 const router = express.Router();

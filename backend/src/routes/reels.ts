@@ -59,17 +59,17 @@ router.post('/upload/presign', [
     }
 
     // Validate file metadata
-    const validationResult = FileValidator.validateFileMetadata(
+    const fileValidationResult = FileValidator.validateFileMetadata(
       fileName,
       fileType,
       fileSize,
       'video'
     );
 
-    if (!validationResult.isValid) {
+    if (!fileValidationResult.isValid) {
       return res.status(400).json({
         success: false,
-        error: validationResult.error
+        error: fileValidationResult.error
       });
     }
 
@@ -206,7 +206,7 @@ router.post('/', [
 
     // Add to moderation queue for content review
     await moderationQueue.addContentForReview({
-      type: 'reel',
+      contentType: 'reel',
       contentId: reel._id.toString(),
       userId,
       content: JSON.stringify({ title, description, tags })

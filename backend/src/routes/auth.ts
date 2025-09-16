@@ -71,7 +71,7 @@ router.post('/register', [
     // Generate JWT token
     const token = jwt.sign(
       { userId: user._id, username: user.username },
-      process.env.JWT_SECRET!,
+      process.env.JWT_SECRET as string,
       { expiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '1h' }
     );
 
@@ -187,7 +187,7 @@ router.post('/login', [
     // Generate JWT token
     const token = jwt.sign(
       { userId: user._id, username: user.username },
-      process.env.JWT_SECRET!,
+      process.env.JWT_SECRET as string,
       { expiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '1h' }
     );
 
@@ -365,7 +365,7 @@ router.post('/refresh', async (req, res) => {
     // Generate new token
     const newToken = jwt.sign(
       { userId: user._id, username: user.username },
-      process.env.JWT_SECRET!,
+      process.env.JWT_SECRET as string,
       { expiresIn: '7d' }
     );
 

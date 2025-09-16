@@ -1,7 +1,8 @@
 import express, { Request, Response } from 'express';
+import { AuthenticatedRequest } from '../middleware/auth';
 import { body, validationResult } from 'express-validator';
 import axios from 'axios';
-import { authenticateToken } from '../middleware/auth';
+import { authMiddleware } from '../middleware/auth';
 import logger from '../utils/logger';
 
 const router = express.Router();
@@ -19,7 +20,7 @@ router.post('/generate-video',
     body('style').optional().isString().withMessage('Style must be a string'),
     body('mood').optional().isString().withMessage('Mood must be a string')
   ],
-  async (req: Request, res: Response) => {
+  async (req: AuthenticatedRequest, res: Response) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -104,7 +105,7 @@ router.post('/generate-thumbnail',
     body('prompt').notEmpty().withMessage('Prompt is required'),
     body('style').optional().isString().withMessage('Style must be a string')
   ],
-  async (req: Request, res: Response) => {
+  async (req: AuthenticatedRequest, res: Response) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -188,7 +189,7 @@ router.post('/generate-music',
     body('style').optional().isString().withMessage('Style must be a string'),
     body('mood').optional().isString().withMessage('Mood must be a string')
   ],
-  async (req: Request, res: Response) => {
+  async (req: AuthenticatedRequest, res: Response) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -275,7 +276,7 @@ router.post('/generate-package',
     body('style').optional().isString().withMessage('Style must be a string'),
     body('mood').optional().isString().withMessage('Mood must be a string')
   ],
-  async (req: Request, res: Response) => {
+  async (req: AuthenticatedRequest, res: Response) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -356,7 +357,7 @@ router.post('/generate-package',
  */
 router.get('/templates',
   authenticateToken,
-  async (req: Request, res: Response) => {
+  async (req: AuthenticatedRequest, res: Response) => {
     try {
       const templates = [
         {
@@ -427,7 +428,7 @@ router.get('/templates',
  */
 router.get('/history',
   authenticateToken,
-  async (req: Request, res: Response) => {
+  async (req: AuthenticatedRequest, res: Response) => {
     try {
       const userId = req.user?.id;
       if (!userId) {

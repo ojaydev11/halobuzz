@@ -89,7 +89,7 @@ async function handlePaymentCapture(resource: any) {
         await transaction.save();
 
         // Update user coins
-        await paymentService.updateUserCoins(transaction.userId, transaction.amount);
+        await paymentService.updateUserCoins(transaction.userId.toString(), transaction.amount);
 
         logger.info('PayPal payment processed successfully', {
           userId: transaction.userId,
