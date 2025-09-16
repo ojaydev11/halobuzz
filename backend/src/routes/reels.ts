@@ -1,29 +1,15 @@
 import express from 'express';
 import { body, validationResult } from 'express-validator';
-// AWS SDK imports - will be dynamically imported when needed
-// import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
-// import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { v4 as uuidv4 } from 'uuid';
 import { User } from '../models/User';
 import { Reel } from '../models/Reel';
 import { LiveStream } from '../models/LiveStream';
 import { reputationService } from '../services/ReputationService';
 import { moderationQueue } from '../services/ModerationQueue';
+import { s3Service } from '../services/s3Service';
 import { logger } from '../config/logger';
 
 const router = express.Router();
-
-// Initialize S3 client
-// S3Client will be dynamically imported when needed
-// const s3Client = new S3Client({
-//   region: process.env.AWS_REGION || 'us-east-1',
-//   credentials: {
-//     accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
-//     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || ''
-//   }
-// });
-
-const BUCKET_NAME = process.env.S3_BUCKET_NAME || 'halobuzz-reels';
 
 // Get presigned URL for reel upload
 router.post('/upload/presign', [
@@ -73,36 +59,15 @@ router.post('/upload/presign', [
     const fileExtension = fileName.split('.').pop();
     const fileKey = `reels/${userId}/${uuidv4()}.${fileExtension}`;
 
-    // Create presigned URL for upload
-    // AWS SDK functionality temporarily disabled for compilation
-    // const { S3Client, PutObjectCommand } = await import('@aws-sdk/client-s3') as any;
-    // const { getSignedUrl } = await import('@aws-sdk/s3-request-presigner') as any;
-    
-    // const s3Client = new S3Client({
-    //   region: process.env.AWS_REGION || 'us-east-1',
-    //   credentials: {
-    //     accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
-    //     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || ''
-    //   }
-    // });
-    
-    // const putObjectCommand = new PutObjectCommand({
-    //   Bucket: BUCKET_NAME,
-    //   Key: fileKey,
-    //   ContentType: fileType,
-    //   Metadata: {
-    //     userId: userId,
-    //     originalName: fileName,
-    //     uploadedAt: new Date().toISOString()
-    //   }
-    // });
-
-    // const presignedUrl = await getSignedUrl(s3Client, putObjectCommand, {
-    //   expiresIn: 3600 // 1 hour
-    // });
-    
-    // Temporary mock URL for compilation
-    const presignedUrl = `https://${BUCKET_NAME}.s3.amazonaws.com/${fileKey}`;
+    // Create presigned URL for upload using S3 service
+    const presignedUrl = await s3Service.generatePresignedUploadUrl(
+      fileKey,
+      fileType,
+      {
+        userId: userId,
+        originalName: fileName
+      }
+    );
 
     res.json({
       success: true,
@@ -122,18 +87,18 @@ router.post('/upload/presign', [
   }
 });
 
-// Create reel record after upload
-router.post('/upload/complete', [
+// Create reel after upload
+router.post('/', [
   body('fileKey')
     .isString()
     .trim()
     .isLength({ min: 1 })
-    .withMessage('File key is required'),
+    .withMessage('Valid file key is required'),
   body('title')
     .isString()
     .trim()
     .isLength({ min: 1, max: 100 })
-    .withMessage('Title must be between 1 and 100 characters'),
+    .withMessage('Title must be 1-100 characters'),
   body('description')
     .optional()
     .isString()
@@ -144,16 +109,11 @@ router.post('/upload/complete', [
     .optional()
     .isArray()
     .withMessage('Tags must be an array'),
-  body('tags.*')
-    .isString()
-    .trim()
-    .isLength({ min: 1, max: 20 })
-    .withMessage('Each tag must be between 1 and 20 characters'),
   body('category')
     .optional()
     .isString()
     .trim()
-    .isIn(['entertainment', 'gaming', 'music', 'comedy', 'education', 'lifestyle', 'other'])
+    .isLength({ min: 1, max: 50 })
     .withMessage('Valid category is required'),
   body('isPublic')
     .optional()
@@ -196,44 +156,16 @@ router.post('/upload/complete', [
     }
 
     // Verify file exists in S3
-    // AWS SDK functionality temporarily disabled for compilation
-    // try {
-    //   const { S3Client, GetObjectCommand } = await import('@aws-sdk/client-s3') as any;
-    //   const { getSignedUrl } = await import('@aws-sdk/s3-request-presigner') as any;
-    //   
-    //   const s3Client = new S3Client({
-    //     region: process.env.AWS_REGION || 'us-east-1',
-    //     credentials: {
-    //       accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
-    //       secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || ''
-    //     }
-    //   });
-    //   
-    //   const headObjectCommand = new GetObjectCommand({
-    //     Bucket: BUCKET_NAME,
-    //     Key: fileKey
-    //   });
-    //   await s3Client.send(headObjectCommand);
-    // } catch (error) {
-    //   return res.status(400).json({
-    //     success: false,
-    //     error: 'File not found in storage'
-    //   });
-    // }
+    const fileExists = await s3Service.fileExists(fileKey);
+    if (!fileExists) {
+      return res.status(400).json({
+        success: false,
+        error: 'File not found in storage'
+      });
+    }
 
     // Generate presigned URL for viewing
-    // AWS SDK functionality temporarily disabled for compilation
-    // const getObjectCommand = new GetObjectCommand({
-    //   Bucket: BUCKET_NAME,
-    //   Key: fileKey
-    // });
-
-    // const viewUrl = await getSignedUrl(s3Client, getObjectCommand, {
-    //   expiresIn: 86400 // 24 hours
-    // });
-    
-    // Temporary mock URL for compilation
-    const viewUrl = `https://${BUCKET_NAME}.s3.amazonaws.com/${fileKey}`;
+    const viewUrl = await s3Service.generatePresignedViewUrl(fileKey, 86400); // 24 hours
 
     // Create reel record
     const reel = new Reel({
@@ -241,70 +173,54 @@ router.post('/upload/complete', [
       username: user.username,
       avatar: user.avatar,
       fileKey,
-      viewUrl,
       title,
       description,
       tags,
       category,
       isPublic,
-      status: 'processing', // Will be updated after video processing
       metadata: {
-        duration: 0, // Will be updated after processing
-        resolution: '',
-        fileSize: 0,
-        views: 0,
-        likes: 0,
-        shares: 0,
-        comments: 0,
-        trendingScore: 0,
-        engagementRate: 0
-      },
-      processing: {
-        status: 'queued',
-        progress: 0,
-        tasks: {
-          transcoding: false,
-          thumbnailGeneration: false,
-          contentModeration: false,
-          aiAnalysis: false
-        }
+        originalFileKey: fileKey,
+        viewUrl: viewUrl
       }
     });
 
     await reel.save();
 
-    // Apply reputation bonus for content creation
-    await reputationService.applyReputationDelta(userId, 'reel_uploaded', {
-      count: 1,
-      category,
-      isPublic
+    // Add to moderation queue for content review
+    await moderationQueue.addContentForReview({
+      type: 'reel',
+      contentId: reel._id,
+      userId,
+      content: { title, description, tags }
     });
 
-    // Auto-moderate content
-    await moderationQueue.autoModerateContent(title + ' ' + description);
+    // Award reputation points for content creation
+    await reputationService.awardPoints(userId, 'content_creation', {
+      contentType: 'reel',
+      contentId: reel._id
+    });
 
-    res.json({
+    res.status(201).json({
       success: true,
-      message: 'Reel uploaded successfully',
+      message: 'Reel created successfully',
       data: {
         reel: {
           id: reel._id,
           title: reel.title,
           description: reel.description,
           category: reel.category,
-          isPublic: reel.isPublic,
-          status: reel.status,
-          viewUrl: reel.viewUrl,
+          tags: reel.tags,
+          viewUrl,
           createdAt: reel.createdAt
         }
       }
     });
 
   } catch (error) {
-    logger.error('Complete reel upload failed:', error);
+    logger.error('Create reel failed:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to complete upload'
+      error: 'Failed to create reel'
     });
   }
 });
@@ -312,71 +228,26 @@ router.post('/upload/complete', [
 // Get reels list
 router.get('/', async (req, res) => {
   try {
-    const {
-      category,
-      userId,
-      trending = false,
-      limit = 20,
-      page = 1,
-      sortBy = 'createdAt'
-    } = req.query;
+    const { page = 1, limit = 20, category, userId: filterUserId } = req.query;
 
-    const skip = (parseInt(page as string) - 1) * parseInt(limit as string);
-    const filter: any = { isPublic: true, status: 'active' };
-
+    // Build filter
+    const filter: any = { isPublic: true };
     if (category) filter.category = category;
-    if (userId) filter.userId = userId;
+    if (filterUserId) filter.userId = filterUserId;
 
-    let sortCriteria: any = {};
-    switch (sortBy) {
-      case 'views':
-        sortCriteria = { 'metadata.views': -1 };
-        break;
-      case 'likes':
-        sortCriteria = { 'metadata.likes': -1 };
-        break;
-      case 'trending':
-        sortCriteria = { 'metadata.trendingScore': -1 };
-        break;
-      case 'createdAt':
-      default:
-        sortCriteria = { createdAt: -1 };
-        break;
-    }
-
+    // Get reels with pagination
     const reels = await Reel.find(filter)
-      .sort(sortCriteria)
-      .skip(skip)
-      .limit(parseInt(limit as string))
+      .sort({ createdAt: -1 })
+      .limit(parseInt(limit as string) * 1)
+      .skip((parseInt(page as string) - 1) * parseInt(limit as string))
       .populate('userId', 'username avatar ogLevel');
+    
     const total = await Reel.countDocuments(filter);
 
     // Generate fresh view URLs for each reel
-    // AWS SDK functionality temporarily disabled for compilation
-    // const { S3Client, GetObjectCommand } = await import('@aws-sdk/client-s3') as any;
-    // const { getSignedUrl } = await import('@aws-sdk/s3-request-presigner') as any;
-    
-    // const s3Client = new S3Client({
-    //   region: process.env.AWS_REGION || 'us-east-1',
-    //   credentials: {
-    //     accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
-    //     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || ''
-    //   }
-    // });
-    
     const reelsWithUrls = await Promise.all(
       reels.map(async (reel) => {
-        // const getObjectCommand = new GetObjectCommand({
-        //   Bucket: BUCKET_NAME,
-        //   Key: reel.fileKey
-        // });
-
-        // const viewUrl = await getSignedUrl(s3Client, getObjectCommand, {
-        //   expiresIn: 86400 // 24 hours
-        // });
-        
-        // Temporary mock URL for compilation
-        const viewUrl = `https://${BUCKET_NAME}.s3.amazonaws.com/${reel.fileKey}`;
+        const viewUrl = await s3Service.generatePresignedViewUrl(reel.fileKey, 86400);
 
         return {
           id: reel._id,
@@ -419,24 +290,21 @@ router.get('/', async (req, res) => {
 // Get trending reels
 router.get('/trending', async (req, res) => {
   try {
-    const { limit = 10, timeFrame = '24h' } = req.query;
+    const { limit = 10 } = req.query;
 
-    const reels = await (Reel as any).findTrending(parseInt(limit as string), timeFrame as string);
+    // Get trending reels based on views and recent activity
+    const trendingReels = await Reel.find({ isPublic: true })
+      .sort({ 
+        viewCount: -1,
+        createdAt: -1 
+      })
+      .limit(parseInt(limit as string) * 1)
+      .populate('userId', 'username avatar ogLevel');
 
     // Generate fresh view URLs
     const reelsWithUrls = await Promise.all(
-      reels.map(async (reel) => {
-        // const getObjectCommand = new GetObjectCommand({
-        //   Bucket: BUCKET_NAME,
-        //   Key: reel.fileKey
-        // });
-
-        // const viewUrl = await getSignedUrl(s3Client, getObjectCommand, {
-        //   expiresIn: 86400
-        // });
-        
-        // Temporary mock URL for compilation
-        const viewUrl = `https://${BUCKET_NAME}.s3.amazonaws.com/${reel.fileKey}`;
+      trendingReels.map(async (reel) => {
+        const viewUrl = await s3Service.generatePresignedViewUrl(reel.fileKey, 86400);
 
         return {
           id: reel._id,
@@ -446,9 +314,10 @@ router.get('/trending', async (req, res) => {
           title: reel.title,
           description: reel.description,
           category: reel.category,
+          tags: reel.tags,
           viewUrl,
-          metadata: reel.metadata,
-          trendingScore: reel.metadata.trendingScore
+          viewCount: reel.viewCount,
+          createdAt: reel.createdAt
         };
       })
     );
@@ -456,8 +325,7 @@ router.get('/trending', async (req, res) => {
     res.json({
       success: true,
       data: {
-        reels: reelsWithUrls,
-        timeFrame
+        reels: reelsWithUrls
       }
     });
 
@@ -486,29 +354,7 @@ router.get('/:id', async (req, res) => {
     }
 
     // Generate fresh view URL
-    // AWS SDK functionality temporarily disabled for compilation
-    // const { S3Client, GetObjectCommand } = await import('@aws-sdk/client-s3') as any;
-    // const { getSignedUrl } = await import('@aws-sdk/s3-request-presigner') as any;
-    
-    // const s3Client = new S3Client({
-    //   region: process.env.AWS_REGION || 'us-east-1',
-    //   credentials: {
-    //     accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
-    //     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || ''
-    //   }
-    // });
-    
-    // const getObjectCommand = new GetObjectCommand({
-    //   Bucket: BUCKET_NAME,
-    //   Key: reel.fileKey
-    // });
-
-    // const viewUrl = await getSignedUrl(s3Client, getObjectCommand, {
-    //   expiresIn: 86400
-    // });
-    
-    // Temporary mock URL for compilation
-    const viewUrl = `https://${BUCKET_NAME}.s3.amazonaws.com/${reel.fileKey}`;
+    const viewUrl = await s3Service.generatePresignedViewUrl(reel.fileKey, 86400);
 
     // Increment view count
     await reel.incrementView();
@@ -526,6 +372,7 @@ router.get('/:id', async (req, res) => {
           category: reel.category,
           tags: reel.tags,
           viewUrl,
+          viewCount: reel.viewCount,
           metadata: reel.metadata,
           createdAt: reel.createdAt
         }
@@ -545,38 +392,38 @@ router.get('/:id', async (req, res) => {
 router.get('/user/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
-    const { limit = 20, page = 1 } = req.query;
+    const { page = 1, limit = 20 } = req.query;
 
-    const skip = (parseInt(page as string) - 1) * parseInt(limit as string);
+    // Check if user exists
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: 'User not found'
+      });
+    }
 
+    // Get user's reels
     const reels = await Reel.find({ userId })
       .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(parseInt(limit as string));
+      .limit(parseInt(limit as string) * 1)
+      .skip((parseInt(page as string) - 1) * parseInt(limit as string));
+
     const total = await Reel.countDocuments({ userId });
 
     // Generate fresh view URLs
     const reelsWithUrls = await Promise.all(
       reels.map(async (reel) => {
-        // const getObjectCommand = new GetObjectCommand({
-        //   Bucket: BUCKET_NAME,
-        //   Key: reel.fileKey
-        // });
-
-        // const viewUrl = await getSignedUrl(s3Client, getObjectCommand, {
-        //   expiresIn: 86400
-        // });
-        
-        // Temporary mock URL for compilation
-        const viewUrl = `https://${BUCKET_NAME}.s3.amazonaws.com/${reel.fileKey}`;
+        const viewUrl = await s3Service.generatePresignedViewUrl(reel.fileKey, 86400);
 
         return {
           id: reel._id,
           title: reel.title,
           description: reel.description,
           category: reel.category,
+          tags: reel.tags,
           viewUrl,
-          metadata: reel.metadata,
+          viewCount: reel.viewCount,
           createdAt: reel.createdAt
         };
       })
@@ -600,91 +447,6 @@ router.get('/user/:userId', async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to get user reels'
-    });
-  }
-});
-
-// Like/unlike reel
-router.post('/:id/like', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const userId = (req as any).user?.userId;
-
-    if (!userId) {
-      return res.status(401).json({
-        success: false,
-        error: 'Authentication required'
-      });
-    }
-
-    const reel = await Reel.findById(id);
-    if (!reel) {
-      return res.status(404).json({
-        success: false,
-        error: 'Reel not found'
-      });
-    }
-
-    const isCurrentlyLiked = reel.likes.includes(userId as any);
-    let isLiked: boolean;
-    
-    if (isCurrentlyLiked) {
-      isLiked = !(await reel.removeLike(userId));
-    } else {
-      isLiked = await reel.addLike(userId);
-    }
-
-    res.json({
-      success: true,
-      message: 'Like status updated',
-      data: {
-        isLiked,
-        totalLikes: reel.metadata.likes
-      }
-    });
-
-  } catch (error) {
-    logger.error('Like reel failed:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to update like status'
-    });
-  }
-});
-
-// Share reel
-router.post('/:id/share', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const userId = (req as any).user?.userId;
-
-    if (!userId) {
-      return res.status(401).json({
-        success: false,
-        error: 'Authentication required'
-      });
-    }
-
-    const reel = await Reel.findById(id);
-    if (!reel) {
-      return res.status(404).json({
-        success: false,
-        error: 'Reel not found'
-      });
-    }
-
-    await Reel.findByIdAndUpdate(id, { $inc: { 'metadata.shares': 1 } });
-
-    res.json({
-      success: true,
-      message: 'Reel shared successfully'
-    });
-
-  } catch (error) {
-    logger.error('Share reel failed:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to share reel'
     });
   }
 });
