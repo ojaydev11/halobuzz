@@ -402,4 +402,214 @@ router.post('/logout', async (req, res) => {
   }
 });
 
+// 2FA Setup - Generate TOTP secret
+router.post('/2fa/setup', async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const userId = req.user?.userId;
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        error: 'Authentication required'
+      });
+    }
+
+    const { twoFactorAuthService } = await import('../services/TwoFactorAuthService');
+    const { secret, qrCodeUrl } = await twoFactorAuthService.generateTOTPSecret(userId);
+
+    res.json({
+      success: true,
+      data: {
+        secret,
+        qrCodeUrl
+      }
+    });
+  } catch (error) {
+    logger.error('2FA setup failed:', error);
+    res.status(500).json({
+      success: false,
+      error: '2FA setup failed'
+    });
+  }
+});
+
+// Enable 2FA
+router.post('/2fa/enable', [
+  body('token')
+    .isLength({ min: 6, max: 6 })
+    .withMessage('Valid 6-digit token required'),
+  body('secret')
+    .notEmpty()
+    .withMessage('Secret is required')
+], async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        errors: errors.array()
+      });
+    }
+
+    const userId = req.user?.userId;
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        error: 'Authentication required'
+      });
+    }
+
+    const { token, secret } = req.body;
+    const { twoFactorAuthService } = await import('../services/TwoFactorAuthService');
+    await twoFactorAuthService.enable2FA(userId, token, secret);
+
+    res.json({
+      success: true,
+      message: '2FA enabled successfully'
+    });
+  } catch (error) {
+    logger.error('Enable 2FA failed:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to enable 2FA'
+    });
+  }
+});
+
+// Disable 2FA
+router.post('/2fa/disable', [
+  body('password')
+    .notEmpty()
+    .withMessage('Password is required')
+], async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        errors: errors.array()
+      });
+    }
+
+    const userId = req.user?.userId;
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        error: 'Authentication required'
+      });
+    }
+
+    const { password } = req.body;
+    const { twoFactorAuthService } = await import('../services/TwoFactorAuthService');
+    await twoFactorAuthService.disable2FA(userId, password);
+
+    res.json({
+      success: true,
+      message: '2FA disabled successfully'
+    });
+  } catch (error) {
+    logger.error('Disable 2FA failed:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to disable 2FA'
+    });
+  }
+});
+
+// Send OTP
+router.post('/otp/send', [
+  body('identifier')
+    .notEmpty()
+    .withMessage('Phone or email is required'),
+  body('purpose')
+    .isIn(['login', 'verification', 'withdrawal', 'security'])
+    .withMessage('Valid purpose is required')
+], async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        errors: errors.array()
+      });
+    }
+
+    const { identifier, purpose } = req.body;
+    const { twoFactorAuthService } = await import('../services/TwoFactorAuthService');
+
+    // Check rate limiting
+    const canSend = await twoFactorAuthService.checkOTPRateLimit(identifier);
+    if (!canSend) {
+      return res.status(429).json({
+        success: false,
+        error: 'Too many OTP requests. Please try again later.'
+      });
+    }
+
+    // Determine if it's email or phone
+    const isEmail = identifier.includes('@');
+    if (isEmail) {
+      await twoFactorAuthService.sendOTPviaEmail(identifier, purpose);
+    } else {
+      await twoFactorAuthService.sendOTPviaSMS(identifier, purpose);
+    }
+
+    res.json({
+      success: true,
+      message: `OTP sent to ${isEmail ? 'email' : 'phone'}`
+    });
+  } catch (error) {
+    logger.error('Send OTP failed:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to send OTP'
+    });
+  }
+});
+
+// Verify OTP
+router.post('/otp/verify', [
+  body('identifier')
+    .notEmpty()
+    .withMessage('Phone or email is required'),
+  body('otp')
+    .isLength({ min: 6, max: 6 })
+    .withMessage('Valid 6-digit OTP required'),
+  body('purpose')
+    .isIn(['login', 'verification', 'withdrawal', 'security'])
+    .withMessage('Valid purpose is required')
+], async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        errors: errors.array()
+      });
+    }
+
+    const { identifier, otp, purpose } = req.body;
+    const { twoFactorAuthService } = await import('../services/TwoFactorAuthService');
+    
+    const isValid = twoFactorAuthService.verifyOTP(identifier, otp, purpose);
+    
+    if (!isValid) {
+      return res.status(401).json({
+        success: false,
+        error: 'Invalid or expired OTP'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'OTP verified successfully'
+    });
+  } catch (error) {
+    logger.error('Verify OTP failed:', error);
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to verify OTP'
+    });
+  }
+});
+
 export default router;

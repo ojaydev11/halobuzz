@@ -433,4 +433,251 @@ router.get('/user/:userId', async (req, res) => {
   }
 });
 
+// LinkCast: Create multi-host session
+router.post('/linkcast/create', [
+  body('title')
+    .isLength({ min: 1, max: 100 })
+    .withMessage('Title must be 1-100 characters'),
+  body('splitScreen')
+    .optional()
+    .isBoolean()
+    .withMessage('splitScreen must be boolean'),
+  body('crossCountry')
+    .optional()
+    .isBoolean()
+    .withMessage('crossCountry must be boolean')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        errors: errors.array()
+      });
+    }
+
+    const userId = (req as any).user?.userId;
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        error: 'Authentication required'
+      });
+    }
+
+    const { title, splitScreen, crossCountry } = req.body;
+    const { linkCastService } = await import('../services/LinkCastService');
+    
+    const session = await linkCastService.createLinkCastSession(
+      userId,
+      title,
+      { splitScreen, crossCountry }
+    );
+
+    res.json({
+      success: true,
+      data: {
+        sessionId: session.id,
+        inviteCode: session.inviteCode,
+        agoraChannel: session.agoraChannel,
+        agoraToken: session.agoraTokenPrimary,
+        streamId: session.primaryStreamId
+      }
+    });
+
+  } catch (error) {
+    logger.error('Create LinkCast failed:', error);
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to create LinkCast'
+    });
+  }
+});
+
+// LinkCast: Join session
+router.post('/linkcast/join', [
+  body('inviteCode')
+    .isLength({ min: 8, max: 8 })
+    .withMessage('Valid invite code required')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        errors: errors.array()
+      });
+    }
+
+    const userId = (req as any).user?.userId;
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        error: 'Authentication required'
+      });
+    }
+
+    const { inviteCode } = req.body;
+    const { linkCastService } = await import('../services/LinkCastService');
+    
+    const session = await linkCastService.joinLinkCast(inviteCode, userId);
+
+    res.json({
+      success: true,
+      data: {
+        sessionId: session.id,
+        agoraChannel: session.agoraChannel,
+        agoraToken: session.agoraTokenSecondary,
+        streamId: session.secondaryStreamId,
+        primaryHostId: session.primaryHostId
+      }
+    });
+
+  } catch (error) {
+    logger.error('Join LinkCast failed:', error);
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to join LinkCast'
+    });
+  }
+});
+
+// LinkCast: End session
+router.post('/linkcast/end', [
+  body('sessionId')
+    .notEmpty()
+    .withMessage('Session ID is required')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        errors: errors.array()
+      });
+    }
+
+    const userId = (req as any).user?.userId;
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        error: 'Authentication required'
+      });
+    }
+
+    const { sessionId } = req.body;
+    const { linkCastService } = await import('../services/LinkCastService');
+    
+    await linkCastService.endLinkCast(sessionId, userId);
+
+    res.json({
+      success: true,
+      message: 'LinkCast session ended successfully'
+    });
+
+  } catch (error) {
+    logger.error('End LinkCast failed:', error);
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to end LinkCast'
+    });
+  }
+});
+
+// Anonymous live streaming
+router.post('/anonymous', [
+  body('title')
+    .optional()
+    .isLength({ max: 100 })
+    .withMessage('Title must be max 100 characters'),
+  body('category')
+    .isIn(['entertainment', 'music', 'dance', 'comedy', 'gaming', 'education', 'lifestyle', 'news', 'sports', 'other'])
+    .withMessage('Valid category is required')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        errors: errors.array()
+      });
+    }
+
+    const userId = (req as any).user?.userId;
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        error: 'Authentication required'
+      });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: 'User not found'
+      });
+    }
+
+    // Check if user has OG tier for anonymous streaming
+    if (user.ogLevel < 3) {
+      return res.status(403).json({
+        success: false,
+        error: 'Anonymous streaming requires OG3 or higher'
+      });
+    }
+
+    const { title = 'Anonymous Stream', category } = req.body;
+
+    // Generate Agora token with anonymous channel
+    const agoraAppId = process.env.AGORA_APP_ID!;
+    const agoraAppCertificate = process.env.AGORA_APP_CERTIFICATE!;
+    const { AgoraToken } = await import('agora-access-token') as any;
+    const agoraToken = new AgoraToken(agoraAppId, agoraAppCertificate);
+    
+    // Generate hidden channel name
+    const channelName = `anon_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+    const hiddenLink = `${process.env.APP_URL}/live/anonymous/${channelName}`;
+    
+    const uid = 0;
+    const role = AgoraToken.Role.PUBLISHER;
+    const privilegeExpiredTs = Math.floor(Date.now() / 1000) + 3600;
+    const token = agoraToken.buildTokenWithUid(channelName, uid, role, privilegeExpiredTs);
+
+    // Create anonymous stream
+    const stream = new LiveStream({
+      hostId: userId,
+      title,
+      description: 'Anonymous live stream',
+      category,
+      isAnonymous: true,
+      isPrivate: true, // Hidden from public discovery
+      agoraChannel: channelName,
+      agoraToken: token,
+      country: user.country,
+      language: user.language,
+      hiddenEntryLink: hiddenLink
+    });
+
+    await stream.save();
+
+    res.json({
+      success: true,
+      data: {
+        streamId: stream._id,
+        agoraChannel: channelName,
+        agoraToken: token,
+        hiddenLink,
+        message: 'Share this hidden link with your audience'
+      }
+    });
+
+  } catch (error) {
+    logger.error('Create anonymous stream failed:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to create anonymous stream'
+    });
+  }
+});
+
 export default router;

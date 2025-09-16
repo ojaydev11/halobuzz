@@ -39,7 +39,11 @@ router.post('/upload/presign', [
     .withMessage('Valid video file type is required'),
   body('fileSize')
     .isInt({ min: 1024, max: 100 * 1024 * 1024 }) // 1KB to 100MB
-    .withMessage('File size must be between 1KB and 100MB')
+    .withMessage('File size must be between 1KB and 100MB'),
+  body('duration')
+    .optional()
+    .isFloat({ min: 15, max: 90 })
+    .withMessage('Reel duration must be between 15 and 90 seconds')
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -50,7 +54,7 @@ router.post('/upload/presign', [
       });
     }
 
-    const { fileName, fileType, fileSize } = req.body;
+    const { fileName, fileType, fileSize, duration } = req.body;
     const userId = (req as any).user?.userId;
 
     if (!userId) {
@@ -158,7 +162,10 @@ router.post('/upload/complete', [
   body('isPublic')
     .optional()
     .isBoolean()
-    .withMessage('isPublic must be a boolean')
+    .withMessage('isPublic must be a boolean'),
+  body('duration')
+    .isFloat({ min: 15, max: 90 })
+    .withMessage('Reel duration must be between 15 and 90 seconds')
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -175,7 +182,8 @@ router.post('/upload/complete', [
       description,
       tags = [],
       category = 'other',
-      isPublic = true
+      isPublic = true,
+      duration
     } = req.body;
     const userId = (req as any).user?.userId;
 
@@ -249,7 +257,7 @@ router.post('/upload/complete', [
       isPublic,
       status: 'processing', // Will be updated after video processing
       metadata: {
-        duration: 0, // Will be updated after processing
+        duration: duration || 0, // Duration from client, validated to be 15-90s
         resolution: '',
         fileSize: 0,
         views: 0,
@@ -685,6 +693,129 @@ router.post('/:id/share', async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to share reel'
+    });
+  }
+});
+
+// Pin reel to profile
+router.post('/:id/pin', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = (req as any).user?.userId;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        error: 'Authentication required'
+      });
+    }
+
+    // Get the reel
+    const reel = await Reel.findById(id);
+    if (!reel) {
+      return res.status(404).json({
+        success: false,
+        error: 'Reel not found'
+      });
+    }
+
+    // Check ownership
+    if (reel.userId.toString() !== userId) {
+      return res.status(403).json({
+        success: false,
+        error: 'You can only pin your own reels'
+      });
+    }
+
+    // Update user's pinned reel
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { 
+        pinnedReelId: id,
+        pinnedReelUpdatedAt: new Date()
+      },
+      { new: true }
+    );
+
+    // Mark this reel as pinned and unpin others
+    await Reel.updateMany(
+      { userId, isPinned: true },
+      { isPinned: false }
+    );
+    
+    reel.isPinned = true;
+    await reel.save();
+
+    res.json({
+      success: true,
+      message: 'Reel pinned to profile successfully',
+      data: {
+        reelId: id,
+        pinnedAt: user?.pinnedReelUpdatedAt
+      }
+    });
+
+  } catch (error) {
+    logger.error('Pin reel failed:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to pin reel'
+    });
+  }
+});
+
+// Unpin reel from profile
+router.post('/:id/unpin', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = (req as any).user?.userId;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        error: 'Authentication required'
+      });
+    }
+
+    // Get the reel
+    const reel = await Reel.findById(id);
+    if (!reel) {
+      return res.status(404).json({
+        success: false,
+        error: 'Reel not found'
+      });
+    }
+
+    // Check ownership
+    if (reel.userId.toString() !== userId) {
+      return res.status(403).json({
+        success: false,
+        error: 'You can only unpin your own reels'
+      });
+    }
+
+    // Update user's pinned reel
+    await User.findByIdAndUpdate(
+      userId,
+      { 
+        $unset: { pinnedReelId: 1, pinnedReelUpdatedAt: 1 }
+      }
+    );
+
+    // Mark reel as unpinned
+    reel.isPinned = false;
+    await reel.save();
+
+    res.json({
+      success: true,
+      message: 'Reel unpinned from profile successfully'
+    });
+
+  } catch (error) {
+    logger.error('Unpin reel failed:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to unpin reel'
     });
   }
 });
