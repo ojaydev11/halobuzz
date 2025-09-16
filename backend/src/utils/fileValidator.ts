@@ -80,7 +80,7 @@ export class FileValidator {
       }
 
       // Detect actual file type from content
-      const detectedType = await fileType.fromBuffer(fileBuffer);
+      const detectedType = await fileType.fileTypeFromBuffer(fileBuffer);
       if (!detectedType) {
         return {
           isValid: false,

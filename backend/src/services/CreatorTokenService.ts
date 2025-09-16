@@ -1,4 +1,4 @@
-import { ethers } from 'ethers';
+import { ethers, JsonRpcProvider, Wallet } from 'ethers';
 import { logger } from '../config/logger';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -41,19 +41,19 @@ export interface TokenTransaction {
 }
 
 export class CreatorTokenService {
-  private provider: ethers.providers.JsonRpcProvider;
-  private wallet: ethers.Wallet;
+  private provider: JsonRpcProvider;
+  private wallet: Wallet;
   private tokens: Map<string, CreatorTokenData> = new Map();
   private stakingData: Map<string, StakingData> = new Map();
   private transactions: Map<string, TokenTransaction> = new Map();
 
   constructor() {
     // Initialize with Polygon testnet for development
-    this.provider = new ethers.providers.JsonRpcProvider(
+    this.provider = new JsonRpcProvider(
       process.env.POLYGON_RPC_URL || 'https://rpc-mumbai.maticvigil.com'
     );
     
-    this.wallet = new ethers.Wallet(
+    this.wallet = new Wallet(
       process.env.PRIVATE_KEY || '',
       this.provider
     );

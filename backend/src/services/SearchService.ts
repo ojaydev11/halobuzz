@@ -3,6 +3,7 @@ import { LiveStream } from '../models/LiveStream';
 import { Reel } from '../models/Reel';
 import { logger } from '../config/logger';
 import { QuerySanitizer } from '../utils/querySanitizer';
+import { Readable } from 'stream';
 
 export interface SearchResult {
   users: {
@@ -315,7 +316,7 @@ export class SearchService {
       }
 
       // Search for hashtags in streams and reels
-      const streamHashtags = await Stream.aggregate([
+      const streamHashtags = await LiveStream.aggregate([
         { $unwind: '$tags' },
         { $match: { tags: { $regex: query.replace('#', ''), $options: 'i' } } },
         { $group: { _id: '$tags', count: { $sum: 1 } } },
@@ -383,7 +384,7 @@ export class SearchService {
 
   async getTrendingHashtags(limit: number = 10): Promise<{ tag: string; count: number; trending: boolean }[]> {
     try {
-      const trendingHashtags = await Stream.aggregate([
+      const trendingHashtags = await LiveStream.aggregate([
         { $unwind: '$tags' },
         { $match: { createdAt: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } } }, // Last 24 hours
         { $group: { _id: '$tags', count: { $sum: 1 } } },
@@ -417,7 +418,7 @@ export class SearchService {
       suggestions.push(...usernameSuggestions.map(user => `@${user.username}`));
 
       // Get hashtag suggestions
-      const hashtagSuggestions = await Stream.aggregate([
+      const hashtagSuggestions = await LiveStream.aggregate([
         { $unwind: '$tags' },
         { $match: { tags: { $regex: query.replace('#', ''), $options: 'i' } } },
         { $group: { _id: '$tags', count: { $sum: 1 } } },

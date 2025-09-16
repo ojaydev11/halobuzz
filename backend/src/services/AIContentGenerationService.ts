@@ -75,7 +75,7 @@ export class AIContentGenerationService {
           }
         ],
         temperature: 0.7,
-        maxTokens: 1000
+        max_tokens: 1000
       });
 
       const videoPlan = JSON.parse(scriptResponse.choices[0].message.content || '{}');
@@ -188,7 +188,7 @@ export class AIContentGenerationService {
           }
         ],
         temperature: 0.8,
-        maxTokens: 800
+        max_tokens: 800
       });
 
       const musicComposition = JSON.parse(musicResponse.choices[0].message.content || '{}');

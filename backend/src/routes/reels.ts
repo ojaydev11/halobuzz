@@ -209,7 +209,7 @@ router.post('/', [
       type: 'reel',
       contentId: reel._id,
       userId,
-      content: { title, description, tags }
+      content: JSON.stringify({ title, description, tags })
     });
 
     // Award reputation points for content creation

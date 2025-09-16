@@ -348,6 +348,57 @@ export class ReputationService {
       return { success: false, error: error.message };
     }
   }
+
+  /**
+   * Calculate reputation points based on action and metadata
+   */
+  private calculateReputationPoints(action: string, metadata: any): number {
+    const pointValues: Record<string, number> = {
+      // Positive actions
+      'stream_start': 5,
+      'stream_complete': 10,
+      'gift_received': 2,
+      'gift_sent': 1,
+      'follow_received': 3,
+      'follow_sent': 1,
+      'comment_received': 1,
+      'like_received': 0.5,
+      'share_received': 2,
+      'kyc_verified': 20,
+      'phone_verified': 10,
+      'email_verified': 5,
+      'social_connected': 5,
+      
+      // Negative actions
+      'stream_report': -10,
+      'content_report': -5,
+      'spam_detected': -15,
+      'fraud_detected': -50,
+      'account_suspended': -100,
+      'payment_chargeback': -25,
+      'fake_followers': -20,
+      'bot_activity': -30
+    };
+
+    let basePoints = pointValues[action] || 0;
+    
+    // Apply multipliers based on metadata
+    if (metadata?.multiplier) {
+      basePoints *= metadata.multiplier;
+    }
+    
+    // Apply time-based bonuses
+    if (metadata?.isFirstTime) {
+      basePoints *= 1.5;
+    }
+    
+    // Apply streak bonuses
+    if (metadata?.streakDays && metadata.streakDays > 7) {
+      basePoints *= 1.2;
+    }
+    
+    return Math.round(basePoints);
+  }
 }
 
 export const reputationService = new ReputationService();
