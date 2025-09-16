@@ -37,7 +37,7 @@ export default function DashboardHome() {
             <StatCard title="Coins Spent" value={stats.coinsSpent || 0} />
           </div>
         )}
-        <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="bg-white p-4 rounded shadow">
             <h3 className="font-semibold mb-2">Top Hosts by Gifts</h3>
             <ul className="divide-y divide-gray-200">
@@ -59,6 +59,16 @@ export default function DashboardHome() {
                 </li>
               ))}
             </ul>
+          </div>
+          <div className="bg-gradient-to-r from-purple-500 to-blue-500 p-4 rounded shadow text-white">
+            <h3 className="font-semibold mb-2">Unified Intelligence</h3>
+            <p className="text-sm mb-4">Access the advanced AI intelligence system</p>
+            <a 
+              href="/dashboard/unified-intelligence" 
+              className="bg-white text-purple-600 px-4 py-2 rounded font-semibold hover:bg-gray-100 transition-colors"
+            >
+              Open AI Dashboard
+            </a>
           </div>
         </div>
       </main>

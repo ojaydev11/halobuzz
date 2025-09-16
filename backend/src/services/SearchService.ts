@@ -4,6 +4,7 @@ import { Reel } from '../models/Reel';
 import { logger } from '../config/logger';
 import { QuerySanitizer } from '../utils/querySanitizer';
 import { Readable } from 'stream';
+import { Stream } from 'stream';
 
 export interface SearchResult {
   users: {
@@ -260,14 +261,14 @@ export class SearchService {
         id: stream._id.toString(),
         title: stream.title,
         host: {
-          id: stream.host._id.toString(),
-          username: stream.host.username,
-          avatar: stream.host.avatar || ''
+          id: (stream.host as any)._id.toString(),
+          username: (stream.host as any).username,
+          avatar: (stream.host as any).avatar || ''
         },
         category: stream.category,
         currentViewers: stream.currentViewers || 0,
         thumbnail: stream.thumbnail || '',
-        isLive: stream.isLive || false
+        isLive: (stream as any).isLive || false
       }));
     } catch (error) {
       logger.error('Stream search failed:', error);
@@ -291,9 +292,9 @@ export class SearchService {
         title: reel.title,
         description: reel.description,
         user: {
-          id: reel.userId._id.toString(),
-          username: reel.userId.username,
-          avatar: reel.userId.avatar || ''
+          id: (reel.userId as any)._id.toString(),
+          username: (reel.userId as any).username,
+          avatar: (reel.userId as any).avatar || ''
         },
         category: reel.category,
         viewCount: reel.metadata.views || 0,

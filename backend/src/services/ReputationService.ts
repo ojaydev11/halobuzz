@@ -352,7 +352,7 @@ export class ReputationService {
   /**
    * Calculate reputation points based on action and metadata
    */
-  private calculateReputationPoints(action: string, metadata: any): number {
+  public calculateReputationPoints(action: string, metadata: any): number {
     const pointValues: Record<string, number> = {
       // Positive actions
       'stream_start': 5,

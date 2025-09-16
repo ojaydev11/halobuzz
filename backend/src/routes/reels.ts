@@ -207,7 +207,7 @@ router.post('/', [
     // Add to moderation queue for content review
     await moderationQueue.addContentForReview({
       type: 'reel',
-      contentId: reel._id,
+      contentId: reel._id.toString(),
       userId,
       content: JSON.stringify({ title, description, tags })
     });
@@ -215,7 +215,7 @@ router.post('/', [
     // Award reputation points for content creation
     await reputationService.awardPoints(userId, 'content_creation', {
       contentType: 'reel',
-      contentId: reel._id
+      contentId: reel._id.toString()
     });
 
     res.status(201).json({

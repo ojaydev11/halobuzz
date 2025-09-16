@@ -208,6 +208,50 @@ router.post('/learning', async (req: Request, res: Response) => {
 });
 
 /**
+ * @route POST /api/ai/intelligence/task
+ * @desc Execute a task using AI intelligence
+ */
+router.post('/task', async (req: Request, res: Response) => {
+  try {
+    const { 
+      userId, 
+      sessionId, 
+      taskType, 
+      description, 
+      data,
+      context 
+    } = req.body;
+
+    if (!userId || !sessionId || !taskType) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required fields: userId, sessionId, taskType'
+      });
+    }
+
+    const response = await aiIntegration.processAIRequest({
+      userId,
+      sessionId,
+      requestType: 'task',
+      data: { taskType, description, ...data },
+      context
+    });
+
+    res.json({
+      success: true,
+      data: response
+    });
+
+  } catch (error) {
+    logger.error('Error in task execution route:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error'
+    });
+  }
+});
+
+/**
  * @route POST /api/ai/intelligence/comprehensive
  * @desc Process comprehensive AI request using multiple services
  */

@@ -437,6 +437,28 @@ export class PersonalBrainService {
    */
   private async generatePersonalizedResponse(context: UserContext, message: string, emotionalAnalysis: any): Promise<any> {
     try {
+      // Check for simple mathematical questions first
+      const mathResult = this.handleMathematicalQuestion(message);
+      if (mathResult) {
+        return {
+          text: mathResult,
+          emotionalTone: "helpful",
+          contextUpdate: { lastQueryType: "mathematical" },
+          confidence: 1.0
+        };
+      }
+
+      // Check for other simple questions
+      const simpleAnswer = this.handleSimpleQuestions(message);
+      if (simpleAnswer) {
+        return {
+          text: simpleAnswer,
+          emotionalTone: "informative",
+          contextUpdate: { lastQueryType: "simple_question" },
+          confidence: 0.9
+        };
+      }
+
       const conversationContext = context.conversationHistory.slice(-5).map(c => 
         `User: ${c.userMessage}\nAI: ${c.aiResponse}`
       ).join('\n');
@@ -466,10 +488,7 @@ export class PersonalBrainService {
         }
       `;
 
-      const response = await aiModelManager.generateResponse(prompt, {
-        temperature: 0.7,
-        maxTokens: 300
-      });
+      const response = await aiModelManager.generateText(prompt);
 
       return JSON.parse(response);
 
@@ -482,6 +501,115 @@ export class PersonalBrainService {
         confidence: 0.5
       };
     }
+  }
+
+  /**
+   * Handle mathematical questions
+   */
+  private handleMathematicalQuestion(message: string): string | null {
+    const mathPatterns = [
+      /what is (\d+)\s*([+\-*/])\s*(\d+)/i,
+      /(\d+)\s*([+\-*/])\s*(\d+)/i,
+      /calculate (\d+)\s*([+\-*/])\s*(\d+)/i,
+      /(\d+)\s*plus\s*(\d+)/i,
+      /(\d+)\s*minus\s*(\d+)/i,
+      /(\d+)\s*times\s*(\d+)/i,
+      /(\d+)\s*multiplied by\s*(\d+)/i,
+      /(\d+)\s*divided by\s*(\d+)/i
+    ];
+
+    for (const pattern of mathPatterns) {
+      const match = message.match(pattern);
+      if (match) {
+        let num1: number, num2: number, operator: string;
+
+        if (pattern.source.includes('plus')) {
+          num1 = parseInt(match[1]);
+          num2 = parseInt(match[2]);
+          operator = '+';
+        } else if (pattern.source.includes('minus')) {
+          num1 = parseInt(match[1]);
+          num2 = parseInt(match[2]);
+          operator = '-';
+        } else if (pattern.source.includes('times') || pattern.source.includes('multiplied')) {
+          num1 = parseInt(match[1]);
+          num2 = parseInt(match[2]);
+          operator = '*';
+        } else if (pattern.source.includes('divided')) {
+          num1 = parseInt(match[1]);
+          num2 = parseInt(match[2]);
+          operator = '/';
+        } else {
+          num1 = parseInt(match[1]);
+          operator = match[2];
+          num2 = parseInt(match[3]);
+        }
+
+        let result: number;
+        switch (operator) {
+          case '+':
+            result = num1 + num2;
+            break;
+          case '-':
+            result = num1 - num2;
+            break;
+          case '*':
+            result = num1 * num2;
+            break;
+          case '/':
+            if (num2 === 0) {
+              return "I can't divide by zero! That's mathematically undefined.";
+            }
+            result = num1 / num2;
+            break;
+          default:
+            return null;
+        }
+
+        return `The answer is ${result}. ${num1} ${operator} ${num2} = ${result}`;
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Handle simple questions
+   */
+  private handleSimpleQuestions(message: string): string | null {
+    const lowerMessage = message.toLowerCase().trim();
+
+    // Common greetings
+    if (lowerMessage.includes('hello') || lowerMessage.includes('hi') || lowerMessage.includes('hey')) {
+      return "Hello! I'm your unified intelligence assistant. How can I help you today?";
+    }
+
+    // Time questions
+    if (lowerMessage.includes('what time') || lowerMessage.includes('current time')) {
+      return `The current time is ${new Date().toLocaleString()}.`;
+    }
+
+    // Date questions
+    if (lowerMessage.includes('what date') || lowerMessage.includes('today')) {
+      return `Today is ${new Date().toLocaleDateString()}.`;
+    }
+
+    // Weather (placeholder)
+    if (lowerMessage.includes('weather')) {
+      return "I don't have access to real-time weather data, but I can help you with many other questions!";
+    }
+
+    // Help questions
+    if (lowerMessage.includes('help') || lowerMessage.includes('what can you do')) {
+      return "I can help you with mathematical calculations, answer questions, provide information, and assist with various tasks. What would you like to know?";
+    }
+
+    // Status questions
+    if (lowerMessage.includes('status') || lowerMessage.includes('how are you')) {
+      return "I'm operating normally and ready to assist you! My intelligence engine is active and functioning at optimal levels.";
+    }
+
+    return null;
   }
 
   /**

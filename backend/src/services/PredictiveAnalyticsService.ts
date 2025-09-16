@@ -327,7 +327,7 @@ export class PredictiveAnalyticsService {
   }
 
   private calculateConfidence(features: any): number {
-    const completeness = Object.values(features).filter((f: any) => f > 0).length / Object.keys(features).length;
+    const completeness = Object.values(features).filter((f: any) => (f as number) > 0).length / Object.keys(features).length;
     const quality = Object.values(features).reduce((sum: number, f: any) => sum + (f as number), 0) / Object.keys(features).length;
     
     return (completeness + quality) / 2;

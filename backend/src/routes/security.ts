@@ -1,5 +1,5 @@
 import express from 'express';
-import { securityMonitoring } from '@/services/SecurityMonitoringService';
+import { securityMonitoring } from '@/services/securityMonitoringService';
 import { logger } from '@/config/logger';
 import { adminOnly } from '@/middleware/admin';
 
