@@ -185,6 +185,9 @@ router.post('/recharge', [
           coins: coins.toString()
         });
         break;
+      case 'paypal':
+        paymentResult = await paymentService.createPayPalOrder(amount, userId, coins);
+        break;
       default:
         return res.status(400).json({
           success: false,

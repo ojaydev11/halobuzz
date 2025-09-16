@@ -8,6 +8,7 @@ export class PaymentService {
   private stripe: Stripe;
   private esewaConfig: any;
   private khaltiConfig: any;
+  private paypalConfig: any;
 
   constructor() {
     this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -25,6 +26,15 @@ export class PaymentService {
       publicKey: process.env.KHALTI_PUBLIC_KEY,
       secretKey: process.env.KHALTI_SECRET_KEY,
       apiUrl: process.env.KHALTI_API_URL || 'https://khalti.com/api/v2'
+    };
+
+    this.paypalConfig = {
+      clientId: process.env.PAYPAL_CLIENT_ID,
+      clientSecret: process.env.PAYPAL_CLIENT_SECRET,
+      environment: process.env.PAYPAL_ENVIRONMENT || 'sandbox', // sandbox or live
+      apiUrl: process.env.PAYPAL_ENVIRONMENT === 'live' 
+        ? 'https://api-m.paypal.com' 
+        : 'https://api-m.sandbox.paypal.com'
     };
   }
 
@@ -303,6 +313,136 @@ export class PaymentService {
         }
       }
     ]);
+  }
+
+  // PayPal Payment Methods
+  async createPayPalOrder(amount: number, userId: string, coins: number) {
+    try {
+      const accessToken = await this.getPayPalAccessToken();
+      if (!accessToken) {
+        throw new Error('Failed to get PayPal access token');
+      }
+
+      const orderData = {
+        intent: 'CAPTURE',
+        purchase_units: [
+          {
+            amount: {
+              currency_code: 'USD',
+              value: amount.toFixed(2)
+            },
+            description: `${coins} HaloBuzz Coins`,
+            custom_id: `HB_${Date.now()}_${userId}`,
+            invoice_id: `HB_${Date.now()}_${userId}`
+          }
+        ],
+        application_context: {
+          brand_name: 'HaloBuzz',
+          landing_page: 'NO_PREFERENCE',
+          user_action: 'PAY_NOW',
+          return_url: `${process.env.FRONTEND_URL}/payment/success`,
+          cancel_url: `${process.env.FRONTEND_URL}/payment/cancel`
+        }
+      };
+
+      const response = await axios.post(
+        `${this.paypalConfig.apiUrl}/v2/checkout/orders`,
+        orderData,
+        {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      return {
+        success: true,
+        orderId: response.data.id,
+        approvalUrl: response.data.links.find((link: any) => link.rel === 'approve')?.href
+      };
+    } catch (error) {
+      logger.error('PayPal order creation failed:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  async capturePayPalOrder(orderId: string) {
+    try {
+      const accessToken = await this.getPayPalAccessToken();
+      if (!accessToken) {
+        throw new Error('Failed to get PayPal access token');
+      }
+
+      const response = await axios.post(
+        `${this.paypalConfig.apiUrl}/v2/checkout/orders/${orderId}/capture`,
+        {},
+        {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data.status === 'COMPLETED') {
+        const purchaseUnit = response.data.purchase_units[0];
+        await this.processPayPalSuccess(orderId, response.data);
+        return {
+          success: true,
+          transactionId: purchaseUnit.payments.captures[0].id,
+          amount: parseFloat(purchaseUnit.payments.captures[0].amount.value),
+          currency: purchaseUnit.payments.captures[0].amount.currency_code
+        };
+      }
+
+      return { success: false, error: 'Payment not completed' };
+    } catch (error) {
+      logger.error('PayPal order capture failed:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  private async getPayPalAccessToken(): Promise<string | null> {
+    try {
+      const auth = Buffer.from(`${this.paypalConfig.clientId}:${this.paypalConfig.clientSecret}`).toString('base64');
+      
+      const response = await axios.post(
+        `${this.paypalConfig.apiUrl}/v1/oauth2/token`,
+        'grant_type=client_credentials',
+        {
+          headers: {
+            'Authorization': `Basic ${auth}`,
+            'Content-Type': 'application/x-www-form-urlencoded'
+          }
+        }
+      );
+
+      return response.data.access_token;
+    } catch (error) {
+      logger.error('PayPal access token request failed:', error);
+      return null;
+    }
+  }
+
+  private async processPayPalSuccess(orderId: string, paymentData: any) {
+    // Find transaction by orderId and update
+    const transaction = await Transaction.findOne({ 'metadata.orderId': orderId });
+    if (transaction) {
+      transaction.status = 'completed';
+      transaction.referenceId = paymentData.purchase_units[0].payments.captures[0].id;
+      await transaction.save();
+
+      // Update user coins
+      await User.findByIdAndUpdate(transaction.userId, {
+        $inc: { 
+          'coins.balance': transaction.amount,
+          'coins.totalEarned': transaction.amount
+        }
+      });
+
+      logger.info(`PayPal payment successful for user ${transaction.userId}`);
+    }
   }
 }
 
