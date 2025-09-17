@@ -96,6 +96,17 @@ halobuzz/
 - **Storage**: AWS S3
 - **Payments**: eSewa, Khalti, Stripe
 
+#### Global Single-Player Games (60/40 hold)
+- API endpoints under `/api/v1/games`:
+  - `GET /api/v1/games` list games with current bucket and timeLeftSec
+  - `GET /api/v1/games/:id/round` public round data with commit (seedHash) and reveal (seed after settle)
+  - `POST /api/v1/games/:id/play` submit a play `{ userId, betAmount, choice? }`
+  - `GET /api/v1/games/:id/history?limit=50` recent settled rounds
+  - `GET /api/v1/games/verify?gameId=...&bucketStart=...` verification helper
+- Provable fairness doc: `GET /api/v1/provable-fairness`
+- Engine: commit–reveal via HMAC-SHA256 seed; deterministic RNG; drift correction to target payout 0.60
+- Simulation: `cd backend && npm run sim`
+
 ### AI Engine
 - **Moderation**: NSFW detection, age estimation, profanity
 - **Engagement**: Boredom detection, cohost suggestions

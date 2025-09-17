@@ -2,7 +2,7 @@ import mongoose, { Document, Schema } from 'mongoose';
 
 export interface ITransaction extends Document {
   userId: mongoose.Types.ObjectId;
-  type: 'recharge' | 'gift_sent' | 'gift_received' | 'og_bonus' | 'refund' | 'withdrawal' | 'subscription' | 'tip' | 'brand_deal' | 'platform_fee';
+  type: 'recharge' | 'gift_sent' | 'gift_received' | 'og_bonus' | 'refund' | 'withdrawal' | 'subscription' | 'tip' | 'brand_deal' | 'platform_fee' | 'game_won' | 'game_bet' | 'game_payout';
   amount: number;
   currency: 'coins' | 'USD' | 'NPR';
   status: 'pending' | 'completed' | 'failed' | 'cancelled';
@@ -33,7 +33,7 @@ const transactionSchema = new Schema<ITransaction>({
   type: {
     type: String,
     required: true,
-    enum: ['recharge', 'gift_sent', 'gift_received', 'og_bonus', 'refund', 'withdrawal', 'subscription', 'tip', 'brand_deal', 'platform_fee']
+    enum: ['recharge', 'gift_sent', 'gift_received', 'og_bonus', 'refund', 'withdrawal', 'subscription', 'tip', 'brand_deal', 'platform_fee', 'game_won', 'game_bet', 'game_payout']
   },
   amount: {
     type: Number,

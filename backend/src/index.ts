@@ -87,12 +87,14 @@ import searchRoutes from '@/routes/search';
 import globalExpansionRoutes from '@/routes/global-expansion';
 import creatorEconomyRoutes from '@/routes/creator-economy';
 import gamesRoutes from '@/routes/games';
+import globalGamesRoutes from '@/routes/global-games';
 import adminRoutes from '@/routes/admin';
 import configRoutes from '@/routes/config';
 import kycRoutes from '@/routes/kyc';
 import monitoringRoutes from '@/routes/monitoring';
 import securityRoutes from '@/routes/security';
 import aiContentStudioRoutes from '@/routes/aiContentStudio';
+import docsRoutes from '@/routes/docs';
 
 // New AI services routes
 import aiContentRoutes from '@/routes/ai-content';
@@ -293,6 +295,7 @@ app.use(`/api/${apiVersion}/search`, searchRoutes);
 app.use(`/api/${apiVersion}/global-expansion`, globalExpansionRoutes);
 app.use(`/api/${apiVersion}/creator-economy`, authMiddleware, creatorEconomyRoutes);
 app.use(`/api/${apiVersion}/games`, authMiddleware, gamesRoutes);
+app.use(`/api/${apiVersion}/global-games`, authMiddleware, globalGamesRoutes);
 app.use(`/api/${apiVersion}/config`, authMiddleware, configRoutes);
 app.use(`/api/${apiVersion}/kyc`, authMiddleware, kycRoutes);
 import { adminOnly } from '@/middleware/admin';
@@ -305,6 +308,7 @@ app.use(`/api/${apiVersion}/nft`, nftRoutes);
 app.use(`/api/${apiVersion}/subscription`, subscriptionRoutes);
 app.use(`/api/${apiVersion}/analytics`, creatorAnalyticsRoutes);
 app.use(`/api/${apiVersion}/commerce`, commerceRoutes);
+app.use(`/api/${apiVersion}`, docsRoutes);
 
 // AI Content Studio routes
 app.use(`/api/${apiVersion}/ai-content-studio`, aiContentStudioRoutes);
@@ -325,8 +329,8 @@ app.use(`/api/${apiVersion}/ai-content`, authMiddleware, aiContentRoutes);
 // app.use(`/api/${process.env.API_VERSION || 'v1'}/wellbeing`, wellbeingRoutes);
 
 // Start cron scheduler
-// import { cronScheduler } from './cron';
-// cronScheduler.start();
+import { cronScheduler } from './cron';
+cronScheduler.start();
 
 // Error handling middleware
 app.use(errorHandler);

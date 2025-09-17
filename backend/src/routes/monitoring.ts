@@ -4,6 +4,8 @@ import { adminOnly } from '@/middleware/admin';
 import { monitoringService } from '@/services/monitoringService';
 import { getCacheStats } from '@/config/redis';
 import { setupLogger } from '@/config/logger';
+import { GameRound } from '@/models/GameRound';
+import { GlobalGame } from '@/models/GlobalGame';
 
 const router = Router();
 const logger = setupLogger();
@@ -27,7 +29,16 @@ router.get('/health', async (req: Request, res: Response) => {
 router.get('/metrics', async (req: Request, res: Response) => {
   try {
     const metrics = await monitoringService.collectMetrics();
-    res.json(metrics);
+    // Append payout metrics for games
+    const games = await GlobalGame.find({});
+    const payoutStats: any[] = [];
+    for (const g of games) {
+      const rounds = await GameRound.find({ gameId: g.id, status: 'settled' }).sort({ bucketStart: -1 }).limit(200);
+      const totals = rounds.reduce((acc, r) => ({ bets: acc.bets + (r.totals?.bets || 0), payouts: acc.payouts + (r.totals?.payouts || 0) }), { bets: 0, payouts: 0 });
+      const rate = totals.bets > 0 ? totals.payouts / totals.bets : null;
+      payoutStats.push({ gameId: g.id, payoutRateTrailing: rate });
+    }
+    res.json({ ...metrics, payoutStats });
   } catch (error) {
     logger.error('Error collecting metrics:', error);
     res.status(500).json({ error: 'Failed to collect metrics' });

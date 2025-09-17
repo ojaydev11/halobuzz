@@ -29,6 +29,11 @@ const DEFAULT_FLAGS = {
     description: 'Enable gift sending',
     category: 'core'
   },
+  gamesGlobalEnabled: {
+    value: true,
+    description: 'Enable Global Single-Player Games',
+    category: 'core'
+  },
   battleBoostEnabled: {
     value: true,
     description: 'Enable battle boost feature',
@@ -214,6 +219,10 @@ class FeatureFlagsService {
   // Convenience methods for common flags
   async isGamesEnabled(): Promise<boolean> {
     return this.getFlag('gamesEnabledGlobal');
+  }
+
+  async isGlobalGamesEnabled(): Promise<boolean> {
+    return this.getFlag('gamesGlobalEnabled');
   }
 
   async isMaintenanceMode(): Promise<boolean> {

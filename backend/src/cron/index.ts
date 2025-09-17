@@ -4,6 +4,8 @@ import { ogDailyBonusJob } from './ogDailyBonus';
 import { throneExpiryJob } from './throneExpiry';
 import { festivalActivationJob } from './festivalActivation';
 import { cronSecurityService } from '../services/CronSecurityService';
+import { GlobalGame } from '@/models/GlobalGame';
+import { gamesEngineService } from '@/services/GamesEngineService';
 
 export class CronScheduler {
   private jobs: Map<string, cron.ScheduledTask> = new Map();
@@ -54,6 +56,24 @@ export class CronScheduler {
         timezone: 'UTC'
       });
       this.jobs.set('trustScore', trustScoreTask);
+
+      // Global Games Round Engine Tick (every second)
+      const gamesTickTask = cron.schedule('* * * * * *', async () => {
+        await this.executeSecureJob('globalGamesTick', async () => {
+          const games = await GlobalGame.find({});
+          for (const g of games) {
+            const bucket = gamesEngineService.getCurrentBucket(g);
+            // Lock close to end
+            const round = await gamesEngineService.getOrCreateRound(g, bucket.bucketStart);
+            await gamesEngineService.lockIfNeeded(g, round);
+            // Settle at end
+            if (bucket.secondsRemaining === 0) {
+              await gamesEngineService.resolveRound(g, bucket.bucketStart);
+            }
+          }
+        });
+      }, { scheduled: true, timezone: 'UTC' });
+      this.jobs.set('globalGamesTick', gamesTickTask);
 
       logger.info('All cron jobs started successfully');
     } catch (error) {

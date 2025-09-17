@@ -283,6 +283,26 @@ class ApiClient {
   }
 
   // Stream endpoints
+  // Global single-player games
+  async listGlobalGames(): Promise<any> {
+    const response = await this.client.get('/global-games');
+    return response.data;
+  }
+
+  async getGlobalGameRound(id: string): Promise<any> {
+    const response = await this.client.get(`/global-games/${id}/round`);
+    return response.data;
+  }
+
+  async playGlobalGame(id: string, payload: { userId: string; betAmount: number; choice?: any }): Promise<any> {
+    const response = await this.client.post(`/global-games/${id}/play`, payload);
+    return response.data;
+  }
+
+  async getGlobalGameHistory(id: string, limit: number = 20): Promise<any> {
+    const response = await this.client.get(`/global-games/${id}/history?limit=${limit}`);
+    return response.data;
+  }
   async getStreams(params?: {
     category?: string;
     country?: string;

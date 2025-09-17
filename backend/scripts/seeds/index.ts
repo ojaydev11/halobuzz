@@ -4,6 +4,7 @@ import { seedGifts } from './gifts';
 import { seedFestivals } from './festivals';
 import { seedPricing } from './pricing';
 import { seedGames } from './games';
+import { seedGlobalGames } from './global-games';
 
 // Load environment variables
 config();
@@ -18,7 +19,8 @@ const seedFunctions: SeedFunction[] = [
   { name: 'Gifts', function: seedGifts },
   { name: 'Festivals', function: seedFestivals },
   { name: 'Pricing', function: seedPricing },
-  { name: 'Games', function: seedGames }
+  { name: 'Games', function: seedGames },
+  { name: 'Global Games', function: seedGlobalGames }
 ];
 
 async function runAllSeeds() {
