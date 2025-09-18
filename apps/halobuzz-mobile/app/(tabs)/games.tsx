@@ -1,5 +1,5 @@
-import GamesScreen from '@/screens/GamesScreen';
+import EnhancedGamesScreen from '@/screens/EnhancedGamesScreen';
 
 export default function Games() {
-  return <GamesScreen />;
+  return <EnhancedGamesScreen />;
 }
