@@ -25,7 +25,7 @@ export default function DiscoverScreen() {
   useEffect(() => {
     (async () => {
       try {
-        const data = await health();
+        const data = await health.check();
         console.log("✅ Backend health:", data);
       } catch (e) {
         console.log("❌ Backend health failed:", e);

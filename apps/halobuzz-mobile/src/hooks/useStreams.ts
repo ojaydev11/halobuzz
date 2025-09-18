@@ -45,6 +45,40 @@ export function useStreams() {
     }
   };
 
+  const getStreamById = async (id: string): Promise<Stream | null> => {
+    try {
+      const response = await apiClient.getStreamById(id);
+      if (response.success && response.data) {
+        return response.data.stream;
+      } else {
+        throw new Error(response.error || 'Failed to get stream');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to get stream');
+      return null;
+    }
+  };
+
+  const likeStream = async (streamId: string): Promise<boolean> => {
+    try {
+      const response = await apiClient.likeStream(streamId);
+      return response.success;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to like stream');
+      return false;
+    }
+  };
+
+  const followUser = async (userId: string): Promise<boolean> => {
+    try {
+      const response = await apiClient.followUser(userId);
+      return response.success;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to follow user');
+      return false;
+    }
+  };
+
   const refresh = () => fetchStreams();
 
   useEffect(() => {
@@ -57,6 +91,9 @@ export function useStreams() {
     error,
     fetchStreams,
     createStream,
+    getStreamById,
+    likeStream,
+    followUser,
     refresh,
   };
 }

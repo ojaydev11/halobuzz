@@ -178,8 +178,8 @@ const GamesScreen: React.FC = ({ navigation }: any) => {
     return icons[category] || '🎮';
   };
 
-  const getGameColor = (type: string) => {
-    const colors: { [key: string]: string[] } = {
+  const getGameColor = (type: string): [string, string] => {
+    const colors: { [key: string]: [string, string] } = {
       'instant': ['#FF6B6B', '#FF8787'],
       'luck': ['#4ECDC4', '#44A3AA'],
       'skill': ['#95E1D3', '#3FC1C9'],

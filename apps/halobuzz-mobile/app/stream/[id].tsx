@@ -8,6 +8,7 @@ import {
   Alert,
   BackHandler,
   Dimensions,
+  TouchableOpacity,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAuth } from '@/store/AuthContext';
@@ -45,11 +46,11 @@ export default function StreamViewScreen() {
       setIsLoading(true);
       setError(null);
       
-      const response = await getStreamById(id as string);
-      if (response.success) {
-        setStream(response.data.stream);
+      const stream = await getStreamById(id as string);
+      if (stream) {
+        setStream(stream);
       } else {
-        setError(response.error || 'Failed to load stream');
+        setError('Failed to load stream');
       }
     } catch (err) {
       console.error('Stream load error:', err);
@@ -73,12 +74,12 @@ export default function StreamViewScreen() {
 
   const handleLike = async (streamId: string) => {
     try {
-      const response = await likeStream(streamId);
-      if (response.success) {
+      const success = await likeStream(streamId);
+      if (success) {
         // Update local stream data
         setStream(prev => prev ? {
           ...prev,
-          totalLikes: prev.totalLikes + 1,
+          totalLikes: (prev.totalLikes || 0) + 1,
         } : null);
       }
     } catch (error) {
@@ -88,14 +89,14 @@ export default function StreamViewScreen() {
 
   const handleFollow = async (userId: string) => {
     try {
-      const response = await followUser(userId);
-      if (response.success) {
+      const success = await followUser(userId);
+      if (success) {
         // Update local stream data
         setStream(prev => prev ? {
           ...prev,
           host: {
             ...prev.host,
-            followers: prev.host.followers + 1,
+            followers: (prev.host.followers || 0) + 1,
           },
         } : null);
       }
@@ -184,8 +185,8 @@ export default function StreamViewScreen() {
           streamId={stream.id}
           hostId={stream.host.id}
           hostUsername={stream.host.username}
-          currentLikes={stream.totalLikes}
-          currentFollowers={stream.host.followers}
+          currentLikes={stream.totalLikes || 0}
+          currentFollowers={stream.host.followers || 0}
           onLike={handleLike}
           onFollow={handleFollow}
           onShare={handleShare}

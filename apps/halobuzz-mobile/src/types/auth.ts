@@ -43,6 +43,7 @@ export interface RegisterRequest {
   phone?: string;
   country: string;
   language: string;
+  displayName?: string;
 }
 
 export interface AuthResponse {
@@ -51,7 +52,9 @@ export interface AuthResponse {
   data: {
     user: User;
     token: string;
+    refreshToken?: string;
   };
+  error?: string;
 }
 
 export interface ApiResponse<T> {

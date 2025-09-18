@@ -6,9 +6,12 @@ export interface Stream {
     username: string;
     avatar?: string;
     ogLevel?: number;
+    followers?: number;
   };
   thumb: string;
+  thumbnail?: string;
   viewers: number;
+  currentViewers?: number;
   country: string;
   startedAt: string;
   tags: string[];
@@ -16,6 +19,9 @@ export interface Stream {
   category?: string;
   isLive: boolean;
   duration?: number;
+  totalLikes?: number;
+  totalCoins?: number;
+  data?: any;
 }
 
 export interface FeaturedItem {
@@ -47,22 +53,55 @@ export interface CheckinReward {
 
 export type RegionFilter = 'all' | 'nepal' | 'asia' | 'global' | 'following';
 
+export interface StreamsResponse {
+  success: boolean;
+  data: {
+    streams: Stream[];
+    pagination?: {
+      page: number;
+      limit: number;
+      total: number;
+      hasMore: boolean;
+    };
+  };
+  message?: string;
+}
+
+export interface CreateStreamRequest {
+  title: string;
+  category?: string;
+  tags?: string[];
+  country?: string;
+  thumbnail?: string;
+  description?: string;
+  isAudioOnly?: boolean;
+}
+
+export interface Game {
+  id: string;
+  name: string;
+  description?: string;
+  rules?: string[];
+  thumbnail?: string;
+  isActive: boolean;
+}
+
 export interface HomeState {
   // Streams
   streams: Stream[];
   featuredItems: FeaturedItem[];
   continueWatching: ContinueWatchingItem[];
-  
+
   // UI State
   activeFilter: RegionFilter;
   loading: boolean;
   refreshing: boolean;
   error?: string;
-  
+
   // Check-in
   checkinReward?: CheckinReward;
   checkinLoading: boolean;
-  
+
   // Pagination
   hasMore: boolean;
   page: number;

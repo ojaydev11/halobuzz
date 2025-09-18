@@ -1,4 +1,9 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosError } from 'axios';
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosError, InternalAxiosRequestConfig } from 'axios';
+
+// Extend the InternalAxiosRequestConfig to include our custom properties
+interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
+  _retry?: boolean;
+}
 import Constants from 'expo-constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ApiResponse, AuthResponse, LoginRequest, RegisterRequest, User } from '@/types/auth';
@@ -100,8 +105,8 @@ class ApiClient {
         }
 
         // Handle 401 Unauthorized - token refresh
-        if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
-          originalRequest._retry = true;
+        if (error.response?.status === 401 && originalRequest && !(originalRequest as CustomAxiosRequestConfig)._retry) {
+          (originalRequest as CustomAxiosRequestConfig)._retry = true;
           
           try {
             if (!this.refreshTokenPromise) {
@@ -206,9 +211,10 @@ class ApiClient {
     } catch (error) {
       if (__DEV__) {
         console.error('Login error details:', error);
-        if (error.response) {
-          console.error('Response data:', error.response.data);
-          console.error('Response status:', error.response.status);
+        if (error instanceof Error && 'response' in error) {
+          const axiosError = error as AxiosError;
+          console.error('Response data:', axiosError.response?.data);
+          console.error('Response status:', axiosError.response?.status);
         }
       }
       const networkError = this.formatError(error);
@@ -239,9 +245,10 @@ class ApiClient {
     } catch (error) {
       if (__DEV__) {
         console.error('Register error details:', error);
-        if (error.response) {
-          console.error('Response data:', error.response.data);
-          console.error('Response status:', error.response.status);
+        if (error instanceof Error && 'response' in error) {
+          const axiosError = error as AxiosError;
+          console.error('Response data:', axiosError.response?.data);
+          console.error('Response status:', axiosError.response?.status);
         }
       }
       const networkError = this.formatError(error);
@@ -359,7 +366,7 @@ class ApiClient {
   }
 
   // Health check
-  async healthCheck(): Promise<ApiResponse<{ status: string }>> {
+  async healthCheck(): Promise<ApiResponse<{ status: string; checks?: any[] }>> {
     try {
       const response = await this.client.get('/monitoring/health', {
         timeout: 5000
@@ -368,6 +375,64 @@ class ApiClient {
     } catch (error) {
       const networkError = this.formatError(error);
       toast.showApiError(networkError);
+      throw networkError;
+    }
+  }
+
+  // Simple health check
+  async simpleHealthCheck(): Promise<ApiResponse<{ status: string }>> {
+    try {
+      const response = await this.client.get('/health', {
+        timeout: 5000
+      });
+      return response.data;
+    } catch (error) {
+      const networkError = this.formatError(error);
+      throw networkError;
+    }
+  }
+
+  // Stream interactions
+  async likeStream(streamId: string): Promise<ApiResponse<{ success: boolean }>> {
+    try {
+      const response = await this.client.post(`/streams/${streamId}/like`);
+      return response.data;
+    } catch (error) {
+      const networkError = this.formatError(error);
+      toast.showApiError(networkError);
+      throw networkError;
+    }
+  }
+
+  // User interactions
+  async followUser(userId: string): Promise<ApiResponse<{ success: boolean }>> {
+    try {
+      const response = await this.client.post(`/users/${userId}/follow`);
+      return response.data;
+    } catch (error) {
+      const networkError = this.formatError(error);
+      toast.showApiError(networkError);
+      throw networkError;
+    }
+  }
+
+  // Generic HTTP methods
+  async get(url: string, config?: AxiosRequestConfig): Promise<any> {
+    try {
+      const response = await this.client.get(url, config);
+      return response.data;
+    } catch (error) {
+      const networkError = this.formatError(error);
+      throw networkError;
+    }
+  }
+
+  async post(url: string, data?: any, config?: AxiosRequestConfig): Promise<any> {
+    try {
+      const response = await this.client.post(url, data, config);
+      return response.data;
+    } catch (error) {
+      const networkError = this.formatError(error);
       throw networkError;
     }
   }
@@ -551,6 +616,12 @@ api.interceptors.request.use((config) => {
 });
 
 export default apiClient;
+
+// Export health check function
+export const health = {
+  check: () => apiClient.healthCheck(),
+  simpleCheck: () => apiClient.simpleHealthCheck()
+};
 
 // Export types for error handling
 export { NetworkError, type ApiError };
