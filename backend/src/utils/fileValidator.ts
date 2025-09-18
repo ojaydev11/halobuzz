@@ -1,4 +1,4 @@
-import fileType from 'file-type';
+import { fileTypeFromBuffer } from 'file-type';
 import { logger } from '@/config/logger';
 
 export interface FileValidationResult {
@@ -80,7 +80,7 @@ export class FileValidator {
       }
 
       // Detect actual file type from content
-      const detectedType = await fileType.fromBuffer(fileBuffer);
+      const detectedType = await fileTypeFromBuffer(fileBuffer);
       if (!detectedType) {
         return {
           isValid: false,

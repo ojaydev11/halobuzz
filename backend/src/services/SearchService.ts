@@ -251,8 +251,8 @@ export class SearchService {
       const sortCriteria = this.getSortCriteria(sortBy, 'streams');
       
       const streams = await LiveStream.find(conditions)
-        .populate('host', 'username avatar')
-        .select('title category currentViewers thumbnail isLive createdAt')
+        .populate('hostId', 'username avatar')
+        .select('title category currentViewers thumbnail status createdAt')
         .sort(sortCriteria as any)
         .limit(limit)
         .skip(offset);
@@ -261,14 +261,14 @@ export class SearchService {
         id: stream._id.toString(),
         title: stream.title,
         host: {
-          id: (stream.host as any)._id.toString(),
-          username: (stream.host as any).username,
-          avatar: (stream.host as any).avatar || ''
+          id: (stream.hostId as any)._id.toString(),
+          username: (stream.hostId as any).username,
+          avatar: (stream.hostId as any).avatar || ''
         },
         category: stream.category,
         currentViewers: stream.currentViewers || 0,
         thumbnail: stream.thumbnail || '',
-        isLive: (stream as any).isLive || false
+        isLive: stream.status === 'live'
       }));
     } catch (error) {
       logger.error('Stream search failed:', error);
