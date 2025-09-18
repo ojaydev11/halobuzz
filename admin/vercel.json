@@ -1,8 +1,21 @@
 {
   "version": 2,
-  "buildCommand": "pnpm install --frozen-lockfile && pnpm build",
+  "buildCommand": "npm install && npm run build",
   "outputDirectory": ".next",
   "framework": "nextjs",
+  "name": "halobuzz-admin",
+  "functions": {
+    "pages/api/**/*.js": {
+      "maxDuration": 30
+    }
+  },
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "/login",
+      "permanent": false
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",

@@ -244,18 +244,23 @@ export default function Layout({ children, title }: LayoutProps) {
               <div className="hidden lg:block lg:h-6 lg:w-px lg:bg-gray-900/10" aria-hidden="true" />
 
               <div className="flex items-center gap-x-4">
-                <span className="text-sm font-semibold leading-6 text-gray-900">
-                  {userRoles.includes('super-admin') ? 'Super Admin' :
-                   userRoles.includes('admin') ? 'Admin' :
-                   userRoles.includes('moderator') ? 'Moderator' :
-                   userRoles.includes('support') ? 'Support Agent' : 'User'}
-                </span>
-                <div className="text-xs text-gray-500">
-                  Level {rbac.userLevel}
+                <div className="text-right">
+                  <div className="text-sm font-semibold leading-6 text-gray-900">
+                    {user.username}
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    {userRoles.includes('super-admin') ? 'Super Admin' :
+                     userRoles.includes('admin') ? 'Admin' :
+                     userRoles.includes('moderator') ? 'Moderator' :
+                     userRoles.includes('support') ? 'Support Agent' : 'User'} • Level {rbac.userLevel}
+                  </div>
                 </div>
-                <form method="post" action="/api/logout">
-                  <button className="text-sm text-gray-600 hover:text-gray-900">Logout</button>
-                </form>
+                <button
+                  onClick={handleLogout}
+                  className="text-sm text-gray-600 hover:text-gray-900 border border-gray-300 px-3 py-1 rounded"
+                >
+                  Logout
+                </button>
               </div>
             </div>
           </div>
