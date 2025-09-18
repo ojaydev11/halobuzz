@@ -97,8 +97,9 @@ export class EmailService {
     });
   }
 
-  async sendPasswordResetEmail(email: string, token: string): Promise<boolean> {
-    return this.sendEmail({
+  static async sendPasswordResetEmail(email: string, token: string): Promise<boolean> {
+    const service = EmailService.getInstance();
+    return service.sendEmail({
       to: email,
       subject: 'Reset your HaloBuzz password',
       text: `Reset your password with this token: ${token}`,

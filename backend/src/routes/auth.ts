@@ -6,6 +6,7 @@ import { User } from '../models/User';
 import { logger } from '../config/logger';
 import { AuthenticatedRequest } from '../middleware/auth';
 import { InputValidator } from '../utils/inputValidator';
+import { EmailService } from '../services/emailService';
 
 const router = express.Router();
 
@@ -69,10 +70,14 @@ router.post('/register', [
     await user.save();
 
     // Generate JWT token
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) {
+      throw new Error('JWT_SECRET environment variable is not set');
+    }
     const token = jwt.sign(
       { userId: user._id, username: user.username },
-      process.env.JWT_SECRET!,
-      { expiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '1h' }
+      jwtSecret,
+      { expiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '1h' } as jwt.SignOptions
     );
 
     res.status(201).json({
@@ -185,10 +190,14 @@ router.post('/login', [
     }
 
     // Generate JWT token
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) {
+      throw new Error('JWT_SECRET environment variable is not set');
+    }
     const token = jwt.sign(
       { userId: user._id, username: user.username },
-      process.env.JWT_SECRET!,
-      { expiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '1h' }
+      jwtSecret,
+      { expiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '1h' } as jwt.SignOptions
     );
 
     res.json({
@@ -476,7 +485,7 @@ router.post('/forgot-password', [
     const resetLink = `${process.env.FRONTEND_URL || 'https://halobuzz.com'}/reset-password?token=${resetToken}`;
 
     // Send reset email
-    await EmailService.sendPasswordResetEmail(user.email, user.username, resetLink);
+    await EmailService.sendPasswordResetEmail(user.email, resetLink);
 
     logger.info(`Password reset email sent to: ${email}`);
 

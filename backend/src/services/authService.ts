@@ -98,7 +98,7 @@ export class AuthService {
         { expiresIn: '24h' }
       );
       const verificationLink = `${process.env.FRONTEND_URL || 'https://halobuzz.com'}/verify-email?token=${verificationToken}`;
-      await EmailService.sendWelcomeEmail(user.email, user.username, verificationLink);
+      await EmailService.sendWelcomeEmail(user.email, user.username);
 
       // Send verification SMS if phone provided
       if (data.phone) {

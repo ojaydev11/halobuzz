@@ -278,8 +278,8 @@ router.post('/:id/play', [
 
     // Determine winners based on round outcome
     const outcomeIndex = round.outcomeIndex % validatedPlayers.length;
-    const totalBetAmount = validatedPlayers.reduce((sum: number, p: any) => sum + p.betAmount, 0);
-    const prizePool = totalBetAmount + (game.prizePool || 0);
+    const totalPlayerBets = validatedPlayers.reduce((sum: number, p: any) => sum + p.betAmount, 0);
+    const prizePool = totalPlayerBets + (game.prizePool || 0);
     const winner = validatedPlayers[outcomeIndex];
     const winnings = Math.floor(prizePool * 0.6); // 60% to players as specified
     const house = prizePool - winnings; // 40% to house

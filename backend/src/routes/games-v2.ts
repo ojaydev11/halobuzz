@@ -8,7 +8,7 @@ import { Transaction } from '@/models/Transaction';
 import { gamesEngineService } from '@/services/GamesEngineService';
 import { gameImplementations } from '@/services/GameImplementations';
 import { authMiddleware, AuthenticatedRequest } from '@/middleware/auth';
-import { globalLimiter } from '@/middleware/rateLimiter';
+import { globalLimiter } from '@/middleware/security';
 import { logger } from '@/config/logger';
 
 const router = express.Router();

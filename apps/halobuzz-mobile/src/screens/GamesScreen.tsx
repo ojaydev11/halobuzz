@@ -17,7 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../store/AuthContext';
-import api from '../services/api';
+import { apiClient } from '../lib/api';
 
 interface Game {
   _id: string;
@@ -77,7 +77,7 @@ const GamesScreen: React.FC = ({ navigation }: any) => {
 
   const fetchGames = async () => {
     try {
-      const response = await api.get('/api/v1/games/v2/list');
+      const response = await apiClient.get('/api/v1/games/v2/list');
       setGames(response.data.data.games);
     } catch (error) {
       console.error('Failed to fetch games:', error);
@@ -89,7 +89,7 @@ const GamesScreen: React.FC = ({ navigation }: any) => {
 
   const fetchUserBalance = async () => {
     try {
-      const response = await api.get(`/api/v1/wallet/balance`);
+      const response = await apiClient.get(`/api/v1/wallet/balance`);
       setUserBalance(response.data.data.coins || 0);
     } catch (error) {
       console.error('Failed to fetch balance:', error);
@@ -98,7 +98,7 @@ const GamesScreen: React.FC = ({ navigation }: any) => {
 
   const fetchGameHistory = async () => {
     try {
-      const response = await api.get('/api/v1/games/v2/history');
+      const response = await apiClient.get('/api/v1/games/v2/history');
       setGameHistory(response.data.data.history || []);
     } catch (error) {
       console.error('Failed to fetch game history:', error);
@@ -107,7 +107,7 @@ const GamesScreen: React.FC = ({ navigation }: any) => {
 
   const fetchCurrentRound = async (gameCode: string) => {
     try {
-      const response = await api.get(`/api/v1/games/v2/${gameCode}/current-round`);
+      const response = await apiClient.get(`/api/v1/games/v2/${gameCode}/current-round`);
       setCurrentRound(response.data.data);
       setTimeRemaining(response.data.data.timeRemaining);
     } catch (error) {
@@ -147,7 +147,7 @@ const GamesScreen: React.FC = ({ navigation }: any) => {
         payload.selectedOption = selectedOption;
       }
 
-      const response = await api.post(`/api/v1/games/v2/${selectedGame.code}/stake`, payload);
+      const response = await apiClient.post(`/api/v1/games/v2/${selectedGame.code}/stake`, payload);
       
       if (response.data.success) {
         Alert.alert('Success', 'Stake placed successfully!', [

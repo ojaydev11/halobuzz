@@ -16,6 +16,7 @@ export interface IGame extends Document {
   duration: number; // in seconds
   roundDuration: number; // Duration of each round in seconds
   houseEdge: number; // House edge percentage (40% target)
+  aiWinRate: number; // AI win rate percentage (35-55% range)
   rules: string[];
   rewards: {
     coins: number;
@@ -119,6 +120,12 @@ const gameSchema = new Schema<IGame>({
     default: 40, // 40% house edge = 60% RTP
     min: 0,
     max: 100
+  },
+  aiWinRate: {
+    type: Number,
+    default: 45, // Default AI win rate 45%
+    min: 35,
+    max: 55
   },
   rules: [{
     type: String,

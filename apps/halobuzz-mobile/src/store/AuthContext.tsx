@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { User, LoginRequest, RegisterRequest } from '@/types/auth';
 import { apiClient } from '@/lib/api';
 import { SecureStorageManager, secureLogger } from '@/lib/security';
+import { validateDemoCredentials, generateDemoToken, DemoUser } from '@/utils/demoAuth';
 
 interface AuthContextType {
   user: User | null;
@@ -63,6 +64,43 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const login = async (identifier: string, password: string) => {
     try {
+      // Use demo authentication in development mode
+      if (__DEV__) {
+        const demoUser = validateDemoCredentials(identifier, password);
+        if (demoUser) {
+          const token = generateDemoToken(demoUser);
+          await secureStorage.setAuthToken(token);
+          
+          // Convert DemoUser to User type
+          const user: User = {
+            id: demoUser.id,
+            username: demoUser.username,
+            email: demoUser.email,
+            displayName: demoUser.displayName,
+            avatar: demoUser.avatar,
+            country: demoUser.country,
+            language: demoUser.language,
+            isVerified: demoUser.isVerified,
+            kycStatus: demoUser.kycStatus,
+            ageVerified: demoUser.ageVerified,
+            totalCoinsEarned: demoUser.totalCoinsEarned,
+            coins: demoUser.coins,
+            followers: demoUser.followers,
+            following: demoUser.following,
+            totalLikes: demoUser.totalLikes,
+            totalViews: demoUser.totalViews,
+            ogLevel: demoUser.ogLevel
+          };
+          
+          setUser(user);
+          secureLogger.log('Demo login successful for user', { username: user.username });
+          return;
+        } else {
+          throw new Error('Invalid demo credentials. Try: demo_user/Demo123! or test_user/Test123! or admin_demo/Admin123!');
+        }
+      }
+      
+      // Production API login
       const response = await apiClient.login({ identifier, password });
       if (response.success && response.data) {
         const { user: userData, token, refreshToken } = response.data;
@@ -90,6 +128,58 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const register = async (userData: RegisterRequest) => {
     try {
+      // In development mode, simulate successful registration
+      if (__DEV__) {
+        // Create a demo user from registration data
+        const demoUser: DemoUser = {
+          id: `demo_${Date.now()}`,
+          username: userData.username,
+          email: userData.email,
+          displayName: userData.displayName || userData.username,
+          country: userData.country || 'US',
+          language: userData.language || 'en',
+          isVerified: false,
+          kycStatus: 'pending',
+          ageVerified: false,
+          totalCoinsEarned: 0,
+          coins: 100, // Welcome bonus
+          followers: 0,
+          following: 0,
+          totalLikes: 0,
+          totalViews: 0,
+          ogLevel: 1
+        };
+        
+        const token = generateDemoToken(demoUser);
+        await secureStorage.setAuthToken(token);
+        
+        // Convert DemoUser to User type
+        const user: User = {
+          id: demoUser.id,
+          username: demoUser.username,
+          email: demoUser.email,
+          displayName: demoUser.displayName,
+          avatar: demoUser.avatar,
+          country: demoUser.country,
+          language: demoUser.language,
+          isVerified: demoUser.isVerified,
+          kycStatus: demoUser.kycStatus,
+          ageVerified: demoUser.ageVerified,
+          totalCoinsEarned: demoUser.totalCoinsEarned,
+          coins: demoUser.coins,
+          followers: demoUser.followers,
+          following: demoUser.following,
+          totalLikes: demoUser.totalLikes,
+          totalViews: demoUser.totalViews,
+          ogLevel: demoUser.ogLevel
+        };
+        
+        setUser(user);
+        secureLogger.log('Demo registration successful for user', { username: user.username });
+        return;
+      }
+      
+      // Production API registration
       const response = await apiClient.register(userData);
       if (response.success && response.data) {
         const { user: newUser, token, refreshToken } = response.data;
