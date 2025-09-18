@@ -216,4 +216,4 @@ export class SecurityMonitoringService {
 }
 
 // Export singleton instance
-export const securityMonitoringService = new SecurityMonitoringService();
+export const securityMonitoring = new SecurityMonitoringService();

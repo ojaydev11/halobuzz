@@ -385,6 +385,169 @@ router.post('/refresh', async (req, res) => {
   }
 });
 
+// Email verification
+router.post('/verify-email', async (req, res) => {
+  try {
+    const { token } = req.body;
+
+    if (!token) {
+      return res.status(400).json({
+        success: false,
+        error: 'Verification token is required'
+      });
+    }
+
+    // Verify token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
+    
+    if (decoded.type !== 'email_verification') {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid verification token'
+      });
+    }
+
+    // Update user verification status
+    const user = await User.findById(decoded.userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: 'User not found'
+      });
+    }
+
+    if (user.isVerified) {
+      return res.status(400).json({
+        success: false,
+        error: 'Email already verified'
+      });
+    }
+
+    user.isVerified = true;
+    await user.save();
+
+    logger.info(`Email verified for user: ${user.username}`);
+
+    res.json({
+      success: true,
+      message: 'Email verified successfully'
+    });
+
+  } catch (error) {
+    logger.error('Email verification error:', error);
+    res.status(400).json({
+      success: false,
+      error: 'Invalid or expired verification token'
+    });
+  }
+});
+
+// Password reset request
+router.post('/forgot-password', [
+  body('email').isEmail().withMessage('Valid email is required')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        errors: errors.array()
+      });
+    }
+
+    const { email } = req.body;
+
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user) {
+      // Don't reveal if email exists or not
+      return res.json({
+        success: true,
+        message: 'If the email exists, a password reset link has been sent'
+      });
+    }
+
+    // Generate reset token
+    const resetToken = jwt.sign(
+      { userId: user._id, type: 'password_reset' },
+      process.env.JWT_SECRET as string,
+      { expiresIn: '1h' }
+    );
+
+    const resetLink = `${process.env.FRONTEND_URL || 'https://halobuzz.com'}/reset-password?token=${resetToken}`;
+
+    // Send reset email
+    await EmailService.sendPasswordResetEmail(user.email, user.username, resetLink);
+
+    logger.info(`Password reset email sent to: ${email}`);
+
+    res.json({
+      success: true,
+      message: 'If the email exists, a password reset link has been sent'
+    });
+
+  } catch (error) {
+    logger.error('Forgot password error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to process password reset request'
+    });
+  }
+});
+
+// Password reset
+router.post('/reset-password', [
+  body('token').notEmpty().withMessage('Reset token is required'),
+  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        errors: errors.array()
+      });
+    }
+
+    const { token, password } = req.body;
+
+    // Verify token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
+    
+    if (decoded.type !== 'password_reset') {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid reset token'
+      });
+    }
+
+    // Update user password
+    const user = await User.findById(decoded.userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: 'User not found'
+      });
+    }
+
+    user.password = password;
+    await user.save();
+
+    logger.info(`Password reset for user: ${user.username}`);
+
+    res.json({
+      success: true,
+      message: 'Password reset successfully'
+    });
+
+  } catch (error) {
+    logger.error('Reset password error:', error);
+    res.status(400).json({
+      success: false,
+      error: 'Invalid or expired reset token'
+    });
+  }
+});
+
 // Logout
 router.post('/logout', async (req, res) => {
   try {

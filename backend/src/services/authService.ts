@@ -91,8 +91,14 @@ export class AuthService {
       // Generate tokens
       const tokens = await this.generateTokens((user._id as any).toString());
 
-      // Send welcome email
-      await EmailService.sendWelcomeEmail(user.email, user.username);
+      // Send welcome email with verification
+      const verificationToken = jwt.sign(
+        { userId: user._id, type: 'email_verification' },
+        process.env.JWT_SECRET as string,
+        { expiresIn: '24h' }
+      );
+      const verificationLink = `${process.env.FRONTEND_URL || 'https://halobuzz.com'}/verify-email?token=${verificationToken}`;
+      await EmailService.sendWelcomeEmail(user.email, user.username, verificationLink);
 
       // Send verification SMS if phone provided
       if (data.phone) {
