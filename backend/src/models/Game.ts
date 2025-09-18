@@ -2,20 +2,30 @@ import mongoose, { Document, Schema } from 'mongoose';
 
 export interface IGame extends Document {
   name: string;
+  code: string; // Unique game identifier
   description: string;
-  type: 'battle' | 'quiz' | 'lottery' | 'challenge';
+  type: 'instant' | 'timed' | 'multiplayer' | 'skill' | 'luck';
+  category: 'coin-flip' | 'dice' | 'wheel' | 'predictor' | 'color' | 'rps' | 'treasure' | 'clicker';
   isActive: boolean;
   minPlayers: number;
   maxPlayers: number;
   entryFee: number;
+  minStake: number;
+  maxStake: number;
   prizePool: number;
   duration: number; // in seconds
-  aiWinRate: number; // percentage for AI to win
+  roundDuration: number; // Duration of each round in seconds
+  houseEdge: number; // House edge percentage (40% target)
   rules: string[];
   rewards: {
     coins: number;
     experience: number;
     specialItems: string[];
+  };
+  config: {
+    options?: number; // Number of options (for games with choices)
+    multipliers?: number[]; // Possible win multipliers
+    targetRTP?: number; // Target Return To Player percentage (60%)
   };
   metadata: {
     totalPlayed: number;
@@ -35,6 +45,13 @@ const gameSchema = new Schema<IGame>({
     trim: true,
     maxlength: 100
   },
+  code: {
+    type: String,
+    required: true,
+    unique: true,
+    trim: true,
+    maxlength: 50
+  },
   description: {
     type: String,
     required: true,
@@ -44,7 +61,12 @@ const gameSchema = new Schema<IGame>({
   type: {
     type: String,
     required: true,
-    enum: ['battle', 'quiz', 'lottery', 'challenge']
+    enum: ['instant', 'timed', 'multiplayer', 'skill', 'luck']
+  },
+  category: {
+    type: String,
+    required: true,
+    enum: ['coin-flip', 'dice', 'wheel', 'predictor', 'color', 'rps', 'treasure', 'clicker']
   },
   isActive: {
     type: Boolean,
@@ -65,6 +87,16 @@ const gameSchema = new Schema<IGame>({
     default: 0,
     min: 0
   },
+  minStake: {
+    type: Number,
+    default: 10,
+    min: 1
+  },
+  maxStake: {
+    type: Number,
+    default: 10000,
+    min: 1
+  },
   prizePool: {
     type: Number,
     default: 0,
@@ -73,12 +105,18 @@ const gameSchema = new Schema<IGame>({
   duration: {
     type: Number,
     required: true,
-    min: 30,
+    min: 5,
     max: 3600 // max 1 hour
   },
-  aiWinRate: {
+  roundDuration: {
     type: Number,
-    default: 0,
+    default: 30,
+    min: 5,
+    max: 300
+  },
+  houseEdge: {
+    type: Number,
+    default: 40, // 40% house edge = 60% RTP
     min: 0,
     max: 100
   },
@@ -100,6 +138,11 @@ const gameSchema = new Schema<IGame>({
     },
     specialItems: [String]
   },
+  config: {
+    options: { type: Number, default: 2 },
+    multipliers: [{ type: Number }],
+    targetRTP: { type: Number, default: 60 }
+  },
   metadata: {
     totalPlayed: { type: Number, default: 0, min: 0 },
     totalWinners: { type: Number, default: 0, min: 0 },
@@ -113,6 +156,8 @@ const gameSchema = new Schema<IGame>({
 // Indexes
 gameSchema.index({ isActive: 1 });
 gameSchema.index({ type: 1 });
+gameSchema.index({ category: 1 });
+gameSchema.index({ code: 1 });
 gameSchema.index({ entryFee: 1 });
 gameSchema.index({ 'metadata.totalPlayed': -1 });
 gameSchema.index({ 'metadata.averagePlayers': -1 });

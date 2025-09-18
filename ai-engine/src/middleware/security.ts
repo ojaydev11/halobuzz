@@ -19,6 +19,19 @@ export function validateServiceJWT(req: Request, res: Response, next: NextFuncti
     if (req.path === '/healthz' || req.path === '/health' || req.path === '/') {
       return next();
     }
+
+    // Allow x-ai-secret as an alternative to JWT for internal S2S
+    const aiSecretHeader = req.headers['x-ai-secret'] as string | undefined;
+    const aiSecret = process.env.AI_SERVICE_SECRET || process.env.AI_ENGINE_SECRET;
+    if (aiSecretHeader && aiSecret && aiSecretHeader === aiSecret) {
+      req.serviceAuth = {
+        aud: 'ai-engine',
+        iss: 'halobuzz-backend',
+        sub: 'backend-s2s',
+        iat: Math.floor(Date.now() / 1000)
+      } as unknown as JwtPayload;
+      return next();
+    }
     
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -35,10 +48,10 @@ export function validateServiceJWT(req: Request, res: Response, next: NextFuncti
     }
 
     const token = authHeader.substring(7);
-    const secret = process.env.AI_SERVICE_SECRET;
+    const secret = process.env.AI_SERVICE_SECRET || process.env.AI_ENGINE_SECRET;
     
     if (!secret) {
-      logger.error('AI_SERVICE_SECRET not configured');
+      logger.error('AI service secret not configured (AI_SERVICE_SECRET/AI_ENGINE_SECRET)');
       return res.status(500).json({
         success: false,
         error: 'Service configuration error'
@@ -99,6 +112,13 @@ export function validateServiceJWT(req: Request, res: Response, next: NextFuncti
 // HMAC signature validation middleware
 export const validateHMACSignature: RequestHandler = (req: Request, res: Response, next: NextFunction) => {
   try {
+    // Allow bypass if x-ai-secret is provided and valid
+    const aiSecretHeader = req.headers['x-ai-secret'] as string | undefined;
+    const aiSecret = process.env.AI_SERVICE_SECRET || process.env.AI_ENGINE_SECRET;
+    if (aiSecretHeader && aiSecret && aiSecretHeader === aiSecret) {
+      return next();
+    }
+
     const signature = req.headers['x-signature'] as string;
     const timestamp = req.headers['x-timestamp'] as string;
     
@@ -134,9 +154,9 @@ export const validateHMACSignature: RequestHandler = (req: Request, res: Respons
       });
     }
 
-    const secret = process.env.AI_SERVICE_SECRET;
+    const secret = process.env.AI_SERVICE_SECRET || process.env.AI_ENGINE_SECRET;
     if (!secret) {
-      logger.error('AI_SERVICE_SECRET not configured');
+      logger.error('AI service secret not configured (AI_SERVICE_SECRET/AI_ENGINE_SECRET)');
       return res.status(500).json({
         success: false,
         error: 'Service configuration error'

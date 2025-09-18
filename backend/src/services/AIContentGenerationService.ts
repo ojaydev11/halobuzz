@@ -32,9 +32,8 @@ export class AIContentGenerationService {
   private contentQueue: Map<string, AIContentRequest> = new Map();
 
   constructor() {
-    this.openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-    });
+    const apiKey = process.env.OPENAI_API_KEY || 'test';
+    this.openai = new OpenAI({ apiKey });
     this.s3Client = new S3Client({
       region: process.env.S3_REGION || 'us-east-1',
       credentials: {

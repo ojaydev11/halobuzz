@@ -33,6 +33,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const checkAuthState = async () => {
     try {
+      // Skip auth check for development to prevent loading issues
+      if (__DEV__) {
+        console.log('Skipping auth check in development mode');
+        setIsLoading(false);
+        return;
+      }
+      
       const token = await secureStorage.getAuthToken();
       if (token) {
         const response = await apiClient.getCurrentUser();

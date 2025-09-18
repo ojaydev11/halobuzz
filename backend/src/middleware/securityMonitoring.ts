@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { securityMonitoring } from '@/services/securityMonitoringService';
+import { securityMonitoringService as securityMonitoring } from '@/services/securityMonitoringService';
 import { logger } from '@/config/logger';
 
 /**
@@ -314,15 +314,22 @@ export const fileUploadMonitoringMiddleware = (req: Request, res: Response, next
       const fileType = req.body?.fileType || 'unknown';
 
       if (this.statusCode === 200) {
-        securityMonitoring.logFileUploadEvent(
-          'upload_success',
-          req,
-          fileName,
-          fileSize,
-          fileType,
-          userId,
-          username
-        );
+        securityMonitoring.logEvent({
+          type: 'admin_action',
+          severity: 'low',
+          source: {
+            ip: req.ip || 'unknown',
+            userAgent: req.get('User-Agent') || '',
+            userId,
+            username
+          },
+          details: {
+            uploadType: 'upload_success',
+            fileName,
+            fileSize,
+            fileType
+          }
+        });
       } else if (this.statusCode >= 400) {
         let uploadType = 'upload_failed';
         if (data.error?.includes('malicious') || data.error?.includes('virus')) {
@@ -331,16 +338,23 @@ export const fileUploadMonitoringMiddleware = (req: Request, res: Response, next
           uploadType = 'oversized_file';
         }
 
-        securityMonitoring.logFileUploadEvent(
-          uploadType,
-          req,
-          fileName,
-          fileSize,
-          fileType,
-          userId,
-          username,
-          data.error || data.message
-        );
+        securityMonitoring.logEvent({
+          type: 'admin_action',
+          severity: 'low',
+          source: {
+            ip: req.ip || 'unknown',
+            userAgent: req.get('User-Agent') || '',
+            userId,
+            username
+          },
+          details: {
+            uploadType,
+            fileName,
+            fileSize,
+            fileType,
+            error: data.error || data.message
+          }
+        });
       }
     }
 

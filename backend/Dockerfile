@@ -65,7 +65,7 @@ RUN mkdir -p logs && chown -R halobuzz:nodejs logs
 
 # Set environment variables
 ENV NODE_ENV=production
-ENV PORT=4000
+ENV PORT=5010
 ENV API_VERSION=v1
 ENV HOST=0.0.0.0
 
@@ -73,11 +73,11 @@ ENV HOST=0.0.0.0
 USER halobuzz
 
 # Expose port
-EXPOSE 4000
+EXPOSE 5010
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=20s --retries=3 \
-  CMD curl -f --max-time 2 --connect-timeout 2 http://127.0.0.1:4000/api/v1/monitoring/health || exit 1
+  CMD curl -f --max-time 2 --connect-timeout 2 http://127.0.0.1:${PORT}/api/v1/monitoring/health || exit 1
 
 # Start the application
 CMD ["node", "dist/index.js"]
