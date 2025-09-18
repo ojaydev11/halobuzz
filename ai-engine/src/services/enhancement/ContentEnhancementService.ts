@@ -1,7 +1,6 @@
 import logger from '../../utils/logger';
 import { aiModelManager } from '../../utils/ai-models';
 import sharp from 'sharp';
-import { createCanvas, loadImage } from 'canvas';
 
 export interface ThumbnailOptions {
   id: string;

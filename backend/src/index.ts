@@ -87,6 +87,7 @@ import searchRoutes from '@/routes/search';
 import globalExpansionRoutes from '@/routes/global-expansion';
 import creatorEconomyRoutes from '@/routes/creator-economy';
 import gamesRoutes from '@/routes/games';
+import gamesRoutesV2 from '@/routes/games-v2';
 import adminRoutes from '@/routes/admin';
 import configRoutes from '@/routes/config';
 import kycRoutes from '@/routes/kyc';
@@ -293,6 +294,7 @@ app.use(`/api/${apiVersion}/search`, searchRoutes);
 app.use(`/api/${apiVersion}/global-expansion`, globalExpansionRoutes);
 app.use(`/api/${apiVersion}/creator-economy`, authMiddleware, creatorEconomyRoutes);
 app.use(`/api/${apiVersion}/games`, authMiddleware, gamesRoutes);
+app.use(`/api/${apiVersion}/games/v2`, gamesRoutesV2); // New enhanced games with staking
 app.use(`/api/${apiVersion}/config`, authMiddleware, configRoutes);
 app.use(`/api/${apiVersion}/kyc`, authMiddleware, kycRoutes);
 import { adminOnly } from '@/middleware/admin';

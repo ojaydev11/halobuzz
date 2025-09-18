@@ -261,9 +261,9 @@ export class SearchService {
         id: stream._id.toString(),
         title: stream.title,
         host: {
-          id: (stream.hostId as any)._id.toString(),
-          username: (stream.hostId as any).username,
-          avatar: (stream.hostId as any).avatar || ''
+          id: (stream.hostId as any)?._id?.toString?.() || '',
+          username: (stream.hostId as any)?.username || '',
+          avatar: (stream.hostId as any)?.avatar || ''
         },
         category: stream.category,
         currentViewers: stream.currentViewers || 0,

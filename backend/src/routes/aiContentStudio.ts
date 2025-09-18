@@ -57,7 +57,7 @@ router.post('/generate-video',
         },
         {
           headers: {
-            'x-ai-secret': process.env.AI_SERVICE_SECRET,
+            'x-ai-secret': process.env.AI_SERVICE_SECRET || process.env.AI_ENGINE_SECRET,
             'Content-Type': 'application/json'
           }
         }
@@ -139,7 +139,7 @@ router.post('/generate-thumbnail',
         },
         {
           headers: {
-            'x-ai-secret': process.env.AI_SERVICE_SECRET,
+            'x-ai-secret': process.env.AI_SERVICE_SECRET || process.env.AI_ENGINE_SECRET,
             'Content-Type': 'application/json'
           }
         }
@@ -226,7 +226,7 @@ router.post('/generate-music',
         },
         {
           headers: {
-            'x-ai-secret': process.env.AI_SERVICE_SECRET,
+            'x-ai-secret': process.env.AI_SERVICE_SECRET || process.env.AI_ENGINE_SECRET,
             'Content-Type': 'application/json'
           }
         }
@@ -313,7 +313,7 @@ router.post('/generate-package',
         },
         {
           headers: {
-            'x-ai-secret': process.env.AI_SERVICE_SECRET,
+            'x-ai-secret': process.env.AI_SERVICE_SECRET || process.env.AI_ENGINE_SECRET,
             'Content-Type': 'application/json'
           }
         }

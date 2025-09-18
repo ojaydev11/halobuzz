@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 import { fileTypeFromBuffer } from 'file-type';
+=======
+// Use dynamic import to avoid ESM/CJS interop issues in test/runtime
+>>>>>>> cursor/audit-halobuzz-repository-status-ab50
 import { logger } from '@/config/logger';
 
 export interface FileValidationResult {
@@ -79,8 +83,9 @@ export class FileValidator {
         };
       }
 
-      // Detect actual file type from content
-      const detectedType = await fileTypeFromBuffer(fileBuffer);
+      // Detect actual file type from content (dynamic import for ESM module)
+      const { fileTypeFromBuffer } = await import('file-type');
+      const detectedType = await fileTypeFromBuffer(fileBuffer as any);
       if (!detectedType) {
         return {
           isValid: false,
