@@ -65,7 +65,7 @@ RUN mkdir -p logs && chown -R halobuzz:nodejs logs
 
 # Set environment variables
 ENV NODE_ENV=production
-ENV PORT=5010
+ENV PORT=4000
 ENV API_VERSION=v1
 ENV HOST=0.0.0.0
 
@@ -73,7 +73,7 @@ ENV HOST=0.0.0.0
 USER halobuzz
 
 # Expose port
-EXPOSE 5010
+EXPOSE 4000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=20s --retries=3 \
