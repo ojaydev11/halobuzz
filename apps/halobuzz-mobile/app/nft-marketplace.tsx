@@ -9,6 +9,7 @@ import {
   RefreshControl,
   ActivityIndicator,
   Alert,
+  ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -172,7 +173,7 @@ export default function NFTMarketplaceScreen() {
           filteredNFTs.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       }
 
-      setNFTs(filteredNFTs);
+      setNfts(filteredNFTs);
     } catch (error) {
       console.error('Failed to load NFTs:', error);
     } finally {

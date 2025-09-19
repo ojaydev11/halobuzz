@@ -37,6 +37,31 @@ export function AuthProvider({ children }: AuthProviderProps) {
       // Skip auth check for development to prevent loading issues
       if (__DEV__) {
         console.log('Skipping auth check in development mode');
+        // Set a demo user for development
+        const demoUser: User = {
+          id: 'demo_user_1',
+          username: 'demo_user',
+          email: 'demo@halobuzz.com',
+          displayName: 'Demo User',
+          avatar: 'https://i.pravatar.cc/150?img=1',
+          country: 'US',
+          language: 'en',
+          isVerified: true,
+          kycStatus: 'verified',
+          ageVerified: true,
+          totalCoinsEarned: 1000,
+          coins: 500,
+          followers: 150,
+          following: 75,
+          totalLikes: 2500,
+          totalViews: 15000,
+          ogLevel: 3,
+          token: 'demo_token',
+          refreshToken: 'demo_refresh_token',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        setUser(demoUser);
         setIsLoading(false);
         return;
       }

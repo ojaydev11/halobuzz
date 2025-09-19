@@ -78,7 +78,9 @@ import {
 import authRoutes from '@/routes/auth';
 import walletRoutes from '@/routes/wallet';
 import streamsRoutes from '@/routes/streams';
+import streamsEnhancedRoutes from '@/routes/streams-enhanced';
 import giftsRoutes from '@/routes/gifts';
+import giftsEnhancedRoutes from '@/routes/gifts-enhanced';
 import throneRoutes from '@/routes/throne';
 import ogRoutes from '@/routes/og';
 import chatRoutes from '@/routes/chat';
@@ -88,6 +90,7 @@ import globalExpansionRoutes from '@/routes/global-expansion';
 import creatorEconomyRoutes from '@/routes/creator-economy';
 import gamesRoutes from '@/routes/games';
 import gamesRoutesV2 from '@/routes/games-v2';
+import gamesEnhancedRoutes from '@/routes/games-enhanced';
 import adminRoutes from '@/routes/admin';
 import configRoutes from '@/routes/config';
 import kycRoutes from '@/routes/kyc';
@@ -285,7 +288,9 @@ app.use(`/api/${apiVersion}/auth`, authLimiter, loginSlowDown, authRoutes);
 app.use(`/api/${apiVersion}/me`, authMiddleware, authRoutes); // GET /me route
 app.use(`/api/${apiVersion}/wallet`, authMiddleware, paymentLimiter, walletRoutes);
 app.use(`/api/${apiVersion}/streams`, authMiddleware, socialLimiter, streamsRoutes);
+app.use(`/api/${apiVersion}/streams`, streamsEnhancedRoutes); // Enhanced streams with better functionality
 app.use(`/api/${apiVersion}/gifts`, authMiddleware, socialLimiter, giftsRoutes);
+app.use(`/api/${apiVersion}/gifts`, giftsEnhancedRoutes); // Enhanced gifts system
 app.use(`/api/${apiVersion}/throne`, authMiddleware, socialLimiter, throneRoutes);
 app.use(`/api/${apiVersion}/og`, authMiddleware, ogRoutes);
 app.use(`/api/${apiVersion}/chat`, authMiddleware, socialLimiter, chatRoutes);
@@ -295,6 +300,7 @@ app.use(`/api/${apiVersion}/global-expansion`, globalExpansionRoutes);
 app.use(`/api/${apiVersion}/creator-economy`, authMiddleware, creatorEconomyRoutes);
 app.use(`/api/${apiVersion}/games`, authMiddleware, gamesRoutes);
 app.use(`/api/${apiVersion}/games/v2`, gamesRoutesV2); // New enhanced games with staking
+app.use(`/api/${apiVersion}/games-enhanced`, gamesEnhancedRoutes); // Enhanced games with coins system
 app.use(`/api/${apiVersion}/config`, authMiddleware, configRoutes);
 app.use(`/api/${apiVersion}/kyc`, authMiddleware, kycRoutes);
 import { adminOnly } from '@/middleware/admin';

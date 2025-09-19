@@ -2,295 +2,380 @@ import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
-  TouchableOpacity,
   StyleSheet,
-  Alert,
+  TouchableOpacity,
   TextInput,
-  SafeAreaView,
+  Alert,
   ActivityIndicator,
+  ScrollView,
+  Image,
+  Switch,
+  Dimensions,
 } from 'react-native';
-import { useAgora } from '@/hooks/useAgora';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/store/AuthContext';
-import { useStreams } from '@/hooks/useStreams';
-import PermissionGate from '@/components/PermissionGate';
-import { secureLogger } from '@/lib/security';
+import { router } from 'expo-router';
+
+const { width } = Dimensions.get('window');
 
 export default function LiveScreen() {
+  const { user } = useAuth();
   const [channelName, setChannelName] = useState('');
   const [isHost, setIsHost] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+  const [isCameraOn, setIsCameraOn] = useState(true);
+  const [streamTitle, setStreamTitle] = useState('');
+  const [streamCategory, setStreamCategory] = useState('gaming');
+  const [isPublic, setIsPublic] = useState(true);
+  const [viewerCount, setViewerCount] = useState(0);
+  const [likes, setLikes] = useState(0);
+  const [comments, setComments] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
-  const [hasPermissions, setHasPermissions] = useState(false);
-  const { user } = useAuth();
-  const { createStream } = useStreams();
-  
-  const {
-    isJoined,
-    isMuted,
-    isCameraOn,
-    remoteUsers,
-    connectionState,
-    isInitialized,
-    error,
-    initializeEngine,
-    joinChannel,
-    leaveChannel,
-    toggleMute,
-    toggleCamera,
-    switchCamera,
-  } = useAgora();
+  const [activeTab, setActiveTab] = useState('go-live');
 
-  const handleJoinChannel = async () => {
-    if (!channelName.trim()) {
-      Alert.alert('Error', 'Please enter a channel name');
+  const categories = [
+    { id: 'gaming', name: 'Gaming', icon: 'game-controller', color: '#FF6B6B' },
+    { id: 'music', name: 'Music', icon: 'musical-notes', color: '#4ECDC4' },
+    { id: 'art', name: 'Art', icon: 'brush', color: '#45B7D1' },
+    { id: 'talk', name: 'Talk Show', icon: 'chatbubbles', color: '#96CEB4' },
+    { id: 'education', name: 'Education', icon: 'school', color: '#FFEAA7' },
+    { id: 'sports', name: 'Sports', icon: 'football', color: '#DDA0DD' },
+  ];
+
+  const mockLiveStreams = [
+    {
+      id: '1',
+      title: 'Epic Gaming Session!',
+      host: 'GamerPro',
+      viewers: 1250,
+      likes: 890,
+      category: 'gaming',
+      thumbnail: 'https://picsum.photos/300/200?random=1',
+      isLive: true,
+    },
+    {
+      id: '2',
+      title: 'Music Production Live',
+      host: 'MusicMaker',
+      viewers: 450,
+      likes: 320,
+      category: 'music',
+      thumbnail: 'https://picsum.photos/300/200?random=2',
+      isLive: true,
+    },
+    {
+      id: '3',
+      title: 'Digital Art Creation',
+      host: 'ArtistLife',
+      viewers: 780,
+      likes: 560,
+      category: 'art',
+      thumbnail: 'https://picsum.photos/300/200?random=3',
+      isLive: true,
+    },
+  ];
+
+  useEffect(() => {
+    if (isConnected) {
+      // Simulate viewer count updates
+      const interval = setInterval(() => {
+        setViewerCount(prev => prev + Math.floor(Math.random() * 5));
+      }, 3000);
+      return () => clearInterval(interval);
+    }
+  }, [isConnected]);
+
+  const startStream = async () => {
+    if (!streamTitle.trim()) {
+      Alert.alert('Error', 'Please enter a stream title');
       return;
     }
-
+    
     setIsLoading(true);
-    try {
-      if (isHost) {
-        secureLogger.log('Creating new stream', { channelName });
-        // Create a new stream
-        const streamResponse = await createStream({
-          title: `Live Stream - ${channelName}`,
-          description: 'Live stream from mobile app',
-          category: 'entertainment',
-          isAudioOnly: false,
-          isPrivate: false,
-        });
-        
-        if (streamResponse?.data?.stream?.agoraChannel) {
-          await joinChannel(
-            streamResponse.data.stream.agoraChannel, 
-            streamResponse.data.stream.agoraToken
-          );
-        } else {
-          throw new Error('Failed to get stream details from server');
-        }
-      } else {
-        secureLogger.log('Joining existing channel', { channelName });
-        // Join existing channel - token will be fetched automatically
-        await joinChannel(channelName);
-      }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to join channel';
-      Alert.alert('Error', errorMessage);
-      secureLogger.error('Join channel error', error);
-    } finally {
+    
+    // Simulate stream setup
+    setTimeout(() => {
       setIsLoading(false);
-    }
+      setIsConnected(true);
+      setViewerCount(Math.floor(Math.random() * 50) + 10);
+      Alert.alert('Success', 'Stream started successfully!');
+    }, 2000);
   };
 
-  const handleLeaveChannel = async () => {
-    setIsLoading(true);
-    try {
-      await leaveChannel();
-      secureLogger.log('Left channel successfully');
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to leave channel';
-      Alert.alert('Error', errorMessage);
-      secureLogger.error('Leave channel error', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleToggleMute = async () => {
-    try {
-      await toggleMute();
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to toggle mute';
-      Alert.alert('Error', errorMessage);
-      secureLogger.error('Toggle mute error', error);
-    }
-  };
-
-  const handleToggleCamera = async () => {
-    try {
-      await toggleCamera();
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to toggle camera';
-      Alert.alert('Error', errorMessage);
-      secureLogger.error('Toggle camera error', error);
-    }
-  };
-  
-  const handleSwitchCamera = async () => {
-    try {
-      await switchCamera();
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to switch camera';
-      Alert.alert('Error', errorMessage);
-      secureLogger.error('Switch camera error', error);
-    }
-  };
-  
-  const handlePermissionGranted = () => {
-    setHasPermissions(true);
-    secureLogger.log('Live streaming permissions granted');
-  };
-  
-  const handlePermissionDenied = () => {
-    setHasPermissions(false);
+  const endStream = () => {
     Alert.alert(
-      'Permissions Required',
-      'Camera and microphone access are required for live streaming.',
-      [{ text: 'OK' }]
+      'End Stream',
+      'Are you sure you want to end the stream?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'End', onPress: () => {
+          setIsConnected(false);
+          setViewerCount(0);
+          setLikes(0);
+          setComments(0);
+        }}
+      ]
     );
   };
-  
-  if (!hasPermissions) {
-    return (
-      <PermissionGate
-        requiredPermissions={['both']}
-        onPermissionGranted={handlePermissionGranted}
-        onPermissionDenied={handlePermissionDenied}
-        showExplanation={true}
-      >
-        <View />
-      </PermissionGate>
-    );
-  }
+
+  const toggleMute = () => setIsMuted(!isMuted);
+  const toggleCamera = () => setIsCameraOn(!isCameraOn);
+
+  const renderGoLiveTab = () => (
+    <ScrollView style={styles.tabContent}>
+      <View style={styles.setupContainer}>
+        <View style={styles.quickStartCard}>
+          <Text style={styles.cardTitle}>Quick Start</Text>
+          <Text style={styles.cardSubtitle}>Start streaming in seconds</Text>
+          
+          <TouchableOpacity
+            style={styles.quickStartButton}
+            onPress={() => {
+              setStreamTitle(`${user?.username || 'User'}'s Stream`);
+              startStream();
+            }}
+          >
+            <Ionicons name="videocam" size={24} color="#fff" />
+            <Text style={styles.quickStartText}>Go Live Now</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Stream Details</Text>
+          
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Stream Title</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="What are you streaming about?"
+              placeholderTextColor="#888"
+              value={streamTitle}
+              onChangeText={setStreamTitle}
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Category</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryScroll}>
+              {categories.map((category) => (
+                <TouchableOpacity
+                  key={category.id}
+                  style={[
+                    styles.categoryButton,
+                    streamCategory === category.id && styles.categoryButtonActive,
+                    { backgroundColor: streamCategory === category.id ? category.color : '#1a1a1a' }
+                  ]}
+                  onPress={() => setStreamCategory(category.id)}
+                >
+                  <Ionicons 
+                    name={category.icon as any} 
+                    size={20} 
+                    color={streamCategory === category.id ? '#fff' : '#888'} 
+                  />
+                  <Text style={[
+                    styles.categoryText,
+                    streamCategory === category.id && styles.categoryTextActive
+                  ]}>
+                    {category.name}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Channel Name</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter channel name"
+              placeholderTextColor="#888"
+              value={channelName}
+              onChangeText={setChannelName}
+            />
+          </View>
+
+          <View style={styles.switchGroup}>
+            <View style={styles.switchRow}>
+              <Text style={styles.switchLabel}>Public Stream</Text>
+              <Switch
+                value={isPublic}
+                onValueChange={setIsPublic}
+                trackColor={{ false: '#333', true: '#007AFF' }}
+                thumbColor={isPublic ? '#fff' : '#888'}
+              />
+            </View>
+          </View>
+        </View>
+
+        <TouchableOpacity
+          style={[styles.startButton, isLoading && styles.startButtonDisabled]}
+          onPress={startStream}
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <>
+              <Ionicons name="videocam" size={24} color="#fff" />
+              <Text style={styles.startButtonText}>Start Streaming</Text>
+            </>
+          )}
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
+  );
+
+  const renderLiveStreamsTab = () => (
+    <ScrollView style={styles.tabContent}>
+      <View style={styles.streamsContainer}>
+        <Text style={styles.sectionTitle}>Live Now</Text>
+        {mockLiveStreams.map((stream) => (
+          <TouchableOpacity key={stream.id} style={styles.streamCard}>
+            <Image source={{ uri: stream.thumbnail }} style={styles.streamThumbnail} />
+            <View style={styles.streamInfo}>
+              <Text style={styles.streamTitle} numberOfLines={1}>{stream.title}</Text>
+              <Text style={styles.streamHost}>@{stream.host}</Text>
+              <View style={styles.streamStats}>
+                <View style={styles.statItem}>
+                  <Ionicons name="eye" size={14} color="#888" />
+                  <Text style={styles.statText}>{stream.viewers}</Text>
+                </View>
+                <View style={styles.statItem}>
+                  <Ionicons name="heart" size={14} color="#ff0000" />
+                  <Text style={styles.statText}>{stream.likes}</Text>
+                </View>
+                <View style={styles.liveIndicator}>
+                  <View style={styles.liveDot} />
+                  <Text style={styles.liveText}>LIVE</Text>
+                </View>
+              </View>
+            </View>
+          </TouchableOpacity>
+        ))}
+      </View>
+    </ScrollView>
+  );
+
+  const renderStreamingTab = () => (
+    <View style={styles.streamingContainer}>
+      <View style={styles.videoContainer}>
+        <Text style={styles.videoText}>
+          {isCameraOn ? '📹 Live Video Feed' : '📹 Camera Off'}
+        </Text>
+        <Text style={styles.streamTitle}>{streamTitle}</Text>
+        <Text style={styles.channelText}>Channel: {channelName || 'Default'}</Text>
+        <Text style={styles.statusText}>🔴 LIVE</Text>
+      </View>
+
+      <View style={styles.streamStats}>
+        <View style={styles.statCard}>
+          <Ionicons name="eye" size={20} color="#fff" />
+          <Text style={styles.statNumber}>{viewerCount}</Text>
+          <Text style={styles.statLabel}>Viewers</Text>
+        </View>
+        <View style={styles.statCard}>
+          <Ionicons name="heart" size={20} color="#ff0000" />
+          <Text style={styles.statNumber}>{likes}</Text>
+          <Text style={styles.statLabel}>Likes</Text>
+        </View>
+        <View style={styles.statCard}>
+          <Ionicons name="chatbubble" size={20} color="#007AFF" />
+          <Text style={styles.statNumber}>{comments}</Text>
+          <Text style={styles.statLabel}>Comments</Text>
+        </View>
+      </View>
+
+      <View style={styles.controls}>
+        <TouchableOpacity
+          style={[styles.controlButton, isMuted && styles.controlButtonActive]}
+          onPress={toggleMute}
+        >
+          <Ionicons 
+            name={isMuted ? "mic-off" : "mic"} 
+            size={24} 
+            color={isMuted ? '#ff0000' : '#fff'} 
+          />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.controlButton, !isCameraOn && styles.controlButtonActive]}
+          onPress={toggleCamera}
+        >
+          <Ionicons 
+            name={isCameraOn ? "videocam" : "videocam-off"} 
+            size={24} 
+            color={!isCameraOn ? '#ff0000' : '#fff'} 
+          />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.controlButton}
+          onPress={() => setLikes(prev => prev + 1)}
+        >
+          <Ionicons name="heart" size={24} color="#ff0000" />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.controlButton}
+          onPress={() => setComments(prev => prev + 1)}
+        >
+          <Ionicons name="chatbubble" size={24} color="#007AFF" />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.controlButton, styles.endButton]}
+          onPress={endStream}
+        >
+          <Ionicons name="call" size={24} color="#fff" />
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Live Streaming</Text>
-        <Text style={styles.subtitle}>
-          {isHost ? 'Start your stream' : 'Join a live stream'}
-        </Text>
-        
-        {/* Connection Status */}
-        <View style={styles.statusContainer}>
-          <View style={[
-            styles.statusIndicator,
-            connectionState === 'connected' ? styles.statusConnected :
-            connectionState === 'connecting' ? styles.statusConnecting :
-            connectionState === 'error' ? styles.statusError :
-            styles.statusDisconnected
-          ]} />
-          <Text style={styles.statusText}>
-            {connectionState === 'connected' ? 'Connected' :
-             connectionState === 'connecting' ? 'Connecting...' :
-             connectionState === 'error' ? 'Connection Error' :
-             'Disconnected'}
-          </Text>
-        </View>
-        
-        {/* Error Display */}
-        {error && (
-          <Text style={styles.errorText}>{error}</Text>
-        )}
+        <Text style={styles.subtitle}>Connect with your audience</Text>
       </View>
 
-      {!isJoined ? (
-        <View style={styles.joinSection}>
-          {isLoading && (
-            <View style={styles.loadingOverlay}>
-              <ActivityIndicator size="large" color="#007AFF" />
-              <Text style={styles.loadingText}>Connecting...</Text>
-            </View>
-          )}
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Channel Name</Text>
-            <TextInput
-              style={styles.input}
-              value={channelName}
-              onChangeText={setChannelName}
-              placeholder="Enter channel name"
-              placeholderTextColor="#888"
-            />
-          </View>
-
-          <View style={styles.modeSelector}>
+      {!isConnected ? (
+        <>
+          <View style={styles.tabBar}>
             <TouchableOpacity
-              style={[styles.modeButton, isHost && styles.modeButtonActive]}
-              onPress={() => setIsHost(true)}
+              style={[styles.tab, activeTab === 'go-live' && styles.activeTab]}
+              onPress={() => setActiveTab('go-live')}
             >
-              <Text style={[styles.modeText, isHost && styles.modeTextActive]}>
-                Host Stream
+              <Ionicons 
+                name="add-circle" 
+                size={20} 
+                color={activeTab === 'go-live' ? '#007AFF' : '#888'} 
+              />
+              <Text style={[styles.tabText, activeTab === 'go-live' && styles.activeTabText]}>
+                Go Live
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.modeButton, !isHost && styles.modeButtonActive]}
-              onPress={() => setIsHost(false)}
+              style={[styles.tab, activeTab === 'live-streams' && styles.activeTab]}
+              onPress={() => setActiveTab('live-streams')}
             >
-              <Text style={[styles.modeText, !isHost && styles.modeTextActive]}>
-                Join Stream
+              <Ionicons 
+                name="play-circle" 
+                size={20} 
+                color={activeTab === 'live-streams' ? '#007AFF' : '#888'} 
+              />
+              <Text style={[styles.tabText, activeTab === 'live-streams' && styles.activeTabText]}>
+                Live Streams
               </Text>
             </TouchableOpacity>
           </View>
 
-          <TouchableOpacity
-            style={[styles.joinButton, (isLoading || !isInitialized) && styles.joinButtonDisabled]}
-            onPress={handleJoinChannel}
-            disabled={isLoading || !isInitialized}
-          >
-            <Text style={styles.joinButtonText}>
-              {isLoading ? 'Connecting...' :
-               !isInitialized ? 'Initializing...' :
-               isHost ? 'Start Stream' : 'Join Channel'}
-            </Text>
-          </TouchableOpacity>
-        </View>
+          {activeTab === 'go-live' ? renderGoLiveTab() : renderLiveStreamsTab()}
+        </>
       ) : (
-        <View style={styles.streamSection}>
-          <View style={styles.videoContainer}>
-            <Text style={styles.videoPlaceholder}>
-              {isCameraOn ? 'Video Stream' : 'Camera Off'}
-            </Text>
-            
-            {/* Remote Users Count */}
-            {remoteUsers.length > 0 && (
-              <View style={styles.remoteUsersInfo}>
-                <Text style={styles.remoteUsersText}>
-                  {remoteUsers.length} viewer{remoteUsers.length !== 1 ? 's' : ''}
-                </Text>
-              </View>
-            )}
-          </View>
-
-          <View style={styles.controls}>
-            <TouchableOpacity
-              style={[styles.controlButton, isMuted && styles.controlButtonActive]}
-              onPress={handleToggleMute}
-            >
-              <Text style={styles.controlButtonText}>
-                {isMuted ? 'Unmute' : 'Mute'}
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.controlButton, !isCameraOn && styles.controlButtonActive]}
-              onPress={handleToggleCamera}
-            >
-              <Text style={styles.controlButtonText}>
-                {isCameraOn ? 'Camera Off' : 'Camera On'}
-              </Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity
-              style={styles.controlButton}
-              onPress={handleSwitchCamera}
-            >
-              <Text style={styles.controlButtonText}>Flip</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.controlButton, styles.leaveButton]}
-              onPress={handleLeaveChannel}
-              disabled={isLoading}
-            >
-              <Text style={styles.controlButtonText}>
-                {isLoading ? 'Leaving...' : 'Leave'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.streamInfo}>
-            <Text style={styles.channelText}>Channel: {channelName}</Text>
-            <Text style={styles.userText}>User: {user?.username}</Text>
-          </View>
-        </View>
+        renderStreamingTab()
       )}
     </SafeAreaView>
   );
@@ -303,205 +388,292 @@ const styles = StyleSheet.create({
   },
   header: {
     padding: 20,
-    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#333',
   },
   title: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#fff',
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#888',
     marginTop: 4,
   },
-  statusContainer: {
+  tabBar: {
+    flexDirection: 'row',
+    backgroundColor: '#1a1a1a',
+    marginHorizontal: 20,
+    marginTop: 20,
+    borderRadius: 8,
+    padding: 4,
+  },
+  tab: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 12,
+    justifyContent: 'center',
+    paddingVertical: 12,
+    borderRadius: 6,
   },
-  statusIndicator: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginRight: 8,
+  activeTab: {
+    backgroundColor: '#007AFF',
   },
-  statusConnected: {
-    backgroundColor: '#00ff00',
-  },
-  statusConnecting: {
-    backgroundColor: '#ffaa00',
-  },
-  statusError: {
-    backgroundColor: '#ff0000',
-  },
-  statusDisconnected: {
-    backgroundColor: '#888',
-  },
-  statusText: {
+  tabText: {
+    color: '#888',
     fontSize: 14,
-    color: '#ccc',
+    fontWeight: '600',
+    marginLeft: 6,
   },
-  errorText: {
-    fontSize: 14,
-    color: '#ff0000',
-    marginTop: 8,
-    padding: 12,
-    backgroundColor: 'rgba(255,0,0,0.1)',
-    borderRadius: 8,
+  activeTabText: {
+    color: '#fff',
   },
-  joinSection: {
+  tabContent: {
     flex: 1,
     padding: 20,
-    justifyContent: 'center',
-    position: 'relative',
   },
-  loadingOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.8)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 10,
+  quickStartCard: {
+    backgroundColor: '#1a1a1a',
     borderRadius: 12,
+    padding: 20,
+    marginBottom: 20,
+    alignItems: 'center',
   },
-  loadingText: {
+  cardTitle: {
     color: '#fff',
-    marginTop: 16,
-    fontSize: 16,
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 4,
   },
-  inputContainer: {
-    marginBottom: 30,
+  cardSubtitle: {
+    color: '#888',
+    fontSize: 14,
+    marginBottom: 20,
+  },
+  quickStartButton: {
+    backgroundColor: '#ff0000',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  quickStartText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginLeft: 8,
+  },
+  section: {
+    marginBottom: 20,
+  },
+  sectionTitle: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 16,
+  },
+  inputGroup: {
+    marginBottom: 16,
   },
   label: {
-    fontSize: 16,
     color: '#fff',
+    fontSize: 16,
     marginBottom: 8,
-    fontWeight: '500',
   },
   input: {
     backgroundColor: '#1a1a1a',
-    borderRadius: 12,
+    borderRadius: 8,
     padding: 16,
-    fontSize: 16,
     color: '#fff',
-    borderWidth: 1,
-    borderColor: '#333',
+    fontSize: 16,
   },
-  modeSelector: {
+  categoryScroll: {
+    marginTop: 8,
+  },
+  categoryButton: {
     flexDirection: 'row',
-    marginBottom: 30,
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginRight: 12,
+  },
+  categoryButtonActive: {
+    // backgroundColor handled inline
+  },
+  categoryText: {
+    color: '#888',
+    fontSize: 14,
+    marginLeft: 6,
+  },
+  categoryTextActive: {
+    color: '#fff',
+  },
+  switchGroup: {
+    marginTop: 8,
+  },
+  switchRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  switchLabel: {
+    color: '#fff',
+    fontSize: 16,
+  },
+  startButton: {
+    backgroundColor: '#ff0000',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+    borderRadius: 8,
+    marginTop: 20,
+  },
+  startButtonDisabled: {
+    backgroundColor: '#666',
+  },
+  startButtonText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginLeft: 8,
+  },
+  streamsContainer: {
+    flex: 1,
+  },
+  streamCard: {
+    flexDirection: 'row',
     backgroundColor: '#1a1a1a',
     borderRadius: 12,
-    padding: 4,
+    marginBottom: 12,
+    overflow: 'hidden',
   },
-  modeButton: {
+  streamThumbnail: {
+    width: 120,
+    height: 80,
+  },
+  streamInfo: {
     flex: 1,
-    paddingVertical: 12,
-    alignItems: 'center',
-    borderRadius: 8,
+    padding: 12,
+    justifyContent: 'space-between',
   },
-  modeButtonActive: {
-    backgroundColor: '#007AFF',
-  },
-  modeText: {
+  streamTitle: {
+    color: '#fff',
     fontSize: 16,
+    fontWeight: 'bold',
+  },
+  streamHost: {
     color: '#888',
-    fontWeight: '500',
+    fontSize: 14,
   },
-  modeTextActive: {
-    color: '#fff',
+  streamStats: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
-  joinButton: {
-    backgroundColor: '#007AFF',
-    borderRadius: 12,
-    padding: 16,
+  statItem: {
+    flexDirection: 'row',
     alignItems: 'center',
   },
-  joinButtonDisabled: {
-    backgroundColor: '#555',
-    opacity: 0.6,
+  statText: {
+    color: '#888',
+    fontSize: 12,
+    marginLeft: 4,
   },
-  joinButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+  liveIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  streamSection: {
+  liveDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#ff0000',
+    marginRight: 4,
+  },
+  liveText: {
+    color: '#ff0000',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  streamingContainer: {
     flex: 1,
     padding: 20,
   },
   videoContainer: {
     flex: 1,
     backgroundColor: '#1a1a1a',
-    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 20,
-    position: 'relative',
-  },
-  remoteUsersInfo: {
-    position: 'absolute',
-    top: 16,
-    right: 16,
-    backgroundColor: 'rgba(0,0,0,0.7)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
     borderRadius: 12,
+    marginBottom: 20,
   },
-  remoteUsersText: {
+  videoText: {
     color: '#fff',
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: 24,
+    marginBottom: 12,
   },
-  videoPlaceholder: {
+  streamTitle: {
+    color: '#fff',
     fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  channelText: {
     color: '#888',
-    fontWeight: '500',
+    fontSize: 14,
+    marginBottom: 8,
+  },
+  statusText: {
+    color: '#ff0000',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  streamStats: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 20,
+  },
+  statCard: {
+    alignItems: 'center',
+    backgroundColor: '#1a1a1a',
+    padding: 16,
+    borderRadius: 8,
+    minWidth: 80,
+  },
+  statNumber: {
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginTop: 4,
+  },
+  statLabel: {
+    color: '#888',
+    fontSize: 12,
+    marginTop: 2,
   },
   controls: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    marginBottom: 20,
-    flexWrap: 'wrap',
-    gap: 8,
+    backgroundColor: '#1a1a1a',
+    padding: 20,
+    borderRadius: 12,
   },
   controlButton: {
-    backgroundColor: '#1a1a1a',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#333',
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#333',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   controlButtonActive: {
     backgroundColor: '#ff0000',
-    borderColor: '#ff0000',
   },
-  leaveButton: {
+  endButton: {
     backgroundColor: '#ff0000',
-    borderColor: '#ff0000',
-  },
-  controlButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  streamInfo: {
-    backgroundColor: '#1a1a1a',
-    padding: 16,
-    borderRadius: 12,
-  },
-  channelText: {
-    fontSize: 14,
-    color: '#fff',
-    marginBottom: 4,
-  },
-  userText: {
-    fontSize: 14,
-    color: '#888',
   },
 });

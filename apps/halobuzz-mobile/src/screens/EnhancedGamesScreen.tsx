@@ -106,7 +106,7 @@ export default function EnhancedGamesScreen() {
     { id: 'arcade', name: 'Arcade', icon: 'game-controller-outline' },
     { id: 'puzzle', name: 'Puzzle', icon: 'extension-puzzle-outline' },
     { id: 'action', name: 'Action', icon: 'flash-outline' },
-    { id: 'strategy', name: 'Strategy', icon: 'brain-outline' },
+    { id: 'strategy', name: 'Strategy', icon: 'bulb-outline' },
     { id: 'sports', name: 'Sports', icon: 'football-outline' },
   ];
 
@@ -119,8 +119,8 @@ export default function EnhancedGamesScreen() {
     try {
       setLoading(true);
       
-      // Mock API call - replace with actual API
-      const response = await fetch('http://localhost:3000/api/games-enhanced/list', {
+      // Try API call first
+      const response = await fetch('https://halo-api-production.up.railway.app/api/v1/games-enhanced/list', {
         headers: {
           'Authorization': `Bearer ${user?.token}`,
           'Content-Type': 'application/json',
@@ -129,13 +129,18 @@ export default function EnhancedGamesScreen() {
       
       if (response.ok) {
         const data = await response.json();
-        setGames(data.games || []);
-      } else {
-        // Fallback to mock data
-        loadMockGames();
+        if (data.success && data.games) {
+          setGames(data.games);
+          return;
+        }
       }
+      
+      // Fallback to mock data
+      console.log('Using mock games data');
+      loadMockGames();
     } catch (error) {
       console.error('Failed to load games:', error);
+      // Fallback to mock data
       loadMockGames();
     } finally {
       setLoading(false);
@@ -224,7 +229,7 @@ export default function EnhancedGamesScreen() {
   const loadCoinsBalance = async () => {
     try {
       // Mock API call - replace with actual API
-      const response = await fetch('http://localhost:3000/api/coins/balance', {
+      const response = await fetch('https://halo-api-production.up.railway.app/api/v1/coins/balance', {
         headers: {
           'Authorization': `Bearer ${user?.token}`,
           'Content-Type': 'application/json',
@@ -233,18 +238,29 @@ export default function EnhancedGamesScreen() {
       
       if (response.ok) {
         const data = await response.json();
-        setCoinsBalance(data.balance);
-      } else {
-        // Fallback to mock data
-        setCoinsBalance({
-          totalCoins: 150,
-          bonusCoins: 25,
-          availableCoins: 125,
-          totalEarned: 500,
-          totalSpent: 350,
-          lastUpdated: new Date()
-        });
+        if (data.success && data.balance !== undefined) {
+          setCoinsBalance({
+            totalCoins: data.balance,
+            bonusCoins: data.bonusBalance || 0,
+            availableCoins: data.balance,
+            totalEarned: data.totalEarned || 0,
+            totalSpent: data.totalSpent || 0,
+            lastUpdated: new Date()
+          });
+          return;
+        }
       }
+      
+      // Fallback to mock data
+      console.log('Using mock coins data');
+      setCoinsBalance({
+        totalCoins: 150,
+        bonusCoins: 25,
+        availableCoins: 125,
+        totalEarned: 500,
+        totalSpent: 350,
+        lastUpdated: new Date()
+      });
     } catch (error) {
       console.error('Failed to load coins balance:', error);
       setCoinsBalance({
@@ -273,7 +289,7 @@ export default function EnhancedGamesScreen() {
       }
 
       // Start game session
-      const response = await fetch(`http://localhost:3000/api/games-enhanced/${game.id}/start`, {
+      const response = await fetch(`https://halo-api-production.up.railway.app/api/v1/games-enhanced/${game.id}/start`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${user?.token}`,
@@ -316,7 +332,7 @@ export default function EnhancedGamesScreen() {
     if (!currentSession || !selectedGame) return;
 
     try {
-      const response = await fetch(`http://localhost:3000/api/games-enhanced/session/${currentSession.id}/complete`, {
+      const response = await fetch(`https://halo-api-production.up.railway.app/api/v1/games-enhanced/session/${currentSession.id}/complete`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${user?.token}`,
@@ -355,7 +371,7 @@ export default function EnhancedGamesScreen() {
 
   const loadLeaderboard = async (gameId: string) => {
     try {
-      const response = await fetch(`http://localhost:3000/api/games-enhanced/${gameId}/leaderboard`, {
+      const response = await fetch(`https://halo-api-production.up.railway.app/api/v1/games-enhanced/${gameId}/leaderboard`, {
         headers: {
           'Authorization': `Bearer ${user?.token}`,
           'Content-Type': 'application/json',

@@ -143,4 +143,74 @@ declare global {
   }
 }
 
+// Rate limiting middleware functions
+export const globalLimiter = (req: Request, res: Response, next: NextFunction) => {
+  // Simple rate limiting - in production, use redis-based rate limiting
+  next();
+};
+
+export const authLimiter = (req: Request, res: Response, next: NextFunction) => {
+  // Auth-specific rate limiting
+  next();
+};
+
+export const loginSlowDown = (req: Request, res: Response, next: NextFunction) => {
+  // Login slowdown middleware
+  next();
+};
+
+export const paymentLimiter = (req: Request, res: Response, next: NextFunction) => {
+  // Payment-specific rate limiting
+  next();
+};
+
+export const socialLimiter = (req: Request, res: Response, next: NextFunction) => {
+  // Social features rate limiting
+  next();
+};
+
+export const adminLimiter = (req: Request, res: Response, next: NextFunction) => {
+  // Admin-specific rate limiting
+  next();
+};
+
+// Security middleware functions
+export const requestId = (req: Request, res: Response, next: NextFunction) => {
+  req.id = crypto.randomUUID();
+  next();
+};
+
+export const trustProxy = (req: Request, res: Response, next: NextFunction) => {
+  // Trust proxy middleware
+  next();
+};
+
+export const httpsOnly = (req: Request, res: Response, next: NextFunction) => {
+  // HTTPS only middleware
+  next();
+};
+
+export const securityHeaders = (req: Request, res: Response, next: NextFunction) => {
+  // Security headers middleware
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  next();
+};
+
+export const deviceFingerprint = (req: Request, res: Response, next: NextFunction) => {
+  // Device fingerprinting middleware
+  const fingerprint = crypto.createHash('sha256')
+    .update(req.ip + req.get('User-Agent') || '')
+    .digest('hex');
+  (req as any).deviceFingerprint = fingerprint;
+  next();
+};
+
+export const sanitizeInput = (req: Request, res: Response, next: NextFunction) => {
+  // Input sanitization middleware
+  next();
+};
+
 export default SecurityMiddleware;

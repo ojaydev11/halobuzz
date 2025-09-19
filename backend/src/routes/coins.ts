@@ -35,6 +35,8 @@ interface CoinsTransaction {
     purchaseId?: string;
     referralId?: string;
     streamId?: string;
+    senderId?: string;
+    recipientId?: string;
   };
   timestamp: Date;
   isProcessed: boolean;

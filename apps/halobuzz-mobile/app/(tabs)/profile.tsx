@@ -118,7 +118,7 @@ export default function ProfileScreen() {
             ) : (
               <View style={styles.avatar}>
                 <Text style={styles.avatarText}>
-                  {user?.username?.charAt(0).toUpperCase() || 'U'}
+                  {user?.username?.charAt(0).toUpperCase() || user?.displayName?.charAt(0).toUpperCase() || 'U'}
                 </Text>
               </View>
             )}
@@ -131,9 +131,9 @@ export default function ProfileScreen() {
 
           <View style={styles.userInfo}>
             <Text style={styles.displayName}>
-              {user?.displayName || user?.username}
+              {user?.displayName || user?.username || 'User'}
             </Text>
-            <Text style={styles.username}>@{user?.username}</Text>
+            <Text style={styles.username}>@{user?.username || 'username'}</Text>
             {user?.bio && (
               <Text style={styles.bio}>{user.bio}</Text>
             )}
