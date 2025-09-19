@@ -73,12 +73,12 @@ export default function SocialFeatures({
       const response = await apiClient.getUserProfile(hostId);
       if (response.success) {
         setUserStats({
-          followers: response.data.followers || currentFollowers,
-          following: response.data.following || 0,
-          totalLikes: response.data.totalLikes || currentLikes,
-          totalStreams: response.data.totalStreams || 0,
-          isFollowing: response.data.isFollowing || false,
-          isLiked: response.data.isLiked || false,
+          followers: response.data?.followers || currentFollowers,
+          following: response.data?.following || 0,
+          totalLikes: response.data?.totalLikes || currentLikes,
+          totalStreams: response.data?.totalStreams || 0,
+          isFollowing: response.data?.isFollowing || false,
+          isLiked: response.data?.isLiked || false,
         });
       }
     } catch (error) {

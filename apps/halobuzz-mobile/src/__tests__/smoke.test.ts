@@ -3,12 +3,13 @@
  * Basic tests to ensure the app can start and core functionality works
  */
 
-import { health } from '../lib/api';
+import { healthCheck, simpleHealthCheck } from '../lib/api';
 import { redactSensitiveData, SecureStorageManager } from '../lib/security';
 
 // Mock network calls for smoke tests
 jest.mock('../lib/api', () => ({
-  health: jest.fn(),
+  healthCheck: jest.fn(),
+  simpleHealthCheck: jest.fn(),
   apiClient: {
     simpleHealthCheck: jest.fn(),
     healthCheck: jest.fn()
@@ -17,7 +18,8 @@ jest.mock('../lib/api', () => ({
 
 jest.mock('../lib/security');
 
-const mockHealth = health as jest.MockedFunction<typeof health>;
+const mockHealthCheck = healthCheck as jest.MockedFunction<typeof healthCheck>;
+const mockSimpleHealthCheck = simpleHealthCheck as jest.MockedFunction<typeof simpleHealthCheck>;
 const MockedSecureStorageManager = SecureStorageManager as jest.MockedClass<typeof SecureStorageManager>;
 
 describe('Smoke Tests', () => {
@@ -56,26 +58,30 @@ describe('Smoke Tests', () => {
         ]
       };
 
-      mockHealth.mockResolvedValue(mockHealthResponse);
+      mockHealthCheck.mockResolvedValue({
+        success: true,
+        data: mockHealthResponse,
+        message: 'Health check successful'
+      });
 
-      const result = await health();
+      const result = await healthCheck();
 
       expect(result).toEqual(mockHealthResponse);
-      expect(mockHealth).toHaveBeenCalledTimes(1);
+      expect(mockHealthCheck).toHaveBeenCalledTimes(1);
     });
 
     it('should handle network errors gracefully', async () => {
       const networkError = new Error('Network error');
-      mockHealth.mockRejectedValue(networkError);
+      mockHealthCheck.mockRejectedValue(networkError);
 
-      await expect(health()).rejects.toThrow('Network error');
+      await expect(healthCheck()).rejects.toThrow('Network error');
     });
 
     it('should handle timeout errors', async () => {
       const timeoutError = { name: 'AbortError', message: 'The operation was aborted' };
-      mockHealth.mockRejectedValue(timeoutError);
+      mockHealthCheck.mockRejectedValue(timeoutError);
 
-      await expect(health()).rejects.toEqual(timeoutError);
+      await expect(healthCheck()).rejects.toEqual(timeoutError);
     });
   });
 

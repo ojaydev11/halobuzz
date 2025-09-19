@@ -13,7 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useStreams } from '@/hooks/useStreams';
 import { Stream } from '@/types/stream';
-import { apiClient, health } from '@/lib/api';
+import { apiClient, healthCheck } from '@/lib/api';
 import { HealthStatus } from '@/types/monitoring';
 
 export default function DiscoverScreen() {
@@ -25,7 +25,7 @@ export default function DiscoverScreen() {
   useEffect(() => {
     (async () => {
       try {
-        const data = await health.check();
+        const data = await healthCheck();
         console.log("✅ Backend health:", data);
       } catch (e) {
         console.log("❌ Backend health failed:", e);
@@ -53,7 +53,7 @@ export default function DiscoverScreen() {
         Alert.alert(
           'Health Check Result',
           `${statusEmoji} Status: ${healthStatus.status.toUpperCase()}\n\n` +
-          healthStatus.checks.map(check => 
+          healthStatus.checks?.map(check => 
             `${check.name}: ${check.status} - ${check.message}`
           ).join('\n'),
           [{ text: 'OK' }]
@@ -63,7 +63,7 @@ export default function DiscoverScreen() {
       }
     } catch (error) {
       console.error('Health check error:', error);
-      Alert.alert('Health Check Error', `Failed to connect: ${error.message}`);
+      Alert.alert('Health Check Error', `Failed to connect: ${(error as Error).message}`);
     }
   };
 
@@ -80,7 +80,7 @@ export default function DiscoverScreen() {
       );
     } catch (error) {
       console.error('Simple health check error:', error);
-      Alert.alert('Simple Health Check Error', `Failed to connect: ${error.message}`);
+      Alert.alert('Simple Health Check Error', `Failed to connect: ${(error as Error).message}`);
     }
   };
 

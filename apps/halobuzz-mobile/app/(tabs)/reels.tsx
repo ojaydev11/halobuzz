@@ -16,7 +16,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { Video, ResizeMode } from 'expo-av';
+import { VideoView, useVideoPlayer } from 'expo-video';
 import { useAuth } from '@/store/AuthContext';
 import { useRouter } from 'expo-router';
 
@@ -78,7 +78,7 @@ export default function ReelsScreen() {
   const [showProfile, setShowProfile] = useState(false);
   const [selectedCreator, setSelectedCreator] = useState<any>(null);
   const [creatorReels, setCreatorReels] = useState<Reel[]>([]);
-  const videoRefs = useRef<{ [key: string]: Video }>({});
+  const videoRefs = useRef<{ [key: string]: any }>({});
 
   useEffect(() => {
     loadReels();
@@ -322,12 +322,12 @@ export default function ReelsScreen() {
   };
 
   const handleComment = () => {
-    if (newComment.trim()) {
+    if (newComment.trim() && user) {
       const comment: Comment = {
         id: Date.now().toString(),
         user: {
-          username: user?.username || 'you',
-          displayName: user?.displayName || 'You',
+          username: user.username || user.displayName || 'you',
+          displayName: user.displayName || user.username || 'You',
           verified: false,
         },
         text: newComment,
@@ -347,19 +347,21 @@ export default function ReelsScreen() {
     setShowProfile(true);
   };
 
-  const ReelItem = ({ item, index }: { item: Reel; index: number }) => (
-    <View style={styles.reelContainer}>
-      <Video
-        ref={(ref) => {
-          if (ref) videoRefs.current[item.id] = ref;
-        }}
-        source={{ uri: item.videoUrl }}
-        style={styles.video}
-        resizeMode={ResizeMode.COVER}
-        shouldPlay={index === currentIndex}
-        isLooping
-        volume={0.5}
-      />
+  const ReelItem = ({ item, index }: { item: Reel; index: number }) => {
+    const player = useVideoPlayer(item.videoUrl, (player) => {
+      player.loop = true;
+      player.volume = 0.5;
+      player.play();
+    });
+
+    return (
+      <View style={styles.reelContainer}>
+        <VideoView
+          style={styles.video}
+          player={player}
+          allowsFullscreen={false}
+          allowsPictureInPicture={false}
+        />
 
       {/* Overlay Content */}
       <View style={styles.overlay}>
@@ -451,7 +453,8 @@ export default function ReelsScreen() {
         </View>
       </View>
     </View>
-  );
+    );
+  };
 
   const CreatorProfileModal = () => (
     <Modal

@@ -7,7 +7,7 @@ const ENCRYPTION_CONFIG = {
   // AES-256-GCM for maximum security
   algorithm: 'AES',
   keySize: 256,
-  mode: CryptoJS.mode.GCM,
+  mode: CryptoJS.mode.CBC,
   padding: CryptoJS.pad.Pkcs7,
   iterations: 100000, // PBKDF2 iterations
   saltLength: 32,

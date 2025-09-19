@@ -927,7 +927,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginBottom: 2,
   },
-  userLevel: {
+  userLevelSmall: {
     color: '#888',
     fontSize: 12,
   },

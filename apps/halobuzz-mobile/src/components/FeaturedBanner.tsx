@@ -10,7 +10,7 @@ import {
   NativeScrollEvent,
   NativeSyntheticEvent,
 } from 'react-native';
-import { colors, spacing, typography, radii, shadows } from '../theme';
+import { colors, spacingObj as spacing, typography, radii, shadows } from '../theme';
 import { FeaturedItem } from '../types/stream';
 
 interface FeaturedBannerProps {

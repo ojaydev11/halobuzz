@@ -76,11 +76,40 @@ describe('Integration Tests', () => {
         id: '1',
         username: 'testuser',
         email: 'test@example.com',
+        displayName: 'Test User',
+        avatar: 'https://example.com/avatar.jpg',
+        bio: 'Test bio',
         country: 'US',
+        language: 'en',
+        isVerified: true,
+        isPremium: false,
+        kycStatus: 'approved' as const,
+        ageVerified: true,
+        ogLevel: 1,
         coins: 100,
+        totalCoinsEarned: 150,
+        token: 'auth-token-123',
+        refreshToken: 'refresh-token-456',
+        trust: { 
+          score: 85,
+          factors: {
+            totalStreams: 10,
+            totalViews: 1000,
+            totalLikes: 500,
+            totalGifts: 100
+          }
+        },
         followers: 0,
         following: 0,
-        trust: { score: 85 }
+        totalLikes: 500,
+        totalViews: 1000,
+        preferences: {
+          notifications: true,
+          privacy: 'public' as const
+        },
+        lastActiveAt: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       };
 
       const mockLoginResponse = {
@@ -92,7 +121,10 @@ describe('Integration Tests', () => {
         }
       };
 
-      mockApiClient.login.mockResolvedValue(mockLoginResponse);
+      mockApiClient.login.mockResolvedValue({
+        ...mockLoginResponse,
+        message: 'Login successful'
+      });
       
       const authStateChanges: boolean[] = [];
       const handleAuthStateChange = (isAuthenticated: boolean) => {
@@ -159,11 +191,40 @@ describe('Integration Tests', () => {
         id: '1',
         username: 'testuser',
         email: 'test@example.com',
+        displayName: 'Test User',
+        avatar: 'https://example.com/avatar.jpg',
+        bio: 'Test bio',
         country: 'US',
+        language: 'en',
+        isVerified: true,
+        isPremium: false,
+        kycStatus: 'approved' as const,
+        ageVerified: true,
+        ogLevel: 1,
         coins: 100,
+        totalCoinsEarned: 150,
+        token: 'auth-token-123',
+        refreshToken: 'refresh-token-456',
+        trust: { 
+          score: 85,
+          factors: {
+            totalStreams: 10,
+            totalViews: 1000,
+            totalLikes: 500,
+            totalGifts: 100
+          }
+        },
         followers: 0,
         following: 0,
-        trust: { score: 85 }
+        totalLikes: 500,
+        totalViews: 1000,
+        preferences: {
+          notifications: true,
+          privacy: 'public' as const
+        },
+        lastActiveAt: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       };
 
       mockApiClient.getCurrentUser.mockResolvedValue({
@@ -208,11 +269,40 @@ describe('Integration Tests', () => {
         id: '1',
         username: 'testuser',
         email: 'test@example.com',
+        displayName: 'Test User',
+        avatar: 'https://example.com/avatar.jpg',
+        bio: 'Test bio',
         country: 'US',
+        language: 'en',
+        isVerified: true,
+        isPremium: false,
+        kycStatus: 'approved' as const,
+        ageVerified: true,
+        ogLevel: 1,
         coins: 100,
+        totalCoinsEarned: 150,
+        token: 'auth-token-123',
+        refreshToken: 'refresh-token-456',
+        trust: { 
+          score: 85,
+          factors: {
+            totalStreams: 10,
+            totalViews: 1000,
+            totalLikes: 500,
+            totalGifts: 100
+          }
+        },
         followers: 0,
         following: 0,
-        trust: { score: 85 }
+        totalLikes: 500,
+        totalViews: 1000,
+        preferences: {
+          notifications: true,
+          privacy: 'public' as const
+        },
+        lastActiveAt: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       };
 
       // Mock existing token
@@ -305,11 +395,40 @@ describe('Integration Tests', () => {
         id: '1',
         username: 'testuser',
         email: 'test@example.com',
+        displayName: 'Test User',
+        avatar: 'https://example.com/avatar.jpg',
+        bio: 'Test bio',
         country: 'US',
+        language: 'en',
+        isVerified: true,
+        isPremium: false,
+        kycStatus: 'approved' as const,
+        ageVerified: true,
+        ogLevel: 1,
         coins: 100,
+        totalCoinsEarned: 150,
+        token: 'auth-token-123',
+        refreshToken: 'refresh-token-456',
+        trust: { 
+          score: 85,
+          factors: {
+            totalStreams: 10,
+            totalViews: 1000,
+            totalLikes: 500,
+            totalGifts: 100
+          }
+        },
         followers: 0,
         following: 0,
-        trust: { score: 85 }
+        totalLikes: 500,
+        totalViews: 1000,
+        preferences: {
+          notifications: true,
+          privacy: 'public' as const
+        },
+        lastActiveAt: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       };
 
       // Setup: user is logged in with expired token
@@ -347,7 +466,22 @@ describe('Integration Tests', () => {
         data: { streams: [], total: 0, page: 1 }
       };
 
-      mockApiClient.getStreams.mockResolvedValue(mockResponse);
+      mockApiClient.getStreams.mockResolvedValue({
+        success: true,
+        data: {
+          success: true,
+          data: {
+            streams: [],
+            pagination: {
+              page: 1,
+              limit: 10,
+              total: 0,
+              hasMore: false
+            }
+          }
+        },
+        message: 'Streams retrieved successfully'
+      });
       mockApiClient.getTrendingStreams.mockResolvedValue({
         success: true,
         data: []

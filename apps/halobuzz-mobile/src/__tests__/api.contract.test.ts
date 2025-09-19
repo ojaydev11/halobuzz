@@ -56,7 +56,7 @@ describe('API Client Contract Tests', () => {
         return config;
       });
       
-      mockAxiosInstance.interceptors.request.use.mockImplementation((interceptor) => {
+      mockAxiosInstance.interceptors.request.use.mockImplementation((interceptor: any) => {
         mockRequestInterceptor.mockImplementation(interceptor);
       });
 
@@ -70,7 +70,7 @@ describe('API Client Contract Tests', () => {
     it('should include request ID in headers', async () => {
       const mockRequestInterceptor = jest.fn();
       
-      mockAxiosInstance.interceptors.request.use.mockImplementation((interceptor) => {
+      mockAxiosInstance.interceptors.request.use.mockImplementation((interceptor: any) => {
         mockRequestInterceptor.mockImplementation(interceptor);
       });
 
@@ -91,7 +91,7 @@ describe('API Client Contract Tests', () => {
         }
       };
 
-      mockAxiosInstance.interceptors.response.use.mockImplementation((success, error) => {
+      mockAxiosInstance.interceptors.response.use.mockImplementation((success: any, error: any) => {
         mockResponseInterceptor.mockImplementation(error);
       });
 
@@ -101,8 +101,12 @@ describe('API Client Contract Tests', () => {
 
       const error401 = {
         response: { status: 401 },
-        config: { _retry: undefined }
-      } as AxiosError;
+        config: { _retry: undefined },
+        isAxiosError: true,
+        toJSON: () => ({}),
+        name: 'AxiosError',
+        message: 'Request failed with status code 401'
+      } as unknown as AxiosError;
 
       await mockResponseInterceptor(error401);
 
@@ -148,7 +152,7 @@ describe('API Client Contract Tests', () => {
     it('should not retry refresh infinitely', async () => {
       const mockResponseInterceptor = jest.fn();
       
-      mockAxiosInstance.interceptors.response.use.mockImplementation((success, error) => {
+      mockAxiosInstance.interceptors.response.use.mockImplementation((success: any, error: any) => {
         mockResponseInterceptor.mockImplementation(error);
       });
 
@@ -158,8 +162,12 @@ describe('API Client Contract Tests', () => {
 
       const error401 = {
         response: { status: 401 },
-        config: { _retry: true } // Already retried
-      } as AxiosError;
+        config: { _retry: true }, // Already retried
+        isAxiosError: true,
+        toJSON: () => ({}),
+        name: 'AxiosError',
+        message: 'Request failed with status code 401'
+      } as unknown as AxiosError;
 
       await expect(mockResponseInterceptor(error401)).rejects.toThrow();
       
@@ -178,7 +186,7 @@ describe('API Client Contract Tests', () => {
       const result = await apiClient.refreshToken('refresh-token');
 
       expect(result.success).toBe(true);
-      expect(result.data.token).toBe('new-auth-token');
+      expect(result.data?.token).toBe('new-auth-token');
     });
   });
 
@@ -262,7 +270,7 @@ describe('API Client Contract Tests', () => {
       const result = await apiClient.healthCheck();
 
       expect(result.success).toBe(true);
-      expect(result.data.status).toBe('healthy');
+      expect(result.data?.status).toBe('healthy');
     });
   });
 
@@ -284,7 +292,7 @@ describe('API Client Contract Tests', () => {
         uid: 123,
         role: 'publisher'
       });
-      expect(result.data.token).toBe('agora-token-123');
+      expect(result.data?.token).toBe('agora-token-123');
     });
   });
 

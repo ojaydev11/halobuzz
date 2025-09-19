@@ -5,7 +5,7 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from 'react-native';
-import { colors, spacing, typography, radii } from '../theme';
+import { colors, spacingObj as spacing, typography, radii } from '../theme';
 
 interface EmptyStateProps {
   title: string;

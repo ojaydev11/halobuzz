@@ -206,7 +206,7 @@ export const removeListener = (event: string, callback?: Function) => {
     return;
   }
   if (callback) {
-    socket.off(event, callback);
+    socket.off(event, callback as (...args: any[]) => void);
   } else {
     socket.removeAllListeners(event);
   }

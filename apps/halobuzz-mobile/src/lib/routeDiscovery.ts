@@ -96,7 +96,7 @@ class RouteDiscovery {
         throw new Error(`No patterns defined for ${category}.${endpoint}`);
       }
 
-      for (const pattern of patterns) {
+      for (const pattern of patterns as string[]) {
         try {
           // Add the API prefix to the full URL
           const fullUrl = `${baseUrl}${apiPrefix}${pattern}`;
@@ -121,7 +121,7 @@ class RouteDiscovery {
         } catch (error) {
           // Continue to next pattern
           if (__DEV__) {
-            console.log(`❌ Route failed: ${pattern} - ${error.message}`);
+            console.log(`❌ Route failed: ${pattern} - ${(error as Error).message}`);
           }
         }
       }
@@ -150,7 +150,7 @@ class RouteDiscovery {
       };
 
       if (method === 'POST' && testData) {
-        config.data = testData;
+        (config as any).data = testData;
       }
 
       const response = await axios(config);
@@ -158,8 +158,8 @@ class RouteDiscovery {
       return { status: response.status };
     } catch (error) {
       clearTimeout(timeoutId);
-      if (error.response) {
-        return { status: error.response.status };
+      if ((error as any).response) {
+        return { status: (error as any).response.status };
       }
       throw error;
     }

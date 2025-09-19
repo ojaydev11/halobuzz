@@ -829,7 +829,7 @@ const styles = StyleSheet.create({
   chatView: {
     flex: 1,
   },
-  chatHeader: {
+  chatHeaderMain: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,

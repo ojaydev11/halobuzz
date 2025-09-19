@@ -7,29 +7,45 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   version: "1.0.0",
   orientation: "portrait",
   icon: "./assets/icon.png",
-  userInterfaceStyle: "light",
+  userInterfaceStyle: "dark",
   splash: {
     image: "./assets/splash.png",
     resizeMode: "contain",
-    backgroundColor: "#ffffff"
+    backgroundColor: "#0B0B10"
   },
+  description: "HaloBuzz - Live streaming platform for creators and viewers",
+  keywords: ["live streaming", "social media", "content creation", "entertainment"],
   assetBundlePatterns: [
     "**/*"
   ],
   ios: {
     supportsTablet: true,
     bundleIdentifier: process.env.IOS_BUNDLE_ID || "com.halobuzz.app",
+    buildNumber: "1",
     infoPlist: {
-      NSCameraUsageDescription: "Camera access is required for live streaming.",
-      NSMicrophoneUsageDescription: "Microphone access is required for live audio.",
-      NSPhotoLibraryUsageDescription: "Photo library access is required to select profile pictures.",
-      ITSAppUsesNonExemptEncryption: false
+      NSCameraUsageDescription: "Camera access is required for live streaming and content creation.",
+      NSMicrophoneUsageDescription: "Microphone access is required for live audio and voice features.",
+      NSPhotoLibraryUsageDescription: "Photo library access is required to select profile pictures and share content.",
+      NSLocationWhenInUseUsageDescription: "Location access helps you discover local streams and events.",
+      NSContactsUsageDescription: "Contact access helps you find friends who are already on HaloBuzz.",
+      ITSAppUsesNonExemptEncryption: false,
+      UIBackgroundModes: ["audio", "voip"],
+      NSAppTransportSecurity: {
+        NSAllowsArbitraryLoads: false,
+        NSExceptionDomains: {
+          "halo-api-production.up.railway.app": {
+            NSExceptionAllowsInsecureHTTPLoads: false,
+            NSExceptionMinimumTLSVersion: "TLSv1.2",
+            NSIncludesSubdomains: true
+          }
+        }
+      }
     }
   },
   android: {
     adaptiveIcon: {
       foregroundImage: "./assets/adaptive-icon.png",
-      backgroundColor: "#ffffff"
+      backgroundColor: "#0B0B10"
     },
     package: "com.halobuzz.app",
     versionCode: 1,
@@ -39,7 +55,13 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       "android.permission.INTERNET",
       "android.permission.ACCESS_NETWORK_STATE",
       "android.permission.WRITE_EXTERNAL_STORAGE",
-      "android.permission.READ_EXTERNAL_STORAGE"
+      "android.permission.READ_EXTERNAL_STORAGE",
+      "android.permission.ACCESS_FINE_LOCATION",
+      "android.permission.ACCESS_COARSE_LOCATION",
+      "android.permission.READ_CONTACTS",
+      "android.permission.WAKE_LOCK",
+      "android.permission.FOREGROUND_SERVICE",
+      "android.permission.VIBRATE"
     ],
     intentFilters: [
       {

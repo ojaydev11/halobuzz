@@ -1088,7 +1088,7 @@ const styles = StyleSheet.create({
   chatView: {
     flex: 1,
   },
-  chatHeader: {
+  chatHeaderMain: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
@@ -1227,7 +1227,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
   },
-  securityStatus: {
+  securityStatusContainer: {
     alignItems: 'center',
     marginBottom: 30,
   },

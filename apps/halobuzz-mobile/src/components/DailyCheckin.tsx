@@ -7,7 +7,7 @@ import {
   ActivityIndicator,
   Animated,
 } from 'react-native';
-import { colors, spacing, typography, radii, shadows } from '../theme';
+import { colors, spacingObj as spacing, typography, radii, shadows } from '../theme';
 import { CheckinReward } from '../types/stream';
 
 interface DailyCheckinProps {

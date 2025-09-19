@@ -285,7 +285,6 @@ app.use(async (req, res, next) => {
 // API routes with enhanced security
 logger.info(`Mounting auth routes at /api/${apiVersion}/auth`);
 app.use(`/api/${apiVersion}/auth`, authLimiter, loginSlowDown, authRoutes);
-app.use(`/api/${apiVersion}/me`, authMiddleware, authRoutes); // GET /me route
 app.use(`/api/${apiVersion}/wallet`, authMiddleware, paymentLimiter, walletRoutes);
 app.use(`/api/${apiVersion}/streams`, authMiddleware, socialLimiter, streamsRoutes);
 app.use(`/api/${apiVersion}/streams`, streamsEnhancedRoutes); // Enhanced streams with better functionality

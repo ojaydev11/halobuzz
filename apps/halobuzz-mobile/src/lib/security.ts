@@ -76,7 +76,7 @@ export class SecureStorageManager {
   
   constructor() {
     // Check if SecureStore is available (not in Expo web)
-    this.isSecureStoreAvailable = Platform.OS !== 'web' && SecureStore.isAvailableAsync();
+    this.isSecureStoreAvailable = Platform.OS !== 'web';
   }
   
   async setItem(key: string, value: string, options?: SecureStore.SecureStoreOptions): Promise<void> {

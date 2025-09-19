@@ -8,7 +8,7 @@ import {
   Dimensions,
 } from 'react-native';
 import ShimmerPlaceholder from 'react-native-shimmer-placeholder';
-import { colors, spacing, typography, radii, shadows } from '../theme';
+import { colors, spacingObj as spacing, typography, radii, shadows } from '../theme';
 import { Stream } from '../types/stream';
 
 interface LiveCardProps {

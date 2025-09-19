@@ -9,7 +9,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { Camera } from 'expo-camera';
-import { Audio } from 'expo-av';
+import { Audio } from 'expo-audio';
 import { secureLogger } from '../lib/security';
 
 export type Permission = 'camera' | 'microphone' | 'both';

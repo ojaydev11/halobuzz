@@ -7,7 +7,7 @@ import {
   StatusBar,
   Platform,
 } from 'react-native';
-import { colors, spacing, typography, radii } from '../theme';
+import { colors, spacingObj as spacing, typography, radii } from '../theme';
 
 interface TopBarProps {
   onSearchPress?: () => void;

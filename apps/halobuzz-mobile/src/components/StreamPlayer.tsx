@@ -8,10 +8,9 @@ import {
   Alert,
   ActivityIndicator,
   Animated,
-  PanGestureHandler,
-  State,
 } from 'react-native';
-import { Video, ResizeMode, AVPlaybackStatus } from 'expo-av';
+import { PanGestureHandler, State } from 'react-native-gesture-handler';
+import { VideoView, useVideoPlayer } from 'expo-video';
 import { Ionicons } from '@expo/vector-icons';
 import { Stream } from '@/types/stream';
 import { useAuth } from '@/store/AuthContext';
@@ -40,8 +39,10 @@ export default function StreamPlayer({
   autoPlay = true,
 }: StreamPlayerProps) {
   const { user } = useAuth();
-  const videoRef = useRef<Video>(null);
-  const [status, setStatus] = useState<AVPlaybackStatus>({} as AVPlaybackStatus);
+  const player = useVideoPlayer(stream.streamUrl || '', player => {
+    player.loop = true;
+    player.muted = false;
+  });
   const [isPlaying, setIsPlaying] = useState(autoPlay);
   const [isMuted, setIsMuted] = useState(false);
   const [showControls, setShowControls] = useState(true);
@@ -90,42 +91,32 @@ export default function StreamPlayer({
     return () => clearTimeout(timer);
   }, [showControls, isPlaying]);
 
-  const handlePlayPause = async () => {
-    if (videoRef.current) {
-      if (isPlaying) {
-        await videoRef.current.pauseAsync();
-      } else {
-        await videoRef.current.playAsync();
-      }
-      setIsPlaying(!isPlaying);
+  const handlePlayPause = () => {
+    if (isPlaying) {
+      player.pause();
+    } else {
+      player.play();
     }
+    setIsPlaying(!isPlaying);
   };
 
-  const handleMute = async () => {
-    if (videoRef.current) {
-      await videoRef.current.setIsMutedAsync(!isMuted);
-      setIsMuted(!isMuted);
-    }
+  const handleMute = () => {
+    player.muted = !isMuted;
+    setIsMuted(!isMuted);
   };
 
-  const handleVolumeChange = async (newVolume: number) => {
-    if (videoRef.current) {
-      await videoRef.current.setVolumeAsync(newVolume);
-      setVolume(newVolume);
-    }
+  const handleVolumeChange = (newVolume: number) => {
+    player.volume = newVolume;
+    setVolume(newVolume);
   };
 
-  const handleSeek = async (positionMillis: number) => {
-    if (videoRef.current) {
-      await videoRef.current.setPositionAsync(positionMillis);
-    }
+  const handleSeek = (positionMillis: number) => {
+    player.seekTo(positionMillis);
   };
 
-  const handlePlaybackRateChange = async (rate: number) => {
-    if (videoRef.current) {
-      await videoRef.current.setRateAsync(rate, true);
-      setPlaybackRate(rate);
-    }
+  const handlePlaybackRateChange = (rate: number) => {
+    player.playbackRate = rate;
+    setPlaybackRate(rate);
   };
 
   const handleLike = () => {
@@ -150,10 +141,10 @@ export default function StreamPlayer({
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
-  const onPlaybackStatusUpdate = (status: AVPlaybackStatus) => {
-    setStatus(status);
-    setIsLoading(status.isLoaded ? false : true);
-  };
+  // Video status is now handled by the player
+  useEffect(() => {
+    setIsLoading(false);
+  }, []);
 
   const onVolumeGesture = (event: any) => {
     if (event.nativeEvent.state === State.ACTIVE) {
@@ -199,14 +190,11 @@ export default function StreamPlayer({
     <View style={[styles.container, isFullscreen && styles.fullscreenContainer]}>
       {/* Video Player */}
       <View style={styles.videoContainer}>
-        <Video
-          ref={videoRef}
+        <VideoView
           style={styles.video}
-          source={{ uri: stream.streamUrl }}
-          resizeMode={ResizeMode.CONTAIN}
-          shouldPlay={isPlaying}
-          isLooping={false}
-          onPlaybackStatusUpdate={onPlaybackStatusUpdate}
+          player={player}
+          allowsFullscreen={false}
+          allowsPictureInPicture={false}
         />
 
         {/* Loading Indicator */}
@@ -314,7 +302,7 @@ export default function StreamPlayer({
                   styles.progressFill,
                   {
                     width: status.isLoaded
-                      ? `${(status.positionMillis / status.durationMillis) * 100}%`
+                      ? `${(status.positionMillis / (status.durationMillis || 1)) * 100}%`
                       : '0%',
                   },
                 ]}
@@ -325,7 +313,7 @@ export default function StreamPlayer({
                 {status.isLoaded ? formatTime(status.positionMillis) : '0:00'}
               </Text>
               <Text style={styles.timeText}>
-                {status.isLoaded ? formatTime(status.durationMillis) : '0:00'}
+                {status.isLoaded ? formatTime(status.durationMillis || 0) : '0:00'}
               </Text>
             </View>
           </View>

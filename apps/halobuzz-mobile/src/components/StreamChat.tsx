@@ -190,7 +190,7 @@ export default function StreamChat({
       message: newMessage.trim(),
       timestamp: new Date(),
       type: 'message',
-      isVIP: user?.ogLevel && user.ogLevel > 0,
+      isVIP: !!(user?.ogLevel && user.ogLevel > 0),
     };
 
     socket.emit('send-stream-message', {

@@ -6,7 +6,7 @@ import {
   StyleSheet,
   ScrollView,
 } from 'react-native';
-import { colors, spacing, typography, radii } from '../theme';
+import { colors, spacingObj as spacing, typography, radii } from '../theme';
 import { RegionFilter } from '../types/stream';
 
 interface FilterTabsProps {

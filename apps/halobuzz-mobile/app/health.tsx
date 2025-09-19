@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { apiClient, health } from '@/lib/api';
+import { apiClient, healthCheck } from '@/lib/api';
 import { HealthStatus } from '@/types/monitoring';
 import { secureLogger } from '@/lib/security';
 

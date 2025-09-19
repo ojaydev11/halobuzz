@@ -11,4 +11,9 @@ export const spacingValues = {
   '4xl': spacing(16), // 64px
 } as const;
 
+// Create a spacing object that includes both the function and the values
+const spacingObj = Object.assign(spacing, spacingValues);
+
+export default spacingObj;
+
 export type SpacingKey = keyof typeof spacingValues;

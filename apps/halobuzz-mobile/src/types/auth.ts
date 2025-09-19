@@ -2,14 +2,20 @@ export interface User {
   id: string;
   username: string;
   email: string;
+  displayName?: string;
   avatar?: string;
   bio?: string;
   country: string;
   language: string;
   isVerified: boolean;
+  isPremium?: boolean;
   kycStatus: 'pending' | 'approved' | 'rejected' | 'none';
+  ageVerified?: boolean;
   ogLevel: number;
   coins: number;
+  totalCoinsEarned?: number;
+  token?: string;
+  refreshToken?: string;
   trust: {
     score: number;
     factors: {
@@ -29,6 +35,7 @@ export interface User {
   };
   lastActiveAt: string;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface LoginRequest {

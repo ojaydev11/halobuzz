@@ -120,7 +120,7 @@ export default function SearchScreen({ onClose }: SearchScreenProps) {
     try {
       const response = await apiClient.getTrendingHashtags();
       if (response.success) {
-        setTrendingHashtags(response.data.hashtags);
+        setTrendingHashtags(response.data?.hashtags || []);
       }
     } catch (error) {
       console.error('Failed to load trending hashtags:', error);
@@ -131,7 +131,7 @@ export default function SearchScreen({ onClose }: SearchScreenProps) {
     try {
       const response = await apiClient.getSearchSuggestions(query);
       if (response.success) {
-        setSuggestions(response.data.suggestions);
+        setSuggestions(response.data?.suggestions || []);
         setShowSuggestions(true);
       }
     } catch (error) {

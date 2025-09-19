@@ -9,10 +9,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ApiResponse, AuthResponse, LoginRequest, RegisterRequest, User } from '@/types/auth';
 import { StreamsResponse, CreateStreamRequest, Stream } from '@/types/stream';
 import { toast } from './toast';
+// Removed mock authentication for production
 
 // Get API configuration from environment
 const API_BASE = process.env.EXPO_PUBLIC_API_BASE_URL ?? "https://halo-api-production.up.railway.app";
 const API_PREFIX = process.env.EXPO_PUBLIC_API_PREFIX ?? "/api/v1";
+// Production mode - no mock authentication
+const USE_MOCK_AUTH = false;
 
 // Ensure API base URL is HTTPS for production
 if (!API_BASE.startsWith('https://')) {
@@ -217,6 +220,7 @@ class ApiClient {
           console.error('Response status:', axiosError.response?.status);
         }
       }
+      
       const networkError = this.formatError(error);
       toast.showApiError(networkError);
       throw networkError;
@@ -251,6 +255,7 @@ class ApiClient {
           console.error('Response status:', axiosError.response?.status);
         }
       }
+      
       const networkError = this.formatError(error);
       toast.showApiError(networkError);
       throw networkError;
@@ -274,7 +279,8 @@ class ApiClient {
       const response = await this.client.post('/auth/refresh', { token });
       return response.data;
     } catch (error) {
-      throw this.formatError(error);
+      const networkError = this.formatError(error);
+      throw networkError;
     }
   }
 
@@ -426,6 +432,46 @@ class ApiClient {
     } catch (error) {
       const networkError = this.formatError(error);
       toast.showApiError(networkError);
+      throw networkError;
+    }
+  }
+
+  async unfollowUser(userId: string): Promise<ApiResponse<{ success: boolean }>> {
+    try {
+      const response = await this.client.post(`/users/${userId}/unfollow`);
+      return response.data;
+    } catch (error) {
+      const networkError = this.formatError(error);
+      toast.showApiError(networkError);
+      throw networkError;
+    }
+  }
+
+  async getUserProfile(userId: string): Promise<ApiResponse<{ 
+    user: any;
+    followers?: number;
+    following?: number;
+    totalLikes?: number;
+    totalStreams?: number;
+    isFollowing?: boolean;
+    isLiked?: boolean;
+  }>> {
+    try {
+      const response = await this.client.get(`/users/${userId}`);
+      return response.data;
+    } catch (error) {
+      const networkError = this.formatError(error);
+      toast.showApiError(networkError);
+      throw networkError;
+    }
+  }
+
+  async put(url: string, data?: any, config?: AxiosRequestConfig): Promise<any> {
+    try {
+      const response = await this.client.put(url, data, config);
+      return response.data;
+    } catch (error) {
+      const networkError = this.formatError(error);
       throw networkError;
     }
   }
@@ -605,6 +651,17 @@ class ApiClient {
       throw networkError;
     }
   }
+
+  async getWallet(): Promise<ApiResponse<any>> {
+    try {
+      const response = await this.client.get('/wallet');
+      return response.data;
+    } catch (error) {
+      const networkError = this.formatError(error);
+      toast.showApiError(networkError);
+      throw networkError;
+    }
+  }
 }
 
 export const apiClient = new ApiClient();
@@ -629,25 +686,12 @@ api.interceptors.request.use((config) => {
 return config;
 });
 
-// Add getWallet method to apiClient
-apiClient.getWallet = async (): Promise<any> => {
-  try {
-    const response = await apiClient.client.get('/wallet');
-    console.log('✅ API Response:', response.status, '/wallet');
-    return response.data;
-  } catch (error) {
-    console.error('❌ API Error:', error);
-    throw apiClient.handleError(error);
-  }
-};
 
 export default apiClient;
 
-// Export health check function
-export const health = {
-  check: () => apiClient.healthCheck(),
-  simpleCheck: () => apiClient.simpleHealthCheck()
-};
+// Export health check functions
+export const healthCheck = () => apiClient.healthCheck();
+export const simpleHealthCheck = () => apiClient.simpleHealthCheck();
 
 // Export types for error handling
 export { NetworkError, type ApiError };

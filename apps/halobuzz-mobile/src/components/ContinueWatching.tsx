@@ -7,7 +7,7 @@ import {
   ScrollView,
   Image,
 } from 'react-native';
-import { colors, spacing, typography, radii, shadows } from '../theme';
+import { colors, spacingObj as spacing, typography, radii, shadows } from '../theme';
 import { ContinueWatchingItem } from '../types/stream';
 
 interface ContinueWatchingProps {

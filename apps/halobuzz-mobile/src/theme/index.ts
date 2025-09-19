@@ -1,7 +1,9 @@
 export { colors } from './colors';
-export { spacing, spacingValues } from './spacing';
+export { spacing, spacingValues, default as spacingObj } from './spacing';
 export { typography } from './typography';
 export { radii } from './radii';
+export { shadows } from './shadows';
+// Components are exported separately to avoid circular dependencies
 
 // Animation durations (150-250ms as specified)
 export const animations = {

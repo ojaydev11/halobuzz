@@ -1,6 +1,9 @@
 export interface Stream {
   id: string;
   channelName: string;
+  hostId?: string;
+  hostName?: string;
+  hostAvatar?: string;
   host: {
     id: string;
     username: string;
@@ -10,16 +13,29 @@ export interface Stream {
   };
   thumb: string;
   thumbnail?: string;
+  streamUrl?: string;
   viewers: number;
+  viewerCount?: number;
+  maxViewers?: number;
   currentViewers?: number;
   country: string;
   startedAt: string;
+  startTime?: string;
   tags: string[];
   title?: string;
   category?: string;
+  description?: string;
   isLive: boolean;
   duration?: number;
   totalLikes?: number;
+  likes?: number;
+  comments?: number;
+  quality?: string;
+  language?: string;
+  isPublic?: boolean;
+  allowComments?: boolean;
+  allowGifts?: boolean;
+  minLevel?: number;
   totalCoins?: number;
   data?: any;
 }
@@ -81,7 +97,7 @@ export interface Game {
   id: string;
   name: string;
   description?: string;
-  rules?: string[];
+  rules: string[];
   thumbnail?: string;
   isActive: boolean;
 }

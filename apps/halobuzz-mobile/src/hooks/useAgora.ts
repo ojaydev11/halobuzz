@@ -1,16 +1,17 @@
 import { useState, useEffect, useRef } from 'react';
 import {
-  RtcEngine,
+  createAgoraRtcEngine,
+  IRtcEngine,
   ChannelProfileType,
   ClientRoleType,
   RtcConnection,
   RtcStats,
-  RtcLocalView,
-  RtcRemoteView,
   VideoSourceType,
   AudioProfileType,
   AudioScenarioType,
 } from 'react-native-agora';
+import RtcLocalView from 'react-native-agora';
+import RtcRemoteView from 'react-native-agora';
 import Constants from 'expo-constants';
 import { secureLogger } from '@/lib/security';
 import { apiClient } from '@/lib/api';
@@ -48,7 +49,7 @@ export function useAgora() {
     error: null
   });
   
-  const engineRef = useRef<RtcEngine | null>(null);
+  const engineRef = useRef<IRtcEngine | null>(null);
   const channelRef = useRef<string>('');
   const currentTokenRef = useRef<string | null>(null);
   const isInitializingRef = useRef(false);
@@ -91,12 +92,12 @@ export function useAgora() {
       updateState({ error: null, connectionState: 'connecting' });
       
       secureLogger.log('Initializing Agora engine');
-      const engine = await RtcEngine.create(AGORA_APP_ID);
+      const engine = createAgoraRtcEngine();
       engineRef.current = engine;
 
       // Set up event listeners with error handling
-      engine.addListener('onJoinChannelSuccess', (channel, uid, elapsed) => {
-        secureLogger.log('Joined channel successfully', { channel, uid: uid.toString() });
+      engine.addListener('onJoinChannelSuccess', (connection: RtcConnection, elapsed: number) => {
+        secureLogger.log('Joined channel successfully', { connection: connection.channelId, elapsed });
         updateState({ 
           isJoined: true, 
           connectionState: 'connected',
@@ -104,7 +105,7 @@ export function useAgora() {
         });
       });
 
-      engine.addListener('onLeaveChannel', (stats) => {
+      engine.addListener('onLeaveChannel', (stats: any) => {
         secureLogger.log('Left channel', { stats });
         updateState({
           isJoined: false,
@@ -113,14 +114,14 @@ export function useAgora() {
         });
       });
 
-      engine.addListener('onUserJoined', (uid, elapsed) => {
+      engine.addListener('onUserJoined', (uid: any, elapsed: any) => {
         secureLogger.log('User joined', { uid: uid.toString() });
         updateState({
           remoteUsers: [...state.remoteUsers, uid]
         });
       });
 
-      engine.addListener('onUserOffline', (uid, reason) => {
+      engine.addListener('onUserOffline', (uid: any, reason: any) => {
         secureLogger.log('User offline', { uid: uid.toString(), reason });
         updateState({
           remoteUsers: state.remoteUsers.filter(id => id !== uid)
@@ -136,12 +137,12 @@ export function useAgora() {
         });
       });
       
-      engine.addListener('onConnectionStateChanged', (state, reason) => {
+      engine.addListener('onConnectionStateChanged', (state: any, reason: any) => {
         secureLogger.log('Connection state changed', { state, reason });
         updateState({ connectionState: state });
       });
       
-      engine.addListener('onTokenPrivilegeWillExpire', (token) => {
+      engine.addListener('onTokenPrivilegeWillExpire', (token: any) => {
         secureLogger.warn('Agora token will expire soon');
         // Refresh token
         refreshAgoraToken();
@@ -155,7 +156,7 @@ export function useAgora() {
       // Audio settings for better quality
       await engine.setAudioProfile(
         AudioProfileType.AudioProfileMusicHighQuality,
-        AudioScenarioType.AudioScenarioChatRoom
+        AudioScenarioType.AudioScenarioChatroom
       );
       
       updateState({ isInitialized: true });
@@ -183,7 +184,7 @@ export function useAgora() {
       
       if (engineRef.current) {
         secureLogger.log('Destroying Agora engine');
-        await engineRef.current.destroy();
+        engineRef.current?.release();
         engineRef.current = null;
       }
       
@@ -206,7 +207,7 @@ export function useAgora() {
       }
       
       const response = await apiClient.getAgoraToken(channelRef.current);
-      if (response.success && response.data.token) {
+      if (response.success && response.data?.token) {
         currentTokenRef.current = response.data.token;
         await engineRef.current?.renewToken(response.data.token);
         secureLogger.log('Agora token refreshed successfully');
@@ -236,7 +237,7 @@ export function useAgora() {
       if (!rtcToken) {
         secureLogger.log('Fetching Agora token from backend');
         const response = await apiClient.getAgoraToken(channelName);
-        if (response.success && response.data.token) {
+        if (response.success && response.data?.token) {
           rtcToken = response.data.token;
         } else {
           throw new Error('Failed to get Agora token from server');
@@ -291,7 +292,7 @@ export function useAgora() {
       }
 
       const newMutedState = !state.isMuted;
-      await engineRef.current.muteLocalAudio(newMutedState);
+      engineRef.current?.muteLocalAudioStream(newMutedState);
       updateState({ isMuted: newMutedState });
       
       secureLogger.log('Audio mute toggled', { muted: newMutedState });
@@ -308,7 +309,7 @@ export function useAgora() {
       }
 
       const newCameraState = !state.isCameraOn;
-      await engineRef.current.muteLocalVideo(!newCameraState);
+      engineRef.current?.muteLocalVideoStream(!newCameraState);
       updateState({ isCameraOn: newCameraState });
       
       secureLogger.log('Camera toggled', { cameraOn: newCameraState });

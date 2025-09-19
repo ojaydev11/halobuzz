@@ -1,21 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
-  TouchableOpacity,
-  TextInput,
   Alert,
-  ActivityIndicator,
   ScrollView,
   Image,
   Switch,
   Dimensions,
+  TouchableOpacity,
+  TextInput,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/store/AuthContext';
 import { router } from 'expo-router';
+import { Button, Card, Input, Text } from '@/components/ui';
+import { colors, spacing, layoutStyles } from '@/theme';
 
 const { width } = Dimensions.get('window');
 
@@ -133,7 +134,8 @@ export default function LiveScreen() {
           <TouchableOpacity
             style={styles.quickStartButton}
             onPress={() => {
-              setStreamTitle(`${user?.username || 'User'}'s Stream`);
+              const userName = user?.username || user?.displayName || 'User';
+              setStreamTitle(`${userName}'s Stream`);
               startStream();
             }}
           >
@@ -432,6 +434,9 @@ const styles = StyleSheet.create({
   tabContent: {
     flex: 1,
     padding: 20,
+  },
+  setupContainer: {
+    flex: 1,
   },
   quickStartCard: {
     backgroundColor: '#1a1a1a',

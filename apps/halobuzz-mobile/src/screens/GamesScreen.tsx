@@ -29,6 +29,7 @@ interface Game {
   minStake: number;
   maxStake: number;
   roundDuration: number;
+  rules: string[];
   config: {
     options?: number;
     multipliers?: number[];
@@ -393,7 +394,7 @@ const GamesScreen: React.FC = ({ navigation }: any) => {
 
                 <View style={styles.rulesContainer}>
                   <Text style={styles.rulesTitle}>Rules:</Text>
-                  {selectedGame.rules.map((rule, index) => (
+                  {selectedGame.rules.map((rule: string, index: number) => (
                     <Text key={index} style={styles.ruleText}>• {rule}</Text>
                   ))}
                 </View>

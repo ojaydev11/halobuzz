@@ -7,7 +7,7 @@ import {
   ActivityIndicator,
   Text,
 } from 'react-native';
-import { colors, spacing, typography } from '../theme';
+import { colors, spacingObj as spacing, typography } from '../theme';
 import { Stream } from '../types/stream';
 import LiveCard from './LiveCard';
 import EmptyState from './EmptyState';
