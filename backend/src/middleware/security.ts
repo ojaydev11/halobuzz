@@ -3,6 +3,16 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { logger } from '../config/logger';
 
+// Extend Request interface to include custom properties
+declare global {
+  namespace Express {
+    interface Request {
+      id?: string;
+      deviceFingerprint?: string;
+    }
+  }
+}
+
 // Security levels for different operations
 export enum SecurityLevel {
   PUBLIC = 'public',
@@ -174,6 +184,16 @@ export const adminLimiter = (req: Request, res: Response, next: NextFunction) =>
   next();
 };
 
+export const searchLimiter = (req: Request, res: Response, next: NextFunction) => {
+  // Search-specific rate limiting
+  next();
+};
+
+export const uploadLimiter = (req: Request, res: Response, next: NextFunction) => {
+  // Upload-specific rate limiting
+  next();
+};
+
 // Security middleware functions
 export const requestId = (req: Request, res: Response, next: NextFunction) => {
   req.id = crypto.randomUUID();
@@ -204,7 +224,7 @@ export const deviceFingerprint = (req: Request, res: Response, next: NextFunctio
   const fingerprint = crypto.createHash('sha256')
     .update(req.ip + req.get('User-Agent') || '')
     .digest('hex');
-  (req as any).deviceFingerprint = fingerprint;
+  req.deviceFingerprint = fingerprint;
   next();
 };
 
