@@ -13,7 +13,8 @@ import { toast } from './toast';
 
 // Get API configuration from environment
 const API_BASE = process.env.EXPO_PUBLIC_API_BASE_URL ?? "https://halo-api-production.up.railway.app";
-const API_PREFIX = process.env.EXPO_PUBLIC_API_PREFIX ?? "/api/v1";
+const rawPrefix = process.env.EXPO_PUBLIC_API_PREFIX ?? "/api/v1";
+const API_PREFIX = rawPrefix && rawPrefix.trim().length > 0 ? rawPrefix : "/api/v1";
 // Production mode - no mock authentication
 const USE_MOCK_AUTH = false;
 

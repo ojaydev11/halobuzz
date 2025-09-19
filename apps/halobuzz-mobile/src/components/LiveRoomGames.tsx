@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import api from '../services/api';
+import { apiClient } from '@/lib/api';
 
 interface LiveRoomGamesProps {
   visible: boolean;
@@ -57,7 +57,7 @@ const LiveRoomGames: React.FC<LiveRoomGamesProps> = ({
   useEffect(() => {
     if (timeRemaining > 0) {
       const timer = setInterval(() => {
-        setTimeRemaining(prev => Math.max(0, prev - 1));
+        setTimeRemaining((prev: number) => Math.max(0, prev - 1));
       }, 1000);
       return () => clearInterval(timer);
     }
@@ -65,9 +65,9 @@ const LiveRoomGames: React.FC<LiveRoomGamesProps> = ({
 
   const fetchCurrentRound = async (gameCode: string) => {
     try {
-      const response = await api.get(`/api/v1/games/v2/${gameCode}/current-round`);
-      setCurrentRound(response.data.data);
-      setTimeRemaining(response.data.data.timeRemaining);
+      const response = await apiClient.get(`/games/v2/${gameCode}/current-round`);
+      setCurrentRound(response.data);
+      setTimeRemaining(response.data.timeRemaining);
     } catch (error) {
       console.error('Failed to fetch round:', error);
     }
@@ -81,23 +81,23 @@ const LiveRoomGames: React.FC<LiveRoomGamesProps> = ({
         payload.selectedOption = option;
       }
 
-      const response = await api.post(`/api/v1/games/v2/${gameCode}/stake`, payload);
+      const response = await apiClient.post(`/games/v2/${gameCode}/stake`, payload);
       
-      if (response.data.success) {
+      if (response.success) {
         Alert.alert('🎯 Staked!', `${amount} coins staked successfully!`);
         onBalanceUpdate();
         
         // Wait for round to end and check result
         setTimeout(async () => {
           try {
-            const resultResponse = await api.get(
-              `/api/v1/games/v2/${gameCode}/round/${response.data.data.roundId}/result`
+            const resultResponse = await apiClient.get(
+              `/games/v2/${gameCode}/round/${response.data.roundId}/result`
             );
             
-            if (resultResponse.data.data.userStake?.result === 'won') {
+            if (resultResponse.data.userStake?.result === 'won') {
               Alert.alert(
                 '🎉 You Won!',
-                `Congratulations! You won ${resultResponse.data.data.userStake.winAmount} coins!`
+                `Congratulations! You won ${resultResponse.data.userStake.winAmount} coins!`
               );
             } else {
               Alert.alert('😔 Better Luck Next Time!', 'Try again in the next round!');
@@ -131,7 +131,7 @@ const LiveRoomGames: React.FC<LiveRoomGamesProps> = ({
         <Text style={styles.quickGameName}>{game.name}</Text>
         <TouchableOpacity
           style={styles.quickPlayButton}
-          onPress={(e) => {
+          onPress={(e: any) => {
             e.stopPropagation();
             if (game.code === 'coin-flip') {
               quickStake(game.code, 50, Math.floor(Math.random() * 2));
@@ -263,7 +263,7 @@ const LiveRoomGames: React.FC<LiveRoomGamesProps> = ({
               {recentWinners.length > 0 && (
                 <View style={styles.winnersSection}>
                   <Text style={styles.winnersTitle}>Recent Winners</Text>
-                  {recentWinners.map((winner, index) => (
+                  {recentWinners.map((winner: any, index: number) => (
                     <View key={index} style={styles.winnerItem}>
                       <Text style={styles.winnerName}>{winner.username}</Text>
                       <Text style={styles.winnerAmount}>+{winner.amount} 🪙</Text>
