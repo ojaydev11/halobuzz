@@ -14,6 +14,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/store/AuthContext';
 import { io, Socket } from 'socket.io-client';
+import { api } from '@/lib/api';
 
 interface ChatMessage {
   id: string;
@@ -62,7 +63,7 @@ export default function StreamChat({
   const [isModerator, setIsModerator] = useState(false);
   
   const flatListRef = useRef<FlatList>(null);
-  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const typingTimeoutRef = useRef<any>(null);
   const slideAnimation = useRef(new Animated.Value(isVisible ? 0 : 300)).current;
 
   const gifts = [
@@ -113,7 +114,9 @@ export default function StreamChat({
   }, [isConnected, socket]);
 
   const initializeSocket = () => {
-    const newSocket = io(process.env.EXPO_PUBLIC_API_BASE_URL || 'https://halo-api-production.up.railway.app', {
+    // Derive base URL from API client (strip API prefix)
+    const base = (api.defaults.baseURL || 'https://halo-api-production.up.railway.app').replace(/\/?api\/.+$/, '');
+    const newSocket = io(base, {
       transports: ['websocket'],
       auth: {
         token: user?.token,
@@ -130,7 +133,7 @@ export default function StreamChat({
       console.log('Disconnected from chat server');
     });
 
-    newSocket.on('connect_error', (error) => {
+    newSocket.on('connect_error', (error: any) => {
       console.error('Chat connection error:', error);
       Alert.alert('Connection Error', 'Failed to connect to chat. Please try again.');
     });
@@ -139,22 +142,22 @@ export default function StreamChat({
   };
 
   const handleNewMessage = (message: ChatMessage) => {
-    setMessages(prev => [...prev, message]);
+    setMessages((prev: ChatMessage[]) => [...prev, message]);
     scrollToBottom();
   };
 
   const handleGiftMessage = (giftMessage: ChatMessage) => {
-    setMessages(prev => [...prev, giftMessage]);
+    setMessages((prev: ChatMessage[]) => [...prev, giftMessage]);
     scrollToBottom();
   };
 
   const handleSystemMessage = (systemMessage: ChatMessage) => {
-    setMessages(prev => [...prev, systemMessage]);
+    setMessages((prev: ChatMessage[]) => [...prev, systemMessage]);
     scrollToBottom();
   };
 
   const handleUserTyping = (data: { userId: string; username: string }) => {
-    setTypingUsers(prev => {
+    setTypingUsers((prev: string[]) => {
       if (!prev.includes(data.username)) {
         return [...prev, data.username];
       }
@@ -163,7 +166,7 @@ export default function StreamChat({
   };
 
   const handleUserStoppedTyping = (data: { userId: string; username: string }) => {
-    setTypingUsers(prev => prev.filter(username => username !== data.username));
+    setTypingUsers((prev: string[]) => prev.filter((username: string) => username !== data.username));
   };
 
   const handleModeratorAction = (action: { type: string; targetUser: string; reason?: string }) => {
@@ -176,7 +179,7 @@ export default function StreamChat({
       type: 'moderator',
       isModerator: true,
     };
-    setMessages(prev => [...prev, moderatorMessage]);
+    setMessages((prev: ChatMessage[]) => [...prev, moderatorMessage]);
   };
 
   const sendMessage = () => {

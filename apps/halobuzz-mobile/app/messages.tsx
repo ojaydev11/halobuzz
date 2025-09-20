@@ -13,9 +13,11 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/store/AuthContext';
+import StreamChat from '@/components/StreamChat';
+import { apiClient } from '@/lib/api';
+import { Stream } from '@/types/stream';
 import { useRouter } from 'expo-router';
 
 interface Message {
@@ -71,11 +73,20 @@ export default function MessagesScreen() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const flatListRef = useRef<FlatList>(null);
+  const [liveLoading, setLiveLoading] = useState(false);
+  const [liveStreams, setLiveStreams] = useState<Stream[]>([]);
+  const [activeLive, setActiveLive] = useState<{ streamId: string; hostId?: string } | null>(null);
 
   useEffect(() => {
     loadChats();
     loadUsers();
   }, []);
+
+  useEffect(() => {
+    if (activeTab === 'live') {
+      loadLiveStreams();
+    }
+  }, [activeTab]);
 
   const loadChats = async () => {
     try {
@@ -254,6 +265,44 @@ export default function MessagesScreen() {
     }
   };
 
+  const loadLiveStreams = async () => {
+    try {
+      setLiveLoading(true);
+      const res = await apiClient.get('/streams', { params: { limit: 20, page: 1 } });
+      const list = res?.data?.streams || res?.data?.data?.streams || res?.streams || [];
+      const mapped: Stream[] = list.map((s: any) => ({
+        id: s.id || s._id,
+        channelName: s.agoraChannel || s.channelName || (s.id || s._id),
+        hostId: s.host?.id || s.hostId || s.host?._id,
+        hostName: s.host?.username,
+        hostAvatar: s.host?.avatar,
+        host: {
+          id: s.host?.id || s.host?._id || s.hostId,
+          username: s.host?.username || s.hostName || 'host',
+          avatar: s.host?.avatar,
+          ogLevel: s.host?.ogLevel,
+          followers: s.host?.followers,
+        },
+        thumb: s.thumbnail || s.thumb || 'https://picsum.photos/400/300',
+        viewers: s.currentViewers || s.viewerCount || 0,
+        country: s.country || 'NP',
+        startedAt: s.startedAt || s.startTime || new Date().toISOString(),
+        tags: s.tags || [],
+        title: s.title,
+        category: s.category,
+        description: s.description,
+        isLive: s.status ? s.status === 'live' : true,
+        data: s,
+      }));
+      setLiveStreams(mapped);
+    } catch (e) {
+      console.error('Failed to load live streams:', e);
+      setLiveStreams([]);
+    } finally {
+      setLiveLoading(false);
+    }
+  };
+
   const sendMessage = () => {
     if (newMessage.trim() && selectedChat) {
       const message: Message = {
@@ -277,8 +326,8 @@ export default function MessagesScreen() {
   };
 
   const startChat = (userId: string) => {
-    const existingChat = chats.find(chat => 
-      chat.participants.some(p => p.id === userId)
+    const existingChat = chats.find((chat: Chat) => 
+      chat.participants.some((p: any) => p.id === userId)
     );
 
     if (existingChat) {
@@ -315,8 +364,8 @@ export default function MessagesScreen() {
     }
   };
 
-  const getOtherParticipant = (chat: Chat) => {
-    return chat.participants.find(p => p.id !== user?.id);
+  const getOtherParticipant = (chat: Chat): any => {
+    return chat.participants.find((p: any) => p.id !== user?.id);
   };
 
   const formatTime = (timestamp: string) => {
@@ -505,6 +554,57 @@ export default function MessagesScreen() {
     </View>
   );
 
+  const LiveList = () => (
+    <View style={styles.tabContent}>
+      <View style={styles.searchContainer}>
+        <View style={styles.searchBar}>
+          <Ionicons name="search" size={20} color="#888" />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search live streams..."
+            placeholderTextColor="#888"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+        </View>
+      </View>
+
+      {liveLoading ? (
+        <View style={styles.loadingContainer}><ActivityIndicator color="#007AFF" /></View>
+      ) : (
+        <FlatList
+          data={liveStreams.filter((s: Stream) => (s.title || s.host?.username || '').toLowerCase().includes(searchQuery.toLowerCase()))}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }: { item: Stream }) => (
+            <TouchableOpacity
+              style={styles.chatItem}
+              onPress={() => setActiveLive({ streamId: item.id, hostId: item.host?.id })}
+            >
+              <View style={styles.chatAvatar}>
+                <Image
+                  source={{ uri: item.thumb }}
+                  style={styles.avatarImage}
+                />
+              </View>
+              <View style={styles.chatContent}>
+                <View style={styles.chatHeader}>
+                  <Text style={styles.chatName}>{item.title || item.host?.username}</Text>
+                  <Text style={styles.chatTime}>{(item.viewers || 0)} live</Text>
+                </View>
+                <View style={styles.chatMessage}>
+                  <Text style={styles.chatMessageText} numberOfLines={1}>
+                    Tap to join live chat
+                  </Text>
+                </View>
+              </View>
+            </TouchableOpacity>
+          )}
+          showsVerticalScrollIndicator={false}
+        />
+      )}
+    </View>
+  );
+
   const ChatView = () => {
     const otherParticipant = selectedChat ? getOtherParticipant(selectedChat) : null;
     
@@ -616,11 +716,31 @@ export default function MessagesScreen() {
               isActive={activeTab === 'users'}
               onPress={() => setActiveTab('users')}
             />
+            <TabButton
+              id="live"
+              title="Live"
+              isActive={activeTab === 'live'}
+              onPress={() => setActiveTab('live')}
+            />
           </View>
 
           {/* Content */}
-          {activeTab === 'chats' ? <ChatsList /> : <UsersList />}
+          {activeTab === 'chats' ? <ChatsList /> : activeTab === 'users' ? <UsersList /> : <LiveList />}
         </>
+      )}
+
+      {/* Embedded Live Stream Chat */}
+      {activeLive && (
+        <View style={{ position: 'absolute', top: 0, right: 0, bottom: 0 }}>
+          <StreamChat
+            streamId={activeLive.streamId}
+            hostId={activeLive.hostId || ''}
+            onGift={() => {}}
+            onFollow={() => {}}
+            isVisible={true}
+            onToggleVisibility={() => setActiveLive(null)}
+          />
+        </View>
       )}
     </SafeAreaView>
   );

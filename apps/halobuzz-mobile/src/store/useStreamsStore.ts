@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { Stream, FeaturedItem, ContinueWatchingItem, CheckinReward, RegionFilter, HomeState } from '../types/stream';
+import { apiClient } from '../lib/api';
 
 interface StreamsStore extends HomeState {
   // Actions
@@ -13,7 +14,26 @@ interface StreamsStore extends HomeState {
   clearError: () => void;
 }
 
-const API_BASE = process.env.EXPO_PUBLIC_API_BASE || 'http://localhost:4000';
+// Note: API base/prefix handled by apiClient; avoid direct env usage here
+
+// Basic region mapping helpers
+const ASIA_COUNTRIES = [
+  'NP','IN','PK','BD','LK','BT','CN','JP','KR','SG','MY','TH','ID','PH','VN','MM','KH','LA','TW','HK','MO','BN',
+  'AE','SA','IR','IQ','IL','TR','UZ','KZ','KG','TJ','TM','AF','MN','YE','OM','QA','BH','KW','JO','LB','SY','PS','GE','AM','AZ'
+];
+
+function mapRegionToQuery(region: RegionFilter): { country?: string; asiaFilter?: boolean } {
+  switch (region) {
+    case 'nepal':
+      return { country: 'NP' };
+    case 'asia':
+      return { asiaFilter: true };
+    case 'global':
+    case 'all':
+    default:
+      return {};
+  }
+}
 
 const getMockStreams = (): Stream[] => [
   {
@@ -126,7 +146,7 @@ const getMockStreams = (): Stream[] => [
   },
 ];
 
-export const useStreamsStore = create<StreamsStore>((set, get) => ({
+export const useStreamsStore = create<StreamsStore>((set: any, get: any) => ({
   // Initial state
   streams: [],
   featuredItems: [],
@@ -144,41 +164,69 @@ export const useStreamsStore = create<StreamsStore>((set, get) => ({
     set({ loading: true, error: undefined });
 
     try {
-      const params = new URLSearchParams({
-        region: currentFilter,
-        limit: '24',
-        page: get().page.toString(),
+      const { country, asiaFilter } = mapRegionToQuery(currentFilter as RegionFilter);
+      const page = get().page;
+
+      const res = await apiClient.get('/streams', {
+        params: {
+          ...(country ? { country } : {}),
+          limit: 24,
+          page,
+        }
       });
 
-      const response = await fetch(`${API_BASE}/api/v1/streams?${params}`);
-      
-      if (!response.ok) {
-        console.log('Streams API failed, using mock data');
-        // Use mock data as fallback
-        set({
-          streams: getMockStreams(),
-          loading: false,
-          hasMore: false,
-        });
-        return;
-      }
+      const streamsRaw = res?.data?.streams || res?.data?.data?.streams || [];
+      const mapped: Stream[] = streamsRaw.map((s: any) => ({
+        id: s.id || s._id,
+        channelName: s.agoraChannel || s.channelName || (s.id || s._id),
+        hostId: s.host?.id || s.hostId || s.host?._id,
+        hostName: s.host?.username,
+        hostAvatar: s.host?.avatar,
+        host: {
+          id: s.host?.id || s.host?._id || s.hostId,
+          username: s.host?.username || s.hostName || 'host',
+          avatar: s.host?.avatar,
+          ogLevel: s.host?.ogLevel,
+          followers: s.host?.followers,
+        },
+        thumb: s.thumbnail || s.thumb || s.image || 'https://picsum.photos/400/300',
+        thumbnail: s.thumbnail || s.thumb,
+        streamUrl: s.streamUrl,
+        viewers: s.currentViewers || s.viewerCount || s.viewers || 0,
+        viewerCount: s.currentViewers || s.viewerCount,
+        maxViewers: s.maxViewers,
+        currentViewers: s.currentViewers,
+        country: s.country || s.host?.country || 'NP',
+        startedAt: s.startedAt || s.startTime || new Date().toISOString(),
+        startTime: s.startTime,
+        tags: s.tags || [],
+        title: s.title,
+        category: s.category,
+        description: s.description,
+        isLive: s.status ? s.status === 'live' : true,
+        duration: s.duration,
+        totalLikes: s.totalLikes,
+        likes: s.likes,
+        comments: s.comments,
+        quality: s.quality,
+        language: s.language,
+        isPublic: s.isPublic,
+        allowComments: s.allowComments,
+        allowGifts: s.allowGifts,
+        minLevel: s.minLevel,
+        totalCoins: s.totalCoins,
+        data: s,
+      }));
 
-      const data = await response.json();
-      
-      if (data.success) {
-        set({
-          streams: data.data.streams || [],
-          loading: false,
-          hasMore: data.data.pagination?.hasMore || false,
-        });
-      } else {
-        console.log('Streams API returned error, using mock data');
-        set({
-          streams: getMockStreams(),
-          loading: false,
-          hasMore: false,
-        });
-      }
+      const filtered = asiaFilter
+        ? mapped.filter((m) => m.country && ASIA_COUNTRIES.includes(m.country.toUpperCase()))
+        : mapped;
+
+      set({
+        streams: filtered,
+        loading: false,
+        hasMore: (res?.data?.pagination?.hasMore || res?.data?.data?.pagination?.hasMore) ?? false,
+      });
     } catch (error) {
       console.error('Failed to fetch streams:', error);
       set({
@@ -191,37 +239,70 @@ export const useStreamsStore = create<StreamsStore>((set, get) => ({
 
   fetchFeaturedItems: async () => {
     try {
-      const response = await fetch(`${API_BASE}/api/v1/events/featured`);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      
-      if (data.success) {
-        set({ featuredItems: data.data.items || [] });
-      }
+      const res = await apiClient.get('/streams/events/featured');
+      const events = res?.events || res?.data?.events || res?.data?.data?.items || [];
+      const mapped: FeaturedItem[] = events.map((e: any) => ({
+        id: e.id || e._id,
+        type: 'live',
+        title: e.title,
+        subtitle: e.description || '',
+        cta: 'Watch',
+        image: e.thumbnail || e.image,
+        deeplink: e.deeplink || `halobuzz://stream/${e.id || e._id}`,
+      }));
+      set({ featuredItems: mapped });
     } catch (error) {
       console.error('Failed to fetch featured items:', error);
+      try {
+        // Fallback to trending streams as banners
+        const fallback = await apiClient.get('/streams/trending', { params: { limit: 5 } });
+        const items = fallback?.data || fallback?.data?.data || [];
+        const mapped: FeaturedItem[] = (items.streams || items).map((s: any) => ({
+          id: s.id || s._id,
+          type: 'live',
+          title: s.title || s.host?.username || 'Live',
+          subtitle: s.description || '',
+          cta: 'Watch',
+          image: s.thumbnail || s.thumb,
+          deeplink: `halobuzz://stream/${s.id || s._id}`,
+        }));
+        set({ featuredItems: mapped });
+      } catch (e) {
+        // Ignore final failure
+      }
     }
   },
 
   fetchContinueWatching: async () => {
     try {
-      const response = await fetch(`${API_BASE}/api/v1/personal/continue-watching`);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      
-      if (data.success) {
-        set({ continueWatching: data.data.items || [] });
-      }
+      const res = await apiClient.get('/streams/personal/continue-watching');
+      const content = res?.content || res?.data?.content || res?.data?.data?.items || [];
+      const mapped: ContinueWatchingItem[] = content.map((c: any) => ({
+        streamId: c.id || c.streamId,
+        host: { username: c.hostName || c.host?.username || 'host', avatar: c.host?.avatar },
+        thumb: c.thumbnail || c.thumb,
+        progress: c.totalDuration ? Math.min(1, (c.watchedDuration || 0) / c.totalDuration) : 0,
+        lastWatched: c.lastWatched || new Date().toISOString(),
+      }));
+      set({ continueWatching: mapped });
     } catch (error) {
       console.error('Failed to fetch continue watching:', error);
+      try {
+        // Fallback to trending streams as continue-watching
+        const fallback = await apiClient.get('/streams/trending', { params: { limit: 8 } });
+        const items = fallback?.data || fallback?.data?.data || [];
+        const streams = items.streams || items;
+        const mapped: ContinueWatchingItem[] = streams.map((s: any) => ({
+          streamId: s.id || s._id,
+          host: { username: s.host?.username || 'host', avatar: s.host?.avatar },
+          thumb: s.thumbnail || s.thumb,
+          progress: 0,
+          lastWatched: new Date().toISOString(),
+        }));
+        set({ continueWatching: mapped });
+      } catch (e) {
+        // Ignore final failure
+      }
     }
   },
 
@@ -229,29 +310,12 @@ export const useStreamsStore = create<StreamsStore>((set, get) => ({
     set({ checkinLoading: true });
 
     try {
-      const response = await fetch(`${API_BASE}/api/v1/rewards/checkin`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          // Add auth header here when available
-          // 'Authorization': `Bearer ${token}`,
-        },
+      const res = await apiClient.post('/streams/rewards/checkin', {});
+      const reward = res?.reward || res?.data || res?.data?.data;
+      set({
+        checkinReward: reward as CheckinReward,
+        checkinLoading: false,
       });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      
-      if (data.success) {
-        set({
-          checkinReward: data.data,
-          checkinLoading: false,
-        });
-      } else {
-        throw new Error(data.error || 'Failed to claim check-in');
-      }
     } catch (error) {
       console.error('Failed to claim check-in:', error);
       set({
