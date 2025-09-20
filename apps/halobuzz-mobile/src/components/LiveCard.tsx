@@ -106,7 +106,7 @@ export default function LiveCard({ stream, onPress, loading = false }: LiveCardP
       <View style={styles.thumbnailContainer}>
         {!imageError ? (
           <Image
-            source={{ uri: stream.thumb }}
+            source={{ uri: stream.thumbnail || stream.thumb }}
             style={[styles.thumbnail, { width: cardWidth }]}
             onLoad={() => setImageLoaded(true)}
             onError={() => setImageError(true)}

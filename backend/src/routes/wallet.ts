@@ -299,6 +299,71 @@ router.get('/transactions', async (req: AuthenticatedRequest, res: Response) => 
   }
 });
 
+// Withdraw coins (creates a pending withdrawal request)
+router.post('/withdraw', [
+  body('amount')
+    .isInt({ min: 100 })
+    .withMessage('Minimum withdrawal is 100 coins'),
+  body('method')
+    .isIn(['bank', 'esewa', 'khalti', 'paypal'])
+    .withMessage('Valid withdrawal method is required'),
+  body('account')
+    .optional()
+    .isString()
+    .isLength({ min: 3, max: 200 })
+], async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success: false, errors: errors.array() });
+    }
+
+    const userId = req.user?.userId;
+    if (!userId) {
+      return res.status(401).json({ success: false, error: 'Authentication required' });
+    }
+
+    const { amount, method, account } = req.body as { amount: number; method: string; account?: string };
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+
+    // Ensure sufficient balance (exclude bonusBalance)
+    const spendable = user.coins?.balance || 0;
+    if (spendable < amount) {
+      return res.status(400).json({ success: false, error: 'Insufficient balance' });
+    }
+
+    // Deduct immediately to reserve funds
+    await User.findByIdAndUpdate(userId, {
+      $inc: {
+        'coins.balance': -amount,
+        'coins.totalSpent': amount
+      }
+    });
+
+    // Record withdrawal request
+    const txn = new Transaction({
+      userId,
+      type: 'withdrawal',
+      amount,
+      currency: 'coins',
+      status: 'pending',
+      description: `Withdrawal request via ${method}`,
+      metadata: { method, account },
+      netAmount: amount
+    });
+    await txn.save();
+
+    res.json({ success: true, message: 'Withdrawal request submitted', data: { transactionId: txn._id } });
+
+  } catch (error) {
+    logger.error('Withdrawal request failed:', error);
+    res.status(500).json({ success: false, error: 'Withdrawal failed' });
+  }
+});
+
 // eSewa webhook
 router.post('/webhooks/esewa', express.raw({ type: '*/*' }), async (req: AuthenticatedRequest, res: Response) => {
   try {

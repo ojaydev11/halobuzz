@@ -3,6 +3,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { apiClient } from '@/lib/api';
 
 export default function WalletWithdraw() {
   const router = useRouter();
@@ -11,9 +12,20 @@ export default function WalletWithdraw() {
 
   const submit = async () => {
     try {
-      Alert.alert('Request Submitted', 'Withdrawal request submitted for review.');
-      router.back();
-    } catch (e) {}
+      const res = await apiClient.post('/wallet/withdraw', {
+        amount: Number(amount),
+        method,
+        account: ''
+      });
+      if (res && (res.success || res.data?.success)) {
+        Alert.alert('Submitted', 'Withdrawal request submitted.');
+        router.back();
+      } else {
+        Alert.alert('Error', 'Failed to submit withdrawal request.');
+      }
+    } catch (e: any) {
+      Alert.alert('Error', e?.message || 'Failed to submit withdrawal');
+    }
   };
 
   return (
