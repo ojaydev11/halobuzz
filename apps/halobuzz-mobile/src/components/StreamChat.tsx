@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/store/AuthContext';
 import { io, Socket } from 'socket.io-client';
 import { api } from '@/lib/api';
+import analytics, { ANALYTICS_EVENTS } from '@/services/analytics';
 
 interface ChatMessage {
   id: string;
@@ -206,6 +207,7 @@ export default function StreamChat({
       username: message.username,
     });
 
+    analytics.track(ANALYTICS_EVENTS.STREAM_JOIN, { stream_id: streamId });
     setNewMessage('');
     stopTyping();
   };
@@ -240,6 +242,7 @@ export default function StreamChat({
 
     setShowGiftMenu(false);
     onGift(gift.id);
+    analytics.track(ANALYTICS_EVENTS.STREAM_GIFT_SEND, { stream_id: streamId, gift_id: gift.id, value: gift.value });
   };
 
   const handleTyping = (text: string) => {
