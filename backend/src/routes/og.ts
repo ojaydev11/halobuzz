@@ -5,6 +5,7 @@ import { User } from '../models/User';
 import { Transaction } from '../models/Transaction';
 import { reputationService } from '../services/ReputationService';
 import { logger } from '../config/logger';
+import dayjs from 'dayjs';
 
 const router = express.Router();
 
@@ -403,3 +404,67 @@ router.get('/leaderboard', async (req, res) => {
 });
 
 export default router;
+
+// Daily OG bonus claim (non-withdrawable bonus coins)
+router.post('/daily-bonus/claim', async (req, res) => {
+  try {
+    const userId = (req as any).user?.userId;
+
+    if (!userId) {
+      return res.status(401).json({ success: false, error: 'Authentication required' });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+
+    if (!user.ogLevel || !(user.ogExpiresAt && new Date() < user.ogExpiresAt)) {
+      return res.status(400).json({ success: false, error: 'OG subscription inactive' });
+    }
+
+    const tier = await OGTier.findOne({ tier: user.ogLevel, isActive: true });
+    if (!tier) {
+      return res.status(400).json({ success: false, error: 'OG tier not found' });
+    }
+
+    // Enforce once per day claim; use Transaction as ledger
+    const startOfDay = dayjs().startOf('day').toDate();
+    const existing = await Transaction.findOne({
+      userId,
+      type: 'og_bonus',
+      status: 'completed',
+      createdAt: { $gte: startOfDay }
+    });
+    if (existing) {
+      return res.status(429).json({ success: false, error: 'Daily bonus already claimed' });
+    }
+
+    // Credit bonusBalance only (non-withdrawable)
+    await User.findByIdAndUpdate(userId, {
+      $inc: { 'coins.bonusBalance': tier.benefits.dailyBonus }
+    });
+
+    // Record transaction
+    const txn = new Transaction({
+      userId,
+      type: 'og_bonus',
+      amount: tier.benefits.dailyBonus,
+      currency: 'coins',
+      status: 'completed',
+      description: `OG daily bonus (Tier ${tier.tier})`,
+      metadata: { ogTier: tier.tier },
+      netAmount: tier.benefits.dailyBonus
+    });
+    await txn.save();
+
+    res.json({
+      success: true,
+      data: { bonus: tier.benefits.dailyBonus }
+    });
+
+  } catch (error) {
+    logger.error('OG daily bonus claim failed:', error);
+    res.status(500).json({ success: false, error: 'Failed to claim daily bonus' });
+  }
+});

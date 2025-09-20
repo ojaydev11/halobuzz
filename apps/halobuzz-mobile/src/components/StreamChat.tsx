@@ -118,9 +118,12 @@ export default function StreamChat({
     const base = (api.defaults.baseURL || 'https://halo-api-production.up.railway.app').replace(/\/?api\/.+$/, '');
     const newSocket = io(base, {
       transports: ['websocket'],
-      auth: {
-        token: user?.token,
-      },
+      reconnection: true,
+      reconnectionAttempts: 10,
+      reconnectionDelay: 500,
+      reconnectionDelayMax: 5000,
+      timeout: 10000,
+      auth: { token: user?.token },
     });
 
     newSocket.on('connect', () => {

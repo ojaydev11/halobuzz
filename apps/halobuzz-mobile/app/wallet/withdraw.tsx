@@ -10,8 +10,10 @@ export default function WalletWithdraw() {
   const [method, setMethod] = useState<'bank'|'esewa'|'khalti'|'paypal'>('bank');
 
   const submit = async () => {
-    Alert.alert('Request Submitted', 'Withdrawal request submitted for review.');
-    router.back();
+    try {
+      Alert.alert('Request Submitted', 'Withdrawal request submitted for review.');
+      router.back();
+    } catch (e) {}
   };
 
   return (

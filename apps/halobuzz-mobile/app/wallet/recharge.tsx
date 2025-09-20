@@ -4,6 +4,7 @@ import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert } from 'reac
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { apiClient } from '@/lib/api';
+import * as WebBrowser from 'expo-web-browser';
 
 export default function WalletRecharge() {
   const router = useRouter();
@@ -21,10 +22,16 @@ export default function WalletRecharge() {
         paymentMethod: method,
       });
       const data = res.data || res.data?.data;
-      if (data?.paymentUrl) {
-        Alert.alert('Continue Payment', 'Opening payment URL');
+      const url = data?.paymentUrl;
+      if (url) {
+        await WebBrowser.openBrowserAsync(url);
       }
-      router.back();
+      if (data?.clientSecret) {
+        Alert.alert('Stripe', 'Client secret received; proceed with Stripe SDK');
+      }
+      if (data?.approvalUrl) {
+        await WebBrowser.openBrowserAsync(data.approvalUrl);
+      }
     } catch (e: any) {
       Alert.alert('Error', e?.message || 'Recharge failed');
     } finally { setLoading(false); }

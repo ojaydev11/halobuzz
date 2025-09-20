@@ -71,7 +71,7 @@ function ReelCard({ item }: { item: ReelItemDto }) {
       <VideoView style={styles.video} player={player} />
       <View style={styles.overlay}>
         <View style={styles.headerRow}>
-          <Image source={{ uri: item.avatar || `https://via.placeholder.com/40x40/007AFF/ffffff?text=${(item.username||'?').charAt(0).toUpperCase()}` }} style={styles.avatar} />
+          <Image source={{ uri: item.avatar || 'https://i.pravatar.cc/100' }} style={styles.avatar} />
           <View style={{ flex: 1 }}>
             <Text style={styles.title} numberOfLines={1}>{item.title}</Text>
             <Text style={styles.subtitle} numberOfLines={1}>@{item.username || 'creator'}</Text>
