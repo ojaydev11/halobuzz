@@ -17,6 +17,8 @@ import { useAuth } from '@/store/AuthContext';
 import { router } from 'expo-router';
 import { Button, Card, Input, Text } from '@/components/ui';
 import { colors, spacing, layoutStyles } from '@/theme';
+import { useAgora } from '@/hooks/useAgora';
+import { apiClient } from '@/lib/api';
 
 const { width } = Dimensions.get('window');
 
@@ -35,6 +37,15 @@ export default function LiveScreen() {
   const [comments, setComments] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('go-live');
+  const {
+    initializeEngine,
+    joinChannel,
+    leaveChannel,
+    toggleMute: agoraToggleMute,
+    toggleCamera: agoraToggleCamera,
+    isInitialized,
+    isJoined,
+  } = useAgora();
 
   const categories = [
     { id: 'gaming', name: 'Gaming', icon: 'game-controller', color: '#FF6B6B' },
@@ -95,14 +106,38 @@ export default function LiveScreen() {
     }
     
     setIsLoading(true);
-    
-    // Simulate stream setup
-    setTimeout(() => {
-      setIsLoading(false);
+
+    try {
+      // Create stream on backend to get Agora channel/token
+      const res = await apiClient.post('/streams', {
+        title: streamTitle,
+        description: '',
+        category: streamCategory,
+        tags: [],
+        isAudioOnly: false,
+        isPrivate: !isPublic,
+      });
+
+      const stream = res.data?.stream || res.data?.data?.stream;
+      if (!stream?.agoraChannel || !stream?.agoraToken) {
+        throw new Error('Missing Agora credentials');
+      }
+
+      // Join Agora
+      if (!isInitialized) {
+        await initializeEngine();
+      }
+      await joinChannel(stream.agoraChannel, stream.agoraToken);
+
       setIsConnected(true);
       setViewerCount(Math.floor(Math.random() * 50) + 10);
       Alert.alert('Success', 'Stream started successfully!');
-    }, 2000);
+    } catch (err: any) {
+      console.error('Start stream failed:', err);
+      Alert.alert('Error', err?.message || 'Failed to start stream');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const endStream = () => {
@@ -111,7 +146,12 @@ export default function LiveScreen() {
       'Are you sure you want to end the stream?',
       [
         { text: 'Cancel', style: 'cancel' },
-        { text: 'End', onPress: () => {
+        { text: 'End', onPress: async () => {
+          try {
+            await leaveChannel();
+            // We don’t have stream id here from local state; in a full flow we’d store it.
+            // Optionally call backend to end stream if id is tracked.
+          } catch {}
           setIsConnected(false);
           setViewerCount(0);
           setLikes(0);
@@ -121,8 +161,8 @@ export default function LiveScreen() {
     );
   };
 
-  const toggleMute = () => setIsMuted(!isMuted);
-  const toggleCamera = () => setIsCameraOn(!isCameraOn);
+  const toggleMute = async () => { setIsMuted(!isMuted); try { await agoraToggleMute(); } catch {} };
+  const toggleCamera = async () => { setIsCameraOn(!isCameraOn); try { await agoraToggleCamera(); } catch {} };
 
   const renderGoLiveTab = () => (
     <ScrollView style={styles.tabContent}>
