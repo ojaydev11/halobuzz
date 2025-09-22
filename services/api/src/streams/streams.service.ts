@@ -35,5 +35,19 @@ export class StreamsService {
   async listLive(limit = 50) {
     return this.streamModel.find({ isLive: true }).sort({ updatedAt: -1 }).limit(limit).exec();
   }
+
+  async byChannel(channelId: string) {
+    return this.streamModel.findOne({ channelId }).exec();
+  }
+
+  async incrementViewers(channelId: string) {
+    await this.streamModel
+      .updateOne({ channelId }, { $inc: { concurrentViewers: 1, totalViewers: 1, engagementScore: 2 } })
+      .exec();
+  }
+
+  async decrementViewers(channelId: string) {
+    await this.streamModel.updateOne({ channelId }, { $inc: { concurrentViewers: -1, engagementScore: 0 } }).exec();
+  }
 }
 

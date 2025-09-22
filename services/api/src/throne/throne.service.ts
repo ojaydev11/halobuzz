@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Throne, ThroneDocument } from './throne.schema';
 import { WalletService } from '../wallet/wallet.service';
-import { THRONE_PRICE_COINS, THRONE_VALIDITY_DAYS } from '@halobuzz/shared/constants';
+import { THRONE_PRICE_COINS, THRONE_VALIDITY_DAYS } from '@halobuzz/shared';
 
 @Injectable()
 export class ThroneService {

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { WalletService } from '../wallet/wallet.service';
-import { DEFAULT_DAILY_REWARD_COINS } from '@halobuzz/shared/constants';
+import { DEFAULT_DAILY_REWARD_COINS } from '@halobuzz/shared';
 
 @Injectable()
 export class OgService {

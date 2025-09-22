@@ -19,5 +19,10 @@ export class GiftsController {
   send(@Body() body: { senderUserId: string; receiverUserId: string; giftCode: string; multiplier?: number }) {
     return this.giftsService.sendGift(body.senderUserId, body.receiverUserId, body.giftCode, body.multiplier);
   }
+
+  @Post('seed-basic')
+  seed() {
+    return this.giftsService.seedDefaults();
+  }
 }
 

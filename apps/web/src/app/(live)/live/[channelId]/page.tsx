@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams, useParams } from 'next/navigation';
 import { api } from '../../../lib/api';
 import io from 'socket.io-client';
+import { GiftPanel } from './GiftPanel';
 
 // Minimal placeholder for player/publisher UI
 export default function LiveRoomPage() {
@@ -44,6 +45,7 @@ export default function LiveRoomPage() {
       <div className="rounded bg-gray-900 h-64 flex items-center justify-center">
         <span className="text-gray-400 text-sm">Video {role === 'publisher' ? 'Publisher' : 'Player'} Placeholder</span>
       </div>
+      <GiftPanel channelId={params.channelId} receiverUserId={"host-" + params.channelId} />
       <div className="space-y-2">
         <div className="h-40 overflow-auto bg-gray-900 p-2 rounded">
           {messages.map((m, idx) => (

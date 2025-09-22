@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { RtcTokenBuilder, RtcRole } from 'agora-access-token';
 import { StreamsService } from './streams.service';
 
@@ -19,6 +19,11 @@ export class StreamsController {
   @Get('live')
   live() {
     return this.streamsService.listLive();
+  }
+
+  @Get(':channelId')
+  byChannel(@Param('channelId') channelId: string) {
+    return this.streamsService.byChannel(channelId);
   }
 
   @Post('token')

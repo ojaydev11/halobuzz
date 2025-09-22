@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import Stripe from 'stripe';
 import { WalletService } from '../wallet/wallet.service';
-import { coinsForLocalCurrency } from '@halobuzz/shared/money';
+import { coinsForLocalCurrency } from '@halobuzz/shared';
 
 @Injectable()
 export class PaymentsService {

@@ -28,6 +28,9 @@ export class StreamSession {
 
   @Prop({ default: 0 })
   totalViewers: number;
+
+  @Prop({ default: 0 })
+  engagementScore: number;
 }
 
 export const StreamSessionSchema = SchemaFactory.createForClass(StreamSession);
