@@ -1,0 +1,110 @@
+{
+  "success": true,
+  "data": {
+    "filter": {
+      "from": "2024-01-01T00:00:00.000Z",
+      "to": "2024-01-31T23:59:59.999Z",
+      "country": "ALL",
+      "granularity": "daily"
+    },
+    "kpis": {
+      "revenue": {
+        "total": 125000,
+        "byPaymentMethod": {
+          "esewa": 45000,
+          "khalti": 35000,
+          "stripe": 25000,
+          "paypal": 20000
+        },
+        "byOGTier": {
+          "tier1": 15000,
+          "tier2": 25000,
+          "tier3": 35000,
+          "tier4": 30000,
+          "tier5": 20000
+        },
+        "giftRevenue": 75000,
+        "coinTopups": 40000,
+        "platformFees": 10000,
+        "growth": 12.5
+      },
+      "engagement": {
+        "dau": 15000,
+        "mau": 45000,
+        "avgSessionDuration": 25.5,
+        "avgViewersPerStream": 12.3,
+        "totalStreams": 2500,
+        "totalStreamDuration": 63750,
+        "battleParticipation": 850,
+        "giftSent": 12500,
+        "messagesSent": 45000,
+        "growth": 8.3
+      },
+      "monetization": {
+        "arpu": 8.33,
+        "arppu": 125.0,
+        "payerRate": 6.67,
+        "avgGiftValue": 15.5,
+        "coinTopupVolume": 40000,
+        "ogConversionRate": 2.5,
+        "growth": 15.2
+      },
+      "retention": {
+        "d1Retention": 45.2,
+        "d7Retention": 28.7,
+        "d30Retention": 15.3,
+        "churnRate": 12.5,
+        "avgLifetimeDays": 18.5,
+        "churnRiskScore": 25.0
+      },
+      "creators": {
+        "activeHosts": 250,
+        "topHostRevenue": 5000,
+        "avgHostRevenue": 500,
+        "newHosts": 45,
+        "hostRetentionRate": 78.5,
+        "topCreators": [
+          {
+            "hostId": "507f1f77bcf86cd799439011",
+            "username": "topcreator1",
+            "revenue": 5000,
+            "streams": 25,
+            "viewers": 1250
+          },
+          {
+            "hostId": "507f1f77bcf86cd799439012",
+            "username": "topcreator2",
+            "revenue": 4500,
+            "streams": 22,
+            "viewers": 1100
+          },
+          {
+            "hostId": "507f1f77bcf86cd799439013",
+            "username": "topcreator3",
+            "revenue": 4000,
+            "streams": 20,
+            "viewers": 1000
+          }
+        ]
+      },
+      "safety": {
+        "flaggedContent": 25,
+        "bannedUsers": 8,
+        "appealsProcessed": 12,
+        "moderationActions": 33,
+        "safetyScore": 87.5,
+        "trend": "improving"
+      },
+      "gaming": {
+        "gamesPlayed": 5000,
+        "totalStakes": 75000,
+        "totalPayouts": 45000,
+        "houseEdge": 40.0,
+        "avgGameDuration": 2.5,
+        "activePlayers": 1200,
+        "revenue": 30000
+      }
+    },
+    "generatedAt": "2024-01-31T12:00:00.000Z"
+  }
+}

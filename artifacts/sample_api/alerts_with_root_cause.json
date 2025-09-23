@@ -1,0 +1,245 @@
+{
+  "alerts": [
+    {
+      "alertId": "alert_1234567890",
+      "appId": "halobuzz",
+      "type": "revenue_drop",
+      "severity": "high",
+      "status": "active",
+      "title": "Revenue Drop Detected",
+      "description": "Revenue dropped by 18.5% compared to 7-day average",
+      "metric": "revenue.total",
+      "currentValue": 85000,
+      "thresholdValue": 104000,
+      "deviation": 18.5,
+      "country": "NP",
+      "timeWindow": "1day",
+      "affectedRevenue": 19000,
+      "config": {
+        "threshold": 15,
+        "comparisonPeriod": "7day_avg",
+        "notificationChannels": ["email", "slack"],
+        "autoResolve": false,
+        "escalationLevel": 1
+      },
+      "notifications": [
+        {
+          "channel": "email",
+          "sentAt": "2024-01-31T10:15:00.000Z",
+          "status": "delivered"
+        }
+      ],
+      "relatedData": {
+        "kpiSnapshot": {
+          "revenue": {
+            "total": 85000,
+            "byPaymentMethod": {
+              "esewa": 30000,
+              "khalti": 25000,
+              "stripe": 20000,
+              "paypal": 10000
+            },
+            "byOGTier": {
+              "tier1": 10000,
+              "tier2": 15000,
+              "tier3": 25000,
+              "tier4": 20000,
+              "tier5": 15000
+            }
+          }
+        },
+        "affectedEntities": [],
+        "trends": {},
+        "rootCause": {
+          "cause": "Significant revenue drop detected. Primarily driven by drops in: Country: NP, OG Tier: tier3",
+          "segments": [
+            {
+              "segment": "Country: NP",
+              "impactPct": 45.2
+            },
+            {
+              "segment": "OG Tier: tier3",
+              "impactPct": 32.1
+            }
+          ],
+          "suggestion": "Investigate recent marketing campaigns, pricing changes, or payment gateway issues. Focus efforts on these segments."
+        }
+      },
+      "createdAt": "2024-01-31T10:00:00.000Z",
+      "updatedAt": "2024-01-31T10:15:00.000Z"
+    },
+    {
+      "alertId": "alert_1234567891",
+      "appId": "halobuzz",
+      "type": "payer_rate_drop",
+      "severity": "medium",
+      "status": "active",
+      "title": "Payer Rate Decline Detected",
+      "description": "Payer rate dropped by 12.3% compared to previous week",
+      "metric": "monetization.payerRate",
+      "currentValue": 5.2,
+      "thresholdValue": 6.0,
+      "deviation": 12.3,
+      "country": "ALL",
+      "timeWindow": "7day",
+      "affectedUsers": 1500,
+      "config": {
+        "threshold": 10,
+        "comparisonPeriod": "previous_week",
+        "notificationChannels": ["email"],
+        "autoResolve": false,
+        "escalationLevel": 1
+      },
+      "notifications": [
+        {
+          "channel": "email",
+          "sentAt": "2024-01-31T09:30:00.000Z",
+          "status": "delivered"
+        }
+      ],
+      "relatedData": {
+        "kpiSnapshot": {
+          "monetization": {
+            "payerRate": 5.2,
+            "arpu": 8.5,
+            "arppu": 125.0
+          }
+        },
+        "affectedEntities": [],
+        "trends": {},
+        "rootCause": {
+          "cause": "Payer rate has declined.",
+          "segments": [],
+          "suggestion": "Review recent changes to monetization features, gift pricing, or coin pack offers. Consider targeted promotions."
+        }
+      },
+      "createdAt": "2024-01-31T09:15:00.000Z",
+      "updatedAt": "2024-01-31T09:30:00.000Z"
+    },
+    {
+      "alertId": "alert_1234567892",
+      "appId": "halobuzz",
+      "type": "abuse_spike",
+      "severity": "critical",
+      "status": "active",
+      "title": "Abuse Spike Detected",
+      "description": "Flagged content rate increased by 150% compared to 7-day average",
+      "metric": "safety.flaggedContentRate",
+      "currentValue": 0.025,
+      "thresholdValue": 0.01,
+      "deviation": 150.0,
+      "country": "ALL",
+      "timeWindow": "1day",
+      "affectedUsers": 250,
+      "config": {
+        "threshold": 50,
+        "comparisonPeriod": "7day_avg",
+        "notificationChannels": ["email", "slack", "webhook"],
+        "autoResolve": false,
+        "escalationLevel": 3
+      },
+      "notifications": [
+        {
+          "channel": "email",
+          "sentAt": "2024-01-31T08:45:00.000Z",
+          "status": "delivered"
+        },
+        {
+          "channel": "slack",
+          "sentAt": "2024-01-31T08:45:00.000Z",
+          "status": "delivered"
+        }
+      ],
+      "relatedData": {
+        "kpiSnapshot": {
+          "safety": {
+            "flaggedContentRate": 0.025,
+            "bannedUsers": 12,
+            "appealsProcessed": 8,
+            "moderationActions": 45
+          }
+        },
+        "affectedEntities": [],
+        "trends": {},
+        "rootCause": {
+          "cause": "Significant spike in flagged content/abuse reports.",
+          "segments": [],
+          "suggestion": "Increase moderation efforts, review content guidelines, and analyze recent user activity for patterns."
+        }
+      },
+      "createdAt": "2024-01-31T08:30:00.000Z",
+      "updatedAt": "2024-01-31T08:45:00.000Z"
+    },
+    {
+      "alertId": "alert_1234567893",
+      "appId": "halobuzz",
+      "type": "engagement_drop",
+      "severity": "high",
+      "status": "acknowledged",
+      "title": "Engagement Drop Detected",
+      "description": "Daily Active Users dropped by 22.1% compared to previous week",
+      "metric": "engagement.dau",
+      "currentValue": 12000,
+      "thresholdValue": 15400,
+      "deviation": 22.1,
+      "country": "ALL",
+      "timeWindow": "1day",
+      "affectedUsers": 3400,
+      "config": {
+        "threshold": 15,
+        "comparisonPeriod": "previous_week",
+        "notificationChannels": ["email", "slack"],
+        "autoResolve": false,
+        "escalationLevel": 2
+      },
+      "notifications": [
+        {
+          "channel": "email",
+          "sentAt": "2024-01-31T07:20:00.000Z",
+          "status": "delivered"
+        },
+        {
+          "channel": "slack",
+          "sentAt": "2024-01-31T07:20:00.000Z",
+          "status": "delivered"
+        }
+      ],
+      "relatedData": {
+        "kpiSnapshot": {
+          "engagement": {
+            "dau": 12000,
+            "mau": 45000,
+            "avgSessionDuration": 22.5,
+            "avgViewersPerStream": 8.2
+          }
+        },
+        "affectedEntities": [],
+        "trends": {},
+        "rootCause": {
+          "cause": "Daily Active Users (DAU) have significantly dropped.",
+          "segments": [],
+          "suggestion": "Investigate recent app updates, server performance, or changes in content trends. Engage with community for feedback."
+        }
+      },
+      "resolution": {
+        "resolvedBy": "507f1f77bcf86cd799439012",
+        "resolvedAt": "2024-01-31T11:00:00.000Z",
+        "resolution": "Identified server performance issue affecting user experience",
+        "actionTaken": "Deployed hotfix to improve server response times"
+      },
+      "createdAt": "2024-01-31T07:00:00.000Z",
+      "updatedAt": "2024-01-31T11:00:00.000Z"
+    }
+  ],
+  "summary": {
+    "totalAlerts": 4,
+    "activeAlerts": 3,
+    "acknowledgedAlerts": 1,
+    "resolvedAlerts": 0,
+    "criticalAlerts": 1,
+    "highAlerts": 2,
+    "mediumAlerts": 1,
+    "lowAlerts": 0
+  },
+  "generatedAt": "2024-01-31T12:00:00.000Z"
+}

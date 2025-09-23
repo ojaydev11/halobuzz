@@ -1,0 +1,250 @@
+{
+  "success": true,
+  "data": {
+    "alerts": [
+      {
+        "alertId": "alert_1234567890",
+        "type": "revenue_drop",
+        "severity": "high",
+        "status": "active",
+        "title": "Revenue Drop Detected",
+        "description": "Revenue dropped by 18.5% compared to 7-day average",
+        "metric": "revenue.total",
+        "currentValue": 85000,
+        "thresholdValue": 104000,
+        "deviation": 18.5,
+        "country": "ALL",
+        "timeWindow": "1day",
+        "affectedUsers": 0,
+        "affectedRevenue": 19000,
+        "config": {
+          "threshold": 15,
+          "comparisonPeriod": "7day_avg",
+          "notificationChannels": ["email", "slack"],
+          "autoResolve": false,
+          "escalationLevel": 1
+        },
+        "notifications": [
+          {
+            "channel": "email",
+            "sentAt": "2024-01-31T10:15:00.000Z",
+            "status": "delivered",
+            "response": "Email sent successfully"
+          },
+          {
+            "channel": "slack",
+            "sentAt": "2024-01-31T10:15:30.000Z",
+            "status": "delivered",
+            "response": "Slack message posted to #alerts"
+          }
+        ],
+        "relatedData": {
+          "kpiSnapshot": {
+            "revenue": {
+              "total": 85000,
+              "byPaymentMethod": {
+                "esewa": 30000,
+                "khalti": 25000,
+                "stripe": 20000,
+                "paypal": 10000
+              }
+            }
+          },
+          "affectedEntities": [],
+          "trends": {
+            "revenueTrend": "declining",
+            "paymentMethodTrends": {
+              "esewa": "stable",
+              "khalti": "declining",
+              "stripe": "stable",
+              "paypal": "declining"
+            }
+          }
+        },
+        "createdAt": "2024-01-31T10:00:00.000Z",
+        "updatedAt": "2024-01-31T10:15:30.000Z"
+      },
+      {
+        "alertId": "alert_1234567891",
+        "type": "payer_rate_drop",
+        "severity": "medium",
+        "status": "acknowledged",
+        "title": "Payer Rate Drop Detected",
+        "description": "Payer rate dropped by 12.3% compared to 7-day average",
+        "metric": "monetization.payerRate",
+        "currentValue": 5.2,
+        "thresholdValue": 5.9,
+        "deviation": 12.3,
+        "country": "NP",
+        "timeWindow": "1day",
+        "affectedUsers": 150,
+        "affectedRevenue": 0,
+        "config": {
+          "threshold": 10,
+          "comparisonPeriod": "7day_avg",
+          "notificationChannels": ["email"],
+          "autoResolve": false,
+          "escalationLevel": 1
+        },
+        "notifications": [
+          {
+            "channel": "email",
+            "sentAt": "2024-01-31T09:30:00.000Z",
+            "status": "delivered",
+            "response": "Email sent successfully"
+          }
+        ],
+        "resolution": {
+          "resolvedBy": "507f1f77bcf86cd799439014",
+          "resolvedAt": "2024-01-31T11:00:00.000Z",
+          "resolution": "Investigated payment gateway issues",
+          "actionTaken": "Contacted Khalti support for payment processing delays"
+        },
+        "relatedData": {
+          "kpiSnapshot": {
+            "monetization": {
+              "payerRate": 5.2,
+              "arpu": 7.8,
+              "arppu": 120.0
+            }
+          },
+          "affectedEntities": ["khalti_payments"],
+          "trends": {
+            "payerRateTrend": "declining",
+            "paymentGatewayTrends": {
+              "khalti": "declining",
+              "esewa": "stable"
+            }
+          }
+        },
+        "createdAt": "2024-01-31T09:00:00.000Z",
+        "updatedAt": "2024-01-31T11:00:00.000Z"
+      },
+      {
+        "alertId": "alert_1234567892",
+        "type": "abuse_spike",
+        "severity": "critical",
+        "status": "active",
+        "title": "Abuse Spike Detected",
+        "description": "75 abuse incidents detected in the last hour",
+        "metric": "safety.flaggedContent",
+        "currentValue": 75,
+        "thresholdValue": 50,
+        "deviation": 50.0,
+        "country": "ALL",
+        "timeWindow": "1hour",
+        "affectedUsers": 25,
+        "affectedRevenue": 0,
+        "config": {
+          "threshold": 50,
+          "comparisonPeriod": "previous_hour",
+          "notificationChannels": ["email", "slack", "webhook"],
+          "autoResolve": true,
+          "escalationLevel": 3
+        },
+        "notifications": [
+          {
+            "channel": "email",
+            "sentAt": "2024-01-31T14:00:00.000Z",
+            "status": "delivered",
+            "response": "Email sent to security team"
+          },
+          {
+            "channel": "slack",
+            "sentAt": "2024-01-31T14:00:15.000Z",
+            "status": "delivered",
+            "response": "Slack message posted to #security-alerts"
+          },
+          {
+            "channel": "webhook",
+            "sentAt": "2024-01-31T14:00:30.000Z",
+            "status": "delivered",
+            "response": "Webhook sent to external monitoring system"
+          }
+        ],
+        "relatedData": {
+          "kpiSnapshot": {
+            "safety": {
+              "flaggedContent": 75,
+              "bannedUsers": 3,
+              "moderationActions": 78,
+              "safetyScore": 65.0
+            }
+          },
+          "affectedEntities": [
+            "stream_12345",
+            "stream_12346",
+            "stream_12347"
+          ],
+          "trends": {
+            "abuseTrend": "spiking",
+            "moderationTrend": "increasing",
+            "safetyScoreTrend": "declining"
+          }
+        },
+        "createdAt": "2024-01-31T14:00:00.000Z",
+        "updatedAt": "2024-01-31T14:00:30.000Z"
+      },
+      {
+        "alertId": "alert_1234567893",
+        "type": "engagement_drop",
+        "severity": "medium",
+        "status": "resolved",
+        "title": "Engagement Drop Detected",
+        "description": "DAU dropped by 16.7% compared to 7-day average",
+        "metric": "engagement.dau",
+        "currentValue": 12500,
+        "thresholdValue": 15000,
+        "deviation": 16.7,
+        "country": "ALL",
+        "timeWindow": "1day",
+        "affectedUsers": 2500,
+        "affectedRevenue": 0,
+        "config": {
+          "threshold": 15,
+          "comparisonPeriod": "7day_avg",
+          "notificationChannels": ["email"],
+          "autoResolve": false,
+          "escalationLevel": 1
+        },
+        "notifications": [
+          {
+            "channel": "email",
+            "sentAt": "2024-01-30T08:00:00.000Z",
+            "status": "delivered",
+            "response": "Email sent successfully"
+          }
+        ],
+        "resolution": {
+          "resolvedBy": "507f1f77bcf86cd799439015",
+          "resolvedAt": "2024-01-30T16:00:00.000Z",
+          "resolution": "Identified server performance issues",
+          "actionTaken": "Optimized database queries and increased server capacity"
+        },
+        "relatedData": {
+          "kpiSnapshot": {
+            "engagement": {
+              "dau": 12500,
+              "totalStreams": 1800,
+              "avgViewersPerStream": 10.5
+            }
+          },
+          "affectedEntities": [],
+          "trends": {
+            "engagementTrend": "declining",
+            "streamTrend": "declining",
+            "viewerTrend": "stable"
+          }
+        },
+        "createdAt": "2024-01-30T08:00:00.000Z",
+        "updatedAt": "2024-01-30T16:00:00.000Z"
+      }
+    ],
+    "filters": {
+      "since": null,
+      "status": null,
+      "severity": null
+    },
+    "generatedAt": "2024-01-31T15:00:00.000Z"
+  }
+}

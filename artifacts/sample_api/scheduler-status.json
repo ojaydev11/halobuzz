@@ -1,0 +1,73 @@
+{
+  "success": true,
+  "data": {
+    "isRunning": true,
+    "scheduledJobs": 5,
+    "timezone": "Australia/Sydney",
+    "jobs": [
+      {
+        "name": "Daily Rollup ETL",
+        "schedule": "0 17 * * *",
+        "description": "Daily analytics data rollup at 3:00 AM Sydney time",
+        "status": "scheduled",
+        "lastRun": "2024-01-31T17:00:00.000Z",
+        "nextRun": "2024-02-01T17:00:00.000Z",
+        "success": true
+      },
+      {
+        "name": "Weekly Report Generation",
+        "schedule": "0 18 * * 0",
+        "description": "Weekly report generation at 4:00 AM Monday Sydney time",
+        "status": "scheduled",
+        "lastRun": "2024-01-29T18:00:00.000Z",
+        "nextRun": "2024-02-05T18:00:00.000Z",
+        "success": true
+      },
+      {
+        "name": "Alert Checking",
+        "schedule": "*/15 * * * *",
+        "description": "Alert checking every 15 minutes",
+        "status": "scheduled",
+        "lastRun": "2024-01-31T14:45:00.000Z",
+        "nextRun": "2024-01-31T15:00:00.000Z",
+        "success": true
+      },
+      {
+        "name": "Forecast Generation",
+        "schedule": "0 16 * * *",
+        "description": "Daily forecast generation at 2:00 AM Sydney time",
+        "status": "scheduled",
+        "lastRun": "2024-01-31T16:00:00.000Z",
+        "nextRun": "2024-02-01T16:00:00.000Z",
+        "success": true
+      },
+      {
+        "name": "Cohort Analysis",
+        "schedule": "0 19 1 * *",
+        "description": "Monthly cohort analysis at 5:00 AM first day of month Sydney time",
+        "status": "scheduled",
+        "lastRun": "2024-01-01T19:00:00.000Z",
+        "nextRun": "2024-03-01T19:00:00.000Z",
+        "success": true
+      }
+    ],
+    "systemHealth": {
+      "status": "healthy",
+      "healthScore": 95,
+      "metrics": {
+        "activeAlerts": 2,
+        "criticalAlerts": 0,
+        "recentAlerts": 1,
+        "systemMetrics": {
+          "cpuUsage": 45,
+          "memoryUsage": 60,
+          "diskUsage": 30,
+          "responseTime": 150
+        }
+      },
+      "lastChecked": "2024-01-31T15:00:00.000Z"
+    },
+    "uptime": "7 days, 12 hours, 30 minutes",
+    "startedAt": "2024-01-24T02:30:00.000Z"
+  }
+}
