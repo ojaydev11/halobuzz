@@ -1,3 +1,48 @@
+# HaloBuzz Monorepo
+
+HaloBuzz is a global live streaming + gaming + gifting platform with AI moderation, coin economy, engagement features, and multi-surface apps (Web, Admin, API, Mobile-ready).
+
+## Structure
+
+- `apps/web` – Next.js web client
+- `apps/admin` – Next.js admin dashboard
+- `services/api` – NestJS API service (MongoDB, Redis, Socket.IO)
+- `packages/shared` – Shared TypeScript types, constants, and utilities
+
+## Quick Start (Local Dev)
+
+1. Copy environment template:
+   - `cp .env.example .env`
+   - Fill in required keys (MongoDB, Redis, Stripe, Agora, etc.)
+
+2. Start databases via Docker:
+   - `docker compose up -d`
+
+3. Install dependencies (root):
+   - `npm install`
+
+4. Run all apps in parallel:
+   - `npm run dev`
+
+Web: http://localhost:3000
+
+Admin: http://localhost:3001
+
+API: http://localhost:4000
+
+## Production
+
+- Build all: `npm run build`
+- Start API: `npm run start -w services/api`
+- Start Web: `npm run start -w apps/web`
+- Start Admin: `npm run start -w apps/admin`
+
+## Notes
+
+- Payments: Stripe live/test mode, Nepali gateways (eSewa, Khalti) via provider services.
+- Live streaming: Agora token service in API; Web client integrates Agora Web SDK with WebRTC fallback placeholder.
+- AI layers are modular and can be swapped for self-hosted models or external APIs.
+
 # HaloBuzz - Nepali-First Live Streaming Platform
 
 A comprehensive live streaming and short-video platform built for Nepal with global expansion capabilities.
