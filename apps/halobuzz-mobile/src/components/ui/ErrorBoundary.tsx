@@ -1,6 +1,7 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { View, StyleSheet } from 'react-native';
-import { Text, Button } from './';
+import Text from './Text';
+import Button from './Button';
 import { colors, spacing, layoutStyles } from '@/theme';
 
 interface Props {

@@ -12,27 +12,20 @@ export const animations = {
   slow: 250,
 } as const;
 
-// Shadow presets
-export const shadows = {
-  sm: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+// Layout styles
+export const layoutStyles = {
+  container: {
+    flex: 1,
+    backgroundColor: '#000',
   },
-  md: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 4,
+  centerContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  lg: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 8,
+  row: {
+    flexDirection: 'row',
+  },
+  column: {
+    flexDirection: 'column',
   },
 } as const;
