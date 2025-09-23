@@ -321,6 +321,18 @@ app.use(`/api/${apiVersion}/ai-content-studio`, aiContentStudioRoutes);
 // AI Content Generation routes
 app.use(`/api/${apiVersion}/ai-content`, authMiddleware, aiContentRoutes);
 
+// AI Business Analytics routes
+import aiBusinessRoutes from '@/routes/ai-business';
+app.use(`/api/${apiVersion}/ai/business`, authMiddleware, aiBusinessRoutes);
+
+// Empire Dashboard routes
+import { empireRoutes } from '@/routes/empire';
+app.use(`/api/${apiVersion}/ai/business`, empireRoutes);
+
+// Analytics Scheduler routes
+import analyticsSchedulerRoutes from '@/routes/analytics-scheduler';
+app.use(`/api/${apiVersion}/analytics/scheduler`, authMiddleware, analyticsSchedulerRoutes);
+
 // Phase 4: Interactive Features routes
 // app.use(`/api/${process.env.API_VERSION || 'v1'}/collaboration`, collaborationRoutes);
 // app.use(`/api/${process.env.API_VERSION || 'v1'}/storytelling`, storytellingRoutes);
