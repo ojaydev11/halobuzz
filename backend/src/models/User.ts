@@ -419,4 +419,23 @@ userSchema.statics.findTopCreators = function(limit: number = 10) {
   .limit(limit);
 };
 
+// Critical indexes for performance and security
+// Authentication performance - HIGH PRIORITY
+userSchema.index({ email: 1, status: 1, isBanned: 1 });
+userSchema.index({ username: 1, status: 1, isBanned: 1 });
+userSchema.index({ phoneNumber: 1 }, { sparse: true });
+
+// Session management and analytics
+userSchema.index({ lastLoginAt: 1 });
+userSchema.index({ isBanned: 1, bannedUntil: 1 }, { sparse: true });
+
+// Geographic user analytics
+userSchema.index({ 'location.country': 1, status: 1 });
+
+// OG tier queries
+userSchema.index({ ogLevel: 1, ogExpiresAt: 1 });
+
+// KYC and verification
+userSchema.index({ kycStatus: 1, ageVerified: 1 });
+
 export const User = mongoose.model<IUser>('User', userSchema);

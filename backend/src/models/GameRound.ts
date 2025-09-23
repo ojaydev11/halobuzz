@@ -32,6 +32,15 @@ const gameRoundSchema = new Schema<IGameRound>({
 
 gameRoundSchema.index({ gameId: 1, endAt: -1 });
 
+// Performance indexes for fraud detection
+gameRoundSchema.index({ playerId: 1, createdAt: -1 });
+
+// TTL for completed game rounds (90 days)
+gameRoundSchema.index(
+  { createdAt: 1 },
+  { expireAfterSeconds: 7776000 } // 90 days
+);
+
 export const GameRound = mongoose.model<IGameRound>('GameRound', gameRoundSchema);
 
 

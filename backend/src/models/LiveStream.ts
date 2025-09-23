@@ -406,4 +406,29 @@ liveStreamSchema.statics.findByCountry = function(country: string, limit: number
   .populate('hostId', 'username avatar followers ogLevel');
 };
 
+// Critical indexes for stream discovery and performance
+// Stream discovery - HIGH PRIORITY
+liveStreamSchema.index({
+  status: 1,
+  category: 1,
+  country: 1,
+  currentViewers: -1
+});
+
+// Trending streams calculation
+liveStreamSchema.index({
+  status: 1,
+  totalCoins: -1,
+  currentViewers: -1
+});
+
+// User's streams
+liveStreamSchema.index({ hostId: 1, status: 1, createdAt: -1 });
+
+// Moderation workflow
+liveStreamSchema.index({ moderationStatus: 1, createdAt: 1 });
+
+// Agora channel lookup
+liveStreamSchema.index({ agoraChannel: 1 }, { unique: true });
+
 export const LiveStream = mongoose.model<ILiveStream>('LiveStream', liveStreamSchema);

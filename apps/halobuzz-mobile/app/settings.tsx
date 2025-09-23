@@ -279,13 +279,25 @@ export default function SettingsScreen() {
             icon="document-outline"
             title="Terms of Service"
             subtitle="Read our terms and conditions"
-            onPress={() => router.push('/terms')}
+            onPress={() => router.push('/legal/terms')}
           />
           <SettingItem
             icon="shield-outline"
             title="Privacy Policy"
             subtitle="How we protect your data"
-            onPress={() => router.push('/privacy-policy')}
+            onPress={() => router.push('/legal/privacy')}
+          />
+          <SettingItem
+            icon="people-outline"
+            title="Community Guidelines"
+            subtitle="Our community rules and standards"
+            onPress={() => router.push('/legal/guidelines')}
+          />
+          <SettingItem
+            icon="help-circle-outline"
+            title="Support & Help"
+            subtitle="Get help and contact support"
+            onPress={() => router.push('/support')}
           />
           <SettingItem
             icon="code-outline"

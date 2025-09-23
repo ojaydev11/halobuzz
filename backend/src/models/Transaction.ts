@@ -136,4 +136,25 @@ transactionSchema.statics.getSummary = function(userId: string) {
   ]);
 };
 
+// Critical indexes for financial integrity and performance
+// Financial queries - CRITICAL PRIORITY
+transactionSchema.index({ userId: 1, status: 1, createdAt: -1 });
+transactionSchema.index({ type: 1, status: 1, createdAt: -1 });
+transactionSchema.index({ userId: 1, type: 1, status: 1 });
+
+// Payment idempotency - CRITICAL for data integrity
+transactionSchema.index({ 'metadata.orderId': 1 }, { sparse: true, unique: true });
+
+// Cleanup jobs for failed transactions
+transactionSchema.index({ status: 1, createdAt: 1 });
+
+// TTL for failed transactions (30 days)
+transactionSchema.index(
+  { createdAt: 1 },
+  {
+    expireAfterSeconds: 2592000, // 30 days
+    partialFilterExpression: { status: 'failed' }
+  }
+);
+
 export const Transaction = mongoose.model<ITransaction>('Transaction', transactionSchema);

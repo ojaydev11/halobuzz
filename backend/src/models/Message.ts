@@ -165,4 +165,20 @@ messageSchema.statics.findGiftMessages = function(roomId: string, limit: number 
     .populate('metadata.giftId', 'name icon');
 };
 
+// Critical indexes for chat performance
+// Chat message loading - HIGH PRIORITY
+messageSchema.index({ roomId: 1, createdAt: -1 });
+
+// Moderation queries
+messageSchema.index({ userId: 1, createdAt: -1 });
+
+// Pinned messages
+messageSchema.index({ roomId: 1, pinned: 1 }, { sparse: true });
+
+// Gift messages
+messageSchema.index({ roomId: 1, type: 1, createdAt: -1 });
+
+// Mentions lookup
+messageSchema.index({ 'metadata.mentions': 1 }, { sparse: true });
+
 export const Message = mongoose.model<IMessage>('Message', messageSchema);

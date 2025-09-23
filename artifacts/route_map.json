@@ -1,0 +1,79 @@
+{
+  "mobile": [
+    {"name": "Auth", "screens": [
+      {"name": "Login", "path": "apps/halobuzz-mobile/app/(auth)/login.tsx", "linked_from": ["Index"]},
+      {"name": "Register", "path": "apps/halobuzz-mobile/app/(auth)/register.tsx", "linked_from": ["Login"]},
+      {"name": "ForgotPassword", "path": "apps/halobuzz-mobile/app/(auth)/forgot-password.tsx", "linked_from": ["Login"]},
+      {"name": "ResetPassword", "path": "apps/halobuzz-mobile/app/(auth)/reset-password.tsx", "linked_from": ["ForgotPassword"]},
+      {"name": "VerifyEmail", "path": "apps/halobuzz-mobile/app/(auth)/verify-email.tsx", "linked_from": ["Register"]}
+    ]},
+    {"name": "Main Tabs", "screens": [
+      {"name": "Home", "path": "apps/halobuzz-mobile/app/(tabs)/index.tsx", "linked_from": ["Root"]},
+      {"name": "Live", "path": "apps/halobuzz-mobile/app/(tabs)/live.tsx", "linked_from": ["Home", "Search"]},
+      {"name": "Reels", "path": "apps/halobuzz-mobile/app/(tabs)/reels.tsx", "linked_from": ["Home", "Profile"]},
+      {"name": "Games", "path": "apps/halobuzz-mobile/app/(tabs)/games.tsx", "linked_from": ["Home"]},
+      {"name": "Search", "path": "apps/halobuzz-mobile/app/(tabs)/search.tsx", "linked_from": ["Home"]},
+      {"name": "Profile", "path": "apps/halobuzz-mobile/app/(tabs)/profile.tsx", "linked_from": ["Home", "Messages"]},
+      {"name": "Messages", "path": "apps/halobuzz-mobile/app/(tabs)/messages-section.tsx", "linked_from": ["Profile", "Live"]}
+    ]},
+    {"name": "Features", "screens": [
+      {"name": "LiveStream", "path": "apps/halobuzz-mobile/app/stream/[id].tsx", "linked_from": ["Live", "Home"]},
+      {"name": "WalletRecharge", "path": "apps/halobuzz-mobile/app/wallet/recharge.tsx", "linked_from": ["Profile", "Games"]},
+      {"name": "CreatorStudio", "path": "apps/halobuzz-mobile/app/creator-studio.tsx", "linked_from": ["Profile"]},
+      {"name": "AIStudio", "path": "apps/halobuzz-mobile/app/ai-studio.tsx", "linked_from": ["CreatorStudio"]},
+      {"name": "Settings", "path": "apps/halobuzz-mobile/app/settings.tsx", "linked_from": ["Profile"]},
+      {"name": "Gamification", "path": "apps/halobuzz-mobile/app/gamification.tsx", "linked_from": ["Games"]},
+      {"name": "LiveCommerce", "path": "apps/halobuzz-mobile/app/live-commerce.tsx", "linked_from": ["Live"]},
+      {"name": "NFTMarketplace", "path": "apps/halobuzz-mobile/app/nft-marketplace.tsx", "linked_from": ["Profile"]},
+      {"name": "SocialHub", "path": "apps/halobuzz-mobile/app/social-hub.tsx", "linked_from": ["Messages"]},
+      {"name": "NavigationHub", "path": "apps/halobuzz-mobile/app/navigation-hub.tsx", "linked_from": ["Home"]}
+    ]}
+  ],
+  "web": [],
+  "admin": [
+    {"route": "/", "file": "admin/pages/index.tsx", "description": "Admin landing/redirect page"},
+    {"route": "/login", "file": "admin/pages/login.tsx", "description": "Admin authentication"},
+    {"route": "/dashboard", "file": "admin/pages/dashboard/index.tsx", "description": "Main admin dashboard"},
+    {"route": "/dashboard/users", "file": "admin/pages/dashboard/users/index.tsx", "description": "User management"},
+    {"route": "/dashboard/transactions", "file": "admin/pages/dashboard/transactions.tsx", "description": "Payment transactions"},
+    {"route": "/dashboard/gifts", "file": "admin/pages/dashboard/gifts.tsx", "description": "Gift management"},
+    {"route": "/dashboard/festivals", "file": "admin/pages/dashboard/festivals.tsx", "description": "Festival skins & events"},
+    {"route": "/dashboard/og", "file": "admin/pages/dashboard/og.tsx", "description": "OG tier management"},
+    {"route": "/dashboard/pricing", "file": "admin/pages/dashboard/pricing.tsx", "description": "Pricing configuration"},
+    {"route": "/dashboard/analytics/behavior", "file": "admin/pages/dashboard/analytics/behavior.tsx", "description": "User behavior analytics"},
+    {"route": "/dashboard/analytics/heatmaps", "file": "admin/pages/dashboard/analytics/heatmaps.tsx", "description": "Heatmap analytics"},
+    {"route": "/dashboard/ai/performance", "file": "admin/pages/dashboard/ai/performance.tsx", "description": "AI performance metrics"},
+    {"route": "/dashboard/unified-intelligence", "file": "admin/pages/dashboard/unified-intelligence.tsx", "description": "AI intelligence dashboard"},
+    {"route": "/dashboard/promotions/campaigns", "file": "admin/pages/dashboard/promotions/campaigns.tsx", "description": "Marketing campaigns"},
+    {"route": "/dashboard/system/problems", "file": "admin/pages/dashboard/system/problems.tsx", "description": "System issues tracking"},
+    {"route": "/dashboard/system/roles", "file": "admin/pages/dashboard/system/roles.tsx", "description": "Role-based access control"}
+  ],
+  "backend": [
+    {"method": "GET", "path": "/api/v1/health", "file": "backend/src/routes/health.ts", "description": "Health check"},
+    {"method": "POST", "path": "/api/v1/auth/signup", "file": "backend/src/routes/auth.ts", "description": "User registration"},
+    {"method": "POST", "path": "/api/v1/auth/login", "file": "backend/src/routes/auth.ts", "description": "User authentication"},
+    {"method": "POST", "path": "/api/v1/auth/forgot-password", "file": "backend/src/routes/auth.ts", "description": "Password reset request"},
+    {"method": "POST", "path": "/api/v1/auth/reset-password", "file": "backend/src/routes/auth.ts", "description": "Password reset"},
+    {"method": "POST", "path": "/api/v1/auth/verify-email", "file": "backend/src/routes/auth.ts", "description": "Email verification"},
+    {"method": "GET", "path": "/api/v1/wallet/balance", "file": "backend/src/routes/coins.ts", "description": "Wallet balance"},
+    {"method": "POST", "path": "/api/v1/wallet/topup", "file": "backend/src/routes/coins.ts", "description": "Wallet top-up"},
+    {"method": "GET", "path": "/api/v1/gifts/catalog", "file": "backend/src/routes/gifts-enhanced.ts", "description": "Gift catalog"},
+    {"method": "POST", "path": "/api/v1/gifts/send", "file": "backend/src/routes/gifts-enhanced.ts", "description": "Send gift"},
+    {"method": "POST", "path": "/api/v1/live/create", "file": "backend/src/routes/live.ts", "description": "Create live stream"},
+    {"method": "POST", "path": "/api/v1/live/join", "file": "backend/src/routes/live.ts", "description": "Join live stream"},
+    {"method": "POST", "path": "/api/v1/live/end", "file": "backend/src/routes/live.ts", "description": "End live stream"},
+    {"method": "POST", "path": "/api/v1/messages/send", "file": "backend/src/routes/chat.ts", "description": "Send message"},
+    {"method": "GET", "path": "/api/v1/games", "file": "backend/src/routes/games.ts", "description": "Game listing"},
+    {"method": "POST", "path": "/api/v1/games/play", "file": "backend/src/routes/games.ts", "description": "Play game"},
+    {"method": "GET", "path": "/api/v1/admin/stats", "file": "backend/src/routes/admin.ts", "description": "Admin statistics"},
+    {"method": "POST", "path": "/api/v1/admin/users/ban", "file": "backend/src/routes/admin.ts", "description": "Ban user"},
+    {"method": "GET", "path": "/api/v1/creator-analytics", "file": "backend/src/routes/creator-analytics.ts", "description": "Creator analytics"},
+    {"method": "POST", "path": "/api/v1/ai-content/generate", "file": "backend/src/routes/ai-content.ts", "description": "AI content generation"}
+  ],
+  "ai_engine": [
+    {"method": "GET", "path": "/health", "file": "ai-engine/src/routes/health.ts", "description": "AI engine health"},
+    {"method": "POST", "path": "/analyze/content", "file": "ai-engine/src/routes/content.ts", "description": "Content analysis"},
+    {"method": "POST", "path": "/generate/thumbnail", "file": "ai-engine/src/routes/generation.ts", "description": "Thumbnail generation"},
+    {"method": "POST", "path": "/moderate/stream", "file": "ai-engine/src/routes/moderation.ts", "description": "Stream moderation"}
+  ]
+}

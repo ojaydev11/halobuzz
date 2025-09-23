@@ -296,6 +296,42 @@ class ApiClient {
     }
   }
 
+  async forgotPassword(email: string): Promise<ApiResponse<{ message: string }>> {
+    try {
+      const response = await this.client.post('/auth/forgot-password', { email });
+      return response.data;
+    } catch (error) {
+      const networkError = this.formatError(error);
+      toast.showApiError(networkError);
+      throw networkError;
+    }
+  }
+
+  async resetPassword(token: string, newPassword: string): Promise<ApiResponse<{ message: string }>> {
+    try {
+      const response = await this.client.post('/auth/reset-password', { 
+        token, 
+        password: newPassword 
+      });
+      return response.data;
+    } catch (error) {
+      const networkError = this.formatError(error);
+      toast.showApiError(networkError);
+      throw networkError;
+    }
+  }
+
+  async verifyEmail(token: string): Promise<ApiResponse<{ message: string }>> {
+    try {
+      const response = await this.client.post('/auth/verify-email', { token });
+      return response.data;
+    } catch (error) {
+      const networkError = this.formatError(error);
+      toast.showApiError(networkError);
+      throw networkError;
+    }
+  }
+
   // Stream endpoints
   async getStreams(params?: {
     category?: string;

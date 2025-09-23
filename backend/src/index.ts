@@ -96,6 +96,7 @@ import configRoutes from '@/routes/config';
 import kycRoutes from '@/routes/kyc';
 import monitoringRoutes from '@/routes/monitoring';
 import securityRoutes from '@/routes/security';
+import agoraRoutes from '@/routes/agora';
 import aiContentStudioRoutes from '@/routes/aiContentStudio';
 
 // New AI services routes
@@ -306,6 +307,7 @@ import { adminOnly } from '@/middleware/admin';
 app.use(`/api/${apiVersion}/admin`, authMiddleware, adminOnly, adminRoutes);
 app.use(`/api/${apiVersion}/monitoring`, monitoringRoutes);
 app.use(`/api/${apiVersion}/security`, securityRoutes);
+app.use(`/api/${apiVersion}/agora`, authMiddleware, agoraRoutes);
 
 // New creator economy routes
 app.use(`/api/${apiVersion}/nft`, nftRoutes);

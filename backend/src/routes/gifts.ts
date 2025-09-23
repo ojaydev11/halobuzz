@@ -1,5 +1,6 @@
 import express from 'express';
 import { body, validationResult } from 'express-validator';
+import mongoose from 'mongoose';
 import { Gift } from '../models/Gift';
 import { Festival } from '../models/Festival';
 import { User } from '../models/User';
@@ -292,112 +293,129 @@ router.post('/:streamId/gift', [
       });
     }
 
-    // Deduct coins from user
-    await User.findByIdAndUpdate(userId, {
-      $inc: { 
-        'coins.balance': -totalCost,
-        'coins.totalSpent': totalCost
-      }
-    });
+    // Start database transaction for atomicity
+    const session = await mongoose.startSession();
+    session.startTransaction();
 
-    // Add coins to stream host
-    await User.findByIdAndUpdate(stream.hostId, {
-      $inc: { 
-        'coins.balance': totalCost,
-        'coins.totalEarned': totalCost
-      }
-    });
-
-    // Update stream metrics
-    (stream as any).addGift(totalCost);
-    await stream.save();
-
-    // Update gift stats
-    (gift as any).incrementSent(totalCost);
-    await gift.save();
-
-    // Create transaction records
-    const senderTransaction = new Transaction({
-      userId,
-      type: 'gift_sent',
-      amount: totalCost,
-      currency: 'coins',
-      status: 'completed',
-      description: `Sent ${quantity}x ${gift.name} to stream`,
-      metadata: {
-        giftId: gift._id,
-        streamId: stream._id,
-        quantity,
-        giftName: gift.name
-      },
-      netAmount: totalCost
-    });
-    await senderTransaction.save();
-
-    const receiverTransaction = new Transaction({
-      userId: stream.hostId,
-      type: 'gift_received',
-      amount: totalCost,
-      currency: 'coins',
-      status: 'completed',
-      description: `Received ${quantity}x ${gift.name} from ${user.username}`,
-      metadata: {
-        giftId: gift._id,
-        streamId: stream._id,
-        quantity,
-        giftName: gift.name,
-        senderId: userId,
-        senderUsername: user.username
-      },
-      netAmount: totalCost
-    });
-    await receiverTransaction.save();
-
-    // Apply reputation changes
-    await reputationService.applyReputationDelta(userId, 'gift_sent', {
-      coins: totalCost,
-      giftId: gift._id,
-      streamId: stream._id
-    });
-
-    await reputationService.applyReputationDelta(stream.hostId.toString(), 'gift_received', {
-      coins: totalCost,
-      giftId: gift._id,
-      streamId: stream._id
-    });
-
-    // Emit gift event to WebSocket clients
-    emitGift(stream.agoraChannel, {
-      from: userId,
-      fromUsername: user.username,
-      giftId: gift._id.toString(),
-      qty: quantity,
-      timestamp: Date.now()
-    });
-
-    res.json({
-      success: true,
-      message: 'Gift sent successfully',
-      data: {
-        gift: {
-          id: gift._id,
-          name: gift.name,
-          icon: gift.icon,
-          animation: gift.animation,
-          quantity,
-          totalCost,
-          effects: gift.effects
-        },
-        stream: {
-          id: stream._id,
-          totalCoins: stream.totalCoins,
-          totalGifts: stream.totalGifts
-        },
-        user: {
-          newBalance: (user.coins?.balance || 0) - totalCost
+    try {
+      // Deduct coins from user
+      await User.findByIdAndUpdate(userId, {
+        $inc: { 
+          'coins.balance': -totalCost,
+          'coins.totalSpent': totalCost
         }
-      }
-    });
+      }, { session });
+
+      // Add coins to stream host
+      await User.findByIdAndUpdate(stream.hostId, {
+        $inc: { 
+          'coins.balance': totalCost,
+          'coins.totalEarned': totalCost
+        }
+      }, { session });
+
+      // Update stream metrics
+      (stream as any).addGift(totalCost);
+      await stream.save({ session });
+
+      // Update gift stats
+      (gift as any).incrementSent(totalCost);
+      await gift.save({ session });
+
+      // Create transaction records
+      const senderTransaction = new Transaction({
+        userId,
+        type: 'gift_sent',
+        amount: totalCost,
+        currency: 'coins',
+        status: 'completed',
+        description: `Sent ${quantity}x ${gift.name} to stream`,
+        metadata: {
+          giftId: gift._id,
+          streamId: stream._id,
+          quantity,
+          giftName: gift.name
+        },
+        netAmount: totalCost
+      });
+      await senderTransaction.save({ session });
+
+      const receiverTransaction = new Transaction({
+        userId: stream.hostId,
+        type: 'gift_received',
+        amount: totalCost,
+        currency: 'coins',
+        status: 'completed',
+        description: `Received ${quantity}x ${gift.name} from ${user.username}`,
+        metadata: {
+          giftId: gift._id,
+          streamId: stream._id,
+          quantity,
+          giftName: gift.name,
+          senderId: userId,
+          senderUsername: user.username
+        },
+        netAmount: totalCost
+      });
+      await receiverTransaction.save({ session });
+
+      // Apply reputation changes
+      await reputationService.applyReputationDelta(userId, 'gift_sent', {
+        coins: totalCost,
+        giftId: gift._id,
+        streamId: stream._id
+      });
+
+      await reputationService.applyReputationDelta(stream.hostId.toString(), 'gift_received', {
+        coins: totalCost,
+        giftId: gift._id,
+        streamId: stream._id
+      });
+
+      // Commit the transaction
+      await session.commitTransaction();
+
+      // Emit gift event to WebSocket clients
+      emitGift(stream.agoraChannel, {
+        from: userId,
+        fromUsername: user.username,
+        giftId: gift._id.toString(),
+        qty: quantity,
+        timestamp: Date.now()
+      });
+
+      res.json({
+        success: true,
+        message: 'Gift sent successfully',
+        data: {
+          gift: {
+            id: gift._id,
+            name: gift.name,
+            icon: gift.icon,
+            animation: gift.animation,
+            quantity,
+            totalCost,
+            effects: gift.effects
+          },
+          stream: {
+            id: stream._id,
+            totalCoins: stream.totalCoins,
+            totalGifts: stream.totalGifts
+          },
+          user: {
+            newBalance: (user.coins?.balance || 0) - totalCost
+          }
+        }
+      });
+
+    } catch (transactionError) {
+      // Rollback the transaction on any error
+      await session.abortTransaction();
+      throw transactionError;
+    } finally {
+      // End the session
+      session.endSession();
+    }
 
   } catch (error) {
     logger.error('Send gift failed:', error);

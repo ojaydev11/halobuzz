@@ -154,45 +154,105 @@ declare global {
 }
 
 // Rate limiting middleware functions
-export const globalLimiter = (req: Request, res: Response, next: NextFunction) => {
-  // Simple rate limiting - in production, use redis-based rate limiting
-  next();
+import { getRedisClient } from '@/config/redis';
+import { logger } from '@/config/logger';
+
+// Redis-based rate limiting implementation
+const createRateLimit = (windowMs: number, maxRequests: number, message: string) => {
+  return async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const client = getRedisClient();
+      if (!client) {
+        // If Redis is not available, allow the request but log a warning
+        logger.warn('Rate limiting disabled - Redis not available');
+        return next();
+      }
+
+      const key = `rate_limit:${req.ip}:${req.path}`;
+      const current = await client.get(key);
+      
+      if (current === null) {
+        // First request in window
+        await client.setEx(key, Math.ceil(windowMs / 1000), '1');
+        return next();
+      }
+      
+      const count = parseInt(current);
+      if (count >= maxRequests) {
+        logger.warn(`Rate limit exceeded for IP ${req.ip} on ${req.path}`);
+        return res.status(429).json({
+          success: false,
+          error: message,
+          retryAfter: Math.ceil(windowMs / 1000)
+        });
+      }
+      
+      // Increment counter
+      await client.incr(key);
+      next();
+    } catch (error) {
+      logger.error('Rate limiting error:', error);
+      // On error, allow the request to proceed
+      next();
+    }
+  };
 };
 
-export const authLimiter = (req: Request, res: Response, next: NextFunction) => {
-  // Auth-specific rate limiting
-  next();
-};
+// Global rate limiting - 100 requests per 15 minutes
+export const globalLimiter = createRateLimit(
+  15 * 60 * 1000, // 15 minutes
+  100, // 100 requests
+  'Too many requests from this IP, please try again later'
+);
 
-export const loginSlowDown = (req: Request, res: Response, next: NextFunction) => {
-  // Login slowdown middleware
-  next();
-};
+// Auth-specific rate limiting - 5 requests per 15 minutes
+export const authLimiter = createRateLimit(
+  15 * 60 * 1000, // 15 minutes
+  5, // 5 requests
+  'Too many authentication attempts, please try again later'
+);
 
-export const paymentLimiter = (req: Request, res: Response, next: NextFunction) => {
-  // Payment-specific rate limiting
-  next();
-};
+// Login slowdown - 3 attempts per 15 minutes
+export const loginSlowDown = createRateLimit(
+  15 * 60 * 1000, // 15 minutes
+  3, // 3 attempts
+  'Too many login attempts, please try again later'
+);
 
-export const socialLimiter = (req: Request, res: Response, next: NextFunction) => {
-  // Social features rate limiting
-  next();
-};
+// Payment-specific rate limiting - 10 requests per 5 minutes
+export const paymentLimiter = createRateLimit(
+  5 * 60 * 1000, // 5 minutes
+  10, // 10 requests
+  'Too many payment requests, please try again later'
+);
 
-export const adminLimiter = (req: Request, res: Response, next: NextFunction) => {
-  // Admin-specific rate limiting
-  next();
-};
+// Social features rate limiting - 50 requests per 5 minutes
+export const socialLimiter = createRateLimit(
+  5 * 60 * 1000, // 5 minutes
+  50, // 50 requests
+  'Too many social requests, please try again later'
+);
 
-export const searchLimiter = (req: Request, res: Response, next: NextFunction) => {
-  // Search-specific rate limiting
-  next();
-};
+// Admin-specific rate limiting - 20 requests per 5 minutes
+export const adminLimiter = createRateLimit(
+  5 * 60 * 1000, // 5 minutes
+  20, // 20 requests
+  'Too many admin requests, please try again later'
+);
 
-export const uploadLimiter = (req: Request, res: Response, next: NextFunction) => {
-  // Upload-specific rate limiting
-  next();
-};
+// Search-specific rate limiting - 30 requests per minute
+export const searchLimiter = createRateLimit(
+  60 * 1000, // 1 minute
+  30, // 30 requests
+  'Too many search requests, please try again later'
+);
+
+// Upload-specific rate limiting - 5 requests per 10 minutes
+export const uploadLimiter = createRateLimit(
+  10 * 60 * 1000, // 10 minutes
+  5, // 5 requests
+  'Too many upload requests, please try again later'
+);
 
 // Security middleware functions
 export const requestId = (req: Request, res: Response, next: NextFunction) => {
