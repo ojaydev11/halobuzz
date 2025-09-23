@@ -70,7 +70,7 @@ const GamesScreen: React.FC = ({ navigation }: any) => {
   useEffect(() => {
     if (currentRound && currentRound.timeRemaining > 0) {
       const timer = setInterval(() => {
-        setTimeRemaining(prev => Math.max(0, prev - 1));
+        setTimeRemaining((prev: number) => Math.max(0, prev - 1));
       }, 1000);
       return () => clearInterval(timer);
     }
@@ -78,8 +78,8 @@ const GamesScreen: React.FC = ({ navigation }: any) => {
 
   const fetchGames = async () => {
     try {
-      const response = await apiClient.get('/api/v1/games/v2/list');
-      setGames(response.data.data.games);
+      const response = await apiClient.get('/games/v2/list');
+      setGames(response.data.games);
     } catch (error) {
       console.error('Failed to fetch games:', error);
     } finally {
@@ -90,8 +90,8 @@ const GamesScreen: React.FC = ({ navigation }: any) => {
 
   const fetchUserBalance = async () => {
     try {
-      const response = await apiClient.get(`/api/v1/wallet/balance`);
-      setUserBalance(response.data.data.coins || 0);
+      const response = await apiClient.get('/wallet');
+      setUserBalance(response.data?.wallet?.balance || 0);
     } catch (error) {
       console.error('Failed to fetch balance:', error);
     }
@@ -99,8 +99,8 @@ const GamesScreen: React.FC = ({ navigation }: any) => {
 
   const fetchGameHistory = async () => {
     try {
-      const response = await apiClient.get('/api/v1/games/v2/history');
-      setGameHistory(response.data.data.history || []);
+      const response = await apiClient.get('/games/v2/history');
+      setGameHistory(response.data.history || []);
     } catch (error) {
       console.error('Failed to fetch game history:', error);
     }
@@ -108,9 +108,9 @@ const GamesScreen: React.FC = ({ navigation }: any) => {
 
   const fetchCurrentRound = async (gameCode: string) => {
     try {
-      const response = await apiClient.get(`/api/v1/games/v2/${gameCode}/current-round`);
-      setCurrentRound(response.data.data);
-      setTimeRemaining(response.data.data.timeRemaining);
+      const response = await apiClient.get(`/games/v2/${gameCode}/current-round`);
+      setCurrentRound(response.data);
+      setTimeRemaining(response.data.timeRemaining);
     } catch (error) {
       console.error('Failed to fetch current round:', error);
     }
@@ -148,9 +148,9 @@ const GamesScreen: React.FC = ({ navigation }: any) => {
         payload.selectedOption = selectedOption;
       }
 
-      const response = await apiClient.post(`/api/v1/games/v2/${selectedGame.code}/stake`, payload);
+      const response = await apiClient.post(`/games/v2/${selectedGame.code}/stake`, payload);
       
-      if (response.data.success) {
+      if (response.success) {
         Alert.alert('Success', 'Stake placed successfully!', [
           { text: 'OK', onPress: () => {
             setModalVisible(false);
@@ -313,7 +313,7 @@ const GamesScreen: React.FC = ({ navigation }: any) => {
         <FlatList
           data={games}
           renderItem={renderGameCard}
-          keyExtractor={(item) => item._id}
+          keyExtractor={(item: Game) => item._id}
           contentContainerStyle={styles.gamesList}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={() => {

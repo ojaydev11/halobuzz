@@ -23,6 +23,7 @@ export default function SettingsScreen() {
   const [dataSaver, setDataSaver] = useState(false);
   const [language, setLanguage] = useState('en');
   const [country, setCountry] = useState('US');
+  const [liteMode, setLiteMode] = useState(false);
 
   const handleLogout = () => {
     Alert.alert(
@@ -185,8 +186,8 @@ export default function SettingsScreen() {
             subtitle="Reduce data usage"
             rightComponent={
               <Switch
-                value={dataSaver}
-                onValueChange={setDataSaver}
+                value={dataSaver || liteMode}
+                onValueChange={(v) => { setDataSaver(v); setLiteMode(v); }}
                 trackColor={{ false: '#333', true: '#007AFF' }}
                 thumbColor="#fff"
               />
@@ -196,7 +197,7 @@ export default function SettingsScreen() {
           <SettingItem
             icon="language-outline"
             title="Language"
-            subtitle="English"
+            subtitle="English / नेपाली"
             onPress={() => router.push('/language')}
           />
           <SettingItem

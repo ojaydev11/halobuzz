@@ -64,7 +64,7 @@ router.post('/recharge', [
     .isFloat({ min: 1 })
     .withMessage('Amount must be at least 1'),
   body('paymentMethod')
-    .isIn(['esewa', 'khalti', 'stripe'])
+    .isIn(['esewa', 'khalti', 'stripe', 'paypal'])
     .withMessage('Valid payment method is required'),
   body('coins')
     .isInt({ min: 1 })
@@ -160,7 +160,7 @@ router.post('/recharge', [
     }
 
     // Create transaction record
-    const transaction = await paymentService.createTransaction(
+    let transaction = await paymentService.createTransaction(
       userId,
       amount,
       coins,
@@ -174,9 +174,25 @@ router.post('/recharge', [
     switch (paymentMethod) {
       case 'esewa':
         paymentResult = await paymentService.createEsewaPayment(amount, userId, coins);
+        if (paymentResult?.paymentUrl && paymentResult?.pid) {
+          await Transaction.findByIdAndUpdate(transaction._id, {
+            $set: {
+              transactionId: paymentResult.pid,
+              metadata: { ...(transaction as any).metadata, pid: paymentResult.pid }
+            }
+          });
+        }
         break;
       case 'khalti':
         paymentResult = await paymentService.createKhaltiPayment(amount, userId, coins);
+        if (paymentResult?.token) {
+          await Transaction.findByIdAndUpdate(transaction._id, {
+            $set: {
+              transactionId: paymentResult.token,
+              metadata: { ...(transaction as any).metadata, token: paymentResult.token }
+            }
+          });
+        }
         break;
       case 'stripe':
         paymentResult = await paymentService.createStripePaymentIntent(amount, 'USD', {
@@ -184,9 +200,24 @@ router.post('/recharge', [
           amount: amount.toString(),
           coins: coins.toString()
         });
+        if (paymentResult?.paymentIntentId) {
+          await Transaction.findByIdAndUpdate(transaction._id, {
+            $set: {
+              transactionId: paymentResult.paymentIntentId
+            }
+          });
+        }
         break;
       case 'paypal':
         paymentResult = await paymentService.createPayPalOrder(amount, userId, coins);
+        if (paymentResult?.orderId) {
+          await Transaction.findByIdAndUpdate(transaction._id, {
+            $set: {
+              transactionId: paymentResult.orderId,
+              metadata: { ...(transaction as any).metadata, orderId: paymentResult.orderId }
+            }
+          });
+        }
         break;
       default:
         return res.status(400).json({
@@ -213,9 +244,10 @@ router.post('/recharge', [
       message: 'Payment initiated successfully',
       data: {
         transactionId: transaction._id,
-        paymentUrl: paymentResult.paymentUrl,
+        paymentUrl: paymentResult.paymentUrl || paymentResult.approvalUrl || null,
         clientSecret: paymentResult.clientSecret,
-        token: paymentResult.token
+        token: paymentResult.token,
+        orderId: paymentResult.orderId || null
       }
     });
 
@@ -264,6 +296,71 @@ router.get('/transactions', async (req: AuthenticatedRequest, res: Response) => 
       success: false,
       error: 'Failed to get transaction history'
     });
+  }
+});
+
+// Withdraw coins (creates a pending withdrawal request)
+router.post('/withdraw', [
+  body('amount')
+    .isInt({ min: 100 })
+    .withMessage('Minimum withdrawal is 100 coins'),
+  body('method')
+    .isIn(['bank', 'esewa', 'khalti', 'paypal'])
+    .withMessage('Valid withdrawal method is required'),
+  body('account')
+    .optional()
+    .isString()
+    .isLength({ min: 3, max: 200 })
+], async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success: false, errors: errors.array() });
+    }
+
+    const userId = req.user?.userId;
+    if (!userId) {
+      return res.status(401).json({ success: false, error: 'Authentication required' });
+    }
+
+    const { amount, method, account } = req.body as { amount: number; method: string; account?: string };
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+
+    // Ensure sufficient balance (exclude bonusBalance)
+    const spendable = user.coins?.balance || 0;
+    if (spendable < amount) {
+      return res.status(400).json({ success: false, error: 'Insufficient balance' });
+    }
+
+    // Deduct immediately to reserve funds
+    await User.findByIdAndUpdate(userId, {
+      $inc: {
+        'coins.balance': -amount,
+        'coins.totalSpent': amount
+      }
+    });
+
+    // Record withdrawal request
+    const txn = new Transaction({
+      userId,
+      type: 'withdrawal',
+      amount,
+      currency: 'coins',
+      status: 'pending',
+      description: `Withdrawal request via ${method}`,
+      metadata: { method, account },
+      netAmount: amount
+    });
+    await txn.save();
+
+    res.json({ success: true, message: 'Withdrawal request submitted', data: { transactionId: txn._id } });
+
+  } catch (error) {
+    logger.error('Withdrawal request failed:', error);
+    res.status(500).json({ success: false, error: 'Withdrawal failed' });
   }
 });
 

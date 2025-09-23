@@ -3,9 +3,14 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider, useAuth } from '@/store/AuthContext';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import { useEffect } from 'react';
+import analytics, { trackHomeImpression } from '@/services/analytics';
 
 function AppContent() {
   const { isLoading } = useAuth();
+  useEffect(() => {
+    analytics.init();
+  }, []);
 
   if (isLoading) {
     return (

@@ -15,6 +15,7 @@ import FilterTabs from '../components/FilterTabs';
 import LiveGrid from '../components/LiveGrid';
 import ContinueWatching from '../components/ContinueWatching';
 import DailyCheckin from '../components/DailyCheckin';
+import analytics, { trackFilterChange, trackLiveCardTap, trackHomeImpression, trackBannerTap } from '../services/analytics';
 
 interface HomeScreenProps {
   navigation: any; // Replace with proper navigation type
@@ -51,6 +52,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
           fetchFeaturedItems(),
           fetchContinueWatching(),
         ]);
+        trackHomeImpression();
       } catch (error) {
         console.error('Failed to load initial data:', error);
       }
@@ -62,7 +64,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
   // Handle stream press
   const handleStreamPress = useCallback((stream: Stream) => {
     // Track analytics
-    console.log('home_livecard_tap', { streamId: stream.id, position: 'grid' });
+    trackLiveCardTap(stream.id, 0);
     
     // Navigate to live room
     navigation.navigate('LiveRoom', {
@@ -73,8 +75,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
 
   // Handle featured item press
   const handleFeaturedPress = useCallback((item: FeaturedItem) => {
-    // Track analytics
-    console.log('home_banner_tap', { itemId: item.id });
+    trackBannerTap(item.id, 0);
     
     // Handle deeplink or navigation
     if (item.deeplink) {
@@ -99,8 +100,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
 
   // Handle filter change
   const handleFilterChange = useCallback((filter: string) => {
-    // Track analytics
-    console.log('home_filter_change', { filter });
+    trackFilterChange(filter);
     
     setFilter(filter as any);
   }, [setFilter]);
