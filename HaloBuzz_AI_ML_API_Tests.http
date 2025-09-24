@@ -1,0 +1,714 @@
+### HaloBuzz AI/ML API Test Collection
+### Copy this file to your REST Client (VS Code) or Thunder Client
+
+### Variables
+@apiBase = https://api.halobuzz.com
+@localApiBase = http://localhost:4000
+@token = {{login.response.body.data.token}}
+@userId = test_user_123
+@sessionId = test_session_456
+
+### ========================================
+### 1. AUTHENTICATION
+### ========================================
+
+# @name login
+POST {{apiBase}}/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@halobuzz.com",
+  "password": "your_admin_password"
+}
+
+### ========================================
+### 2. AI RECOMMENDATIONS
+### ========================================
+
+### Get Personalized Recommendations
+GET {{apiBase}}/api/v1/ai-recommendations?limit=20
+Authorization: Bearer {{token}}
+
+### Get Trending Recommendations
+GET {{apiBase}}/api/v1/ai-recommendations/trending?limit=10&timeRange=day
+Authorization: Bearer {{token}}
+
+### Provide Recommendation Feedback
+POST {{apiBase}}/api/v1/ai-recommendations/feedback
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "contentId": "content_123",
+  "contentType": "video",
+  "action": "like",
+  "watchTime": 120,
+  "rating": 5
+}
+
+### Get Recommendation Analytics (Admin)
+GET {{apiBase}}/api/v1/ai-recommendations/analytics
+Authorization: Bearer {{token}}
+
+### Force Refresh Recommendations (Admin)
+POST {{apiBase}}/api/v1/ai-recommendations/refresh
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "userId": "{{userId}}",
+  "contentType": "all"
+}
+
+### ========================================
+### 3. ADVANCED ANALYTICS
+### ========================================
+
+### Get Dashboard Metrics
+GET {{apiBase}}/api/v1/advanced-analytics/dashboard?timeRange=day&granularity=hour
+Authorization: Bearer {{token}}
+
+### Get Predictive Insights
+GET {{apiBase}}/api/v1/advanced-analytics/predictive-insights
+Authorization: Bearer {{token}}
+
+### Get Real-Time Metrics
+GET {{apiBase}}/api/v1/advanced-analytics/real-time
+Authorization: Bearer {{token}}
+
+### Export Analytics Data
+GET {{apiBase}}/api/v1/advanced-analytics/export?format=json&timeRange=day&metrics=all
+Authorization: Bearer {{token}}
+
+### Create Custom Report
+POST {{apiBase}}/api/v1/advanced-analytics/custom-report
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Weekly Revenue Report",
+  "description": "Weekly revenue analysis with trends",
+  "metrics": ["revenue", "conversion_rate", "user_growth"],
+  "filters": {
+    "timeRange": "week",
+    "granularity": "day",
+    "categories": ["gaming", "music"]
+  },
+  "schedule": {
+    "frequency": "weekly",
+    "time": "09:00",
+    "recipients": ["admin@halobuzz.com"]
+  }
+}
+
+### ========================================
+### 4. ML OPTIMIZATION
+### ========================================
+
+### Create A/B Test
+POST {{apiBase}}/api/v1/ml-optimization/ab-test/create
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Gift Multiplier Test",
+  "description": "Test different gift multipliers for revenue optimization",
+  "hypothesis": "Higher gift multipliers increase revenue without reducing user satisfaction",
+  "variants": [
+    {
+      "variantId": "control",
+      "name": "Control Group",
+      "weight": 0.5,
+      "config": {"multiplier": 1.0}
+    },
+    {
+      "variantId": "treatment",
+      "name": "Treatment Group",
+      "weight": 0.5,
+      "config": {"multiplier": 1.5}
+    }
+  ],
+  "targetAudience": {
+    "userSegments": ["premium_users", "active_users"],
+    "demographics": {
+      "ageRange": [18, 35],
+      "location": ["NP", "IN"]
+    }
+  },
+  "metrics": [
+    {
+      "metricName": "gift_revenue",
+      "metricType": "revenue",
+      "isPrimary": true
+    },
+    {
+      "metricName": "gift_count",
+      "metricType": "engagement",
+      "isPrimary": false
+    }
+  ],
+  "duration": 7,
+  "isActive": true
+}
+
+### Start A/B Test
+POST {{apiBase}}/api/v1/ml-optimization/ab-test/ab_test_123456789/start
+Authorization: Bearer {{token}}
+
+### Get A/B Test Results
+GET {{apiBase}}/api/v1/ml-optimization/ab-test/ab_test_123456789/results
+Authorization: Bearer {{token}}
+
+### Assign User to Variant
+POST {{apiBase}}/api/v1/ml-optimization/ab-test/assign
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "testId": "ab_test_123456789"
+}
+
+### Record Conversion
+POST {{apiBase}}/api/v1/ml-optimization/ab-test/conversion
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "testId": "ab_test_123456789",
+  "metricName": "gift_revenue",
+  "value": 100
+}
+
+### Train ML Model
+POST {{apiBase}}/api/v1/ml-optimization/model/train
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "User Engagement Predictor",
+  "type": "classification",
+  "algorithm": "random_forest",
+  "features": ["watch_time", "gift_count", "session_duration", "user_age"],
+  "target": "engagement_level",
+  "trainingData": [
+    {
+      "watch_time": 120,
+      "gift_count": 5,
+      "session_duration": 300,
+      "user_age": 25,
+      "engagement_level": "high"
+    },
+    {
+      "watch_time": 60,
+      "gift_count": 2,
+      "session_duration": 180,
+      "user_age": 30,
+      "engagement_level": "medium"
+    }
+  ]
+}
+
+### Make Prediction
+POST {{apiBase}}/api/v1/ml-optimization/model/predict
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "modelId": "model_123456789",
+  "inputData": {
+    "watch_time": 90,
+    "gift_count": 3,
+    "session_duration": 240,
+    "user_age": 28
+  }
+}
+
+### Get Optimization Recommendations
+GET {{apiBase}}/api/v1/ml-optimization/recommendations
+Authorization: Bearer {{token}}
+
+### Get ML Insights
+GET {{apiBase}}/api/v1/ml-optimization/insights
+Authorization: Bearer {{token}}
+
+### Get Trained Models
+GET {{apiBase}}/api/v1/ml-optimization/models
+Authorization: Bearer {{token}}
+
+### ========================================
+### 5. REAL-TIME PERSONALIZATION
+### ========================================
+
+### Get Personalized Content Feed
+GET {{apiBase}}/api/v1/personalization/content-feed?sessionId={{sessionId}}&currentPage=home&limit=10
+Authorization: Bearer {{token}}
+
+### Get Personalized UI
+GET {{apiBase}}/api/v1/personalization/ui?sessionId={{sessionId}}&currentPage=home
+Authorization: Bearer {{token}}
+
+### Get Personalized Notifications
+GET {{apiBase}}/api/v1/personalization/notifications?limit=5
+Authorization: Bearer {{token}}
+
+### Get Personalized Pricing
+POST {{apiBase}}/api/v1/personalization/pricing
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "productId": "premium_subscription",
+  "basePrice": 29.99
+}
+
+### Create Personalization Rule (Admin)
+POST {{apiBase}}/api/v1/personalization/rules
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "New User Welcome Rule",
+  "description": "Show welcome content to new users",
+  "conditions": [
+    {
+      "field": "account_age_days",
+      "operator": "less_than",
+      "value": 7,
+      "weight": 0.8
+    }
+  ],
+  "actions": [
+    {
+      "type": "show_content",
+      "config": {
+        "contentType": "welcome_video",
+        "priority": "high"
+      }
+    }
+  ],
+  "priority": 90,
+  "isActive": true
+}
+
+### Get Personalization Metrics (Admin)
+GET {{apiBase}}/api/v1/personalization/metrics?timeRange=day
+Authorization: Bearer {{token}}
+
+### Get User Context (Admin)
+GET {{apiBase}}/api/v1/personalization/user-context/{{userId}}?sessionId={{sessionId}}&currentPage=home
+Authorization: Bearer {{token}}
+
+### Provide Personalization Feedback
+POST {{apiBase}}/api/v1/personalization/feedback
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "personalizationType": "content_feed",
+  "contentId": "content_123",
+  "rating": 4,
+  "feedback": "Great recommendations!"
+}
+
+### ========================================
+### 6. ADVANCED FRAUD DETECTION
+### ========================================
+
+### Create Fraud Pattern (Admin)
+POST {{apiBase}}/api/v1/fraud-detection/patterns
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Rapid Gift Sending",
+  "description": "Detect users sending gifts too rapidly",
+  "type": "behavioral",
+  "severity": "medium",
+  "conditions": [
+    {
+      "field": "gifts_per_minute",
+      "operator": "greater_than",
+      "value": 10,
+      "weight": 0.7
+    },
+    {
+      "field": "total_gift_amount",
+      "operator": "greater_than",
+      "value": 1000,
+      "weight": 0.3
+    }
+  ],
+  "threshold": 0.6,
+  "isActive": true
+}
+
+### Analyze User for Fraud (Admin)
+POST {{apiBase}}/api/v1/fraud-detection/analyze
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "userId": "{{userId}}"
+}
+
+### Get User Risk Score (Admin)
+GET {{apiBase}}/api/v1/fraud-detection/risk-score/{{userId}}
+Authorization: Bearer {{token}}
+
+### Detect Anomalies (Admin)
+GET {{apiBase}}/api/v1/fraud-detection/anomalies/{{userId}}
+Authorization: Bearer {{token}}
+
+### Get Fraud Metrics (Admin)
+GET {{apiBase}}/api/v1/fraud-detection/metrics?timeRange=day
+Authorization: Bearer {{token}}
+
+### Resolve Fraud Alert (Admin)
+POST {{apiBase}}/api/v1/fraud-detection/resolve-alert
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "alertId": "alert_123456789",
+  "resolution": "False positive - user verified legitimate"
+}
+
+### Get Fraud Alerts (Admin)
+GET {{apiBase}}/api/v1/fraud-detection/alerts?status=new&severity=high&limit=20&offset=0
+Authorization: Bearer {{token}}
+
+### Get Fraud Patterns (Admin)
+GET {{apiBase}}/api/v1/fraud-detection/patterns
+Authorization: Bearer {{token}}
+
+### ========================================
+### 7. FEATURE FLAGS & ROLLOUT
+### ========================================
+
+### Update Feature Flag (Admin)
+POST {{apiBase}}/api/v1/admin/feature-flags/update
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "flag": "FF_RECS",
+  "rolloutPercentage": 5,
+  "targetRegions": ["NP", "IN"]
+}
+
+### Activate Kill Switch (Admin)
+POST {{apiBase}}/api/v1/admin/kill-switch/activate
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "service": "ai_recommendations",
+  "reason": "emergency_rollback"
+}
+
+### Rollback Feature Flag (Admin)
+POST {{apiBase}}/api/v1/admin/feature-flags/rollback
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "flag": "FF_RECS",
+  "rollbackPercentage": 0
+}
+
+### ========================================
+### 8. MONITORING & HEALTH CHECKS
+### ========================================
+
+### Health Check
+GET {{apiBase}}/healthz
+
+### API Health Check
+GET {{apiBase}}/api/v1/monitoring/health
+
+### Get All Routes
+GET {{apiBase}}/api/v1/monitoring/routes
+
+### ========================================
+### 9. PERFORMANCE TESTING
+### ========================================
+
+### Load Test Recommendations
+GET {{apiBase}}/api/v1/ai-recommendations?limit=20
+Authorization: Bearer {{token}}
+X-Load-Test: true
+
+### Load Test Analytics
+GET {{apiBase}}/api/v1/advanced-analytics/dashboard?timeRange=day
+Authorization: Bearer {{token}}
+X-Load-Test: true
+
+### Load Test Personalization
+GET {{apiBase}}/api/v1/personalization/content-feed?limit=10
+Authorization: Bearer {{token}}
+X-Load-Test: true
+
+### Load Test Fraud Detection
+GET {{apiBase}}/api/v1/fraud-detection/risk-score/{{userId}}
+Authorization: Bearer {{token}}
+X-Load-Test: true
+
+### ========================================
+### 10. ERROR TESTING
+### ========================================
+
+### Test Invalid Token
+GET {{apiBase}}/api/v1/ai-recommendations
+Authorization: Bearer invalid_token
+
+### Test Missing Parameters
+POST {{apiBase}}/api/v1/ml-optimization/ab-test/create
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Test"
+}
+
+### Test Rate Limiting
+GET {{apiBase}}/api/v1/ai-recommendations
+Authorization: Bearer {{token}}
+X-Rate-Limit-Test: true
+
+### ========================================
+### 11. DATA VALIDATION TESTS
+### ========================================
+
+### Test Schema Validation
+POST {{apiBase}}/api/v1/ai-recommendations/feedback
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "contentId": "test",
+  "contentType": "invalid_type",
+  "action": "invalid_action"
+}
+
+### Test Input Sanitization
+POST {{apiBase}}/api/v1/personalization/feedback
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "personalizationType": "<script>alert('xss')</script>",
+  "rating": 999,
+  "feedback": "'; DROP TABLE users; --"
+}
+
+### ========================================
+### 12. INTEGRATION TESTS
+### ========================================
+
+### Full User Journey Test
+# 1. Get recommendations
+GET {{apiBase}}/api/v1/ai-recommendations?limit=5
+Authorization: Bearer {{token}}
+
+# 2. Provide feedback
+POST {{apiBase}}/api/v1/ai-recommendations/feedback
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "contentId": "content_from_step_1",
+  "contentType": "video",
+  "action": "like",
+  "watchTime": 120,
+  "rating": 5
+}
+
+# 3. Get personalized UI
+GET {{apiBase}}/api/v1/personalization/ui?sessionId={{sessionId}}&currentPage=home
+Authorization: Bearer {{token}}
+
+# 4. Get personalized pricing
+POST {{apiBase}}/api/v1/personalization/pricing
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "productId": "premium_subscription",
+  "basePrice": 29.99
+}
+
+### ========================================
+### 13. ADMIN PANEL TESTS
+### ========================================
+
+### Test Recommendations Admin
+GET {{apiBase}}/api/v1/admin/recommendations?userId={{userId}}
+Authorization: Bearer {{token}}
+
+### Test Analytics Admin
+GET {{apiBase}}/api/v1/admin/analytics/advanced?timeRange=7d
+Authorization: Bearer {{token}}
+
+### Test ML Experiments Admin
+GET {{apiBase}}/api/v1/admin/ml/experiments
+Authorization: Bearer {{token}}
+
+### Test Fraud Admin
+GET {{apiBase}}/api/v1/admin/fraud/alerts
+Authorization: Bearer {{token}}
+
+### ========================================
+### 14. CACHE TESTING
+### ========================================
+
+### Test Cache Hit
+GET {{apiBase}}/api/v1/ai-recommendations?limit=20
+Authorization: Bearer {{token}}
+
+### Test Cache Miss (after TTL)
+GET {{apiBase}}/api/v1/ai-recommendations?limit=20&force_refresh=true
+Authorization: Bearer {{token}}
+
+### ========================================
+### 15. SECURITY TESTS
+### ========================================
+
+### Test SQL Injection
+GET {{apiBase}}/api/v1/ai-recommendations?userId=1'; DROP TABLE users; --
+Authorization: Bearer {{token}}
+
+### Test XSS
+POST {{apiBase}}/api/v1/personalization/feedback
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "personalizationType": "content_feed",
+  "rating": 5,
+  "feedback": "<script>alert('XSS')</script>"
+}
+
+### Test CSRF
+POST {{apiBase}}/api/v1/ml-optimization/ab-test/create
+Authorization: Bearer {{token}}
+Content-Type: application/json
+X-CSRF-Token: invalid_token
+
+{
+  "name": "CSRF Test",
+  "description": "Test CSRF protection"
+}
+
+### ========================================
+### 16. BOUNDARY TESTS
+### ========================================
+
+### Test Maximum Limit
+GET {{apiBase}}/api/v1/ai-recommendations?limit=1000
+Authorization: Bearer {{token}}
+
+### Test Minimum Limit
+GET {{apiBase}}/api/v1/ai-recommendations?limit=0
+Authorization: Bearer {{token}}
+
+### Test Invalid Time Range
+GET {{apiBase}}/api/v1/advanced-analytics/dashboard?timeRange=invalid
+Authorization: Bearer {{token}}
+
+### Test Invalid Granularity
+GET {{apiBase}}/api/v1/advanced-analytics/dashboard?granularity=invalid
+Authorization: Bearer {{token}}
+
+### ========================================
+### 17. CONCURRENT TESTING
+### ========================================
+
+### Concurrent Recommendations (5 requests)
+GET {{apiBase}}/api/v1/ai-recommendations?limit=20
+Authorization: Bearer {{token}}
+
+###
+GET {{apiBase}}/api/v1/ai-recommendations?limit=20
+Authorization: Bearer {{token}}
+
+###
+GET {{apiBase}}/api/v1/ai-recommendations?limit=20
+Authorization: Bearer {{token}}
+
+###
+GET {{apiBase}}/api/v1/ai-recommendations?limit=20
+Authorization: Bearer {{token}}
+
+###
+GET {{apiBase}}/api/v1/ai-recommendations?limit=20
+Authorization: Bearer {{token}}
+
+### ========================================
+### 18. END-TO-END TESTS
+### ========================================
+
+### Complete AI/ML Workflow Test
+# 1. Create A/B test
+POST {{apiBase}}/api/v1/ml-optimization/ab-test/create
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "E2E Test",
+  "description": "End-to-end test",
+  "hypothesis": "Test hypothesis",
+  "variants": [
+    {"variantId": "control", "name": "Control", "weight": 0.5, "config": {}},
+    {"variantId": "treatment", "name": "Treatment", "weight": 0.5, "config": {}}
+  ],
+  "targetAudience": {},
+  "metrics": [
+    {"metricName": "test_metric", "metricType": "engagement", "isPrimary": true}
+  ],
+  "duration": 1,
+  "isActive": true
+}
+
+# 2. Start the test
+POST {{apiBase}}/api/v1/ml-optimization/ab-test/{{testId}}/start
+Authorization: Bearer {{token}}
+
+# 3. Assign user to variant
+POST {{apiBase}}/api/v1/ml-optimization/ab-test/assign
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "testId": "{{testId}}"
+}
+
+# 4. Record conversion
+POST {{apiBase}}/api/v1/ml-optimization/ab-test/conversion
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "testId": "{{testId}}",
+  "metricName": "test_metric",
+  "value": 1
+}
+
+# 5. Get results
+GET {{apiBase}}/api/v1/ml-optimization/ab-test/{{testId}}/results
+Authorization: Bearer {{token}}
+
+### ========================================
+### NOTES
+### ========================================
+
+# 1. Replace {{token}} with actual token from login response
+# 2. Replace {{userId}} with actual user ID
+# 3. Replace {{sessionId}} with actual session ID
+# 4. Replace {{testId}} with actual test ID from create response
+# 5. Adjust API base URL for your environment
+# 6. Some endpoints require admin privileges
+# 7. Rate limiting may apply to some endpoints
+# 8. Cache TTL varies by endpoint (5 min for recs, 1 min for personalization)
+# 9. All responses should include app_id, request_id, and proper error handling
+# 10. Performance targets: <200ms p95 for recommendations, <150ms p95 for fraud detection
+

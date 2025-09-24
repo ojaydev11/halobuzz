@@ -31,6 +31,13 @@ export interface IUser extends Document {
   kycStatus: 'pending' | 'verified' | 'rejected';
   ageVerified: boolean;
   totpSecret?: string;
+  mfaEnabled?: boolean;
+  backupCodes?: Array<{
+    code: string;
+    used: boolean;
+    createdAt: Date;
+    usedAt?: Date;
+  }>;
   boundDevices?: string[];
   kycDocuments?: {
     idCard?: string;
@@ -67,6 +74,17 @@ export interface IUser extends Document {
     };
   };
   deviceTokens: string[];
+  notificationPreferences?: {
+    pushEnabled: boolean;
+    streamNotifications: boolean;
+    giftNotifications: boolean;
+    followNotifications: boolean;
+    messageNotifications: boolean;
+    achievementNotifications: boolean;
+    systemNotifications: boolean;
+    soundEnabled: boolean;
+    vibrateEnabled: boolean;
+  };
   trust: {
     score: number;
     level: 'low' | 'medium' | 'high' | 'verified';
@@ -247,6 +265,16 @@ const userSchema = new Schema<IUser>({
     type: String,
     default: null
   },
+  mfaEnabled: {
+    type: Boolean,
+    default: false
+  },
+  backupCodes: [{
+    code: String,
+    used: { type: Boolean, default: false },
+    createdAt: { type: Date, default: Date.now },
+    usedAt: Date
+  }],
   boundDevices: [{
     type: String,
     default: []
@@ -293,6 +321,17 @@ const userSchema = new Schema<IUser>({
     type: String,
     default: []
   }],
+  notificationPreferences: {
+    pushEnabled: { type: Boolean, default: true },
+    streamNotifications: { type: Boolean, default: true },
+    giftNotifications: { type: Boolean, default: true },
+    followNotifications: { type: Boolean, default: true },
+    messageNotifications: { type: Boolean, default: true },
+    achievementNotifications: { type: Boolean, default: true },
+    systemNotifications: { type: Boolean, default: true },
+    soundEnabled: { type: Boolean, default: true },
+    vibrateEnabled: { type: Boolean, default: true }
+  },
   trust: {
     score: { type: Number, default: 0, min: 0, max: 100 },
     level: { 

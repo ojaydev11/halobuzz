@@ -29,7 +29,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       NSLocationWhenInUseUsageDescription: "Location access helps you discover local streams and events.",
       NSContactsUsageDescription: "Contact access helps you find friends who are already on HaloBuzz.",
       ITSAppUsesNonExemptEncryption: false,
-      UIBackgroundModes: ["audio", "voip"],
+      UIBackgroundModes: ["audio", "voip", "background-processing"],
       NSAppTransportSecurity: {
         NSAllowsArbitraryLoads: false,
         NSExceptionDomains: {
@@ -61,7 +61,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       "android.permission.READ_CONTACTS",
       "android.permission.WAKE_LOCK",
       "android.permission.FOREGROUND_SERVICE",
-      "android.permission.VIBRATE"
+      "android.permission.VIBRATE",
+      "android.permission.POST_NOTIFICATIONS",
+      "android.permission.RECEIVE_BOOT_COMPLETED"
     ],
     intentFilters: [
       {
@@ -94,6 +96,15 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   plugins: [
     "expo-router",
-    "expo-font"
+    "expo-font",
+    [
+      "expo-notifications",
+      {
+        icon: "./assets/notification-icon.png",
+        color: "#ffffff",
+        sounds: ["./assets/notification-sound.wav"],
+        mode: "production"
+      }
+    ]
   ]
 });

@@ -73,6 +73,16 @@ import {
   securityHeaders,
   sanitizeInput
 } from '@/middleware/security';
+import {
+  enhancedAuthMiddleware,
+  securityHeaders as enhancedSecurityHeaders,
+  validateInput,
+  securityMonitoring,
+  createRateLimit,
+  requireAdmin,
+  requireSuperAdmin,
+  requireMFA
+} from '@/middleware/enhancedSecurity';
 
 // Import routes
 import authRoutes from '@/routes/auth';
@@ -96,6 +106,17 @@ import configRoutes from '@/routes/config';
 import kycRoutes from '@/routes/kyc';
 import monitoringRoutes from '@/routes/monitoring';
 import securityRoutes from '@/routes/security';
+import mfaRoutes from '@/routes/mfa';
+import notificationRoutes from '@/routes/notifications';
+import viralGrowthRoutes from '@/routes/viral-growth';
+import trustCredibilityRoutes from '@/routes/trust-credibility';
+import revenueOptimizationRoutes from '@/routes/revenue-optimization';
+// Temporarily disabled AI/ML services for deployment
+// import aiRecommendationRoutes from '@/routes/ai-recommendations';
+// import advancedAnalyticsRoutes from '@/routes/advanced-analytics';
+// import mlOptimizationRoutes from '@/routes/ml-optimization';
+// import realTimePersonalizationRoutes from '@/routes/real-time-personalization';
+// import advancedFraudDetectionRoutes from '@/routes/advanced-fraud-detection';
 import agoraRoutes from '@/routes/agora';
 import aiContentStudioRoutes from '@/routes/aiContentStudio';
 
@@ -200,11 +221,14 @@ app.use(cors({
 // Global rate limiting
 app.use(globalLimiter);
 
-// Input sanitization
-app.use(sanitizeInput);
+// Enhanced input validation and sanitization
+app.use(validateInput);
 
 // Device fingerprinting
 app.use(deviceFingerprint);
+
+// Enhanced security monitoring
+app.use(securityMonitoring);
 
 // Metrics collection middleware
 app.use(metricsMiddleware);
@@ -307,6 +331,17 @@ import { adminOnly } from '@/middleware/admin';
 app.use(`/api/${apiVersion}/admin`, authMiddleware, adminOnly, adminRoutes);
 app.use(`/api/${apiVersion}/monitoring`, monitoringRoutes);
 app.use(`/api/${apiVersion}/security`, securityRoutes);
+app.use(`/api/${apiVersion}/mfa`, mfaRoutes);
+app.use(`/api/${apiVersion}/notifications`, authMiddleware, notificationRoutes);
+app.use(`/api/${apiVersion}/viral`, authMiddleware, viralGrowthRoutes);
+app.use(`/api/${apiVersion}/trust`, authMiddleware, trustCredibilityRoutes);
+app.use(`/api/${apiVersion}/revenue`, authMiddleware, revenueOptimizationRoutes);
+// Temporarily disabled AI/ML services for deployment
+// app.use(`/api/${apiVersion}/ai-recommendations`, authMiddleware, aiRecommendationRoutes);
+// app.use(`/api/${apiVersion}/advanced-analytics`, authMiddleware, advancedAnalyticsRoutes);
+// app.use(`/api/${apiVersion}/ml-optimization`, authMiddleware, mlOptimizationRoutes);
+// app.use(`/api/${apiVersion}/personalization`, authMiddleware, realTimePersonalizationRoutes);
+// app.use(`/api/${apiVersion}/fraud-detection`, authMiddleware, advancedFraudDetectionRoutes);
 app.use(`/api/${apiVersion}/agora`, authMiddleware, agoraRoutes);
 
 // New creator economy routes
@@ -415,6 +450,16 @@ const startServer = async () => {
     } catch (error) {
       logger.warn('Feature flags initialization failed:', error instanceof Error ? error.message : String(error));
       logger.warn('Continuing with default feature flags');
+    }
+
+    // Initialize security audit service
+    try {
+      const { SecurityAuditService } = await import('@/services/SecurityAuditService');
+      SecurityAuditService.scheduleSecurityAudits();
+      logger.info('Security audit service initialized successfully');
+    } catch (error) {
+      logger.warn('Security audit service initialization failed:', error instanceof Error ? error.message : String(error));
+      logger.warn('Continuing without automated security audits');
     }
 
     // Setup Socket.IO with Redis adapter for multi-instance scaling (with fallback)
