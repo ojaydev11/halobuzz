@@ -88,7 +88,7 @@ router.get('/personalization/content-feed',
   validateInput,
   async (req: AuthenticatedRequest, res: Response) => {
     try {
-      const { sessionId, currentPage, limit = 20 } = req.query as ContentFeedRequest;
+      const { sessionId, currentPage, limit = 20 } = req.query as unknown as ContentFeedRequest;
       const userId = req.user?.userId;
 
       if (!userId) {
@@ -99,11 +99,10 @@ router.get('/personalization/content-feed',
       }
 
       const service = await initializeService();
-      const personalizedFeed = await service.getPersonalizedContentFeed(
+      const personalizedFeed = await service.personalizeContentFeed(
         userId,
         sessionId,
-        currentPage,
-        limit
+        currentPage
       );
 
       return res.json({
@@ -130,7 +129,7 @@ router.get('/personalization/ui-config',
   validateInput,
   async (req: AuthenticatedRequest, res: Response) => {
     try {
-      const { sessionId, currentPage } = req.query as UIPersonalizationRequest;
+      const { sessionId, currentPage } = req.query as unknown as UIPersonalizationRequest;
       const userId = req.user?.userId;
 
       if (!userId) {
@@ -181,7 +180,7 @@ router.get('/personalization/notifications',
       }
 
       const service = await initializeService();
-      const notifications = await service.getPersonalizedNotifications(userId, limit);
+      const notifications = await service.personalizeNotifications(userId);
 
       return res.json({
         success: true,
@@ -218,7 +217,7 @@ router.post('/personalization/pricing',
       }
 
       const service = await initializeService();
-      const personalizedPricing = await service.getPersonalizedPricing(
+      const personalizedPricing = await service.personalizePricing(
         userId,
         productId,
         basePrice
@@ -361,7 +360,7 @@ router.get('/personalization/analytics',
   async (req: AuthenticatedRequest, res: Response) => {
     try {
       const service = await initializeService();
-      const analytics = await service.getPersonalizationAnalytics();
+      const analytics = await service.getPersonalizationMetrics();
 
       return res.json({
         success: true,

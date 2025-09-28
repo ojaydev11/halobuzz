@@ -63,7 +63,7 @@ router.get('/opportunities', async (req: AuthenticatedRequest, res: Response) =>
       });
     }
 
-    const opportunities = await revenueOptimizationService.getMonetizationOpportunities(userId);
+    const opportunities = await revenueOptimizationService.identifyMonetizationOpportunities(userId);
 
     return res.json({
       success: true,
@@ -90,7 +90,7 @@ router.get('/offers/personalized', async (req: AuthenticatedRequest, res: Respon
       });
     }
 
-    const offers = await revenueOptimizationService.getPersonalizedOffers(userId);
+    const offers = await revenueOptimizationService.generatePersonalizedOffers(userId);
 
     return res.json({
       success: true,
@@ -192,11 +192,7 @@ router.post('/pricing/optimize', async (req: AuthenticatedRequest, res: Response
   try {
     const { productId, optimizationType, parameters } = req.body;
 
-    const optimization = await revenueOptimizationService.optimizePricing(
-      productId,
-      optimizationType,
-      parameters
-    );
+    const optimization = await revenueOptimizationService.optimizePricingTiers();
 
     return res.json({
       success: true,

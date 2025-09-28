@@ -32,8 +32,8 @@ describe('ReportGeneratorService', () => {
         {
           metric: 'Total Revenue',
           direction: 'up' as const,
-          magnitude: 10,
-          confidence: 'high',
+          magnitude: 10 as number,
+          confidence: 'high' as string,
           description: 'Revenue increased by 10%'
         }
       ]

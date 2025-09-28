@@ -260,7 +260,7 @@ router.get('/verification/status', async (req: AuthenticatedRequest, res: Respon
 // Get trust leaderboard
 router.get('/leaderboard', async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const { limit = 50, category = 'overall' } = req.query as {
+    const { limit = 50, category = 'overall' } = req.query as unknown as {
       limit: number;
       category: string;
     };

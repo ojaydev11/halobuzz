@@ -249,3 +249,21 @@ export const requestLogger = (req: Request, res: Response, next: NextFunction) =
   
   next();
 };
+
+/**
+ * GDPR Compliance Middleware
+ * Handles GDPR compliance requirements
+ */
+export const gdprCompliance = (req: Request, res: Response, next: NextFunction) => {
+  // GDPR compliance middleware - placeholder implementation
+  next();
+};
+
+/**
+ * Search Rate Limiter Middleware
+ * Rate limits search requests
+ */
+export const searchLimiter = (req: Request, res: Response, next: NextFunction) => {
+  // Search rate limiting - placeholder implementation
+  next();
+};
