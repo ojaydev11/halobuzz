@@ -502,7 +502,7 @@ export class AIHyperPersonalizationEngine extends EventEmitter {
     }, {} as { [hour: number]: number });
 
     const activeHours = Object.entries(hourCounts)
-      .sort(([,a], [,b]) => b - a)
+      .sort(([,a], [,b]) => (b as number) - (a as number))
       .slice(0, 3)
       .map(([hour]) => parseInt(hour));
 
@@ -863,7 +863,7 @@ export class AIHyperPersonalizationEngine extends EventEmitter {
               '🌟 Exclusive VIP Offer - Limited Time!' :
               '💎 Special Deal Just for You!',
             coinPackage: this.selectOptimalCoinPackage(profile),
-            discount: profile.spendingPsychology.priceS sensitivity > 0.6 ? 25 : 15,
+            discount: profile.spendingPsychology.pricesensitivity > 0.6 ? 25 : 15,
             urgency: profile.spendingPsychology.urgencyResponsive > 0.5
           },
           timing: new Date(),
@@ -906,7 +906,7 @@ export class AIHyperPersonalizationEngine extends EventEmitter {
     } else if (profile.spendingPsychology.spendingTier === 'dolphin') {
       return 'premium_pack';
     } else {
-      return profile.spendingPsychology.priceS sensitivity > 0.7 ? 'basic_pack' : 'popular_pack';
+      return profile.spendingPsychology.pricesensitivity > 0.7 ? 'basic_pack' : 'popular_pack';
     }
   }
 
@@ -1134,7 +1134,7 @@ export class AIHyperPersonalizationEngine extends EventEmitter {
     const senderActiveHours = new Set(senderProfile.behaviorPatterns.dailyActiveHours);
     const recipientActiveHours = new Set(recipientProfile.behaviorPatterns.dailyActiveHours);
 
-    const overlappingHours = [...senderActiveHours].filter(hour => recipientActiveHours.has(hour));
+    const overlappingHours = Array.from(senderActiveHours).filter(hour => recipientActiveHours.has(hour));
     const optimalHour = overlappingHours[0] || senderProfile.behaviorPatterns.dailyActiveHours[0];
 
     const timing = new Date();
@@ -1215,7 +1215,7 @@ export class AIHyperPersonalizationEngine extends EventEmitter {
   }
 
   private async refreshExpiredRecommendations(): Promise<void> {
-    for (const [userId, recommendations] of this.recommendations.entries()) {
+    for (const [userId, recommendations] of Array.from(this.recommendations.entries())) {
       const validRecommendations = recommendations.filter(rec => rec.expiresAt > new Date());
 
       if (validRecommendations.length < recommendations.length / 2) {
@@ -1227,7 +1227,7 @@ export class AIHyperPersonalizationEngine extends EventEmitter {
   }
 
   private async updateEmotionalStates(): Promise<void> {
-    for (const profile of this.userProfiles.values()) {
+    for (const profile of Array.from(this.userProfiles.values())) {
       // Decay emotional states over time (return to neutral)
       profile.emotionalState.engagementLevel *= 0.9;
       profile.emotionalState.stressLevel *= 0.8;
