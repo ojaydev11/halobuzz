@@ -197,7 +197,7 @@ class GiftTransactionService {
       // Check cache first
       const cachedBalance = await getCache(`balance:${userId}`);
       if (cachedBalance) {
-        return cachedBalance;
+        return cachedBalance as UserBalance;
       }
 
       // Default balance if not found
@@ -290,7 +290,7 @@ class GiftTransactionService {
       // Check cache first
       const cachedTransaction = await getCache(`transaction:${transactionId}`);
       if (cachedTransaction) {
-        return cachedTransaction;
+        return cachedTransaction as GiftTransaction;
       }
 
       // Check active transactions

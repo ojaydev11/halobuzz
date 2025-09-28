@@ -47,7 +47,7 @@ export default async function trustCredibilityRoutes(fastify: FastifyInstance) {
       const userId = request.user?.userId;
 
       if (!userId) {
-        return reply.status(401).json({
+        return reply.status(401).send({
           success: false,
           error: 'Authentication required'
         });
@@ -55,13 +55,13 @@ export default async function trustCredibilityRoutes(fastify: FastifyInstance) {
 
       const trustMetrics = await trustCredibilityService.calculateTrustScore(userId);
 
-      return reply.json({
+      return reply.send({
         success: true,
         data: trustMetrics
       });
     } catch (error) {
       logger.error('Failed to get trust score:', error);
-      return reply.status(500).json({
+      return reply.status(500).send({
         success: false,
         error: 'Failed to get trust score'
       });
@@ -100,7 +100,7 @@ export default async function trustCredibilityRoutes(fastify: FastifyInstance) {
     try {
       const errors = validationResult(request);
       if (!errors.isEmpty()) {
-        return reply.status(400).json({
+        return reply.status(400).send({
           success: false,
           errors: errors.array()
         });
@@ -110,7 +110,7 @@ export default async function trustCredibilityRoutes(fastify: FastifyInstance) {
       const verificationData = request.body as any;
 
       if (!userId) {
-        return reply.status(401).json({
+        return reply.status(401).send({
           success: false,
           error: 'Authentication required'
         });
@@ -118,7 +118,7 @@ export default async function trustCredibilityRoutes(fastify: FastifyInstance) {
 
       const result = await trustCredibilityService.verifyUserIdentity(userId, verificationData);
 
-      return reply.json({
+      return reply.send({
         success: result.success,
         data: {
           verificationLevel: result.verificationLevel,
@@ -127,7 +127,7 @@ export default async function trustCredibilityRoutes(fastify: FastifyInstance) {
       });
     } catch (error) {
       logger.error('Failed to verify user identity:', error);
-      return reply.status(500).json({
+      return reply.status(500).send({
         success: false,
         error: 'Failed to verify user identity'
       });
@@ -163,7 +163,7 @@ export default async function trustCredibilityRoutes(fastify: FastifyInstance) {
       const userId = request.user?.userId;
 
       if (!userId) {
-        return reply.status(401).json({
+        return reply.status(401).send({
           success: false,
           error: 'Authentication required'
         });
@@ -171,13 +171,13 @@ export default async function trustCredibilityRoutes(fastify: FastifyInstance) {
 
       const report = await trustCredibilityService.generateTrustReport(userId);
 
-      return reply.json({
+      return reply.send({
         success: true,
         data: report
       });
     } catch (error) {
       logger.error('Failed to generate trust report:', error);
-      return reply.status(500).json({
+      return reply.status(500).send({
         success: false,
         error: 'Failed to generate trust report'
       });
@@ -206,14 +206,14 @@ export default async function trustCredibilityRoutes(fastify: FastifyInstance) {
 
       const result = await trustCredibilityService.awardTrustBadge(userId, badgeId);
 
-      return reply.json({
+      return reply.send({
         success: result.success,
         data: result.badge,
         message: result.message
       });
     } catch (error) {
       logger.error('Failed to award trust badge:', error);
-      return reply.status(500).json({
+      return reply.status(500).send({
         success: false,
         error: 'Failed to award trust badge'
       });
@@ -292,13 +292,13 @@ export default async function trustCredibilityRoutes(fastify: FastifyInstance) {
         }
       ];
 
-      return reply.json({
+      return reply.send({
         success: true,
         data: badges
       });
     } catch (error) {
       logger.error('Failed to get trust badges:', error);
-      return reply.status(500).json({
+      return reply.status(500).send({
         success: false,
         error: 'Failed to get trust badges'
       });
@@ -330,13 +330,13 @@ export default async function trustCredibilityRoutes(fastify: FastifyInstance) {
     try {
       const dashboard = await trustCredibilityService.createTransparencyDashboard();
 
-      return reply.json({
+      return reply.send({
         success: true,
         data: dashboard
       });
     } catch (error) {
       logger.error('Failed to get transparency dashboard:', error);
-      return reply.status(500).json({
+      return reply.status(500).send({
         success: false,
         error: 'Failed to get transparency dashboard'
       });
@@ -378,7 +378,7 @@ export default async function trustCredibilityRoutes(fastify: FastifyInstance) {
       const { recoveryPlan } = request.body as { recoveryPlan: any };
 
       if (!userId) {
-        return reply.status(401).json({
+        return reply.status(401).send({
           success: false,
           error: 'Authentication required'
         });
@@ -386,7 +386,7 @@ export default async function trustCredibilityRoutes(fastify: FastifyInstance) {
 
       const result = await trustCredibilityService.implementReputationRecovery(userId, recoveryPlan);
 
-      return reply.json({
+      return reply.send({
         success: result.success,
         data: {
           recoveryId: result.recoveryId,
@@ -396,7 +396,7 @@ export default async function trustCredibilityRoutes(fastify: FastifyInstance) {
       });
     } catch (error) {
       logger.error('Failed to implement reputation recovery:', error);
-      return reply.status(500).json({
+      return reply.status(500).send({
         success: false,
         error: 'Failed to implement reputation recovery'
       });
@@ -434,7 +434,7 @@ export default async function trustCredibilityRoutes(fastify: FastifyInstance) {
       const userId = request.user?.userId;
 
       if (!userId) {
-        return reply.status(401).json({
+        return reply.status(401).send({
           success: false,
           error: 'Authentication required'
         });
@@ -442,13 +442,13 @@ export default async function trustCredibilityRoutes(fastify: FastifyInstance) {
 
       const trustMetrics = await trustCredibilityService.calculateTrustScore(userId);
 
-      return reply.json({
+      return reply.send({
         success: true,
         data: trustMetrics.verificationStatus
       });
     } catch (error) {
       logger.error('Failed to get verification status:', error);
-      return reply.status(500).json({
+      return reply.status(500).send({
         success: false,
         error: 'Failed to get verification status'
       });
@@ -493,7 +493,7 @@ export default async function trustCredibilityRoutes(fastify: FastifyInstance) {
         }
       ];
 
-      return reply.json({
+      return reply.send({
         success: true,
         data: {
           category,
@@ -503,7 +503,7 @@ export default async function trustCredibilityRoutes(fastify: FastifyInstance) {
       });
     } catch (error) {
       logger.error('Failed to get trust leaderboard:', error);
-      return reply.status(500).json({
+      return reply.status(500).send({
         success: false,
         error: 'Failed to get trust leaderboard'
       });

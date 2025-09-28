@@ -609,7 +609,7 @@ export class RevenueOptimizationService {
 
   private calculatePricingConfidence(multipliers: any): number {
     // Higher confidence when multipliers are closer to 1.0
-    const variance = Object.values(multipliers).reduce((sum: number, val: any) => {
+    const variance = (Object.values(multipliers) as any[]).reduce((sum: number, val: any) => {
       const numVal = typeof val === 'number' ? val : Number(val);
       return sum + Math.pow(numVal - 1.0, 2);
     }, 0) / Object.keys(multipliers).length;

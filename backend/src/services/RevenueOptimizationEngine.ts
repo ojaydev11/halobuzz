@@ -1210,7 +1210,7 @@ class RevenueOptimizationEngine extends EventEmitter {
 
   private calculatePricingConfidence(factors: any): number {
     // Calculate confidence based on data quality and factor certainty
-    const factor_certainty = Object.values(factors).reduce((sum: number, val: any) => {
+    const factor_certainty = (Object.values(factors) as any[]).reduce((sum: number, val: any) => {
       const numVal = typeof val === 'number' ? val : Number(val);
       return sum + (typeof numVal === 'number' && !isNaN(numVal) ? Math.min(1, Math.abs(numVal)) : 0.5);
     }, 0) / Object.keys(factors).length;

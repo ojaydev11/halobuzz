@@ -1,5 +1,5 @@
 import { Model, Document } from 'mongoose';
-import { AnalyticsEvent } from '../analytics/models/AnalyticsEvent';
+import { AnalyticsEvent, IAnalyticsEvent } from '../analytics/models/AnalyticsEvent';
 import { User, IUser } from '../models/User';
 import { LiveStream, ILiveStream } from '../models/LiveStream';
 import { ShortVideo, IShortVideo } from '../models/ShortVideo';
@@ -135,7 +135,7 @@ interface PersonalizationMetrics {
 
 export class RealTimePersonalizationService {
   private readonly logger = logger;
-  private analyticsEventModel: Model<AnalyticsEvent>;
+  private analyticsEventModel: Model<IAnalyticsEvent>;
   private userModel: Model<IUser>;
   private liveStreamModel: Model<ILiveStream>;
   private shortVideoModel: Model<IShortVideo>;

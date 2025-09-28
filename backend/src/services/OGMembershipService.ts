@@ -782,7 +782,7 @@ export class OGMembershipService extends EventEmitter {
       tier: tx.metadata?.ogTier || 0,
       startDate: tx.createdAt,
       paymentAmount: tx.amount,
-      paymentType: tx.paymentMethod || 'monthly'
+      paymentType: (tx.paymentMethod || 'monthly') as 'monthly' | 'yearly'
     }));
 
     return membership;

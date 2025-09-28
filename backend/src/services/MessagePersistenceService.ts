@@ -156,7 +156,7 @@ class MessagePersistenceService {
         return [];
       }
       
-      return offlineData.messages || [];
+      return (offlineData as any).messages || [];
       
     } catch (error) {
       logger.error('Error getting offline messages:', error);

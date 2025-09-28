@@ -852,7 +852,7 @@ export class GamificationAddictionEngine extends EventEmitter {
       lastUpdated: new Date(),
       
       // Missing properties that the code expects
-      engagementLevel: aiProfile.behaviorPatterns.engagementLevel || 50,
+      engagementLevel: 50, // Default value
       addictionRisk: 0.5, // Will be calculated later
       lastActive: new Date(),
       dailyTriggers: 0,

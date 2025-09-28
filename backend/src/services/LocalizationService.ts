@@ -232,7 +232,7 @@ class LocalizationService {
   async getLocaleConfig(localeCode: string): Promise<LocaleConfig | null> {
     try {
       // Check cache first
-      const cached = await getCache(`locale:${localeCode}`);
+      const cached = await getCache(`locale:${localeCode}`) as LocaleConfig;
       if (cached) {
         return cached;
       }
