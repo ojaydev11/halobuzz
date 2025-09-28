@@ -4,7 +4,7 @@
 import { EventEmitter } from 'events';
 import { Logger } from '../utils/logger';
 import { PerformanceMonitor } from '../utils/performanceMonitor';
-// import WebSocket from 'ws'; // Commented out for now
+import WebSocket from 'ws';
 import { Worker } from 'worker_threads';
 
 interface LoadTestConfig {
@@ -515,16 +515,7 @@ export class LoadTestRunner extends EventEmitter {
           sequence: user.requestCount + 1
         });
 
-        user.websocket!.send(message, (error) => {
-          if (error) {
-            this.testResults.failedRequests++;
-            reject(error);
-          } else {
-            this.testResults.successfulRequests++;
-            this.testResults.totalRequests++;
-            resolve();
-          }
-        });
+        user.websocket!.send(message);
 
       } catch (error) {
         this.testResults.failedRequests++;

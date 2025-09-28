@@ -1,23 +1,21 @@
-import { FastifyInstance } from 'fastify';
+import { Express } from 'express';
 import { build } from '../app';
 import { connectDatabase, disconnectDatabase } from '../config/database';
 import { AnalyticsDailyKPI } from '../analytics/models/AnalyticsDailyKPI';
 import { AnalyticsAlert } from '../analytics/models/AnalyticsAlert';
-import { AnalyticsReport } from '../analytics/models/AnalyticsReport';
 import { AnalyticsForecast } from '../analytics/models/AnalyticsForecast';
 import { AnalyticsSimulation } from '../analytics/models/AnalyticsSimulation';
 
 describe('Business AI End-to-End Tests', () => {
-  let app: FastifyInstance;
+  let app: Express;
   let authToken: string;
 
   beforeAll(async () => {
     // Connect to test database
-    await connectDatabase(process.env.MONGODB_TEST_URI || 'mongodb://localhost:27017/test_halobuzz_analytics');
+    await connectDatabase();
     
     // Build the application
-    app = build({ logger: false });
-    await app.ready();
+    app = build();
 
     // Mock authentication token
     authToken = 'Bearer mock-admin-token';

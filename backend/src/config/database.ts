@@ -62,3 +62,6 @@ export const disconnectDatabase = async (): Promise<void> => {
     throw error;
   }
 };
+
+// Alias for backward compatibility
+export const connectDB = connectDatabase;

@@ -30,7 +30,11 @@ async function cleanupTestResources() {
     
     // Clear any timers
     if (global.clearTimeout) {
-      global.clearTimeout();
+      // Clear all timeouts
+      const highestTimeoutId = setTimeout(() => {}, 0);
+      for (let i = 0; i < highestTimeoutId; i++) {
+        clearTimeout(i);
+      }
     }
     
     logger.info('Test resources cleaned up');
