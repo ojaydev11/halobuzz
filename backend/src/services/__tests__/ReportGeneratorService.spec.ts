@@ -31,8 +31,8 @@ describe('ReportGeneratorService', () => {
       insights: [
         {
           metric: 'Total Revenue',
-          direction: 'increase',
-          magnitude: 10,
+          direction: 'up' as const,
+          magnitude: ['10%'],
           confidence: 'high',
           description: 'Revenue increased by 10%'
         }
@@ -272,7 +272,7 @@ describe('ReportGeneratorService', () => {
       expect(metadata).toHaveProperty('filename');
       expect(metadata.filename).toContain('daily');
       expect(metadata.filename).toContain('ALL');
-      expect(metadata.filename).toEndWith('.pdf');
+      expect(metadata.filename).toMatch(/\.pdf$/);
     });
 
     it('should return report metadata for XLSX format', () => {
@@ -283,7 +283,7 @@ describe('ReportGeneratorService', () => {
       expect(metadata).toHaveProperty('filename');
       expect(metadata.filename).toContain('weekly');
       expect(metadata.filename).toContain('NP');
-      expect(metadata.filename).toEndWith('.xlsx');
+      expect(metadata.filename).toMatch(/\.xlsx$/);
     });
 
     it('should include timestamp in filename', () => {

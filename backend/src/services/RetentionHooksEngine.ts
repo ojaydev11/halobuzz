@@ -405,7 +405,7 @@ class RetentionHooksEngine extends EventEmitter {
         id: 'monthly_legend_quest',
         name: 'Monthly Legend Quest',
         type: 'monthly',
-        category: 'milestone',
+        category: 'achievement',
         trigger: {
           condition: 'month_start',
           timeWindow: 43200, // 1 month

@@ -116,13 +116,15 @@ export class OfflineExportService {
       // Generate PDF report
       const pdfBuffer = await this.reportGenerator.generateReport({
         ...reportOptions,
-        format: 'pdf'
+        format: 'pdf' as const,
+        period: reportOptions.period as 'daily' | 'weekly' | 'monthly' | 'custom'
       });
 
       // Generate XLSX report
       const xlsxBuffer = await this.reportGenerator.generateReport({
         ...reportOptions,
-        format: 'xlsx'
+        format: 'xlsx' as const,
+        period: reportOptions.period as 'daily' | 'weekly' | 'monthly' | 'custom'
       });
 
       // Save files

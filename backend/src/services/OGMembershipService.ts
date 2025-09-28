@@ -749,7 +749,7 @@ export class OGMembershipService extends EventEmitter {
     const membership: UserMembership = {
       userId,
       currentTier: wallet?.ogLevel || 0,
-      memberSince: wallet?.createdAt || new Date(),
+      memberSince: new Date(), // Default to current date since createdAt is not available
       nextBillingDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
       isActive: (wallet?.ogLevel || 0) > 0,
       isAutoRenew: false,
@@ -779,10 +779,10 @@ export class OGMembershipService extends EventEmitter {
     }).sort({ createdAt: -1 });
 
     membership.membershipHistory = ogTransactions.map(tx => ({
-      tier: tx.context?.tier || 0,
+      tier: tx.metadata?.ogTier || 0,
       startDate: tx.createdAt,
       paymentAmount: tx.amount,
-      paymentType: tx.context?.paymentType || 'monthly'
+      paymentType: tx.paymentMethod || 'monthly'
     }));
 
     return membership;

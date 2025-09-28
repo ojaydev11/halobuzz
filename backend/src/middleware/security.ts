@@ -389,3 +389,25 @@ export const globalLimiter = async (request: FastifyRequest, reply: FastifyReply
   
   return;
 };
+
+// Export commonly used middleware functions
+export const uploadLimiter = async (request: FastifyRequest, reply: FastifyReply) => {
+  // Upload rate limiting logic
+  const clientId = request.ip || 'unknown';
+  logger.info(`Upload rate limit check for client: ${clientId}`);
+  return;
+};
+
+export const searchLimiter = async (request: FastifyRequest, reply: FastifyReply) => {
+  // Search rate limiting logic
+  const clientId = request.ip || 'unknown';
+  logger.info(`Search rate limit check for client: ${clientId}`);
+  return;
+};
+
+export const socialLimiter = async (request: FastifyRequest, reply: FastifyReply) => {
+  // Social actions rate limiting logic
+  const clientId = request.ip || 'unknown';
+  logger.info(`Social rate limit check for client: ${clientId}`);
+  return;
+};

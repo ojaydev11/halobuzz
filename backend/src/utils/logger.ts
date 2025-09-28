@@ -5,8 +5,8 @@
  * to resolve logger import mismatches and ensure consistent logging.
  */
 
-import winston from 'winston';
-import path from 'path';
+import * as winston from 'winston';
+import * as path from 'path';
 
 // Log levels
 const levels = {
@@ -68,6 +68,31 @@ export const requestLogger = (req: any, res: any, next: any) => {
   
   next();
 };
+
+// Logger class for compatibility
+export class Logger {
+  constructor(private context: string) {}
+
+  error(message: string, meta?: any) {
+    logger.error(`[${this.context}] ${message}`, meta);
+  }
+
+  warn(message: string, meta?: any) {
+    logger.warn(`[${this.context}] ${message}`, meta);
+  }
+
+  info(message: string, meta?: any) {
+    logger.info(`[${this.context}] ${message}`, meta);
+  }
+
+  http(message: string, meta?: any) {
+    logger.http(`[${this.context}] ${message}`, meta);
+  }
+
+  debug(message: string, meta?: any) {
+    logger.debug(`[${this.context}] ${message}`, meta);
+  }
+}
 
 // Export logger instance
 export default logger;

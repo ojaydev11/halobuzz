@@ -1,5 +1,5 @@
-import winston from 'winston';
-import path from 'path';
+import * as winston from 'winston';
+import * as path from 'path';
 
 const logLevel = process.env.LOG_LEVEL || 'info';
 const logFilePath = process.env.LOG_FILE_PATH || './logs/app.log';

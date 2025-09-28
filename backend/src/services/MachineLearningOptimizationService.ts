@@ -145,7 +145,7 @@ export class MachineLearningOptimizationService {
       };
 
       // Store A/B test configuration
-      await this.redisService.hset(`ab_test:${testId}`, {
+      await this.redisService.hmset(`ab_test:${testId}`, {
         config: JSON.stringify(abTest),
         status: 'draft',
       });
@@ -174,14 +174,14 @@ export class MachineLearningOptimizationService {
       }
 
       // Update test status
-      await this.redisService.hset(`ab_test:${testId}`, {
+      await this.redisService.hmset(`ab_test:${testId}`, {
         status: 'active',
         startedAt: new Date().toISOString(),
       });
 
       // Initialize variant tracking
       for (const variant of testConfig.variants) {
-        await this.redisService.hset(`ab_test:${testId}:variant:${variant.variantId}`, {
+        await this.redisService.hmset(`ab_test:${testId}:variant:${variant.variantId}`, {
           participants: '0',
           conversions: '0',
           metrics: JSON.stringify({}),
@@ -398,7 +398,7 @@ export class MachineLearningOptimizationService {
       };
 
       // Store model
-      await this.redisService.hset(`ml_model:${modelId}`, {
+      await this.redisService.hmset(`ml_model:${modelId}`, {
         config: JSON.stringify(model),
         status: 'ready',
       });

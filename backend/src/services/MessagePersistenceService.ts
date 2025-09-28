@@ -241,7 +241,8 @@ class MessagePersistenceService {
       }
       
       // Update channel state
-      const state = await getCache(`channel:state:${channelKey}`) || {
+      const cachedState = await getCache(`channel:state:${channelKey}`);
+      const state: ChannelState = cachedState ? JSON.parse(cachedState as string) : {
         channelId,
         channelType,
         lastMessageId: '',
@@ -275,7 +276,8 @@ class MessagePersistenceService {
       await setCache(usersKey, filteredUsers, 3600);
       
       // Update channel state
-      const state = await getCache(`channel:state:${channelKey}`) || {
+      const cachedState = await getCache(`channel:state:${channelKey}`);
+      const state: ChannelState = cachedState ? JSON.parse(cachedState as string) : {
         channelId,
         channelType,
         lastMessageId: '',

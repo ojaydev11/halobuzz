@@ -96,7 +96,12 @@ export class ReportGeneratorService {
     });
 
     // Generate narratives
-    const narratives = this.narrativeGenerator.generateNarratives(kpis, comparisonKpis);
+    const narrativeResult = this.narrativeGenerator.generateNarratives(kpis, comparisonKpis);
+    const narratives = {
+      short: narrativeResult.short,
+      long: Array.isArray(narrativeResult.long) ? narrativeResult.long.join(' ') : narrativeResult.long,
+      insights: narrativeResult.insights
+    };
 
     // Collect forecasts
     const forecasts = await AnalyticsForecast.find({

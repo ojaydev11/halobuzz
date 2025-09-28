@@ -782,7 +782,7 @@ export class LoadTestRunner extends EventEmitter {
     this.logger.info('Stopping load test...');
 
     // Mark all users as inactive
-    for (const user of this.virtualUsers.values()) {
+    for (const user of Array.from(this.virtualUsers.values())) {
       user.isActive = false;
     }
 

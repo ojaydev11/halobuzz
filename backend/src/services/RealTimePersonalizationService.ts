@@ -1,8 +1,8 @@
-import { Model } from 'mongoose';
+import { Model, Document } from 'mongoose';
 import { AnalyticsEvent } from '../analytics/models/AnalyticsEvent';
-import { User } from '../models/User';
-import { LiveStream } from '../models/LiveStream';
-import { ShortVideo } from '../models/ShortVideo';
+import { User, IUser } from '../models/User';
+import { LiveStream, ILiveStream } from '../models/LiveStream';
+import { ShortVideo, IShortVideo } from '../models/ShortVideo';
 import { logger } from '../config/logger';
 import { getCache, setCache } from '../config/redis';
 
@@ -136,9 +136,9 @@ interface PersonalizationMetrics {
 export class RealTimePersonalizationService {
   private readonly logger = logger;
   private analyticsEventModel: Model<AnalyticsEvent>;
-  private userModel: Model<User>;
-  private liveStreamModel: Model<LiveStream>;
-  private shortVideoModel: Model<ShortVideo>;
+  private userModel: Model<IUser>;
+  private liveStreamModel: Model<ILiveStream>;
+  private shortVideoModel: Model<IShortVideo>;
 
   constructor() {
     this.analyticsEventModel = AnalyticsEvent as any;
@@ -333,7 +333,7 @@ export class RealTimePersonalizationService {
         isActive: rule.isActive.toString(),
       }, 3600);
 
-      this.logger.log(`Created personalization rule: ${ruleId} - ${rule.name}`);
+      this.logger.info(`Created personalization rule: ${ruleId} - ${rule.name}`);
       
       return personalizationRule;
     } catch (error) {
