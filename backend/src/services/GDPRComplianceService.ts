@@ -142,11 +142,11 @@ class GDPRComplianceService {
   }> {
     try {
       // Check cache first
-      const cached = await getCache(`consent:${userId}:${consentType}`);
+      const cached = await getCache(`consent:${userId}:${consentType}`) as any;
       if (cached) {
         return {
           granted: cached.granted,
-          consent: cached,
+          consent: cached as ConsentRecord,
           expiresAt: cached.expiresAt
         };
       }
@@ -521,7 +521,7 @@ class GDPRComplianceService {
   async getPrivacySettings(userId: string): Promise<PrivacySettings | null> {
     try {
       // Check cache first
-      const cached = await getCache(`privacy_settings:${userId}`);
+      const cached = await getCache(`privacy_settings:${userId}`) as PrivacySettings;
       if (cached) {
         return cached;
       }

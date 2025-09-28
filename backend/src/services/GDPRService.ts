@@ -108,7 +108,7 @@ export class GDPRService {
         streams: streams.map(s => s.toJSON()),
         messages: messages.map(m => m.toJSON()),
         analytics,
-        consentHistory: user.consentHistory || [],
+        consentHistory: (user as any).consentHistory || [],
         exportDate: new Date()
       };
 
@@ -227,9 +227,9 @@ export class GDPRService {
       }
 
       return {
-        currentConsent: user.consent || {},
-        consentHistory: user.consentHistory || [],
-        lastUpdated: user.consent?.lastUpdated || null
+        currentConsent: (user as any).consent || {},
+        consentHistory: (user as any).consentHistory || [],
+        lastUpdated: (user as any).consent?.lastUpdated || null
       };
     } catch (error) {
       this.logger.error('Error getting consent status:', error);
@@ -247,7 +247,7 @@ export class GDPRService {
         return false;
       }
 
-      const consent = user.consent || {};
+      const consent = (user as any).consent || {};
       return consent[dataType] === true;
     } catch (error) {
       this.logger.error('Error validating consent:', error);

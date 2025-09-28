@@ -102,6 +102,25 @@ export interface UserAddictionProfile {
   };
 
   lastUpdated: Date;
+
+  // Missing properties that the code expects
+  engagementLevel: number;
+  addictionRisk: number;
+  lastActive: Date;
+  dailyTriggers: number;
+  streakCount: number;
+  unlockedAchievements: string[];
+  totalAchievements: number;
+  lastDailyReward: Date;
+  dailyRewardStreak: number;
+  activityHistory: Array<{
+    timestamp: Date;
+    action: string;
+    duration: number;
+  }>;
+  completedChallenges: string[];
+  level: number;
+  experience: number;
 }
 
 export interface Achievement {
@@ -440,7 +459,7 @@ export class GamificationAddictionEngine extends EventEmitter {
     }
 
     // Calculate current pressure level
-    const pressureLevel = this.calculateStreakPressure(streak);
+    const pressureLevel = this.calculateStreakPressureForStreak(streak);
 
     // Find next milestone for anticipation
     const nextMilestone = this.findNextMilestone(streak);
@@ -1325,7 +1344,7 @@ export class GamificationAddictionEngine extends EventEmitter {
 
   private selectVisuallyAppealingReward(profile: UserAddictionProfile, type: string): string {
     if (profile.vulnerability.socialValidationNeed > 0.7) return 'social_status_symbol';
-    if (profile.vulnerability.collectibleUrge > 0.7) return 'rare_collectible';
+    if (profile.vulnerability.compulsivityScore > 0.7) return 'rare_collectible';
     return 'coin_reward';
   }
 
