@@ -489,6 +489,73 @@ export class MonitoringService {
       return 0;
     }
   }
+
+  // Additional methods needed by routes
+  async getHealthStatus(): Promise<{ status: string; services: any[] }> {
+    try {
+      const healthChecks = await this.performHealthChecks();
+      const overallStatus = healthChecks.every(check => check.status === 'healthy') ? 'healthy' : 'degraded';
+      
+      return {
+        status: overallStatus,
+        services: healthChecks
+      };
+    } catch (error) {
+      logger.error('Error getting health status:', error);
+      return {
+        status: 'unhealthy',
+        services: []
+      };
+    }
+  }
+
+  async collectMetrics(): Promise<void> {
+    try {
+      await this.collectSystemMetrics();
+      await this.collectApplicationMetrics();
+      await this.collectBusinessMetrics();
+    } catch (error) {
+      logger.error('Error collecting metrics:', error);
+    }
+  }
+
+  async getMetrics(timeRange: string = '1h'): Promise<any> {
+    try {
+      const metrics = await this.getCachedMetrics(timeRange);
+      return metrics;
+    } catch (error) {
+      logger.error('Error getting metrics:', error);
+      return {};
+    }
+  }
+
+  async getLatestMetrics(): Promise<any> {
+    try {
+      const latest = await getCache('metrics:latest');
+      return latest ? JSON.parse(latest as string) : {};
+    } catch (error) {
+      logger.error('Error getting latest metrics:', error);
+      return {};
+    }
+  }
+
+  async getAlertConfig(): Promise<any> {
+    try {
+      const config = await getCache('alert:config');
+      return config ? JSON.parse(config as string) : {};
+    } catch (error) {
+      logger.error('Error getting alert config:', error);
+      return {};
+    }
+  }
+
+  async updateAlertConfig(config: any): Promise<void> {
+    try {
+      await setCache('alert:config', JSON.stringify(config), 86400); // 24 hours
+    } catch (error) {
+      logger.error('Error updating alert config:', error);
+    }
+  }
 }
 
 export const monitoringService = new MonitoringService();

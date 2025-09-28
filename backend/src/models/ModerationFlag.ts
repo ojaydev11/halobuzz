@@ -121,4 +121,27 @@ moderationFlagSchema.methods.flag = function() {
   return this.save();
 };
 
+// Static methods
+moderationFlagSchema.statics.findPending = function() {
+  return this.find({ status: 'pending' }).sort({ createdAt: -1 });
+};
+
+moderationFlagSchema.statics.findByUser = function(userId: string) {
+  return this.find({ userId }).sort({ createdAt: -1 });
+};
+
+// Instance methods
+moderationFlagSchema.methods.resolve = function(resolution: string, reviewedBy: string) {
+  this.status = 'resolved';
+  this.resolution = resolution;
+  this.reviewedBy = reviewedBy;
+  this.reviewedAt = new Date();
+  return this.save();
+};
+
+moderationFlagSchema.methods.flag = function() {
+  this.status = 'flagged';
+  return this.save();
+};
+
 export const ModerationFlag = mongoose.model<IModerationFlag>('ModerationFlag', moderationFlagSchema);

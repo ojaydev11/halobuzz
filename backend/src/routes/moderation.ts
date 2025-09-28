@@ -1,7 +1,7 @@
 import express from 'express';
 import { aiModerationService } from '../services/AIModerationService';
 import { authMiddleware } from '../middleware/auth';
-import { adminMiddleware } from '../middleware/admin';
+import { adminOnly } from '../middleware/admin';
 import { ModerationFlag } from '../models/ModerationFlag';
 
 const router = express.Router();
@@ -160,7 +160,7 @@ router.post('/flags/:flagId/resolve', authMiddleware, async (req, res) => {
  * @route POST /moderation/bulk-action
  * @desc Perform bulk action on moderation flags
  */
-router.post('/bulk-action', adminMiddleware, async (req, res) => {
+router.post('/bulk-action', adminOnly, async (req, res) => {
   try {
     const { flagIds, action } = req.body;
     const adminId = req.user?.id;
@@ -209,7 +209,7 @@ router.post('/bulk-action', adminMiddleware, async (req, res) => {
  * @route GET /moderation/pending
  * @desc Get pending moderation flags (admin only)
  */
-router.get('/pending', adminMiddleware, async (req, res) => {
+router.get('/pending', adminOnly, async (req, res) => {
   try {
     const { limit = 100 } = req.query;
 
@@ -232,7 +232,7 @@ router.get('/pending', adminMiddleware, async (req, res) => {
  * @route GET /moderation/analytics
  * @desc Get moderation analytics (admin only)
  */
-router.get('/analytics', adminMiddleware, async (req, res) => {
+router.get('/analytics', adminOnly, async (req, res) => {
   try {
     const { timeframe = 'day' } = req.query;
 
