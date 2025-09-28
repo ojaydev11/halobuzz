@@ -493,7 +493,7 @@ export class MonitoringService {
   // Additional methods needed by routes
   async getHealthStatus(): Promise<{ status: string; services: any[] }> {
     try {
-      const healthChecks = await this.performHealthChecks();
+      const healthChecks = await this.performHealthCheck();
       const overallStatus = healthChecks.every(check => check.status === 'healthy') ? 'healthy' : 'degraded';
       
       return {
@@ -512,7 +512,7 @@ export class MonitoringService {
   async collectMetrics(): Promise<void> {
     try {
       await this.collectSystemMetrics();
-      await this.collectApplicationMetrics();
+      await this.getApplicationMetrics();
       await this.collectBusinessMetrics();
     } catch (error) {
       logger.error('Error collecting metrics:', error);
