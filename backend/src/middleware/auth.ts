@@ -4,7 +4,7 @@ import { User } from '../models/User';
 import { logger } from '../config/logger';
 import { getCache, setCache } from '../config/redis';
 
-interface AuthenticatedRequest extends Request {
+export interface AuthenticatedRequest extends Request {
   user?: {
     userId: string;
     id: string; // Add id field for compatibility
@@ -393,3 +393,39 @@ export async function destroySession(userId: string): Promise<void> {
     logger.error('Session destruction error:', error);
   }
 }
+
+/**
+ * Alias for authMiddleware for backward compatibility
+ */
+export const authenticateToken = authMiddleware;
+
+/**
+ * Age verification middleware
+ */
+export const requireAgeVerification = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ 
+        success: false, 
+        error: 'Authentication required' 
+      });
+    }
+
+    // Check if user has verified their age
+    const user = await User.findById(req.user.userId);
+    if (!user || !user.isAgeVerified) {
+      return res.status(403).json({ 
+        success: false, 
+        error: 'Age verification required' 
+      });
+    }
+
+    next();
+  } catch (error) {
+    logger.error('Age verification error:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Internal server error' 
+    });
+  }
+};

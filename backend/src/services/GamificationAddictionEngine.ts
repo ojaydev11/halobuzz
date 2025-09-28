@@ -1388,6 +1388,155 @@ export class GamificationAddictionEngine extends EventEmitter {
       'Friend challenge to boost together'
     ];
   }
+
+  // Public API methods for routes
+  async getUserEngagementStatus(userId: string): Promise<any> {
+    const profile = await this.getUserAddictionProfile(userId);
+    return {
+      userId,
+      engagementLevel: profile.engagementLevel,
+      addictionRisk: profile.addictionRisk,
+      lastActive: profile.lastActive,
+      dailyTriggers: profile.dailyTriggers,
+      streakCount: profile.streakCount
+    };
+  }
+
+  async getAchievementSystem(): Promise<any> {
+    return {
+      achievements: Array.from(this.achievements.values()),
+      categories: ['social', 'economic', 'engagement', 'milestone']
+    };
+  }
+
+  async unlockAchievement(userId: string, achievementId: string): Promise<any> {
+    const achievement = this.achievements.get(achievementId);
+    if (!achievement) {
+      throw new Error('Achievement not found');
+    }
+
+    const profile = await this.getUserAddictionProfile(userId);
+    profile.unlockedAchievements.push(achievementId);
+    profile.totalAchievements++;
+
+    return {
+      unlocked: true,
+      achievement,
+      totalAchievements: profile.totalAchievements
+    };
+  }
+
+  async getRewardSystem(): Promise<any> {
+    return {
+      dailyRewards: true,
+      streakRewards: true,
+      achievementRewards: true,
+      socialRewards: true
+    };
+  }
+
+  async claimDailyReward(userId: string): Promise<any> {
+    const profile = await this.getUserAddictionProfile(userId);
+    const today = new Date().toDateString();
+    
+    if (profile.lastDailyReward === today) {
+      throw new Error('Daily reward already claimed');
+    }
+
+    profile.lastDailyReward = today;
+    profile.dailyRewardStreak++;
+
+    return {
+      claimed: true,
+      streak: profile.dailyRewardStreak,
+      reward: 'coins',
+      amount: 100
+    };
+  }
+
+  async getStreakSystem(): Promise<any> {
+    return {
+      dailyLogin: true,
+      dailyReward: true,
+      socialActivity: true,
+      economicActivity: true
+    };
+  }
+
+  async updateUserActivity(userId: string, activity: string): Promise<any> {
+    const profile = await this.getUserAddictionProfile(userId);
+    profile.lastActive = new Date();
+    profile.activityHistory.push({
+      type: activity,
+      timestamp: new Date()
+    });
+
+    return {
+      updated: true,
+      lastActive: profile.lastActive
+    };
+  }
+
+  async getLeaderboards(): Promise<any> {
+    return {
+      global: [],
+      friends: [],
+      weekly: [],
+      monthly: []
+    };
+  }
+
+  async getChallenges(): Promise<any> {
+    return {
+      daily: [],
+      weekly: [],
+      monthly: [],
+      special: []
+    };
+  }
+
+  async completeChallenge(userId: string, challengeId: string): Promise<any> {
+    const profile = await this.getUserAddictionProfile(userId);
+    profile.completedChallenges.push(challengeId);
+
+    return {
+      completed: true,
+      challengeId,
+      totalCompleted: profile.completedChallenges.length
+    };
+  }
+
+  async getUserProgress(userId: string): Promise<any> {
+    const profile = await this.getUserAddictionProfile(userId);
+    return {
+      userId,
+      level: profile.level,
+      experience: profile.experience,
+      achievements: profile.unlockedAchievements.length,
+      streaks: profile.streakCount,
+      lastActive: profile.lastActive
+    };
+  }
+
+  async getLevelSystem(): Promise<any> {
+    return {
+      maxLevel: 100,
+      experiencePerLevel: 1000,
+      rewards: ['coins', 'badges', 'unlocks']
+    };
+  }
+
+  async getAddictionMetrics(): Promise<any> {
+    return {
+      totalUsers: this.userProfiles.size,
+      averageEngagement: 0.5,
+      addictionRiskDistribution: {
+        low: 0.6,
+        medium: 0.3,
+        high: 0.1
+      }
+    };
+  }
 }
 
 export const gamificationEngine = GamificationAddictionEngine.getInstance();

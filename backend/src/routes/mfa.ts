@@ -1,4 +1,4 @@
-import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+import { Request, Response } from 'express';
 import { body, validationResult } from 'express-validator';
 import { User } from '@/models/User';
 import { MFAService, CryptographicSecurity, SecureDesign, SecurityLogging } from '@/middleware/enhancedSecurity';
@@ -11,7 +11,7 @@ import QRCode from 'qrcode';
  * Implements TOTP-based MFA with backup codes
  */
 
-interface MFARequest extends FastifyRequest {
+interface MFARequest extends Request {
   user?: {
     userId: string;
     email: string;
@@ -32,7 +32,7 @@ export default async function mfaRoutes(fastify: FastifyInstance) {
         }
       }
     }
-  }, async (request: MFARequest, reply: FastifyReply) => {
+  }, async (request: MFARequest, reply: Response) => {
     try {
       const errors = validationResult(request);
       if (!errors.isEmpty()) {
@@ -130,7 +130,7 @@ export default async function mfaRoutes(fastify: FastifyInstance) {
         }
       }
     }
-  }, async (request: MFARequest, reply: FastifyReply) => {
+  }, async (request: MFARequest, reply: Response) => {
     try {
       const { code } = request.body as { code: string };
       const userId = request.user?.userId;
@@ -201,7 +201,7 @@ export default async function mfaRoutes(fastify: FastifyInstance) {
         }
       }
     }
-  }, async (request: FastifyRequest, reply: FastifyReply) => {
+  }, async (request: Request, reply: Response) => {
     try {
       const { sessionId, code } = request.body as { sessionId: string; code: string };
 
@@ -273,7 +273,7 @@ export default async function mfaRoutes(fastify: FastifyInstance) {
         }
       }
     }
-  }, async (request: FastifyRequest, reply: FastifyReply) => {
+  }, async (request: Request, reply: Response) => {
     try {
       const { sessionId, backupCode } = request.body as { sessionId: string; backupCode: string };
 
@@ -355,7 +355,7 @@ export default async function mfaRoutes(fastify: FastifyInstance) {
         }
       }
     }
-  }, async (request: MFARequest, reply: FastifyReply) => {
+  }, async (request: MFARequest, reply: Response) => {
     try {
       const { password, code } = request.body as { password: string; code: string };
       const userId = request.user?.userId;
@@ -427,7 +427,7 @@ export default async function mfaRoutes(fastify: FastifyInstance) {
   // Get MFA status
   fastify.get('/status', {
     preHandler: [fastify.authenticate]
-  }, async (request: MFARequest, reply: FastifyReply) => {
+  }, async (request: MFARequest, reply: Response) => {
     try {
       const userId = request.user?.userId;
 
@@ -478,7 +478,7 @@ export default async function mfaRoutes(fastify: FastifyInstance) {
         }
       }
     }
-  }, async (request: MFARequest, reply: FastifyReply) => {
+  }, async (request: MFARequest, reply: Response) => {
     try {
       const { password, code } = request.body as { password: string; code: string };
       const userId = request.user?.userId;

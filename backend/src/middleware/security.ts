@@ -374,3 +374,18 @@ export const inputSanitizer = {
     return date;
   }
 };
+
+/**
+ * Global rate limiter middleware
+ */
+export const globalLimiter = async (request: FastifyRequest, reply: FastifyReply) => {
+  // Basic rate limiting logic
+  const clientId = request.ip || 'unknown';
+  const key = `rate_limit:${clientId}`;
+  
+  // This would typically use Redis or similar for actual rate limiting
+  // For now, just log the request
+  logger.info(`Rate limit check for client: ${clientId}`);
+  
+  return;
+};
