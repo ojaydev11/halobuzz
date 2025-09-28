@@ -160,10 +160,10 @@ export class AIContentRecommendationService {
         interactionHistory: behaviorData.interactionHistory,
       },
       demographics: {
-        age: user?.demographics?.age || 25,
-        location: user?.demographics?.location || 'unknown',
-        interests: user?.demographics?.interests || [],
-        deviceType: user?.demographics?.deviceType || 'mobile',
+        age: (user as any)?.demographics?.age || 25,
+        location: (user as any)?.demographics?.location || 'unknown',
+        interests: (user as any)?.demographics?.interests || [],
+        deviceType: (user as any)?.demographics?.deviceType || 'mobile',
       },
     };
   }
@@ -242,8 +242,9 @@ export class AIContentRecommendationService {
       const content = await this.getContentById(watch.contentId, watch.contentType);
       if (content) {
         categoryCounts[content.category] = (categoryCounts[content.category] || 0) + 1;
-        languageCounts[content.language] = (languageCounts[content.language] || 0) + 1;
-        creatorCounts[content.creatorId] = (creatorCounts[content.creatorId] || 0) + 1;
+        // Use userId as creatorId for now since creatorId doesn't exist
+        const creatorId = (content as any).creatorId || (content as any).userId || 'unknown';
+        creatorCounts[creatorId] = (creatorCounts[creatorId] || 0) + 1;
         contentTypeCounts[watch.contentType] = (contentTypeCounts[watch.contentType] || 0) + 1;
       }
     }

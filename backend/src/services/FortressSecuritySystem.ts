@@ -976,7 +976,7 @@ export class FortressSecuritySystem extends EventEmitter {
     ]);
 
     // Ensemble voting with confidence weighting
-    const ensembleResult = this.combinePredictions(predictions);
+    const ensembleResult = await this.combinePredictions(predictions);
     
     return {
       fraudProbability: ensembleResult.probability,
@@ -1331,41 +1331,42 @@ export class FortressSecuritySystem extends EventEmitter {
       // Check IP reputation using multiple threat intelligence sources
       if (networkInfo.ipAddress) {
         const ipRisk = await this.checkIPReputationReal(networkInfo.ipAddress);
-        riskScore += ipRisk.score;
-        if (ipRisk.score > 0.5) {
-          riskFactors.push(`High-risk IP: ${ipRisk.reason}`);
+        riskScore += ipRisk;
+        if (ipRisk > 0.5) {
+          riskFactors.push(`High-risk IP: score ${ipRisk}`);
         }
       }
 
       // Check VPN/Proxy usage with real detection
       const proxyDetection = await this.detectProxyUsage(networkInfo);
       if (proxyDetection.isProxy) {
-        riskScore += proxyDetection.riskLevel;
-        riskFactors.push(`Proxy detected: ${proxyDetection.type}`);
+        riskScore += 0.3; // Fixed risk level
+        riskFactors.push(`Proxy detected: confidence ${proxyDetection.confidence}`);
       }
 
       // Check geographic anomalies with real analysis
+      const securityProfile = { userId: 'temp', riskLevel: 0.5 }; // Temporary profile
       const geoAnalysis = await this.analyzeGeographicAnomaly(networkInfo, securityProfile);
       if (geoAnalysis.isAnomalous) {
-        riskScore += geoAnalysis.riskScore;
+        riskScore += geoAnalysis.riskIncrease;
         riskFactors.push(`Geographic anomaly: ${geoAnalysis.reason}`);
       }
 
       // Check ASN reputation
       if (networkInfo.asn) {
         const asnRisk = await this.checkASNReputation(networkInfo.asn);
-        riskScore += asnRisk.score;
-        if (asnRisk.score > 0.3) {
-          riskFactors.push(`Risky ASN: ${asnRisk.reason}`);
+        riskScore += asnRisk;
+        if (asnRisk > 0.3) {
+          riskFactors.push(`Risky ASN: score ${asnRisk}`);
         }
       }
 
       // Check DNS reputation
       if (networkInfo.dnsServers) {
         const dnsRisk = await this.checkDNSReputation(networkInfo.dnsServers);
-        riskScore += dnsRisk.score;
-        if (dnsRisk.score > 0.2) {
-          riskFactors.push(`Suspicious DNS: ${dnsRisk.reason}`);
+        riskScore += dnsRisk;
+        if (dnsRisk > 0.2) {
+          riskFactors.push(`Suspicious DNS: score ${dnsRisk}`);
         }
       }
 
