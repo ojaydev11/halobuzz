@@ -17,7 +17,7 @@ Set these environment variables in Vercel dashboard:
 
 ```bash
 # Database
-MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/halobuzz-admin
+MONGODB_URI=mongodb+srv://<username>:<password>@<cluster>.mongodb.net/halobuzz-admin
 
 # Authentication
 JWT_SECRET=your-super-secret-jwt-key-change-this-in-production

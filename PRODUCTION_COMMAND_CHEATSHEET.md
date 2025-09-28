@@ -90,7 +90,7 @@ npm run test:smoke         # Smoke test
 ### MongoDB Operations
 ```bash
 # Connect to MongoDB
-mongosh "mongodb+srv://user:pass@cluster.mongodb.net/halobuzz"
+mongosh "mongodb+srv://<username>:<password>@<cluster>.mongodb.net/halobuzz"
 
 # Add indexes
 node scripts/add-indexes.js

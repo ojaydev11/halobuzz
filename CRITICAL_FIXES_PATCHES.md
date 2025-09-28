@@ -508,7 +508,7 @@ PORT=4000
 TZ=UTC
 
 # Database
-MONGODB_URI=mongodb+srv://user:pass@cluster.mongodb.net/halobuzz_prod?retryWrites=true&w=majority
+MONGODB_URI=mongodb+srv://<username>:<password>@<cluster>.mongodb.net/halobuzz_prod?retryWrites=true&w=majority
 REDIS_URL=redis://redis-cluster:6379
 
 # Security

@@ -60,7 +60,7 @@
 #### Production Environment Variables
 ```bash
 # Database
-MONGODB_URI=mongodb://halobuzz:password@db.halobuzz.com:27017/halobuzz_prod
+MONGODB_URI=mongodb://<username>:<password>@<host>:27017/halobuzz_prod
 REDIS_URL=redis://redis.halobuzz.com:6379
 
 # Authentication
@@ -205,7 +205,7 @@ eas build --platform android --profile production
 ### 1. MongoDB Setup
 ```bash
 # Connect to MongoDB
-mongo mongodb://halobuzz:password@db.halobuzz.com:27017/halobuzz_prod
+mongo mongodb://<username>:<password>@<host>:27017/halobuzz_prod
 
 # Create indexes
 use halobuzz_prod

@@ -107,7 +107,7 @@ AI_SERVICE_SECRET=your-unique-ai-service-secret-32-chars-minimum
 
 **Database URLs:**
 ```bash
-DATABASE_URL=mongodb+srv://user:pass@cluster.mongodb.net/halobuzz_prod
+DATABASE_URL=mongodb+srv://<username>:<password>@<cluster>.mongodb.net/halobuzz_prod
 REDIS_URL=redis://default:password@redis-host:6379
 ```
 
