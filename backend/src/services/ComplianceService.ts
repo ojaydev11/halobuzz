@@ -110,7 +110,7 @@ export class ComplianceService {
    * Anonymizes user data for analytics
    */
   public anonymizeUserDataForAnalytics(userData: any): any {
-    return gdprCompliance.anonymizeUserData(userData);
+    return piiSanitizer.sanitizeUserData(userData);
   }
 
   /**
