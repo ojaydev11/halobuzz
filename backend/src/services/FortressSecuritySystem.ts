@@ -988,13 +988,13 @@ export class FortressSecuritySystem extends EventEmitter {
 
   private async logisticRegressionPrediction(features: number[]): Promise<any> {
     // Real logistic regression implementation
-    const weights = this.getModelWeights('logistic_regression');
+    const weights = await this.getModelWeights();
     const bias = weights.bias;
     
     // Calculate linear combination
     let linearCombination = bias;
-    for (let i = 0; i < features.length && i < weights.features.length; i++) {
-      linearCombination += features[i] * weights.features[i];
+    for (let i = 0; i < features.length && i < weights.weights.length; i++) {
+      linearCombination += features[i] * weights.weights[i];
     }
     
     // Apply sigmoid function
@@ -1002,18 +1002,18 @@ export class FortressSecuritySystem extends EventEmitter {
     
     return {
       probability: Math.max(0, Math.min(1, probability)),
-      confidence: this.calculateConfidence(probability, weights.confidence),
+      confidence: await this.calculateConfidence({ probability }),
       method: 'logistic_regression'
     };
   }
 
   private async randomForestPrediction(features: number[]): Promise<any> {
     // Real random forest implementation
-    const trees = this.getRandomForestTrees();
+    const trees = await this.getRandomForestTrees();
     const predictions = [];
     
     for (const tree of trees) {
-      const treePrediction = this.traverseDecisionTree(tree, features);
+      const treePrediction = await this.traverseDecisionTree(tree.id, features);
       predictions.push(treePrediction);
     }
     
@@ -1022,7 +1022,7 @@ export class FortressSecuritySystem extends EventEmitter {
     
     return {
       probability: avgProbability,
-      confidence: this.calculateForestConfidence(predictions),
+      confidence: await this.calculateForestConfidence(predictions),
       method: 'random_forest',
       treesUsed: trees.length
     };
@@ -1030,16 +1030,16 @@ export class FortressSecuritySystem extends EventEmitter {
 
   private async neuralNetworkPrediction(features: number[]): Promise<any> {
     // Real neural network implementation
-    const network = this.getNeuralNetwork();
+    const network = await this.getNeuralNetwork();
     
     // Forward propagation
     let layerOutput = features;
     for (const layer of network.layers) {
-      layerOutput = this.forwardPropagate(layerOutput, layer);
+      layerOutput = await this.forwardPropagate(layerOutput);
     }
     
     // Apply softmax for probability distribution
-    const probabilities = this.softmax(layerOutput);
+    const probabilities = await this.softmax(layerOutput);
     
     return {
       probability: probabilities[1], // Fraud class probability

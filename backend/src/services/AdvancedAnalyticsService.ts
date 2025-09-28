@@ -254,7 +254,7 @@ export class AdvancedAnalyticsService {
         }
       },
       {
-        $sort: { _id: 1 }
+        $sort: { _id: 1 as const }
       }
     ];
 
@@ -288,7 +288,7 @@ export class AdvancedAnalyticsService {
         }
       },
       {
-        $sort: { _id: 1 }
+        $sort: { _id: 1 as const }
       }
     ];
 
@@ -349,7 +349,7 @@ export class AdvancedAnalyticsService {
         }
       },
       {
-        $sort: { count: -1 }
+        $sort: { count: -1 as const }
       }
     ]);
 
@@ -385,7 +385,7 @@ export class AdvancedAnalyticsService {
         }
       },
       {
-        $sort: { _id: 1 }
+        $sort: { _id: 1 as const }
       }
     ];
 
@@ -420,7 +420,7 @@ export class AdvancedAnalyticsService {
         }
       },
       {
-        $sort: { _id: 1 }
+        $sort: { _id: 1 as const }
       }
     ];
 
@@ -455,7 +455,7 @@ export class AdvancedAnalyticsService {
         }
       },
       {
-        $sort: { _id: 1 }
+        $sort: { _id: 1 as const }
       }
     ];
 
@@ -486,7 +486,7 @@ export class AdvancedAnalyticsService {
         }
       },
       {
-        $sort: { count: -1 }
+        $sort: { count: -1 as const }
       },
       {
         $limit: 10
@@ -541,7 +541,7 @@ export class AdvancedAnalyticsService {
         }
       },
       {
-        $sort: { totalViews: -1 }
+        $sort: { totalViews: -1 as const }
       },
       {
         $limit: 10
@@ -575,7 +575,7 @@ export class AdvancedAnalyticsService {
         }
       },
       {
-        $sort: { _id: 1 }
+        $sort: { _id: 1 as const }
       }
     ];
 
@@ -606,7 +606,7 @@ export class AdvancedAnalyticsService {
         }
       },
       {
-        $sort: { amount: -1 }
+        $sort: { amount: -1 as const }
       }
     ]);
 
@@ -658,7 +658,7 @@ export class AdvancedAnalyticsService {
         }
       },
       {
-        $sort: { revenue: -1 }
+        $sort: { revenue: -1 as const }
       },
       {
         $limit: 10
@@ -691,7 +691,7 @@ export class AdvancedAnalyticsService {
         }
       },
       {
-        $sort: { _id: 1 }
+        $sort: { _id: 1 as const }
       }
     ];
 
@@ -722,7 +722,7 @@ export class AdvancedAnalyticsService {
         }
       },
       {
-        $sort: { engagement: -1 }
+        $sort: { engagement: -1 as const }
       }
     ]);
 
@@ -753,7 +753,7 @@ export class AdvancedAnalyticsService {
         }
       },
       {
-        $sort: { engagement: -1 }
+        $sort: { engagement: -1 as const }
       },
       {
         $limit: 10

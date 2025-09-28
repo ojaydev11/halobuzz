@@ -24,6 +24,12 @@ export interface IAuditLog extends Document {
   createdAt: Date;
 }
 
+export interface IAuditLogModel extends mongoose.Model<IAuditLog> {
+  getUserActivity(userId: string, startDate: Date, endDate: Date): Promise<any[]>;
+  getSecurityEvents(startDate: Date, endDate: Date): Promise<any[]>;
+  getComplianceReport(startDate: Date, endDate: Date): Promise<any[]>;
+}
+
 const auditLogSchema = new Schema<IAuditLog>({
   timestamp: { type: Date, required: true, default: Date.now },
   userId: { type: String, required: true, index: true },
@@ -205,4 +211,4 @@ auditLogSchema.statics.getComplianceReport = async function(startDate: Date, end
   ]);
 };
 
-export const AuditLog = mongoose.model<IAuditLog>('AuditLog', auditLogSchema);
+export const AuditLog = mongoose.model<IAuditLog, IAuditLogModel>('AuditLog', auditLogSchema);

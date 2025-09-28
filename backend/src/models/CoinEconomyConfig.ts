@@ -230,6 +230,10 @@ export interface ICoinEconomyConfig extends Document {
   }[];
 }
 
+export interface ICoinEconomyConfigModel extends mongoose.Model<ICoinEconomyConfig> {
+  getCurrentConfig(): Promise<ICoinEconomyConfig>;
+}
+
 const CoinEconomyConfigSchema = new Schema<ICoinEconomyConfig>({
   isActive: { type: Boolean, default: true },
   maintenanceMode: { type: Boolean, default: false },
@@ -499,4 +503,4 @@ CoinEconomyConfigSchema.methods.updateConfig = function(changes: any, updatedBy:
   return this.save();
 };
 
-export const CoinEconomyConfig = mongoose.model<ICoinEconomyConfig>('CoinEconomyConfig', CoinEconomyConfigSchema);
+export const CoinEconomyConfig = mongoose.model<ICoinEconomyConfig, ICoinEconomyConfigModel>('CoinEconomyConfig', CoinEconomyConfigSchema);

@@ -380,7 +380,7 @@ export class AdvancedGiftEconomy {
    * Get streak multiplier
    */
   private async getStreakMultiplier(userId: string): Promise<number> {
-    const streak = await getCache(`streak:${userId}`) || 0;
+    const streak = (await getCache(`streak:${userId}`)) as number || 0;
     
     if (streak >= 30) return 2.0; // 100% bonus for 30+ day streak
     if (streak >= 14) return 1.5; // 50% bonus for 14+ day streak
@@ -452,7 +452,7 @@ export class AdvancedGiftEconomy {
    * Update sold quantity
    */
   private async updateSoldQuantity(giftId: string, quantity: number): Promise<void> {
-    const gift = await getCache(`limited_gift:${giftId}`);
+    const gift = await getCache(`limited_gift:${giftId}`) as any;
     if (gift) {
       gift.soldQuantity += quantity;
       await setCache(`limited_gift:${giftId}`, gift, 7 * 24 * 60 * 60);
