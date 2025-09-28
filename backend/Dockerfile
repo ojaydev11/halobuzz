@@ -57,7 +57,7 @@ COPY src ./src
 
 # Build TypeScript to JavaScript (skip type checking for production build)
 RUN echo '{"compilerOptions":{"target":"ES2020","module":"commonjs","outDir":"dist","rootDir":"src","strict":false,"noEmitOnError":false,"skipLibCheck":true,"noImplicitAny":false,"noUnusedLocals":false,"noUnusedParameters":false,"allowJs":true,"esModuleInterop":true,"allowSyntheticDefaultImports":true,"forceConsistentCasingInFileNames":true,"resolveJsonModule":true,"isolatedModules":true,"noFallthroughCasesInSwitch":true,"moduleResolution":"node","baseUrl":".","paths":{"@/*":["src/*"]}},"include":["src/**/*"],"exclude":["node_modules","dist"]}' > tsconfig.build.json && \
-    npx tsc -p tsconfig.build.json --transpileOnly --skipLibCheck || echo "TypeScript compilation completed with warnings" && \
+    npx tsc -p tsconfig.build.json --skipLibCheck --noEmitOnError false --noImplicitAny false --noUnusedLocals false --noUnusedParameters false || echo "TypeScript compilation completed with warnings" && \
     npx tsc-alias -p tsconfig.build.json --outDir dist || echo "Path alias resolution completed"
 
 # ---- Runtime stage ----
@@ -116,4 +116,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=20s --retries=3 \
   CMD curl -f --max-time 2 --connect-timeout 2 http://127.0.0.1:${PORT}/api/v1/health || exit 1
 
 # Start the application
-CMD ["node", "dist/index.js"]
+CMD ["npx", "ts-node", "-r", "tsconfig-paths/register", "src/index.ts"]
