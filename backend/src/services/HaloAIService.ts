@@ -681,7 +681,7 @@ export class HaloAIService {
         const gifts = await Gift.find({ isActive: true }).limit(5);
         const randomGift = gifts[Math.floor(Math.random() * gifts.length)];
         
-        if (randomGift && user.coins?.balance >= randomGift.price) {
+        if (randomGift && user.coins?.balance >= (randomGift as any).price) {
           // Send gift (this would integrate with gift service)
           this.logger.info(`Auto-gift sent: ${randomGift.name} to stream ${streamId} by user ${userId}`);
         }

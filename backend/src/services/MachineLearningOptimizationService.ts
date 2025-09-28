@@ -1,10 +1,8 @@
-import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Document } from 'mongoose';
 import { AnalyticsEvent } from '../analytics/models/AnalyticsEvent';
-import { User } from '../models/User';
+import { User, IUser } from '../models/User';
 import { RedisService } from './RedisService';
-import { Logger } from '@nestjs/common';
+import { logger } from '@/config/logger';
 
 interface ABTestConfig {
   testId: string;
@@ -120,13 +118,12 @@ interface MLInsight {
   actionable: boolean;
 }
 
-@Injectable()
 export class MachineLearningOptimizationService {
-  private readonly logger = new Logger(MachineLearningOptimizationService.name);
+  private readonly logger = logger;
 
   constructor(
-    @InjectModel('AnalyticsEvent') private analyticsEventModel: Model<AnalyticsEvent>,
-    @InjectModel('User') private userModel: Model<User>,
+    private analyticsEventModel: Model<AnalyticsEvent>,
+    private userModel: Model<IUser>,
     private redisService: RedisService,
   ) {}
 

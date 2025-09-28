@@ -2,6 +2,29 @@ import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { body, validationResult } from 'express-validator';
 import { viralGrowthService } from '@/services/ViralGrowthService';
 import { logger } from '@/config/logger';
+import jwt from 'jsonwebtoken';
+
+// Simple authentication middleware for Fastify
+const authenticate = async (request: FastifyRequest, reply: FastifyReply) => {
+  const token = request.headers.authorization?.replace('Bearer ', '');
+  if (!token) {
+    return reply.status(401).send({ error: 'Unauthorized' });
+  }
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!);
+    (request as any).user = decoded;
+  } catch (error) {
+    return reply.status(401).send({ error: 'Invalid token' });
+  }
+};
+
+// Simple admin middleware for Fastify
+const requireAdmin = async (request: FastifyRequest, reply: FastifyReply) => {
+  const user = (request as any).user;
+  if (!user || user.role !== 'admin') {
+    return reply.status(403).send({ error: 'Admin access required' });
+  }
+};
 
 /**
  * Viral Growth Routes
@@ -18,7 +41,7 @@ interface ViralRequest extends FastifyRequest {
 export default async function viralGrowthRoutes(fastify: FastifyInstance) {
   // Generate referral code
   fastify.post('/referral/generate', {
-    preHandler: [fastify.authenticate],
+    preHandler: [authenticate],
     schema: {
       response: {
         200: {
@@ -126,7 +149,7 @@ export default async function viralGrowthRoutes(fastify: FastifyInstance) {
 
   // Create viral challenge
   fastify.post('/challenges/create', {
-    preHandler: [fastify.authenticate, fastify.requireAdmin],
+    preHandler: [authenticate, requireAdmin],
     schema: {
       body: {
         type: 'object',
@@ -189,7 +212,7 @@ export default async function viralGrowthRoutes(fastify: FastifyInstance) {
 
   // Join viral challenge
   fastify.post('/challenges/:challengeId/join', {
-    preHandler: [fastify.authenticate],
+    preHandler: [authenticate],
     schema: {
       params: {
         type: 'object',
@@ -228,7 +251,7 @@ export default async function viralGrowthRoutes(fastify: FastifyInstance) {
 
   // Calculate viral score
   fastify.post('/content/viral-score', {
-    preHandler: [fastify.authenticate],
+    preHandler: [authenticate],
     schema: {
       body: {
         type: 'object',
@@ -263,7 +286,7 @@ export default async function viralGrowthRoutes(fastify: FastifyInstance) {
 
   // Boost content visibility
   fastify.post('/content/:contentId/boost', {
-    preHandler: [fastify.authenticate],
+    preHandler: [authenticate],
     schema: {
       params: {
         type: 'object',
@@ -366,7 +389,7 @@ export default async function viralGrowthRoutes(fastify: FastifyInstance) {
 
   // Create collaboration opportunities
   fastify.post('/collaborations/opportunities', {
-    preHandler: [fastify.authenticate],
+    preHandler: [authenticate],
     schema: {
       body: {
         type: 'object',
@@ -462,7 +485,7 @@ export default async function viralGrowthRoutes(fastify: FastifyInstance) {
       });
     } catch (error) {
       logger.error('Failed to get viral campaigns:', error);
-      return reply.status(500).json({
+      return reply.status(500).send({
         success: false,
         error: 'Failed to get viral campaigns'
       });

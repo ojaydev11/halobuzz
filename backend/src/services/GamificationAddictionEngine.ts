@@ -849,7 +849,22 @@ export class GamificationAddictionEngine extends EventEmitter {
         financialStress: this.detectFinancialStress(transactions),
         addictionRiskLevel: 'low' // Will be calculated
       },
-      lastUpdated: new Date()
+      lastUpdated: new Date(),
+      
+      // Missing properties that the code expects
+      engagementLevel: aiProfile.behaviorPatterns.engagementLevel || 50,
+      addictionRisk: 0.5, // Will be calculated later
+      lastActive: new Date(),
+      dailyTriggers: 0,
+      streakCount: 0,
+      unlockedAchievements: [],
+      totalAchievements: 0,
+      lastDailyReward: new Date(),
+      dailyRewardStreak: 0,
+      activityHistory: [],
+      completedChallenges: [],
+      level: 1,
+      experience: 0
     };
 
     // Calculate overall addiction risk level
@@ -1458,11 +1473,11 @@ export class GamificationAddictionEngine extends EventEmitter {
     const profile = await this.getUserAddictionProfile(userId);
     const today = new Date().toDateString();
     
-    if (profile.lastDailyReward === today) {
+    if (profile.lastDailyReward.toDateString() === today) {
       throw new Error('Daily reward already claimed');
     }
 
-    profile.lastDailyReward = today;
+    profile.lastDailyReward = new Date();
     profile.dailyRewardStreak++;
 
     return {
@@ -1486,8 +1501,9 @@ export class GamificationAddictionEngine extends EventEmitter {
     const profile = await this.getUserAddictionProfile(userId);
     profile.lastActive = new Date();
     profile.activityHistory.push({
-      type: activity,
-      timestamp: new Date()
+      action: activity,
+      timestamp: new Date(),
+      duration: 0
     });
 
     return {

@@ -277,7 +277,7 @@ class LocalizationService {
   async getGeoLocation(ipAddress: string): Promise<GeoLocation | null> {
     try {
       // Check cache first
-      const cached = await getCache(`geo:${ipAddress}`);
+      const cached = await getCache(`geo:${ipAddress}`) as GeoLocation;
       if (cached) {
         return cached;
       }

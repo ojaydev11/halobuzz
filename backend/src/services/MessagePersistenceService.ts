@@ -53,7 +53,7 @@ class MessagePersistenceService {
       await setCache(`message:${message.id}`, message, 3600); // 1 hour TTL
       
       // Add to channel message list
-      const channelMessages = await getCache(`channel:messages:${channelKey}`) || [];
+      const channelMessages = await getCache(`channel:messages:${channelKey}`) as PersistedMessage[] || [];
       channelMessages.push(message);
       
       // Keep only last 100 messages in Redis
@@ -86,7 +86,7 @@ class MessagePersistenceService {
   ): Promise<PersistedMessage[]> {
     try {
       const channelKey = `${channelType}:${channelId}`;
-      const messages = await getCache(`channel:messages:${channelKey}`) || [];
+      const messages = await getCache(`channel:messages:${channelKey}`) as PersistedMessage[] || [];
       
       // Return last N messages
       return messages.slice(-limit);
@@ -103,7 +103,7 @@ class MessagePersistenceService {
       const channelKey = `${message.channelType}:${message.channelId}`;
       
       // Get all users in this channel
-      const channelUsers = await getCache(`channel:users:${channelKey}`) || [];
+      const channelUsers = await getCache(`channel:users:${channelKey}`) as string[] || [];
       
       for (const userId of channelUsers) {
         // Check if user is online
@@ -123,7 +123,7 @@ class MessagePersistenceService {
   private async storeOfflineMessage(userId: string, message: PersistedMessage): Promise<void> {
     try {
       const offlineKey = `offline:${userId}`;
-      const offlineData = await getCache(offlineKey) || {
+      const offlineData = await getCache(offlineKey) as any || {
         userId,
         messages: [],
         lastSeen: new Date(),
@@ -204,7 +204,7 @@ class MessagePersistenceService {
   ): Promise<void> {
     try {
       const channelKey = `${channelType}:${channelId}`;
-      const state = await getCache(`channel:state:${channelKey}`) || {
+      const state = await getCache(`channel:state:${channelKey}`) as ChannelState || {
         channelId,
         channelType,
         lastMessageId: '',
@@ -234,7 +234,7 @@ class MessagePersistenceService {
       const channelKey = `${channelType}:${channelId}`;
       const usersKey = `channel:users:${channelKey}`;
       
-      const users = await getCache(usersKey) || [];
+      const users = await getCache(usersKey) as string[] || [];
       if (!users.includes(userId)) {
         users.push(userId);
         await setCache(usersKey, users, 3600);
@@ -271,7 +271,7 @@ class MessagePersistenceService {
       const channelKey = `${channelType}:${channelId}`;
       const usersKey = `channel:users:${channelKey}`;
       
-      const users = await getCache(usersKey) || [];
+      const users = await getCache(usersKey) as string[] || [];
       const filteredUsers = users.filter((id: string) => id !== userId);
       await setCache(usersKey, filteredUsers, 3600);
       
