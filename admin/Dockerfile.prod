@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.7
 
-# Production Dockerfile for HaloBuzz AI Engine
+# Production Dockerfile for HaloBuzz Admin Dashboard
 # Optimized for Northflank deployment
 
 # ---- Dependencies stage ----
@@ -49,9 +49,16 @@ COPY --from=deps /app/pnpm-lock.yaml ./
 
 # Copy source code and config files
 COPY tsconfig*.json ./
-COPY src ./src
+COPY next.config.js ./
+COPY tailwind.config.js ./
+COPY pages ./pages
+COPY components ./components
+COPY context ./context
+COPY lib ./lib
+COPY styles ./styles
+COPY middleware.ts ./
 
-# Build TypeScript to JavaScript
+# Build Next.js application
 RUN pnpm run build
 
 # ---- Runtime stage ----
@@ -61,15 +68,11 @@ WORKDIR /app
 # Install runtime dependencies
 RUN apk add --no-cache \
     curl \
-    libc6-compat \
-    python3 \
-    make \
-    g++ \
-    && ln -sf python3 /usr/bin/python
+    libc6-compat
 
 # Create non-root user
 RUN addgroup --system --gid 1001 nodejs && \
-    adduser --system --uid 1001 --ingroup nodejs ai-engine
+    adduser --system --uid 1001 --ingroup nodejs admin
 
 # Install pnpm
 RUN corepack enable && corepack prepare pnpm@9.1.0 --activate
@@ -82,25 +85,27 @@ RUN --mount=type=cache,id=pnpm-store,target=/root/.pnpm-store \
     pnpm install --frozen-lockfile --prod
 
 # Copy built application
-COPY --from=build /app/dist ./dist
+COPY --from=build /app/.next ./.next
+COPY --from=build /app/public ./public
+COPY --from=build /app/package*.json ./
 
 # Create logs directory
-RUN mkdir -p logs && chown -R ai-engine:nodejs logs
+RUN mkdir -p logs && chown -R admin:nodejs logs
 
 # Set environment variables
 ENV NODE_ENV=production
-ENV PORT=5020
+ENV PORT=3000
 ENV HOST=0.0.0.0
 
 # Switch to non-root user
-USER ai-engine
+USER admin
 
 # Expose port
-EXPOSE 5020
+EXPOSE 3000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=20s --retries=3 \
-  CMD curl -f --max-time 5 --connect-timeout 5 http://127.0.0.1:${PORT}/health || exit 1
+  CMD curl -f --max-time 5 --connect-timeout 5 http://127.0.0.1:${PORT}/api/health || exit 1
 
 # Start the application
-CMD ["node", "dist/index.js"]
+CMD ["pnpm", "start"]

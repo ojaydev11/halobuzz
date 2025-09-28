@@ -5,6 +5,10 @@
   "private": true,
   "scripts": {
     "build": "cd backend && npm run build",
+    "build:prod": "cd backend && npm run build:prod && cd ../ai-engine && npm run build:prod && cd ../admin && npm run build:prod",
+    "build:backend": "cd backend && npm run build:prod",
+    "build:ai": "cd ai-engine && npm run build:prod",
+    "build:admin": "cd admin && npm run build:prod",
     "lint": "eslint . --ext .ts,.tsx --max-warnings=0",
     "typecheck": "tsc -b backend ai-engine",
     "test": "cd backend && npm run test && cd ../ai-engine && npm run test",
@@ -13,12 +17,21 @@
     "test:security:lint": "powershell -ExecutionPolicy Bypass -File scripts/test-security.ps1 -LintOnly",
     "dev:backend": "cd backend && npm run dev",
     "dev:ai": "cd ai-engine && npm run dev",
+    "dev:admin": "cd admin && npm run dev",
     "dev:mobile": "cd apps/halobuzz-mobile && npx expo start",
     "mobile:dev": "cd apps/halobuzz-mobile && npx expo start",
     "mobile:build:ios": "cd apps/halobuzz-mobile && npx eas build -p ios --profile preview",
     "mobile:build:ios:dev": "cd apps/halobuzz-mobile && npx eas build -p ios --profile development",
     "seed": "cd backend && npm run seed",
-    "smoke": "bash scripts/smoke.sh || powershell -File scripts/smoke.ps1"
+    "smoke": "bash scripts/smoke.sh || powershell -File scripts/smoke.ps1",
+    "docker:build": "docker build -f backend/Dockerfile.prod -t halobuzz-backend ./backend && docker build -f ai-engine/Dockerfile.prod -t halobuzz-ai ./ai-engine && docker build -f admin/Dockerfile.prod -t halobuzz-admin ./admin",
+    "docker:push": "docker push halobuzz-backend && docker push halobuzz-ai && docker push halobuzz-admin",
+    "deploy:northflank": "powershell -ExecutionPolicy Bypass -File scripts/deploy-northflank.ps1 -Action deploy",
+    "deploy:northflank:build": "powershell -ExecutionPolicy Bypass -File scripts/deploy-northflank.ps1 -Action build",
+    "deploy:northflank:check": "powershell -ExecutionPolicy Bypass -File scripts/deploy-northflank.ps1 -Action check",
+    "deploy:northflank:health": "powershell -ExecutionPolicy Bypass -File scripts/deploy-northflank.ps1 -Action health",
+    "deploy:northflank:cleanup": "powershell -ExecutionPolicy Bypass -File scripts/deploy-northflank.ps1 -Action cleanup",
+    "health:check": "curl -f http://localhost:5010/api/v1/monitoring/health && curl -f http://localhost:5020/health && curl -f http://localhost:3000/api/health"
   },
   "devDependencies": {
     "concurrently": "^8.2.2",

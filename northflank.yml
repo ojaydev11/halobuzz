@@ -1,0 +1,164 @@
+# Northflank Deployment Configuration for HaloBuzz
+# This file defines the complete deployment setup for Northflank
+
+version: '3.9'
+
+services:
+  # Backend API Service
+  halo-api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.prod
+    ports:
+      - "5010:5010"
+    environment:
+      NODE_ENV: production
+      PORT: 5010
+      HOST: 0.0.0.0
+      API_VERSION: v1
+      # Database
+      MONGODB_URI: ${MONGODB_URI}
+      # Redis
+      REDIS_URL: ${REDIS_URL}
+      # Security
+      JWT_SECRET: ${JWT_SECRET}
+      # CORS
+      CORS_ORIGIN: ${CORS_ORIGIN}
+      # External Services
+      AGORA_APP_ID: ${AGORA_APP_ID}
+      AGORA_APP_CERT: ${AGORA_APP_CERT}
+      # AWS S3
+      S3_BUCKET: ${S3_BUCKET}
+      S3_REGION: ${S3_REGION}
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY}
+      S3_SECRET_KEY: ${S3_SECRET_KEY}
+      # Payment Gateways
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      ESEWA_MERCHANT_ID: ${ESEWA_MERCHANT_ID}
+      ESEWA_SECRET: ${ESEWA_SECRET}
+      KHALTI_PUBLIC_KEY: ${KHALTI_PUBLIC_KEY}
+      KHALTI_SECRET_KEY: ${KHALTI_SECRET_KEY}
+      PAYPAL_CLIENT_ID: ${PAYPAL_CLIENT_ID}
+      PAYPAL_CLIENT_SECRET: ${PAYPAL_CLIENT_SECRET}
+      PAYPAL_ENVIRONMENT: ${PAYPAL_ENVIRONMENT}
+      # AI Services
+      AI_ENGINE_URL: ${AI_ENGINE_URL}
+      AI_ENGINE_SECRET: ${AI_ENGINE_SECRET}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      # Communication
+      SENDGRID_API_KEY: ${SENDGRID_API_KEY}
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN}
+      TWILIO_PHONE_NUMBER: ${TWILIO_PHONE_NUMBER}
+      # Feature Flags
+      ENABLE_AI: ${ENABLE_AI}
+      ENABLE_PAYMENTS: ${ENABLE_PAYMENTS}
+      ENABLE_NOTIFICATIONS: ${ENABLE_NOTIFICATIONS}
+      ENABLE_MODERATION: ${ENABLE_MODERATION}
+      ENABLE_ANALYTICS: ${ENABLE_ANALYTICS}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5010/api/v1/monitoring/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '0.5'
+        reservations:
+          memory: 512M
+          cpus: '0.25'
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+
+  # AI Engine Service
+  halo-ai-engine:
+    build:
+      context: ./ai-engine
+      dockerfile: Dockerfile.prod
+    ports:
+      - "5020:5020"
+    environment:
+      NODE_ENV: production
+      PORT: 5020
+      HOST: 0.0.0.0
+      # AI Service Configuration
+      AI_SERVICE_SECRET: ${AI_SERVICE_SECRET}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      # Database (if needed)
+      MONGODB_URI: ${MONGODB_URI}
+      # Redis (if needed)
+      REDIS_URL: ${REDIS_URL}
+      # CORS
+      CORS_ORIGIN: ${CORS_ORIGIN}
+      # Additional AI Config
+      AI_MODEL_VERSION: ${AI_MODEL_VERSION}
+      AI_MAX_TOKENS: ${AI_MAX_TOKENS}
+      AI_TEMPERATURE: ${AI_TEMPERATURE}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5020/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.25'
+        reservations:
+          memory: 256M
+          cpus: '0.1'
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+
+  # Admin Dashboard Service
+  halo-admin:
+    build:
+      context: ./admin
+      dockerfile: Dockerfile.prod
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      HOST: 0.0.0.0
+      # Backend API URL
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+      # Admin Configuration
+      ADMIN_SECRET: ${ADMIN_SECRET}
+      # Database
+      MONGODB_URI: ${MONGODB_URI}
+      # Redis
+      REDIS_URL: ${REDIS_URL}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.25'
+        reservations:
+          memory: 256M
+          cpus: '0.1'
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+
+networks:
+  default:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
