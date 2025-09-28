@@ -3,6 +3,7 @@ import mongoose, { Document, Schema } from 'mongoose';
 export interface IShortVideo extends Document {
   _id: mongoose.Types.ObjectId;
   userId: mongoose.Types.ObjectId;
+  creatorId?: mongoose.Types.ObjectId;
   title: string;
   description?: string;
   videoUrl: string;

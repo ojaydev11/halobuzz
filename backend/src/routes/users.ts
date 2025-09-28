@@ -23,7 +23,7 @@ const userLimit = rateLimit({
  */
 router.post('/:userId/follow', authenticateToken, userLimit, async (req: Request, res: Response) => {
   try {
-    const followerId = req.user?.id;
+    const followerId = (req as any).user?.id;
     const { userId } = req.params;
     const { action } = req.body;
 
@@ -117,7 +117,7 @@ router.post('/:userId/follow', authenticateToken, userLimit, async (req: Request
  */
 router.get('/:userId/follow-status', authenticateToken, userLimit, async (req: Request, res: Response) => {
   try {
-    const followerId = req.user?.id;
+    const followerId = (req as any).user?.id;
     const { userId } = req.params;
 
     if (!followerId) {
@@ -211,7 +211,7 @@ router.get('/:userId/following', userLimit, async (req: Request, res: Response) 
 router.get('/:userId/profile', userLimit, async (req: Request, res: Response) => {
   try {
     const { userId } = req.params;
-    const currentUserId = req.user?.id;
+    const currentUserId = (req as any).user?.id;
 
     const user = await User.findById(userId).select('-password -email -phone -backupCodes -totpSecret');
     if (!user) {

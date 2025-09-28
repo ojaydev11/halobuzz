@@ -1,5 +1,5 @@
 import { Model, Document } from 'mongoose';
-import { AnalyticsEvent } from '../analytics/models/AnalyticsEvent';
+import { AnalyticsEvent, IAnalyticsEvent } from '../analytics/models/AnalyticsEvent';
 import { User, IUser } from '../models/User';
 import { RedisService } from './RedisService';
 import { logger } from '@/config/logger';
@@ -122,7 +122,7 @@ export class MachineLearningOptimizationService {
   private readonly logger = logger;
 
   constructor(
-    private analyticsEventModel: Model<AnalyticsEvent>,
+    private analyticsEventModel: Model<IAnalyticsEvent>,
     private userModel: Model<IUser>,
     private redisService: RedisService,
   ) {}
@@ -147,7 +147,7 @@ export class MachineLearningOptimizationService {
         status: 'draft',
       });
 
-      this.logger.log(`Created A/B test: ${testId} - ${config.name}`);
+      this.logger.info(`Created A/B test: ${testId} - ${config.name}`);
       
       return abTest;
     } catch (error) {
@@ -185,7 +185,7 @@ export class MachineLearningOptimizationService {
         });
       }
 
-      this.logger.log(`Started A/B test: ${testId}`);
+      this.logger.info(`Started A/B test: ${testId}`);
       
       return true;
     } catch (error) {
@@ -237,7 +237,7 @@ export class MachineLearningOptimizationService {
         appId: 'halobuzz',
       });
 
-      this.logger.log(`Assigned user ${userId} to variant ${variantId} in test ${testId}`);
+      this.logger.info(`Assigned user ${userId} to variant ${variantId} in test ${testId}`);
       
       return variantId;
     } catch (error) {
@@ -279,7 +279,7 @@ export class MachineLearningOptimizationService {
         appId: 'halobuzz',
       });
 
-      this.logger.log(`Recorded conversion for user ${userId} in test ${testId}, variant ${variantId}`);
+      this.logger.info(`Recorded conversion for user ${userId} in test ${testId}, variant ${variantId}`);
     } catch (error) {
       this.logger.error('Error recording conversion:', error);
     }
@@ -400,7 +400,7 @@ export class MachineLearningOptimizationService {
         status: 'ready',
       });
 
-      this.logger.log(`Trained model: ${modelId} - ${modelConfig.name}`);
+      this.logger.info(`Trained model: ${modelId} - ${modelConfig.name}`);
       
       return model;
     } catch (error) {

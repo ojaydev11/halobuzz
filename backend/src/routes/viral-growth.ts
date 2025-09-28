@@ -71,7 +71,7 @@ export default async function viralGrowthRoutes(fastify: FastifyInstance) {
       const userId = request.user?.userId;
 
       if (!userId) {
-        return reply.status(401).json({
+        return reply.status(401).send({
           success: false,
           error: 'Authentication required'
         });
@@ -80,7 +80,7 @@ export default async function viralGrowthRoutes(fastify: FastifyInstance) {
       const referralCode = await viralGrowthService.generateReferralCode(userId);
       const referralUrl = `https://halobuzz.com/invite/${referralCode}`;
 
-      return reply.json({
+      return reply.send({
         success: true,
         data: {
           referralCode,
@@ -93,7 +93,7 @@ export default async function viralGrowthRoutes(fastify: FastifyInstance) {
       });
     } catch (error) {
       logger.error('Failed to generate referral code:', error);
-      return reply.status(500).json({
+      return reply.status(500).send({
         success: false,
         error: 'Failed to generate referral code'
       });
@@ -116,7 +116,7 @@ export default async function viralGrowthRoutes(fastify: FastifyInstance) {
     try {
       const errors = validationResult(request);
       if (!errors.isEmpty()) {
-        return reply.status(400).json({
+        return reply.status(400).send({
           success: false,
           errors: errors.array()
         });
@@ -129,7 +129,7 @@ export default async function viralGrowthRoutes(fastify: FastifyInstance) {
 
       const result = await viralGrowthService.processReferralSignup(referralCode, userId);
 
-      return reply.json({
+      return reply.send({
         success: result.success,
         data: result.success ? {
           referrerReward: result.referrerReward,
@@ -140,7 +140,7 @@ export default async function viralGrowthRoutes(fastify: FastifyInstance) {
       });
     } catch (error) {
       logger.error('Failed to process referral signup:', error);
-      return reply.status(500).json({
+      return reply.status(500).send({
         success: false,
         error: 'Failed to process referral signup'
       });
@@ -194,7 +194,7 @@ export default async function viralGrowthRoutes(fastify: FastifyInstance) {
 
       const challengeId = await viralGrowthService.createViralChallenge(challengeData);
 
-      return reply.json({
+      return reply.send({
         success: true,
         data: {
           challengeId,
@@ -203,7 +203,7 @@ export default async function viralGrowthRoutes(fastify: FastifyInstance) {
       });
     } catch (error) {
       logger.error('Failed to create viral challenge:', error);
-      return reply.status(500).json({
+      return reply.status(500).send({
         success: false,
         error: 'Failed to create viral challenge'
       });
@@ -227,7 +227,7 @@ export default async function viralGrowthRoutes(fastify: FastifyInstance) {
       const userId = request.user?.userId;
 
       if (!userId) {
-        return reply.status(401).json({
+        return reply.status(401).send({
           success: false,
           error: 'Authentication required'
         });
@@ -235,14 +235,14 @@ export default async function viralGrowthRoutes(fastify: FastifyInstance) {
 
       const result = await viralGrowthService.joinViralChallenge(challengeId, userId);
 
-      return reply.json({
+      return reply.send({
         success: result.success,
         data: result.success ? result.reward : null,
         message: result.message || (result.success ? 'Successfully joined challenge' : 'Failed to join challenge')
       });
     } catch (error) {
       logger.error('Failed to join viral challenge:', error);
-      return reply.status(500).json({
+      return reply.status(500).send({
         success: false,
         error: 'Failed to join viral challenge'
       });
@@ -271,13 +271,13 @@ export default async function viralGrowthRoutes(fastify: FastifyInstance) {
 
       const viralScore = await viralGrowthService.calculateViralScore(contentId, contentType);
 
-      return reply.json({
+      return reply.send({
         success: true,
         data: viralScore
       });
     } catch (error) {
       logger.error('Failed to calculate viral score:', error);
-      return reply.status(500).json({
+      return reply.status(500).send({
         success: false,
         error: 'Failed to calculate viral score'
       });
@@ -309,7 +309,7 @@ export default async function viralGrowthRoutes(fastify: FastifyInstance) {
 
       const result = await viralGrowthService.boostContentVisibility(contentId, boostType);
 
-      return reply.json({
+      return reply.send({
         success: result.success,
         data: {
           boostMultiplier: result.boostMultiplier,
@@ -319,7 +319,7 @@ export default async function viralGrowthRoutes(fastify: FastifyInstance) {
       });
     } catch (error) {
       logger.error('Failed to boost content visibility:', error);
-      return reply.status(500).json({
+      return reply.status(500).send({
         success: false,
         error: 'Failed to boost content visibility'
       });
@@ -374,13 +374,13 @@ export default async function viralGrowthRoutes(fastify: FastifyInstance) {
     try {
       const socialProof = await viralGrowthService.generateSocialProof();
 
-      return reply.json({
+      return reply.send({
         success: true,
         data: socialProof
       });
     } catch (error) {
       logger.error('Failed to get social proof:', error);
-      return reply.status(500).json({
+      return reply.status(500).send({
         success: false,
         error: 'Failed to get social proof data'
       });
@@ -404,7 +404,7 @@ export default async function viralGrowthRoutes(fastify: FastifyInstance) {
       const { targetAudience } = request.body as { targetAudience: any };
 
       if (!userId) {
-        return reply.status(401).json({
+        return reply.status(401).send({
           success: false,
           error: 'Authentication required'
         });
@@ -412,13 +412,13 @@ export default async function viralGrowthRoutes(fastify: FastifyInstance) {
 
       const opportunities = await viralGrowthService.createCollaborationOpportunity(userId, targetAudience);
 
-      return reply.json({
+      return reply.send({
         success: opportunities.success,
         data: opportunities.opportunities
       });
     } catch (error) {
       logger.error('Failed to create collaboration opportunities:', error);
-      return reply.status(500).json({
+      return reply.status(500).send({
         success: false,
         error: 'Failed to create collaboration opportunities'
       });
@@ -479,7 +479,7 @@ export default async function viralGrowthRoutes(fastify: FastifyInstance) {
         }
       ];
 
-      return reply.json({
+      return reply.send({
         success: true,
         data: campaigns
       });

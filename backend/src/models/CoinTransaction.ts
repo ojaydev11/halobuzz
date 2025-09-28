@@ -34,6 +34,13 @@ export interface ICoinTransaction extends Document {
     referenceId?: string; // General purpose reference ID
   };
 
+  // Additional properties for compatibility
+  metadata?: {
+    ogTier?: number;
+    [key: string]: any;
+  };
+  paymentMethod?: string;
+
   // Anti-Fraud & Compliance
   geoLocation?: {
     country: string;

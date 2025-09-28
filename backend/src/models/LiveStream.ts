@@ -2,6 +2,8 @@ import mongoose, { Document, Schema } from 'mongoose';
 
 export interface ILiveStream extends Document {
   hostId: mongoose.Types.ObjectId;
+  creatorId?: mongoose.Types.ObjectId;
+  userId?: mongoose.Types.ObjectId;
   title: string;
   description?: string;
   category: string;

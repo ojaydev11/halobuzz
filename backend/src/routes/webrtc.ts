@@ -11,7 +11,7 @@ const router = express.Router();
 router.post('/offer', authMiddleware, async (req, res) => {
   try {
     const { streamId, quality = 'medium' } = req.body;
-    const userId = req.user?.id;
+    const userId = (req as any).user?.id;
 
     if (!streamId) {
       return res.status(400).json({

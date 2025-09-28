@@ -24,7 +24,7 @@ const socialLimit = rateLimit({
  */
 router.post('/follow', authenticateToken, socialLimit, async (req: Request, res: Response) => {
   try {
-    const followerId = req.user?.id;
+    const followerId = (req as any).user?.id;
     const { userId, action } = req.body;
 
     if (!followerId) {
@@ -181,7 +181,7 @@ router.get('/followers/:userId', socialLimit, async (req: Request, res: Response
  */
 router.get('/follow-status/:userId', authenticateToken, socialLimit, async (req: Request, res: Response) => {
   try {
-    const followerId = req.user?.id;
+    const followerId = (req as any).user?.id;
     const { userId } = req.params;
 
     if (!followerId) {
@@ -216,7 +216,7 @@ router.get('/follow-status/:userId', authenticateToken, socialLimit, async (req:
  */
 router.get('/friends', authenticateToken, socialLimit, async (req: Request, res: Response) => {
   try {
-    const userId = req.user?.id;
+    const userId = (req as any).user?.id;
     if (!userId) {
       return res.status(401).json({
         success: false,
@@ -246,7 +246,7 @@ router.get('/friends', authenticateToken, socialLimit, async (req: Request, res:
  */
 router.post('/friends/add', authenticateToken, socialLimit, async (req: Request, res: Response) => {
   try {
-    const userId = req.user?.id;
+    const userId = (req as any).user?.id;
     const { friendId } = req.body;
 
     if (!userId) {
@@ -291,7 +291,7 @@ router.post('/friends/add', authenticateToken, socialLimit, async (req: Request,
  */
 router.delete('/friends/:friendId', authenticateToken, socialLimit, async (req: Request, res: Response) => {
   try {
-    const userId = req.user?.id;
+    const userId = (req as any).user?.id;
     const { friendId } = req.params;
 
     if (!userId) {
@@ -351,7 +351,7 @@ router.get('/guilds', socialLimit, async (req: Request, res: Response) => {
  */
 router.get('/guilds/my', authenticateToken, socialLimit, async (req: Request, res: Response) => {
   try {
-    const userId = req.user?.id;
+    const userId = (req as any).user?.id;
     if (!userId) {
       return res.status(401).json({
         success: false,
@@ -381,7 +381,7 @@ router.get('/guilds/my', authenticateToken, socialLimit, async (req: Request, re
  */
 router.post('/guilds/:guildId/join', authenticateToken, socialLimit, async (req: Request, res: Response) => {
   try {
-    const userId = req.user?.id;
+    const userId = (req as any).user?.id;
     const { guildId } = req.params;
 
     if (!userId) {
@@ -423,7 +423,7 @@ router.post('/guilds/:guildId/join', authenticateToken, socialLimit, async (req:
  */
 router.post('/guilds/:guildId/leave', authenticateToken, socialLimit, async (req: Request, res: Response) => {
   try {
-    const userId = req.user?.id;
+    const userId = (req as any).user?.id;
     const { guildId } = req.params;
 
     if (!userId) {
@@ -490,7 +490,7 @@ router.get('/chat/history', authenticateToken, socialLimit, async (req: Request,
  */
 router.post('/chat/send', authenticateToken, socialLimit, async (req: Request, res: Response) => {
   try {
-    const userId = req.user?.id;
+    const userId = (req as any).user?.id;
     const { roomId = 'global', message, type = 'text' } = req.body;
 
     if (!userId) {
@@ -540,7 +540,7 @@ router.post('/chat/send', authenticateToken, socialLimit, async (req: Request, r
  */
 router.get('/invites', authenticateToken, socialLimit, async (req: Request, res: Response) => {
   try {
-    const userId = req.user?.id;
+    const userId = (req as any).user?.id;
     if (!userId) {
       return res.status(401).json({
         success: false,
@@ -570,7 +570,7 @@ router.get('/invites', authenticateToken, socialLimit, async (req: Request, res:
  */
 router.post('/invites/send', authenticateToken, socialLimit, async (req: Request, res: Response) => {
   try {
-    const userId = req.user?.id;
+    const userId = (req as any).user?.id;
     const { friendId, gameCode, gameName, message, stake } = req.body;
 
     if (!userId) {
@@ -684,7 +684,7 @@ router.post('/invites/:inviteId/decline', authenticateToken, socialLimit, async 
  */
 router.get('/achievements', authenticateToken, socialLimit, async (req: Request, res: Response) => {
   try {
-    const userId = req.user?.id;
+    const userId = (req as any).user?.id;
     if (!userId) {
       return res.status(401).json({
         success: false,

@@ -61,6 +61,10 @@ export interface IUser extends Document {
     };
     language: string;
     timezone: string;
+    interests?: string[];
+    autoGifter?: boolean;
+    categories?: string[];
+    creators?: string[];
   };
   socialLogin?: {
     google?: {
@@ -101,6 +105,11 @@ export interface IUser extends Document {
       totalGifts: number;
       reportCount: number;
     };
+  };
+  demographics?: {
+    age?: number;
+    location?: string;
+    deviceType?: string;
   };
   karma: {
     total: number;
