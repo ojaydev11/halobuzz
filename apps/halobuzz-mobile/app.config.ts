@@ -2,7 +2,7 @@ import { ExpoConfig, ConfigContext } from 'expo/config';
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
-  name: "HaloBuzz",
+  name: "HaloBuzz - Global Gaming Platform",
   slug: "halobuzz-mobile",
   version: "1.0.0",
   orientation: "portrait",
@@ -13,33 +13,18 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     resizeMode: "contain",
     backgroundColor: "#0B0B10"
   },
-  description: "HaloBuzz - Live streaming platform for creators and viewers",
-  keywords: ["live streaming", "social media", "content creation", "entertainment"],
+  description: "HaloBuzz - Advanced Gaming Platform with Live Streaming, AI Opponents, and Social Features",
   assetBundlePatterns: [
     "**/*"
   ],
   ios: {
     supportsTablet: true,
-    bundleIdentifier: process.env.IOS_BUNDLE_ID || "com.halobuzz.app",
+    bundleIdentifier: "com.halobuzz.app",
     buildNumber: "1",
     infoPlist: {
-      NSCameraUsageDescription: "Camera access is required for live streaming and content creation.",
-      NSMicrophoneUsageDescription: "Microphone access is required for live audio and voice features.",
-      NSPhotoLibraryUsageDescription: "Photo library access is required to select profile pictures and share content.",
-      NSLocationWhenInUseUsageDescription: "Location access helps you discover local streams and events.",
-      NSContactsUsageDescription: "Contact access helps you find friends who are already on HaloBuzz.",
-      ITSAppUsesNonExemptEncryption: false,
-      UIBackgroundModes: ["audio", "voip", "background-processing"],
-      NSAppTransportSecurity: {
-        NSAllowsArbitraryLoads: false,
-        NSExceptionDomains: {
-          "halo-api-production.up.railway.app": {
-            NSExceptionAllowsInsecureHTTPLoads: false,
-            NSExceptionMinimumTLSVersion: "TLSv1.2",
-            NSIncludesSubdomains: true
-          }
-        }
-      }
+      NSCameraUsageDescription: "HaloBuzz needs camera access for live streaming and profile pictures",
+      NSMicrophoneUsageDescription: "HaloBuzz needs microphone access for live streaming and voice chat",
+      NSPhotoLibraryUsageDescription: "HaloBuzz needs photo library access for profile pictures and content sharing"
     }
   },
   android: {
@@ -52,29 +37,10 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     permissions: [
       "android.permission.CAMERA",
       "android.permission.RECORD_AUDIO",
-      "android.permission.INTERNET",
-      "android.permission.ACCESS_NETWORK_STATE",
-      "android.permission.WRITE_EXTERNAL_STORAGE",
       "android.permission.READ_EXTERNAL_STORAGE",
-      "android.permission.ACCESS_FINE_LOCATION",
-      "android.permission.ACCESS_COARSE_LOCATION",
-      "android.permission.READ_CONTACTS",
-      "android.permission.WAKE_LOCK",
-      "android.permission.FOREGROUND_SERVICE",
-      "android.permission.VIBRATE",
-      "android.permission.POST_NOTIFICATIONS",
-      "android.permission.RECEIVE_BOOT_COMPLETED"
-    ],
-    intentFilters: [
-      {
-        action: "VIEW",
-        data: [
-          {
-            scheme: "halobuzz"
-          }
-        ],
-        category: ["BROWSABLE", "DEFAULT"]
-      }
+      "android.permission.WRITE_EXTERNAL_STORAGE",
+      "android.permission.INTERNET",
+      "android.permission.ACCESS_NETWORK_STATE"
     ]
   },
   web: {
@@ -82,29 +48,35 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   scheme: "halobuzz",
   extra: {
-    // Expo public env var (preferred for OTA updates)
-    apiBaseUrl: process.env.EXPO_PUBLIC_API_BASE_URL || "https://halo-api-production.up.railway.app",
-    // Fallback for non-OTA dev builds
-    apiBase: process.env.HALOBUZZ_API_BASE || "https://halo-api-production.up.railway.app",
-    // API path prefix (e.g., /api, /v1, etc.)
-    apiPrefix: process.env.EXPO_PUBLIC_API_PREFIX || process.env.API_PREFIX || "/api/v1",
-    agoraAppId: process.env.AGORA_APP_ID || "",
-    paymentsEnabled: process.env.PAYMENTS_ENABLED === "true",
+    apiBaseUrl: "https://halo-api-production.up.railway.app",
+    apiPrefix: "/api/v1",
     eas: {
-      projectId: "5c8d3620-68bb-4fd8-94c3-6575c9c218bb"
+      projectId: "halobuzz-mobile-project"
     }
   },
   plugins: [
     "expo-router",
     "expo-font",
     [
-      "expo-notifications",
+      "expo-build-properties",
       {
-        icon: "./assets/notification-icon.png",
-        color: "#ffffff",
-        sounds: ["./assets/notification-sound.wav"],
-        mode: "production"
+        ios: {
+          deploymentTarget: "15.1"
+        },
+        android: {
+          compileSdkVersion: 34,
+          targetSdkVersion: 34,
+          buildToolsVersion: "34.0.0"
+        }
       }
     ]
-  ]
+  ],
+  updates: {
+    enabled: true,
+    checkAutomatically: "ON_LOAD",
+    fallbackToCacheTimeout: 0
+  },
+  runtimeVersion: {
+    policy: "appVersion"
+  }
 });

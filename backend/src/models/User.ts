@@ -1,5 +1,5 @@
 import mongoose, { Document, Schema } from 'mongoose';
-import bcrypt from 'bcryptjs';
+import * as bcrypt from 'bcryptjs';
 
 export interface IUser extends Document {
   username: string;
@@ -15,11 +15,14 @@ export interface IUser extends Document {
   language: string;
   isVerified: boolean;
   isBanned: boolean;
+  isActive?: boolean;
+  role?: string;
   banReason?: string;
   banExpiresAt?: Date;
   lastActiveAt: Date;
-  totalCoinsEarned: number;
-  totalCoinsSpent: number;
+  lastLoginIP?: string;
+  lastLoginDevice?: string;
+  // Removed duplicate coin tracking - using coins object instead
   followers: number;
   following: number;
   totalLikes: number;
@@ -196,6 +199,15 @@ const userSchema = new Schema<IUser>({
     type: Boolean,
     default: false
   },
+  isActive: {
+    type: Boolean,
+    default: true
+  },
+  role: {
+    type: String,
+    default: 'user',
+    enum: ['user', 'admin', 'moderator', 'super_admin']
+  },
   banReason: {
     type: String,
     default: null
@@ -208,16 +220,15 @@ const userSchema = new Schema<IUser>({
     type: Date,
     default: Date.now
   },
-  totalCoinsEarned: {
-    type: Number,
-    default: 0,
-    min: 0
+  lastLoginIP: {
+    type: String,
+    required: false
   },
-  totalCoinsSpent: {
-    type: Number,
-    default: 0,
-    min: 0
+  lastLoginDevice: {
+    type: String,
+    required: false
   },
+  // Removed duplicate coin fields - using coins object instead
   followers: {
     type: Number,
     default: 0,
@@ -442,6 +453,17 @@ userSchema.virtual('isHaloThroneActive').get(function() {
   if (!this.haloThroneExpiresAt) return false;
   return new Date() < this.haloThroneExpiresAt;
 });
+
+// Compatibility virtuals for legacy coin access
+userSchema.virtual('totalCoinsEarned').get(function() {
+  return this.coins?.totalEarned || 0;
+});
+
+userSchema.virtual('totalCoinsSpent').get(function() {
+  return this.coins?.totalSpent || 0;
+});
+
+userSchema.set('toJSON', { virtuals: true });
 
 // Static method to find users by country
 userSchema.statics.findByCountry = function(country: string) {

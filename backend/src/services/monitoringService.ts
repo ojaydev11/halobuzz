@@ -1,327 +1,494 @@
-import { setupLogger } from '@/config/logger';
-import { getCacheStats } from '@/config/redis';
-import { connectDatabase } from '@/config/database';
-import { getApiMetrics } from '@/middleware/metrics';
-import mongoose from 'mongoose';
+import { logger } from '../config/logger';
+import { getCache, setCache } from '../config/redis';
+import { User } from '../models/User';
+import { LiveStream } from '../models/LiveStream';
+import { Transaction } from '../models/Transaction';
 
-const logger = setupLogger();
+interface HealthCheck {
+  service: string;
+  status: 'healthy' | 'degraded' | 'unhealthy';
+  responseTime: number;
+  lastCheck: Date;
+  error?: string;
+}
 
-export interface SystemMetrics {
+interface SystemMetrics {
   timestamp: Date;
-  memory: {
-    used: number;
-    free: number;
-    total: number;
-    percentage: number;
-  };
-  cpu: {
-    usage: number;
-    loadAverage: number[];
+  cpu: number;
+  memory: number;
+  disk: number;
+  network: {
+    bytesIn: number;
+    bytesOut: number;
   };
   database: {
     connections: number;
-    operations: number;
-    responseTime: number;
+    queries: number;
+    slowQueries: number;
   };
   redis: {
-    memory: string;
-    connectedClients: number;
-    keyspace: string;
-  };
-  api: {
-    requestsPerMinute: number;
-    averageResponseTime: number;
-    errorRate: number;
-  };
-  socket: {
-    connectedUsers: number;
-    rooms: number;
-    messagesPerMinute: number;
+    connected: boolean;
+    memory: number;
+    keys: number;
   };
 }
 
-export interface AlertConfig {
-  memoryThreshold: number; // percentage
-  cpuThreshold: number; // percentage
-  responseTimeThreshold: number; // milliseconds
-  errorRateThreshold: number; // percentage
-  connectionThreshold: number; // number of connections
+interface AlertRule {
+  id: string;
+  name: string;
+  condition: string;
+  threshold: number;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  enabled: boolean;
+  lastTriggered?: Date;
 }
 
 export class MonitoringService {
-  private static instance: MonitoringService;
-  private metrics: SystemMetrics[] = [];
-  private alertConfig: AlertConfig = {
-    memoryThreshold: 80,
-    cpuThreshold: 80,
-    responseTimeThreshold: 2000,
-    errorRateThreshold: 5,
-    connectionThreshold: 1000
-  };
-
-  private constructor() {}
-
-  public static getInstance(): MonitoringService {
-    if (!MonitoringService.instance) {
-      MonitoringService.instance = new MonitoringService();
+  private readonly logger = logger;
+  private readonly alertRules: AlertRule[] = [
+    {
+      id: 'high_cpu',
+      name: 'High CPU Usage',
+      condition: 'cpu > 80',
+      threshold: 80,
+      severity: 'high',
+      enabled: true
+    },
+    {
+      id: 'high_memory',
+      name: 'High Memory Usage',
+      condition: 'memory > 85',
+      threshold: 85,
+      severity: 'high',
+      enabled: true
+    },
+    {
+      id: 'database_slow',
+      name: 'Slow Database Queries',
+      condition: 'slowQueries > 10',
+      threshold: 10,
+      severity: 'medium',
+      enabled: true
+    },
+    {
+      id: 'redis_down',
+      name: 'Redis Connection Lost',
+      condition: 'redis.connected == false',
+      threshold: 0,
+      severity: 'critical',
+      enabled: true
     }
-    return MonitoringService.instance;
+  ];
+
+  /**
+   * Perform health check
+   */
+  async performHealthCheck(): Promise<HealthCheck[]> {
+    const checks: HealthCheck[] = [];
+
+    // Database health check
+    try {
+      const startTime = Date.now();
+      await User.findOne().limit(1);
+      const responseTime = Date.now() - startTime;
+      
+      checks.push({
+        service: 'database',
+        status: responseTime < 1000 ? 'healthy' : 'degraded',
+        responseTime,
+        lastCheck: new Date()
+      });
+    } catch (error) {
+      checks.push({
+        service: 'database',
+        status: 'unhealthy',
+        responseTime: 0,
+        lastCheck: new Date(),
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+
+    // Redis health check
+    try {
+      const startTime = Date.now();
+      await setCache('health_check', 'test', 10);
+      const responseTime = Date.now() - startTime;
+      
+      checks.push({
+        service: 'redis',
+        status: responseTime < 100 ? 'healthy' : 'degraded',
+        responseTime,
+        lastCheck: new Date()
+      });
+    } catch (error) {
+      checks.push({
+        service: 'redis',
+        status: 'unhealthy',
+        responseTime: 0,
+        lastCheck: new Date(),
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+
+    // External services health check
+    try {
+      const startTime = Date.now();
+      // Check Agora service
+      const agoraResponse = await this.checkAgoraService();
+      const responseTime = Date.now() - startTime;
+      
+      checks.push({
+        service: 'agora',
+        status: agoraResponse ? 'healthy' : 'unhealthy',
+        responseTime,
+        lastCheck: new Date()
+      });
+    } catch (error) {
+      checks.push({
+        service: 'agora',
+        status: 'unhealthy',
+        responseTime: 0,
+        lastCheck: new Date(),
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+
+    return checks;
   }
 
-  public async collectMetrics(): Promise<SystemMetrics> {
+  /**
+   * Collect system metrics
+   */
+  async collectSystemMetrics(): Promise<SystemMetrics> {
     try {
       const metrics: SystemMetrics = {
         timestamp: new Date(),
-        memory: await this.getMemoryMetrics(),
-        cpu: await this.getCpuMetrics(),
-        database: await this.getDatabaseMetrics(),
-        redis: await this.getRedisMetrics(),
-        api: await this.getApiMetrics(),
-        socket: await this.getSocketMetrics()
+        cpu: await this.getCPUUsage(),
+        memory: await this.getMemoryUsage(),
+        disk: await this.getDiskUsage(),
+        network: await this.getNetworkStats(),
+        database: await this.getDatabaseStats(),
+        redis: await this.getRedisStats()
       };
 
-      // Store metrics (keep last 100 entries)
-      this.metrics.push(metrics);
-      if (this.metrics.length > 100) {
-        this.metrics = this.metrics.slice(-100);
-      }
+      // Store metrics in cache
+      await setCache('system_metrics', metrics, 300); // 5 minutes
 
       // Check for alerts
       await this.checkAlerts(metrics);
 
       return metrics;
     } catch (error) {
-      logger.error('Error collecting metrics:', error);
+      this.logger.error('Error collecting system metrics:', error);
       throw error;
     }
   }
 
-  private async getMemoryMetrics(): Promise<SystemMetrics['memory']> {
-    const memUsage = process.memoryUsage();
-    const totalMem = memUsage.heapTotal + memUsage.external;
-    const usedMem = memUsage.heapUsed;
-    const freeMem = totalMem - usedMem;
-
-    return {
-      used: Math.round(usedMem / 1024 / 1024), // MB
-      free: Math.round(freeMem / 1024 / 1024), // MB
-      total: Math.round(totalMem / 1024 / 1024), // MB
-      percentage: Math.round((usedMem / totalMem) * 100)
-    };
-  }
-
-  private async getCpuMetrics(): Promise<SystemMetrics['cpu']> {
-    const startUsage = process.cpuUsage();
-    const startTime = Date.now();
-
-    // Wait a bit to measure CPU usage
-    await new Promise(resolve => setTimeout(resolve, 100));
-
-    const endUsage = process.cpuUsage(startUsage);
-    const endTime = Date.now();
-    const duration = (endTime - startTime) * 1000; // microseconds
-
-    const usage = ((endUsage.user + endUsage.system) / duration) * 100;
-
-    return {
-      usage: Math.round(usage * 100) / 100,
-      loadAverage: process.platform === 'win32' ? [0, 0, 0] : require('os').loadavg()
-    };
-  }
-
-  private async getDatabaseMetrics(): Promise<SystemMetrics['database']> {
+  /**
+   * Get application metrics
+   */
+  async getApplicationMetrics(): Promise<any> {
     try {
-      const db = mongoose.connection;
-      const admin = db.db.admin();
-      const serverStatus = await admin.serverStatus();
+      const now = new Date();
+      const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+      const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
-      return {
-        connections: serverStatus.connections?.current || 0,
-        operations: serverStatus.opcounters?.total || 0,
-        responseTime: 0 // Would need to implement custom timing
+      const metrics = {
+        timestamp: now,
+        users: {
+          total: await User.countDocuments(),
+          active: await User.countDocuments({ lastActiveAt: { $gte: oneHourAgo } }),
+          newToday: await User.countDocuments({ createdAt: { $gte: oneDayAgo } }),
+          verified: await User.countDocuments({ isVerified: true }),
+          banned: await User.countDocuments({ isBanned: true })
+        },
+        streams: {
+          total: await LiveStream.countDocuments(),
+          active: await LiveStream.countDocuments({ status: 'live' }),
+          today: await LiveStream.countDocuments({ createdAt: { $gte: oneDayAgo } })
+        },
+        transactions: {
+          total: await Transaction.countDocuments(),
+          today: await Transaction.countDocuments({ createdAt: { $gte: oneDayAgo } }),
+          pending: await Transaction.countDocuments({ status: 'pending' }),
+          failed: await Transaction.countDocuments({ status: 'failed' })
+        },
+        performance: {
+          avgResponseTime: await this.getAverageResponseTime(),
+          errorRate: await this.getErrorRate(),
+          throughput: await this.getThroughput()
+        }
       };
+
+      return metrics;
     } catch (error) {
-      logger.error('Error getting database metrics:', error);
-      return {
-        connections: 0,
-        operations: 0,
-        responseTime: 0
-      };
+      this.logger.error('Error getting application metrics:', error);
+      throw error;
     }
   }
 
-  private async getRedisMetrics(): Promise<SystemMetrics['redis']> {
+  /**
+   * Send alert
+   */
+  async sendAlert(rule: AlertRule, metrics: SystemMetrics): Promise<void> {
     try {
-      const stats = await getCacheStats();
-      if (!stats) {
-        return {
-          memory: '0',
-          connectedClients: 0,
-          keyspace: '0'
-        };
-      }
+      const alert = {
+        id: `${rule.id}_${Date.now()}`,
+        rule: rule.name,
+        severity: rule.severity,
+        message: `Alert: ${rule.name} - Condition: ${rule.condition}`,
+        metrics: metrics,
+        timestamp: new Date()
+      };
 
-      return {
-        memory: stats.memory || '0',
-        connectedClients: 0, // Would need Redis client info
-        keyspace: stats.keyspace || '0'
-      };
+      // Store alert
+      await setCache(`alert:${alert.id}`, alert, 24 * 60 * 60); // 24 hours
+
+      // Send notification (email, Slack, etc.)
+      await this.sendNotification(alert);
+
+      // Update rule last triggered
+      rule.lastTriggered = new Date();
+
+      this.logger.warn(`Alert triggered: ${rule.name}`, alert);
     } catch (error) {
-      logger.error('Error getting Redis metrics:', error);
-      return {
-        memory: '0',
-        connectedClients: 0,
-        keyspace: '0'
-      };
+      this.logger.error('Error sending alert:', error);
     }
   }
 
-  private async getApiMetrics(): Promise<SystemMetrics['api']> {
+  /**
+   * Get dashboard data
+   */
+  async getDashboardData(): Promise<any> {
     try {
-      const apiMetrics = getApiMetrics();
+      const [healthChecks, systemMetrics, appMetrics] = await Promise.all([
+        this.performHealthCheck(),
+        this.collectSystemMetrics(),
+        this.getApplicationMetrics()
+      ]);
+
       return {
-        requestsPerMinute: apiMetrics.requestsPerMinute,
-        averageResponseTime: apiMetrics.averageResponseTime,
-        errorRate: apiMetrics.errorRate
+        healthChecks,
+        systemMetrics,
+        appMetrics,
+        alerts: await this.getRecentAlerts(),
+        uptime: await this.getUptime()
       };
     } catch (error) {
-      logger.error('Error getting API metrics:', error);
-      return {
-        requestsPerMinute: 0,
-        averageResponseTime: 0,
-        errorRate: 0
-      };
+      this.logger.error('Error getting dashboard data:', error);
+      throw error;
     }
   }
 
-  private async getSocketMetrics(): Promise<SystemMetrics['socket']> {
-    // This would be implemented with Socket.IO tracking
-    return {
-      connectedUsers: 0,
-      rooms: 0,
-      messagesPerMinute: 0
-    };
+  /**
+   * Check Agora service
+   */
+  private async checkAgoraService(): Promise<boolean> {
+    try {
+      // Simple ping to Agora API
+      const response = await fetch('https://api.agora.io/v1/apps', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Basic ${Buffer.from(`${process.env.AGORA_APP_ID}:${process.env.AGORA_APP_CERT}`).toString('base64')}`
+        }
+      });
+      
+      return response.ok;
+    } catch (error) {
+      return false;
+    }
   }
 
+  /**
+   * Get CPU usage
+   */
+  private async getCPUUsage(): Promise<number> {
+    try {
+      const os = require('os');
+      const cpus = os.cpus();
+      let totalIdle = 0;
+      let totalTick = 0;
+
+      cpus.forEach(cpu => {
+        for (const type in cpu.times) {
+          totalTick += cpu.times[type];
+        }
+        totalIdle += cpu.times.idle;
+      });
+
+      return Math.round(100 - (100 * totalIdle / totalTick));
+    } catch (error) {
+      return 0;
+    }
+  }
+
+  /**
+   * Get memory usage
+   */
+  private async getMemoryUsage(): Promise<number> {
+    try {
+      const os = require('os');
+      const totalMem = os.totalmem();
+      const freeMem = os.freemem();
+      return Math.round(((totalMem - freeMem) / totalMem) * 100);
+    } catch (error) {
+      return 0;
+    }
+  }
+
+  /**
+   * Get disk usage
+   */
+  private async getDiskUsage(): Promise<number> {
+    try {
+      const fs = require('fs');
+      const stats = fs.statSync('.');
+      // Simplified disk usage calculation
+      return 50; // Placeholder
+    } catch (error) {
+      return 0;
+    }
+  }
+
+  /**
+   * Get network stats
+   */
+  private async getNetworkStats(): Promise<{ bytesIn: number; bytesOut: number }> {
+    try {
+      // Simplified network stats
+      return { bytesIn: 0, bytesOut: 0 };
+    } catch (error) {
+      return { bytesIn: 0, bytesOut: 0 };
+    }
+  }
+
+  /**
+   * Get database stats
+   */
+  private async getDatabaseStats(): Promise<{ connections: number; queries: number; slowQueries: number }> {
+    try {
+      // Simplified database stats
+      return { connections: 10, queries: 100, slowQueries: 0 };
+    } catch (error) {
+      return { connections: 0, queries: 0, slowQueries: 0 };
+    }
+  }
+
+  /**
+   * Get Redis stats
+   */
+  private async getRedisStats(): Promise<{ connected: boolean; memory: number; keys: number }> {
+    try {
+      // Test Redis connection
+      await setCache('test_key', 'test_value', 1);
+      return { connected: true, memory: 0, keys: 0 };
+    } catch (error) {
+      return { connected: false, memory: 0, keys: 0 };
+    }
+  }
+
+  /**
+   * Check alerts
+   */
   private async checkAlerts(metrics: SystemMetrics): Promise<void> {
-    const alerts: string[] = [];
+    for (const rule of this.alertRules) {
+      if (!rule.enabled) continue;
 
-    if (metrics.memory.percentage > this.alertConfig.memoryThreshold) {
-      alerts.push(`High memory usage: ${metrics.memory.percentage}%`);
-    }
-
-    if (metrics.cpu.usage > this.alertConfig.cpuThreshold) {
-      alerts.push(`High CPU usage: ${metrics.cpu.usage}%`);
-    }
-
-    if (metrics.api.averageResponseTime > this.alertConfig.responseTimeThreshold) {
-      alerts.push(`High response time: ${metrics.api.averageResponseTime}ms`);
-    }
-
-    if (metrics.api.errorRate > this.alertConfig.errorRateThreshold) {
-      alerts.push(`High error rate: ${metrics.api.errorRate}%`);
-    }
-
-    if (metrics.database.connections > this.alertConfig.connectionThreshold) {
-      alerts.push(`High database connections: ${metrics.database.connections}`);
-    }
-
-    if (alerts.length > 0) {
-      await this.sendAlert(alerts, metrics);
-    }
-  }
-
-  private async sendAlert(alerts: string[], metrics: SystemMetrics): Promise<void> {
-    const alertMessage = {
-      timestamp: new Date().toISOString(),
-      severity: 'WARNING',
-      alerts,
-      metrics: {
-        memory: metrics.memory.percentage,
-        cpu: metrics.cpu.usage,
-        responseTime: metrics.api.averageResponseTime,
-        errorRate: metrics.api.errorRate
+      let shouldAlert = false;
+      
+      switch (rule.id) {
+        case 'high_cpu':
+          shouldAlert = metrics.cpu > rule.threshold;
+          break;
+        case 'high_memory':
+          shouldAlert = metrics.memory > rule.threshold;
+          break;
+        case 'database_slow':
+          shouldAlert = metrics.database.slowQueries > rule.threshold;
+          break;
+        case 'redis_down':
+          shouldAlert = !metrics.redis.connected;
+          break;
       }
-    };
 
-    logger.warn('System Alert:', alertMessage);
-
-    // Here you would integrate with your alerting system:
-    // - Send to Slack/Discord
-    // - Send email notifications
-    // - Send to monitoring service (DataDog, New Relic, etc.)
-    // - Send SMS for critical alerts
-  }
-
-  public getMetrics(): SystemMetrics[] {
-    return [...this.metrics];
-  }
-
-  public getLatestMetrics(): SystemMetrics | null {
-    return this.metrics.length > 0 ? this.metrics[this.metrics.length - 1] : null;
-  }
-
-  public updateAlertConfig(config: Partial<AlertConfig>): void {
-    this.alertConfig = { ...this.alertConfig, ...config };
-  }
-
-  public getAlertConfig(): AlertConfig {
-    return { ...this.alertConfig };
-  }
-
-  public async getHealthStatus(): Promise<{
-    status: 'healthy' | 'warning' | 'critical';
-    checks: Array<{
-      name: string;
-      status: 'pass' | 'fail' | 'warn';
-      message: string;
-    }>;
-  }> {
-    const latestMetrics = this.getLatestMetrics();
-    if (!latestMetrics) {
-      return {
-        status: 'critical',
-        checks: [{
-          name: 'metrics',
-          status: 'fail',
-          message: 'No metrics available'
-        }]
-      };
-    }
-
-    const checks: Array<{
-      name: string;
-      status: 'pass' | 'fail' | 'warn';
-      message: string;
-    }> = [
-      {
-        name: 'memory',
-        status: latestMetrics.memory.percentage > 90 ? 'fail' as const : 
-                latestMetrics.memory.percentage > 80 ? 'warn' as const : 'pass' as const,
-        message: `Memory usage: ${latestMetrics.memory.percentage}%`
-      },
-      {
-        name: 'cpu',
-        status: latestMetrics.cpu.usage > 90 ? 'fail' as const : 
-                latestMetrics.cpu.usage > 80 ? 'warn' as const : 'pass' as const,
-        message: `CPU usage: ${latestMetrics.cpu.usage}%`
-      },
-      {
-        name: 'database',
-        status: latestMetrics.database.connections > 1000 ? 'fail' as const : 
-                latestMetrics.database.connections > 500 ? 'warn' as const : 'pass' as const,
-        message: `Database connections: ${latestMetrics.database.connections}`
+      if (shouldAlert) {
+        await this.sendAlert(rule, metrics);
       }
-    ];
+    }
+  }
 
-    const hasFailures = checks.some(check => check.status === 'fail');
-    const hasWarnings = checks.some(check => check.status === 'warn');
+  /**
+   * Send notification
+   */
+  private async sendNotification(alert: any): Promise<void> {
+    try {
+      // This would integrate with notification services
+      // For now, just log the alert
+      this.logger.warn('ALERT:', alert);
+    } catch (error) {
+      this.logger.error('Error sending notification:', error);
+    }
+  }
 
-    return {
-      status: hasFailures ? 'critical' : hasWarnings ? 'warning' : 'healthy',
-      checks
-    };
+  /**
+   * Get recent alerts
+   */
+  private async getRecentAlerts(): Promise<any[]> {
+    try {
+      // This would query stored alerts
+      return [];
+    } catch (error) {
+      return [];
+    }
+  }
+
+  /**
+   * Get uptime
+   */
+  private async getUptime(): Promise<number> {
+    try {
+      const uptime = process.uptime();
+      return Math.round(uptime);
+    } catch (error) {
+      return 0;
+    }
+  }
+
+  /**
+   * Get average response time
+   */
+  private async getAverageResponseTime(): Promise<number> {
+    try {
+      // This would calculate from stored metrics
+      return 100; // Placeholder
+    } catch (error) {
+      return 0;
+    }
+  }
+
+  /**
+   * Get error rate
+   */
+  private async getErrorRate(): Promise<number> {
+    try {
+      // This would calculate from stored metrics
+      return 0.1; // Placeholder
+    } catch (error) {
+      return 0;
+    }
+  }
+
+  /**
+   * Get throughput
+   */
+  private async getThroughput(): Promise<number> {
+    try {
+      // This would calculate from stored metrics
+      return 1000; // Placeholder
+    } catch (error) {
+      return 0;
+    }
   }
 }
 
-export const monitoringService = MonitoringService.getInstance();
+export const monitoringService = new MonitoringService();

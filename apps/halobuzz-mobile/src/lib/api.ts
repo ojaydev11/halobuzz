@@ -11,11 +11,11 @@ import { StreamsResponse, CreateStreamRequest, Stream } from '@/types/stream';
 import { toast } from './toast';
 // Removed mock authentication for production
 
-// Get API configuration from environment
+// Get API configuration from environment - PRODUCTION MODE
 const API_BASE = process.env.EXPO_PUBLIC_API_BASE_URL ?? "https://halo-api-production.up.railway.app";
 const rawPrefix = process.env.EXPO_PUBLIC_API_PREFIX ?? "/api/v1";
 const API_PREFIX = rawPrefix && rawPrefix.trim().length > 0 ? rawPrefix : "/api/v1";
-// Production mode - no mock authentication
+// PRODUCTION MODE - Real backend integration
 const USE_MOCK_AUTH = false;
 
 // Ensure API base URL is HTTPS for production
@@ -697,6 +697,478 @@ class ApiClient {
       const networkError = this.formatError(error);
       toast.showApiError(networkError);
       throw networkError;
+    }
+  }
+
+  // Advanced Games API endpoints
+  async getAdvancedGames(): Promise<any> {
+    try {
+      const response = await this.client.get('/advanced-games/list');
+      return response.data;
+    } catch (error) {
+      throw this.formatError(error);
+    }
+  }
+
+  async joinGame(gameId: string, sessionId: string): Promise<any> {
+    try {
+      const response = await this.client.post(`/advanced-games/${gameId}/join`, { sessionId });
+      return response.data;
+    } catch (error) {
+      throw this.formatError(error);
+    }
+  }
+
+  async leaveGame(gameId: string, sessionId: string): Promise<any> {
+    try {
+      const response = await this.client.post(`/advanced-games/${gameId}/leave`, { sessionId });
+      return response.data;
+    } catch (error) {
+      throw this.formatError(error);
+    }
+  }
+
+  async getGameSessions(gameId: string): Promise<any> {
+    try {
+      const response = await this.client.get(`/advanced-games/${gameId}/sessions`);
+      return response.data;
+    } catch (error) {
+      throw this.formatError(error);
+    }
+  }
+
+  async submitGameAction(gameId: string, sessionId: string, action: any): Promise<any> {
+    try {
+      const response = await this.client.post(`/advanced-games/${gameId}/action`, { sessionId, action });
+      return response.data;
+    } catch (error) {
+      throw this.formatError(error);
+    }
+  }
+
+  // AI Opponents API endpoints
+  async getAIOpponents(): Promise<any> {
+    try {
+      const response = await this.client.get('/ai-opponents/list');
+      return response.data;
+    } catch (error) {
+      throw this.formatError(error);
+    }
+  }
+
+  async challengeAI(opponentId: string, gameType: string): Promise<any> {
+    try {
+      const response = await this.client.post('/ai-opponents/challenge', { opponentId, gameType });
+      return response.data;
+    } catch (error) {
+      throw this.formatError(error);
+    }
+  }
+
+  async getAIMatchHistory(): Promise<any> {
+    try {
+      const response = await this.client.get('/ai-opponents/match-history');
+      return response.data;
+    } catch (error) {
+      throw this.formatError(error);
+    }
+  }
+
+  // Social API endpoints
+  async getFriends(): Promise<any> {
+    try {
+      const response = await this.client.get('/social/friends');
+      return response.data;
+    } catch (error) {
+      throw this.formatError(error);
+    }
+  }
+
+  async sendFriendRequest(userId: string): Promise<any> {
+    try {
+      const response = await this.client.post('/social/friends/request', { userId });
+      return response.data;
+    } catch (error) {
+      throw this.formatError(error);
+    }
+  }
+
+  async acceptFriendRequest(requestId: string): Promise<any> {
+    try {
+      const response = await this.client.post(`/social/friends/accept/${requestId}`);
+      return response.data;
+    } catch (error) {
+      throw this.formatError(error);
+    }
+  }
+
+  async getGuilds(): Promise<any> {
+    try {
+      const response = await this.client.get('/social/guilds');
+      return response.data;
+    } catch (error) {
+      throw this.formatError(error);
+    }
+  }
+
+  async joinGuild(guildId: string): Promise<any> {
+    try {
+      const response = await this.client.post(`/social/guilds/join/${guildId}`);
+      return response.data;
+    } catch (error) {
+      throw this.formatError(error);
+    }
+  }
+
+  async createGuild(guildData: any): Promise<any> {
+    try {
+      const response = await this.client.post('/social/guilds/create', guildData);
+      return response.data;
+    } catch (error) {
+      throw this.formatError(error);
+    }
+  }
+
+  async sendGameInvite(userId: string, gameType: string): Promise<any> {
+    try {
+      const response = await this.client.post('/social/invites/send', { userId, gameType });
+      return response.data;
+    } catch (error) {
+      throw this.formatError(error);
+    }
+  }
+
+  async getGameInvites(): Promise<any> {
+    try {
+      const response = await this.client.get('/social/invites');
+      return response.data;
+    } catch (error) {
+      throw this.formatError(error);
+    }
+  }
+
+  // Tournaments API endpoints
+  async getTournaments(): Promise<any> {
+    try {
+      const response = await this.client.get('/tournaments');
+      return response.data;
+    } catch (error) {
+      throw this.formatError(error);
+    }
+  }
+
+  async joinTournament(tournamentId: string): Promise<any> {
+    try {
+      const response = await this.client.post(`/tournaments/${tournamentId}/join`);
+      return response.data;
+    } catch (error) {
+      throw this.formatError(error);
+    }
+  }
+
+  async getTournamentStatus(tournamentId: string): Promise<any> {
+    try {
+      const response = await this.client.get(`/tournaments/${tournamentId}/status`);
+      return response.data;
+    } catch (error) {
+      throw this.formatError(error);
+    }
+  }
+
+  // Leaderboards API endpoints
+  async getLeaderboards(gameType?: string, period?: string): Promise<any> {
+    try {
+      const params: any = {};
+      if (gameType) params.gameType = gameType;
+      if (period) params.period = period;
+      const response = await this.client.get('/leaderboards', { params });
+      return response.data;
+    } catch (error) {
+      throw this.formatError(error);
+    }
+  }
+
+  async getUserRank(gameType?: string): Promise<any> {
+    try {
+      const params: any = {};
+      if (gameType) params.gameType = gameType;
+      const response = await this.client.get('/leaderboards/user-rank', { params });
+      return response.data;
+    } catch (error) {
+      throw this.formatError(error);
+    }
+  }
+
+  // Achievements API endpoints
+  async getAchievements(): Promise<any> {
+    try {
+      const response = await this.client.get('/achievements');
+      return response.data;
+    } catch (error) {
+      throw this.formatError(error);
+    }
+  }
+
+  async getUserAchievements(): Promise<any> {
+    try {
+      const response = await this.client.get('/achievements/user');
+      return response.data;
+    } catch (error) {
+      throw this.formatError(error);
+    }
+  }
+
+  async claimAchievement(achievementId: string): Promise<any> {
+    try {
+      const response = await this.client.post(`/achievements/${achievementId}/claim`);
+      return response.data;
+    } catch (error) {
+      throw this.formatError(error);
+    }
+  }
+
+  // Monetization API endpoints
+  async getCurrencyBalance(): Promise<any> {
+    try {
+      const response = await this.client.get('/monetization/currency/balance');
+      return response.data;
+    } catch (error) {
+      throw this.formatError(error);
+    }
+  }
+
+  async getInventory(): Promise<any> {
+    try {
+      const response = await this.client.get('/monetization/inventory');
+      return response.data;
+    } catch (error) {
+      throw this.formatError(error);
+    }
+  }
+
+  async getIAPProducts(): Promise<any> {
+    try {
+      const response = await this.client.get('/monetization/products');
+      return response.data;
+    } catch (error) {
+      throw this.formatError(error);
+    }
+  }
+
+  async getFeaturedProducts(): Promise<any> {
+    try {
+      const response = await this.client.get('/monetization/products/featured');
+      return response.data;
+    } catch (error) {
+      throw this.formatError(error);
+    }
+  }
+
+  async processPurchase(productId: string, receiptData?: any): Promise<any> {
+    try {
+      const response = await this.client.post('/monetization/purchase', { productId, receiptData });
+      return response.data;
+    } catch (error) {
+      throw this.formatError(error);
+    }
+  }
+
+  async getBattlePasses(): Promise<any> {
+    try {
+      const response = await this.client.get('/monetization/battle-pass');
+      return response.data;
+    } catch (error) {
+      throw this.formatError(error);
+    }
+  }
+
+  async getBattlePassProgress(battlePassId: string): Promise<any> {
+    try {
+      const response = await this.client.get(`/monetization/battle-pass/${battlePassId}/progress`);
+      return response.data;
+    } catch (error) {
+      throw this.formatError(error);
+    }
+  }
+
+  async purchaseBattlePass(battlePassId: string, useGems: boolean = false): Promise<any> {
+    try {
+      const response = await this.client.post(`/monetization/battle-pass/${battlePassId}/purchase`, { useGems });
+      return response.data;
+    } catch (error) {
+      throw this.formatError(error);
+    }
+  }
+
+  async claimBattlePassReward(battlePassId: string, tier: number): Promise<any> {
+    try {
+      const response = await this.client.post(`/monetization/battle-pass/${battlePassId}/claim/${tier}`);
+      return response.data;
+    } catch (error) {
+      throw this.formatError(error);
+    }
+  }
+
+  async getLootBoxes(): Promise<any> {
+    try {
+      const response = await this.client.get('/monetization/loot-boxes');
+      return response.data;
+    } catch (error) {
+      throw this.formatError(error);
+    }
+  }
+
+  async openLootBox(lootBoxId: string): Promise<any> {
+    try {
+      const response = await this.client.post(`/monetization/loot-boxes/${lootBoxId}/open`);
+      return response.data;
+    } catch (error) {
+      throw this.formatError(error);
+    }
+  }
+
+  async getDailyRewards(): Promise<any> {
+    try {
+      const response = await this.client.get('/monetization/daily-rewards');
+      return response.data;
+    } catch (error) {
+      throw this.formatError(error);
+    }
+  }
+
+  async claimDailyReward(day: number): Promise<any> {
+    try {
+      const response = await this.client.post(`/monetization/daily-rewards/${day}/claim`);
+      return response.data;
+    } catch (error) {
+      throw this.formatError(error);
+    }
+  }
+
+  async addCurrency(currency: any, source: string = 'reward'): Promise<any> {
+    try {
+      const response = await this.client.post('/monetization/currency/add', { currency, source });
+      return response.data;
+    } catch (error) {
+      throw this.formatError(error);
+    }
+  }
+
+  // Admin Moderation API endpoints
+  async getModerationFlags(params?: any): Promise<any> {
+    try {
+      const response = await this.client.get('/admin/moderation/flags', { params });
+      return response.data;
+    } catch (error) {
+      throw this.formatError(error);
+    }
+  }
+
+  async getModerationStats(): Promise<any> {
+    try {
+      const response = await this.client.get('/admin/moderation/stats');
+      return response.data;
+    } catch (error) {
+      throw this.formatError(error);
+    }
+  }
+
+  async processModerationFlag(flagData: any): Promise<any> {
+    try {
+      const response = await this.client.post('/admin/moderation/process-flag', flagData);
+      return response.data;
+    } catch (error) {
+      throw this.formatError(error);
+    }
+  }
+
+  async assignModerationFlag(flagId: string, moderatorId: string): Promise<any> {
+    try {
+      const response = await this.client.post(`/admin/moderation/assign/${flagId}`, { moderatorId });
+      return response.data;
+    } catch (error) {
+      throw this.formatError(error);
+    }
+  }
+
+  async updateAutoModerationSettings(settings: any): Promise<any> {
+    try {
+      const response = await this.client.put('/admin/settings/auto-moderation', settings);
+      return response.data;
+    } catch (error) {
+      throw this.formatError(error);
+    }
+  }
+
+  async getBannedUsers(params?: any): Promise<any> {
+    try {
+      const response = await this.client.get('/admin/users/banned', { params });
+      return response.data;
+    } catch (error) {
+      throw this.formatError(error);
+    }
+  }
+
+  async unbanUser(userId: string): Promise<any> {
+    try {
+      const response = await this.client.post(`/admin/users/${userId}/unban`);
+      return response.data;
+    } catch (error) {
+      throw this.formatError(error);
+    }
+  }
+
+  async getModerationAuditLog(params?: any): Promise<any> {
+    try {
+      const response = await this.client.get('/admin/moderation/audit-log', { params });
+      return response.data;
+    } catch (error) {
+      throw this.formatError(error);
+    }
+  }
+
+  async getContentReports(params?: any): Promise<any> {
+    try {
+      const response = await this.client.get('/admin/content/reports', { params });
+      return response.data;
+    } catch (error) {
+      throw this.formatError(error);
+    }
+  }
+
+  async reportContent(reportData: any): Promise<any> {
+    try {
+      const response = await this.client.post('/reports/create', reportData);
+      return response.data;
+    } catch (error) {
+      throw this.formatError(error);
+    }
+  }
+
+  async getSystemStats(): Promise<any> {
+    try {
+      const response = await this.client.get('/admin/stats/system');
+      return response.data;
+    } catch (error) {
+      throw this.formatError(error);
+    }
+  }
+
+  async getAnalyticsDashboard(): Promise<any> {
+    try {
+      const response = await this.client.get('/admin/analytics/dashboard');
+      return response.data;
+    } catch (error) {
+      throw this.formatError(error);
+    }
+  }
+
+  async createModerationAction(actionData: any): Promise<any> {
+    try {
+      const response = await this.client.post('/admin/moderation/actions', actionData);
+      return response.data;
+    } catch (error) {
+      throw this.formatError(error);
     }
   }
 }

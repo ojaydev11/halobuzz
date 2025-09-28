@@ -279,7 +279,7 @@ export class TrustCredibilityService {
       }
 
       // Check if user already has this badge
-      if (user.trustBadges?.includes(badgeId)) {
+      if (user.trustBadges && user.trustBadges.includes(badgeId)) {
         return { success: false, message: 'User already has this badge' };
       }
 

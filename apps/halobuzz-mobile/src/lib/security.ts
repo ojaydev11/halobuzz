@@ -125,28 +125,28 @@ export class SecureStorageManager {
   // Auth-specific methods
   async setAuthToken(token: string): Promise<void> {
     await this.setItem(STORAGE_KEYS.AUTH_TOKEN, token, {
-      requireAuthentication: true,
+      requireAuthentication: false, // Changed to false for global compatibility
       keychainService: 'halobuzz-auth',
     });
   }
   
   async getAuthToken(): Promise<string | null> {
     return await this.getItem(STORAGE_KEYS.AUTH_TOKEN, {
-      requireAuthentication: true,
+      requireAuthentication: false, // Changed to false for global compatibility
       keychainService: 'halobuzz-auth',
     });
   }
   
   async setRefreshToken(token: string): Promise<void> {
     await this.setItem(STORAGE_KEYS.REFRESH_TOKEN, token, {
-      requireAuthentication: true,
+      requireAuthentication: false, // Changed to false for global compatibility
       keychainService: 'halobuzz-auth',
     });
   }
   
   async getRefreshToken(): Promise<string | null> {
     return await this.getItem(STORAGE_KEYS.REFRESH_TOKEN, {
-      requireAuthentication: true,
+      requireAuthentication: false, // Changed to false for global compatibility
       keychainService: 'halobuzz-auth',
     });
   }

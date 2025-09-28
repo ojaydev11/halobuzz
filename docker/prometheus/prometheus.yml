@@ -1,0 +1,46 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - "rules/*.yml"
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: 'halobuzz-backend'
+    static_configs:
+      - targets: ['backend-1:5010', 'backend-2:5010']
+    metrics_path: /metrics
+    scrape_interval: 10s
+
+  - job_name: 'halobuzz-gameservers'
+    static_configs:
+      - targets: ['game-server-1:5011', 'game-server-2:5012']
+    metrics_path: /metrics
+    scrape_interval: 5s
+
+  - job_name: 'halobuzz-ai'
+    static_configs:
+      - targets: ['ai:5020']
+    metrics_path: /metrics
+
+  - job_name: 'mongodb'
+    static_configs:
+      - targets: ['mongo:27017']
+
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['nginx:80']
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093

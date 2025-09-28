@@ -1,12 +1,8 @@
-import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { AnalyticsEvent } from '../analytics/models/AnalyticsEvent';
+import { logger } from '../config/logger';
 import { User } from '../models/User';
 import { LiveStream } from '../models/LiveStream';
-import { ShortVideo } from '../models/ShortVideo';
-import { RedisService } from './RedisService';
-import { Logger } from '@nestjs/common';
+import { Transaction } from '../models/Transaction';
+import { getCache, setCache } from '../config/redis';
 
 interface TimeSeriesData {
   timestamp: Date;
@@ -52,145 +48,79 @@ interface DashboardMetrics {
       streams: number;
       videos: number;
       totalViews: number;
-      revenue: number;
+      totalRevenue: number;
     }>;
   };
-  engagementMetrics: {
-    likesPerDay: TimeSeriesData[];
-    sharesPerDay: TimeSeriesData[];
-    commentsPerDay: TimeSeriesData[];
-    giftsPerDay: TimeSeriesData[];
-    engagementRate: TimeSeriesData[];
-    viralCoefficient: number;
-  };
   revenueMetrics: {
-    revenuePerDay: TimeSeriesData[];
+    dailyRevenue: TimeSeriesData[];
     revenueBySource: Array<{
       source: string;
       amount: number;
       percentage: number;
     }>;
-    averageRevenuePerUser: TimeSeriesData[];
-    conversionRate: TimeSeriesData[];
     topRevenueGenerators: Array<{
       userId: string;
-      userName: string;
+      username: string;
       revenue: number;
-      streams: number;
-      videos: number;
+      transactions: number;
     }>;
   };
-  technicalMetrics: {
-    apiResponseTime: TimeSeriesData[];
-    errorRate: TimeSeriesData[];
-    activeConnections: TimeSeriesData[];
-    cacheHitRate: TimeSeriesData[];
-    databasePerformance: {
-      queryTime: number;
-      connectionPool: number;
-      slowQueries: number;
-    };
-  };
-}
-
-interface PredictiveInsights {
-  userGrowth: {
-    predictedGrowth: number;
-    confidence: number;
-    factors: string[];
-  };
-  revenueForecast: {
-    predictedRevenue: number;
-    confidence: number;
-    trends: string[];
-  };
-  contentTrends: {
-    trendingCategories: string[];
-    predictedTrends: Array<{
-      category: string;
-      growth: number;
-      confidence: number;
+  engagementMetrics: {
+    dailyEngagement: TimeSeriesData[];
+    engagementByContent: Array<{
+      contentType: string;
+      engagement: number;
+      count: number;
+    }>;
+    trendingContent: Array<{
+      contentId: string;
+      title: string;
+      engagement: number;
+      views: number;
     }>;
   };
-  churnPrediction: {
-    atRiskUsers: number;
-    churnProbability: number;
-    interventionSuggestions: string[];
-  };
 }
 
-interface RealTimeMetrics {
-  activeStreams: number;
-  activeUsers: number;
-  currentRevenue: number;
-  topTrendingContent: Array<{
-    contentId: string;
-    contentType: 'stream' | 'video';
-    views: number;
-    engagement: number;
-  }>;
-  systemHealth: {
-    apiLatency: number;
-    errorRate: number;
-    activeConnections: number;
-    cacheHitRate: number;
-  };
-  alerts: Array<{
-    type: 'warning' | 'error' | 'info';
-    message: string;
-    timestamp: Date;
-    severity: 'low' | 'medium' | 'high' | 'critical';
-  }>;
+interface AnalyticsFilter {
+  startDate: Date;
+  endDate: Date;
+  userId?: string;
+  category?: string;
+  eventType?: string;
+  limit?: number;
 }
 
-@Injectable()
 export class AdvancedAnalyticsService {
-  private readonly logger = new Logger(AdvancedAnalyticsService.name);
-
-  constructor(
-    @InjectModel('AnalyticsEvent') private analyticsEventModel: Model<AnalyticsEvent>,
-    @InjectModel('User') private userModel: Model<User>,
-    @InjectModel('LiveStream') private liveStreamModel: Model<LiveStream>,
-    @InjectModel('ShortVideo') private shortVideoModel: Model<ShortVideo>,
-    private redisService: RedisService,
-  ) {}
+  private readonly logger = logger;
+  private readonly userModel = User;
+  private readonly streamModel = LiveStream;
+  private readonly transactionModel = Transaction;
 
   /**
    * Get comprehensive dashboard metrics
    */
-  async getDashboardMetrics(
-    timeRange: 'hour' | 'day' | 'week' | 'month' = 'day',
-    granularity: 'minute' | 'hour' | 'day' = 'hour',
-  ): Promise<DashboardMetrics> {
+  async getDashboardMetrics(filter: AnalyticsFilter): Promise<DashboardMetrics> {
     try {
-      const timeRangeMs = this.getTimeRangeMs(timeRange);
-      const startTime = new Date(Date.now() - timeRangeMs);
-
-      // Get overview metrics
-      const overview = await this.getOverviewMetrics(startTime);
-
-      // Get user metrics
-      const userMetrics = await this.getUserMetrics(startTime, granularity);
-
-      // Get content metrics
-      const contentMetrics = await this.getContentMetrics(startTime, granularity);
-
-      // Get engagement metrics
-      const engagementMetrics = await this.getEngagementMetrics(startTime, granularity);
-
-      // Get revenue metrics
-      const revenueMetrics = await this.getRevenueMetrics(startTime, granularity);
-
-      // Get technical metrics
-      const technicalMetrics = await this.getTechnicalMetrics(startTime, granularity);
+      const [
+        overview,
+        userMetrics,
+        contentMetrics,
+        revenueMetrics,
+        engagementMetrics
+      ] = await Promise.all([
+        this.getOverviewMetrics(filter),
+        this.getUserMetrics(filter),
+        this.getContentMetrics(filter),
+        this.getRevenueMetrics(filter),
+        this.getEngagementMetrics(filter)
+      ]);
 
       return {
         overview,
         userMetrics,
         contentMetrics,
-        engagementMetrics,
         revenueMetrics,
-        technicalMetrics,
+        engagementMetrics
       };
     } catch (error) {
       this.logger.error('Error getting dashboard metrics:', error);
@@ -199,87 +129,23 @@ export class AdvancedAnalyticsService {
   }
 
   /**
-   * Get predictive insights using ML algorithms
-   */
-  async getPredictiveInsights(): Promise<PredictiveInsights> {
-    try {
-      // User growth prediction
-      const userGrowth = await this.predictUserGrowth();
-
-      // Revenue forecast
-      const revenueForecast = await this.predictRevenue();
-
-      // Content trends prediction
-      const contentTrends = await this.predictContentTrends();
-
-      // Churn prediction
-      const churnPrediction = await this.predictChurn();
-
-      return {
-        userGrowth,
-        revenueForecast,
-        contentTrends,
-        churnPrediction,
-      };
-    } catch (error) {
-      this.logger.error('Error getting predictive insights:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Get real-time metrics
-   */
-  async getRealTimeMetrics(): Promise<RealTimeMetrics> {
-    try {
-      // Get real-time data from Redis
-      const activeStreams = await this.getActiveStreamsCount();
-      const activeUsers = await this.getActiveUsersCount();
-      const currentRevenue = await this.getCurrentRevenue();
-
-      // Get trending content
-      const topTrendingContent = await this.getTopTrendingContent();
-
-      // Get system health
-      const systemHealth = await this.getSystemHealth();
-
-      // Get active alerts
-      const alerts = await this.getActiveAlerts();
-
-      return {
-        activeStreams,
-        activeUsers,
-        currentRevenue,
-        topTrendingContent,
-        systemHealth,
-        alerts,
-      };
-    } catch (error) {
-      this.logger.error('Error getting real-time metrics:', error);
-      throw error;
-    }
-  }
-
-  /**
    * Get overview metrics
    */
-  private async getOverviewMetrics(startTime: Date) {
+  private async getOverviewMetrics(filter: AnalyticsFilter) {
     const [
       totalUsers,
       activeUsers,
       totalStreams,
       totalVideos,
       totalRevenue,
-      engagementRate,
+      engagementRate
     ] = await Promise.all([
       this.userModel.countDocuments(),
-      this.userModel.countDocuments({
-        lastActiveAt: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) },
-      }),
-      this.liveStreamModel.countDocuments({ createdAt: { $gte: startTime } }),
-      this.shortVideoModel.countDocuments({ createdAt: { $gte: startTime } }),
-      this.getTotalRevenue(startTime),
-      this.getEngagementRate(startTime),
+      this.userModel.countDocuments({ lastActiveAt: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } }),
+      this.streamModel.countDocuments({ createdAt: { $gte: filter.startDate } }),
+      this.streamModel.countDocuments({ createdAt: { $gte: filter.startDate }, type: 'video' }),
+      this.getTotalRevenue(filter.startDate),
+      this.getEngagementRate(filter.startDate)
     ]);
 
     return {
@@ -288,245 +154,154 @@ export class AdvancedAnalyticsService {
       totalStreams,
       totalVideos,
       totalRevenue,
-      engagementRate,
+      engagementRate
     };
   }
 
   /**
-   * Get user metrics with time series data
+   * Get user metrics
    */
-  private async getUserMetrics(startTime: Date, granularity: string) {
-    const newUsers = await this.getTimeSeriesData(
-      'user_registration',
-      startTime,
-      granularity,
-    );
-
-    const activeUsers = await this.getTimeSeriesData(
-      'user_active',
-      startTime,
-      granularity,
-    );
-
-    const userRetention = await this.getUserRetention();
-
-    const userSegments = await this.getUserSegments();
+  private async getUserMetrics(filter: AnalyticsFilter) {
+    const [newUsers, activeUsers, userRetention, userSegments] = await Promise.all([
+      this.getNewUsers(filter.startDate),
+      this.getActiveUsers(filter.startDate),
+      this.getUserRetention(),
+      this.getUserSegments()
+    ]);
 
     return {
       newUsers,
       activeUsers,
       userRetention,
-      userSegments,
+      userSegments
     };
   }
 
   /**
    * Get content metrics
    */
-  private async getContentMetrics(startTime: Date, granularity: string) {
-    const streamsPerDay = await this.getTimeSeriesData(
-      'stream_created',
-      startTime,
-      granularity,
-    );
-
-    const videosPerDay = await this.getTimeSeriesData(
-      'video_created',
-      startTime,
-      granularity,
-    );
-
-    const averageWatchTime = await this.getAverageWatchTime(startTime, granularity);
-
-    const topCategories = await this.getTopCategories(startTime);
-
-    const topCreators = await this.getTopCreators(startTime);
+  private async getContentMetrics(filter: AnalyticsFilter) {
+    const [streamsPerDay, videosPerDay, averageWatchTime, topCategories, topCreators] = await Promise.all([
+      this.getStreamsPerDay(filter.startDate),
+      this.getVideosPerDay(filter.startDate),
+      this.getAverageWatchTime(filter.startDate),
+      this.getTopCategories(filter.startDate),
+      this.getTopCreators(filter.startDate)
+    ]);
 
     return {
       streamsPerDay,
       videosPerDay,
       averageWatchTime,
       topCategories,
-      topCreators,
-    };
-  }
-
-  /**
-   * Get engagement metrics
-   */
-  private async getEngagementMetrics(startTime: Date, granularity: string) {
-    const likesPerDay = await this.getTimeSeriesData(
-      'content_like',
-      startTime,
-      granularity,
-    );
-
-    const sharesPerDay = await this.getTimeSeriesData(
-      'content_share',
-      startTime,
-      granularity,
-    );
-
-    const commentsPerDay = await this.getTimeSeriesData(
-      'content_comment',
-      startTime,
-      granularity,
-    );
-
-    const giftsPerDay = await this.getTimeSeriesData(
-      'gift_sent',
-      startTime,
-      granularity,
-    );
-
-    const engagementRate = await this.getEngagementRateTimeSeries(startTime, granularity);
-
-    const viralCoefficient = await this.getViralCoefficient();
-
-    return {
-      likesPerDay,
-      sharesPerDay,
-      commentsPerDay,
-      giftsPerDay,
-      engagementRate,
-      viralCoefficient,
+      topCreators
     };
   }
 
   /**
    * Get revenue metrics
    */
-  private async getRevenueMetrics(startTime: Date, granularity: string) {
-    const revenuePerDay = await this.getRevenueTimeSeries(startTime, granularity);
-
-    const revenueBySource = await this.getRevenueBySource(startTime);
-
-    const averageRevenuePerUser = await this.getAverageRevenuePerUser(startTime, granularity);
-
-    const conversionRate = await this.getConversionRate(startTime, granularity);
-
-    const topRevenueGenerators = await this.getTopRevenueGenerators(startTime);
+  private async getRevenueMetrics(filter: AnalyticsFilter) {
+    const [dailyRevenue, revenueBySource, topRevenueGenerators] = await Promise.all([
+      this.getDailyRevenue(filter.startDate),
+      this.getRevenueBySource(filter.startDate),
+      this.getTopRevenueGenerators(filter.startDate)
+    ]);
 
     return {
-      revenuePerDay,
+      dailyRevenue,
       revenueBySource,
-      averageRevenuePerUser,
-      conversionRate,
-      topRevenueGenerators,
+      topRevenueGenerators
     };
   }
 
   /**
-   * Get technical metrics
+   * Get engagement metrics
    */
-  private async getTechnicalMetrics(startTime: Date, granularity: string) {
-    const apiResponseTime = await this.getTimeSeriesData(
-      'api_response_time',
-      startTime,
-      granularity,
-    );
-
-    const errorRate = await this.getTimeSeriesData(
-      'api_error',
-      startTime,
-      granularity,
-    );
-
-    const activeConnections = await this.getTimeSeriesData(
-      'socket_connection',
-      startTime,
-      granularity,
-    );
-
-    const cacheHitRate = await this.getCacheHitRate(startTime, granularity);
-
-    const databasePerformance = await this.getDatabasePerformance();
+  private async getEngagementMetrics(filter: AnalyticsFilter) {
+    const [dailyEngagement, engagementByContent, trendingContent] = await Promise.all([
+      this.getDailyEngagement(filter.startDate),
+      this.getEngagementByContent(filter.startDate),
+      this.getTrendingContent(filter.startDate)
+    ]);
 
     return {
-      apiResponseTime,
-      errorRate,
-      activeConnections,
-      cacheHitRate,
-      databasePerformance,
+      dailyEngagement,
+      engagementByContent,
+      trendingContent
     };
   }
 
   /**
-   * Get time series data for a specific event type
+   * Get new users over time
    */
-  private async getTimeSeriesData(
-    eventType: string,
-    startTime: Date,
-    granularity: string,
-  ): Promise<TimeSeriesData[]> {
-    const groupBy = this.getGroupByClause(granularity);
-
+  private async getNewUsers(startTime: Date): Promise<TimeSeriesData[]> {
     const pipeline = [
       {
         $match: {
-          eventType,
-          timestamp: { $gte: startTime },
-        },
+          createdAt: { $gte: startTime }
+        }
       },
       {
         $group: {
-          _id: groupBy,
-          value: { $sum: 1 },
-          metadata: { $first: '$metadata' },
-        },
+          _id: {
+            $dateToString: {
+              format: '%Y-%m-%d',
+              date: '$createdAt'
+            }
+          },
+          count: { $sum: 1 }
+        }
       },
       {
-        $sort: { '_id': 1 },
-      },
+        $sort: { _id: 1 }
+      }
     ];
 
-    const results = await this.analyticsEventModel.aggregate(pipeline);
+    const results = await this.userModel.aggregate(pipeline);
 
     return results.map(result => ({
-      timestamp: result._id,
-      value: result.value,
-      metadata: result.metadata,
+      timestamp: new Date(result._id),
+      value: result.count
     }));
   }
 
   /**
-   * Get group by clause for aggregation
+   * Get active users over time
    */
-  private getGroupByClause(granularity: string) {
-    switch (granularity) {
-      case 'minute':
-        return {
-          $dateToString: {
-            format: '%Y-%m-%d %H:%M:00',
-            date: '$timestamp',
+  private async getActiveUsers(startTime: Date): Promise<TimeSeriesData[]> {
+    const pipeline = [
+      {
+        $match: {
+          lastActiveAt: { $gte: startTime }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: {
+              format: '%Y-%m-%d',
+              date: '$lastActiveAt'
+            }
           },
-        };
-      case 'hour':
-        return {
-          $dateToString: {
-            format: '%Y-%m-%d %H:00:00',
-            date: '$timestamp',
-          },
-        };
-      case 'day':
-        return {
-          $dateToString: {
-            format: '%Y-%m-%d',
-            date: '$timestamp',
-          },
-        };
-      default:
-        return {
-          $dateToString: {
-            format: '%Y-%m-%d %H:00:00',
-            date: '$timestamp',
-          },
-        };
-    }
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $sort: { _id: 1 }
+      }
+    ];
+
+    const results = await this.userModel.aggregate(pipeline);
+
+    return results.map(result => ({
+      timestamp: new Date(result._id),
+      value: result.count
+    }));
   }
 
   /**
-   * Get user retention metrics
+   * Get user retention rates
    */
   private async getUserRetention() {
     const now = new Date();
@@ -534,35 +309,18 @@ export class AdvancedAnalyticsService {
     const day7 = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     const day30 = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
-    const [day1Retention, day7Retention, day30Retention] = await Promise.all([
-      this.calculateRetentionRate(day1),
-      this.calculateRetentionRate(day7),
-      this.calculateRetentionRate(day30),
+    const [totalUsers, day1Users, day7Users, day30Users] = await Promise.all([
+      this.userModel.countDocuments(),
+      this.userModel.countDocuments({ lastActiveAt: { $gte: day1 } }),
+      this.userModel.countDocuments({ lastActiveAt: { $gte: day7 } }),
+      this.userModel.countDocuments({ lastActiveAt: { $gte: day30 } })
     ]);
 
     return {
-      day1: day1Retention,
-      day7: day7Retention,
-      day30: day30Retention,
+      day1: totalUsers > 0 ? (day1Users / totalUsers) * 100 : 0,
+      day7: totalUsers > 0 ? (day7Users / totalUsers) * 100 : 0,
+      day30: totalUsers > 0 ? (day30Users / totalUsers) * 100 : 0
     };
-  }
-
-  /**
-   * Calculate retention rate for a specific period
-   */
-  private async calculateRetentionRate(periodStart: Date) {
-    const totalUsers = await this.userModel.countDocuments({
-      createdAt: { $gte: periodStart },
-    });
-
-    if (totalUsers === 0) return 0;
-
-    const activeUsers = await this.userModel.countDocuments({
-      createdAt: { $gte: periodStart },
-      lastActiveAt: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) },
-    });
-
-    return (activeUsers / totalUsers) * 100;
   }
 
   /**
@@ -574,28 +332,138 @@ export class AdvancedAnalyticsService {
         $group: {
           _id: {
             $cond: [
-              { $gte: ['$createdAt', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)] },
-              'new',
-              {
-                $cond: [
-                  { $gte: ['$lastActiveAt', new Date(Date.now() - 24 * 60 * 60 * 1000)] },
-                  'active',
-                  'inactive'
-                ]
-              }
+              { $gte: ['$coins.totalSpent', 1000] },
+              'Whale',
+              { $cond: [
+                { $gte: ['$coins.totalSpent', 100] },
+                'Premium',
+                { $cond: [
+                  { $gte: ['$coins.totalSpent', 10] },
+                  'Regular',
+                  'Free'
+                ]}
+              ]}
             ]
           },
-          count: { $sum: 1 },
-        },
+          count: { $sum: 1 }
+        }
       },
+      {
+        $sort: { count: -1 }
+      }
     ]);
 
-    const totalUsers = segments.reduce((sum, segment) => sum + segment.count, 0);
+    const totalUsers = await this.userModel.countDocuments();
 
     return segments.map(segment => ({
       segment: segment._id,
       count: segment.count,
-      percentage: (segment.count / totalUsers) * 100,
+      percentage: totalUsers > 0 ? (segment.count / totalUsers) * 100 : 0
+    }));
+  }
+
+  /**
+   * Get streams per day
+   */
+  private async getStreamsPerDay(startTime: Date): Promise<TimeSeriesData[]> {
+    const pipeline = [
+      {
+        $match: {
+          createdAt: { $gte: startTime },
+          type: 'live'
+        }
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: {
+              format: '%Y-%m-%d',
+              date: '$createdAt'
+            }
+          },
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $sort: { _id: 1 }
+      }
+    ];
+
+    const results = await this.streamModel.aggregate(pipeline);
+
+    return results.map(result => ({
+      timestamp: new Date(result._id),
+      value: result.count
+    }));
+  }
+
+  /**
+   * Get videos per day
+   */
+  private async getVideosPerDay(startTime: Date): Promise<TimeSeriesData[]> {
+    const pipeline = [
+      {
+        $match: {
+          createdAt: { $gte: startTime },
+          type: 'video'
+        }
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: {
+              format: '%Y-%m-%d',
+              date: '$createdAt'
+            }
+          },
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $sort: { _id: 1 }
+      }
+    ];
+
+    const results = await this.streamModel.aggregate(pipeline);
+
+    return results.map(result => ({
+      timestamp: new Date(result._id),
+      value: result.count
+    }));
+  }
+
+  /**
+   * Get average watch time
+   */
+  private async getAverageWatchTime(startTime: Date): Promise<TimeSeriesData[]> {
+    const pipeline = [
+      {
+        $match: {
+          createdAt: { $gte: startTime },
+          status: 'completed'
+        }
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: {
+              format: '%Y-%m-%d',
+              date: '$createdAt'
+            }
+          },
+          avgWatchTime: { $avg: '$duration' }
+        }
+      },
+      {
+        $sort: { _id: 1 }
+      }
+    ];
+
+    const results = await this.streamModel.aggregate(pipeline);
+
+    return results.map(result => ({
+      timestamp: new Date(result._id),
+      value: result.avgWatchTime || 0
     }));
   }
 
@@ -603,44 +471,32 @@ export class AdvancedAnalyticsService {
    * Get top categories
    */
   private async getTopCategories(startTime: Date) {
-    const categories = await this.analyticsEventModel.aggregate([
+    const categories = await this.streamModel.aggregate([
       {
         $match: {
-          eventType: { $in: ['content_watch', 'content_like', 'content_share'] },
-          timestamp: { $gte: startTime },
-        },
+          createdAt: { $gte: startTime },
+          status: 'completed'
+        }
       },
       {
         $group: {
-          _id: '$metadata.category',
+          _id: '$category',
           count: { $sum: 1 },
-          engagement: {
-            $sum: {
-              $cond: [
-                { $eq: ['$eventType', 'content_like'] },
-                1,
-                { $cond: [
-                  { $eq: ['$eventType', 'content_share'] },
-                  3,
-                  { $cond: [
-                    { $eq: ['$eventType', 'content_watch'] },
-                    0.1,
-                    0
-                  ]}
-                ]}
-              ]
-            }
-          },
-        },
+          engagement: { $sum: '$totalLikes' }
+        }
       },
-      { $sort: { engagement: -1 } },
-      { $limit: 10 },
+      {
+        $sort: { count: -1 }
+      },
+      {
+        $limit: 10
+      }
     ]);
 
-    return categories.map(category => ({
-      category: category._id || 'unknown',
-      count: category.count,
-      engagement: category.engagement,
+    return categories.map(cat => ({
+      category: cat._id || 'Unknown',
+      count: cat.count,
+      engagement: cat.engagement
     }));
   }
 
@@ -648,206 +504,86 @@ export class AdvancedAnalyticsService {
    * Get top creators
    */
   private async getTopCreators(startTime: Date) {
-    const creators = await this.analyticsEventModel.aggregate([
+    const creators = await this.streamModel.aggregate([
       {
         $match: {
-          eventType: { $in: ['content_watch', 'content_like', 'content_share'] },
-          timestamp: { $gte: startTime },
-        },
+          createdAt: { $gte: startTime },
+          status: 'completed'
+        }
       },
       {
         $group: {
-          _id: '$metadata.creatorId',
-          creatorName: { $first: '$metadata.creatorName' },
-          streams: {
-            $sum: {
-              $cond: [
-                { $eq: ['$metadata.contentType', 'stream'] },
-                1,
-                0
-              ]
-            }
-          },
-          videos: {
-            $sum: {
-              $cond: [
-                { $eq: ['$metadata.contentType', 'video'] },
-                1,
-                0
-              ]
-            }
-          },
-          totalViews: {
-            $sum: {
-              $cond: [
-                { $eq: ['$eventType', 'content_watch'] },
-                1,
-                0
-              ]
-            }
-          },
-          revenue: { $sum: '$metadata.revenue' || 0 },
-        },
+          _id: '$userId',
+          streams: { $sum: 1 },
+          totalViews: { $sum: '$totalViewers' },
+          totalRevenue: { $sum: '$totalCoins' }
+        }
       },
-      { $sort: { totalViews: -1 } },
-      { $limit: 10 },
+      {
+        $lookup: {
+          from: 'users',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'user'
+        }
+      },
+      {
+        $unwind: '$user'
+      },
+      {
+        $project: {
+          creatorId: '$_id',
+          creatorName: '$user.username',
+          streams: 1,
+          videos: 0,
+          totalViews: 1,
+          totalRevenue: 1
+        }
+      },
+      {
+        $sort: { totalViews: -1 }
+      },
+      {
+        $limit: 10
+      }
     ]);
 
-    return creators.map(creator => ({
-      creatorId: creator._id,
-      creatorName: creator.creatorName || 'Unknown',
-      streams: creator.streams,
-      videos: creator.videos,
-      totalViews: creator.totalViews,
-      revenue: creator.revenue,
-    }));
+    return creators;
   }
 
   /**
-   * Get average watch time time series
+   * Get daily revenue
    */
-  private async getAverageWatchTime(startTime: Date, granularity: string): Promise<TimeSeriesData[]> {
-    const groupBy = this.getGroupByClause(granularity);
-
+  private async getDailyRevenue(startTime: Date): Promise<TimeSeriesData[]> {
     const pipeline = [
       {
         $match: {
-          eventType: 'content_watch',
-          timestamp: { $gte: startTime },
-        },
+          type: 'recharge',
+          status: 'completed',
+          createdAt: { $gte: startTime }
+        }
       },
       {
         $group: {
-          _id: groupBy,
-          averageWatchTime: { $avg: '$metadata.watchTime' },
-          count: { $sum: 1 },
-        },
-      },
-      {
-        $sort: { '_id': 1 },
-      },
-    ];
-
-    const results = await this.analyticsEventModel.aggregate(pipeline);
-
-    return results.map(result => ({
-      timestamp: result._id,
-      value: result.averageWatchTime || 0,
-      metadata: { count: result.count },
-    }));
-  }
-
-  /**
-   * Get engagement rate time series
-   */
-  private async getEngagementRateTimeSeries(startTime: Date, granularity: string): Promise<TimeSeriesData[]> {
-    const groupBy = this.getGroupByClause(granularity);
-
-    const pipeline = [
-      {
-        $match: {
-          eventType: { $in: ['content_watch', 'content_like', 'content_share', 'content_comment'] },
-          timestamp: { $gte: startTime },
-        },
-      },
-      {
-        $group: {
-          _id: groupBy,
-          totalViews: {
-            $sum: {
-              $cond: [
-                { $eq: ['$eventType', 'content_watch'] },
-                1,
-                0
-              ]
+          _id: {
+            $dateToString: {
+              format: '%Y-%m-%d',
+              date: '$createdAt'
             }
           },
-          totalEngagements: {
-            $sum: {
-              $cond: [
-                { $in: ['$eventType', ['content_like', 'content_share', 'content_comment']] },
-                1,
-                0
-              ]
-            }
-          },
-        },
+          revenue: { $sum: '$amount' }
+        }
       },
       {
-        $addFields: {
-          engagementRate: {
-            $cond: [
-              { $gt: ['$totalViews', 0] },
-              { $divide: ['$totalEngagements', '$totalViews'] },
-              0
-            ]
-          },
-        },
-      },
-      {
-        $sort: { '_id': 1 },
-      },
+        $sort: { _id: 1 }
+      }
     ];
 
-    const results = await this.analyticsEventModel.aggregate(pipeline);
+    const results = await this.transactionModel.aggregate(pipeline);
 
     return results.map(result => ({
-      timestamp: result._id,
-      value: result.engagementRate,
-      metadata: { totalViews: result.totalViews, totalEngagements: result.totalEngagements },
-    }));
-  }
-
-  /**
-   * Get viral coefficient
-   */
-  private async getViralCoefficient(): Promise<number> {
-    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-
-    const [totalShares, totalUsers] = await Promise.all([
-      this.analyticsEventModel.countDocuments({
-        eventType: 'content_share',
-        timestamp: { $gte: thirtyDaysAgo },
-      }),
-      this.userModel.countDocuments({
-        createdAt: { $gte: thirtyDaysAgo },
-      }),
-    ]);
-
-    return totalUsers > 0 ? totalShares / totalUsers : 0;
-  }
-
-  /**
-   * Get revenue time series
-   */
-  private async getRevenueTimeSeries(startTime: Date, granularity: string): Promise<TimeSeriesData[]> {
-    const groupBy = this.getGroupByClause(granularity);
-
-    const pipeline = [
-      {
-        $match: {
-          eventType: { $in: ['payment_success', 'subscription_payment', 'gift_purchase'] },
-          timestamp: { $gte: startTime },
-        },
-      },
-      {
-        $group: {
-          _id: groupBy,
-          revenue: { $sum: '$metadata.amount' },
-          transactions: { $sum: 1 },
-        },
-      },
-      {
-        $sort: { '_id': 1 },
-      },
-    ];
-
-    const results = await this.analyticsEventModel.aggregate(pipeline);
-
-    return results.map(result => ({
-      timestamp: result._id,
-      value: result.revenue || 0,
-      metadata: { transactions: result.transactions },
+      timestamp: new Date(result._id),
+      value: result.revenue
     }));
   }
 
@@ -855,134 +591,31 @@ export class AdvancedAnalyticsService {
    * Get revenue by source
    */
   private async getRevenueBySource(startTime: Date) {
-    const sources = await this.analyticsEventModel.aggregate([
+    const sources = await this.transactionModel.aggregate([
       {
         $match: {
-          eventType: { $in: ['payment_success', 'subscription_payment', 'gift_purchase'] },
-          timestamp: { $gte: startTime },
-        },
+          type: 'recharge',
+          status: 'completed',
+          createdAt: { $gte: startTime }
+        }
       },
       {
         $group: {
-          _id: '$metadata.source',
-          amount: { $sum: '$metadata.amount' },
-        },
+          _id: '$paymentMethod',
+          amount: { $sum: '$amount' }
+        }
       },
+      {
+        $sort: { amount: -1 }
+      }
     ]);
 
     const totalRevenue = sources.reduce((sum, source) => sum + source.amount, 0);
 
     return sources.map(source => ({
-      source: source._id || 'unknown',
+      source: source._id || 'Unknown',
       amount: source.amount,
-      percentage: totalRevenue > 0 ? (source.amount / totalRevenue) * 100 : 0,
-    }));
-  }
-
-  /**
-   * Get average revenue per user time series
-   */
-  private async getAverageRevenuePerUser(startTime: Date, granularity: string): Promise<TimeSeriesData[]> {
-    const groupBy = this.getGroupByClause(granularity);
-
-    const pipeline = [
-      {
-        $match: {
-          eventType: { $in: ['payment_success', 'subscription_payment', 'gift_purchase'] },
-          timestamp: { $gte: startTime },
-        },
-      },
-      {
-        $group: {
-          _id: groupBy,
-          totalRevenue: { $sum: '$metadata.amount' },
-          uniqueUsers: { $addToSet: '$userId' },
-        },
-      },
-      {
-        $addFields: {
-          userCount: { $size: '$uniqueUsers' },
-          averageRevenue: {
-            $cond: [
-              { $gt: [{ $size: '$uniqueUsers' }, 0] },
-              { $divide: ['$totalRevenue', { $size: '$uniqueUsers' }] },
-              0
-            ]
-          },
-        },
-      },
-      {
-        $sort: { '_id': 1 },
-      },
-    ];
-
-    const results = await this.analyticsEventModel.aggregate(pipeline);
-
-    return results.map(result => ({
-      timestamp: result._id,
-      value: result.averageRevenue,
-      metadata: { userCount: result.userCount, totalRevenue: result.totalRevenue },
-    }));
-  }
-
-  /**
-   * Get conversion rate time series
-   */
-  private async getConversionRate(startTime: Date, granularity: string): Promise<TimeSeriesData[]> {
-    const groupBy = this.getGroupByClause(granularity);
-
-    const pipeline = [
-      {
-        $match: {
-          eventType: { $in: ['user_registration', 'payment_success'] },
-          timestamp: { $gte: startTime },
-        },
-      },
-      {
-        $group: {
-          _id: groupBy,
-          registrations: {
-            $sum: {
-              $cond: [
-                { $eq: ['$eventType', 'user_registration'] },
-                1,
-                0
-              ]
-            }
-          },
-          payments: {
-            $sum: {
-              $cond: [
-                { $eq: ['$eventType', 'payment_success'] },
-                1,
-                0
-              ]
-            }
-          },
-        },
-      },
-      {
-        $addFields: {
-          conversionRate: {
-            $cond: [
-              { $gt: ['$registrations', 0] },
-              { $divide: ['$payments', '$registrations'] },
-              0
-            ]
-          },
-        },
-      },
-      {
-        $sort: { '_id': 1 },
-      },
-    ];
-
-    const results = await this.analyticsEventModel.aggregate(pipeline);
-
-    return results.map(result => ({
-      timestamp: result._id,
-      value: result.conversionRate,
-      metadata: { registrations: result.registrations, payments: result.payments },
+      percentage: totalRevenue > 0 ? (source.amount / totalRevenue) * 100 : 0
     }));
   }
 
@@ -990,402 +623,275 @@ export class AdvancedAnalyticsService {
    * Get top revenue generators
    */
   private async getTopRevenueGenerators(startTime: Date) {
-    const generators = await this.analyticsEventModel.aggregate([
+    const generators = await this.transactionModel.aggregate([
       {
         $match: {
-          eventType: { $in: ['payment_success', 'subscription_payment', 'gift_purchase'] },
-          timestamp: { $gte: startTime },
-        },
+          type: 'recharge',
+          status: 'completed',
+          createdAt: { $gte: startTime }
+        }
       },
       {
         $group: {
           _id: '$userId',
-          userName: { $first: '$metadata.userName' },
-          revenue: { $sum: '$metadata.amount' },
-          streams: {
-            $sum: {
-              $cond: [
-                { $eq: ['$metadata.contentType', 'stream'] },
-                1,
-                0
-              ]
-            }
-          },
-          videos: {
-            $sum: {
-              $cond: [
-                { $eq: ['$metadata.contentType', 'video'] },
-                1,
-                0
-              ]
-            }
-          },
-        },
+          revenue: { $sum: '$amount' },
+          transactions: { $sum: 1 }
+        }
       },
-      { $sort: { revenue: -1 } },
-      { $limit: 10 },
+      {
+        $lookup: {
+          from: 'users',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'user'
+        }
+      },
+      {
+        $unwind: '$user'
+      },
+      {
+        $project: {
+          userId: '$_id',
+          username: '$user.username',
+          revenue: 1,
+          transactions: 1
+        }
+      },
+      {
+        $sort: { revenue: -1 }
+      },
+      {
+        $limit: 10
+      }
     ]);
 
-    return generators.map(generator => ({
-      userId: generator._id,
-      userName: generator.userName || 'Unknown',
-      revenue: generator.revenue,
-      streams: generator.streams,
-      videos: generator.videos,
+    return generators;
+  }
+
+  /**
+   * Get daily engagement
+   */
+  private async getDailyEngagement(startTime: Date): Promise<TimeSeriesData[]> {
+    const pipeline = [
+      {
+        $match: {
+          createdAt: { $gte: startTime },
+          status: 'completed'
+        }
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: {
+              format: '%Y-%m-%d',
+              date: '$createdAt'
+            }
+          },
+          engagement: { $sum: { $add: ['$totalLikes', '$totalComments', '$totalShares'] } }
+        }
+      },
+      {
+        $sort: { _id: 1 }
+      }
+    ];
+
+    const results = await this.streamModel.aggregate(pipeline);
+
+    return results.map(result => ({
+      timestamp: new Date(result._id),
+      value: result.engagement
     }));
   }
 
   /**
-   * Get cache hit rate time series
+   * Get engagement by content type
    */
-  private async getCacheHitRate(startTime: Date, granularity: string): Promise<TimeSeriesData[]> {
-    // This would typically come from Redis metrics
-    // For now, return mock data
-    return [];
+  private async getEngagementByContent(startTime: Date) {
+    const engagement = await this.streamModel.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: startTime },
+          status: 'completed'
+        }
+      },
+      {
+        $group: {
+          _id: '$type',
+          engagement: { $sum: { $add: ['$totalLikes', '$totalComments', '$totalShares'] } },
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $sort: { engagement: -1 }
+      }
+    ]);
+
+    return engagement.map(item => ({
+      contentType: item._id || 'Unknown',
+      engagement: item.engagement,
+      count: item.count
+    }));
   }
 
   /**
-   * Get database performance metrics
+   * Get trending content
    */
-  private async getDatabasePerformance() {
-    // This would typically come from database monitoring
-    // For now, return mock data
-    return {
-      queryTime: 50, // ms
-      connectionPool: 10,
-      slowQueries: 2,
-    };
+  private async getTrendingContent(startTime: Date) {
+    const trending = await this.streamModel.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: startTime },
+          status: 'completed'
+        }
+      },
+      {
+        $project: {
+          contentId: '$_id',
+          title: 1,
+          engagement: { $add: ['$totalLikes', '$totalComments', '$totalShares'] },
+          views: '$totalViewers'
+        }
+      },
+      {
+        $sort: { engagement: -1 }
+      },
+      {
+        $limit: 10
+      }
+    ]);
+
+    return trending;
   }
 
   /**
-   * Get total revenue for a period
+   * Get total revenue
    */
   private async getTotalRevenue(startTime: Date): Promise<number> {
-    const result = await this.analyticsEventModel.aggregate([
+    const result = await this.transactionModel.aggregate([
       {
         $match: {
-          eventType: { $in: ['payment_success', 'subscription_payment', 'gift_purchase'] },
-          timestamp: { $gte: startTime },
-        },
+          type: 'recharge',
+          status: 'completed',
+          createdAt: { $gte: startTime }
+        }
       },
       {
         $group: {
           _id: null,
-          totalRevenue: { $sum: '$metadata.amount' },
-        },
-      },
+          total: { $sum: '$amount' }
+        }
+      }
     ]);
 
-    return result.length > 0 ? result[0].totalRevenue : 0;
+    return result.length > 0 ? result[0].total : 0;
   }
 
   /**
-   * Get engagement rate for a period
+   * Get engagement rate
    */
   private async getEngagementRate(startTime: Date): Promise<number> {
-    const [totalViews, totalEngagements] = await Promise.all([
-      this.analyticsEventModel.countDocuments({
-        eventType: 'content_watch',
-        timestamp: { $gte: startTime },
-      }),
-      this.analyticsEventModel.countDocuments({
-        eventType: { $in: ['content_like', 'content_share', 'content_comment'] },
-        timestamp: { $gte: startTime },
-      }),
+    const [totalViews, totalEngagement] = await Promise.all([
+      this.streamModel.aggregate([
+        {
+          $match: {
+            createdAt: { $gte: startTime },
+            status: 'completed'
+          }
+        },
+        {
+          $group: {
+            _id: null,
+            total: { $sum: '$totalViewers' }
+          }
+        }
+      ]),
+      this.streamModel.aggregate([
+        {
+          $match: {
+            createdAt: { $gte: startTime },
+            status: 'completed'
+          }
+        },
+        {
+          $group: {
+            _id: null,
+            total: { $sum: { $add: ['$totalLikes', '$totalComments', '$totalShares'] } }
+          }
+        }
+      ])
     ]);
 
-    return totalViews > 0 ? (totalEngagements / totalViews) * 100 : 0;
+    const views = totalViews.length > 0 ? totalViews[0].total : 0;
+    const engagement = totalEngagement.length > 0 ? totalEngagement[0].total : 0;
+
+    return views > 0 ? (engagement / views) * 100 : 0;
   }
 
   /**
-   * Get time range in milliseconds
+   * Export analytics data
    */
-  private getTimeRangeMs(timeRange: string): number {
-    switch (timeRange) {
-      case 'hour':
-        return 60 * 60 * 1000;
-      case 'day':
-        return 24 * 60 * 60 * 1000;
-      case 'week':
-        return 7 * 24 * 60 * 60 * 1000;
-      case 'month':
-        return 30 * 24 * 60 * 60 * 1000;
-      default:
-        return 24 * 60 * 60 * 1000;
+  async exportAnalytics(filter: AnalyticsFilter, format: 'json' | 'csv' | 'xlsx' = 'json') {
+    try {
+      const metrics = await this.getDashboardMetrics(filter);
+      
+      if (format === 'json') {
+        return JSON.stringify(metrics, null, 2);
+      }
+      
+      // For CSV and XLSX, we'd need additional libraries
+      // This is a simplified implementation
+      return JSON.stringify(metrics, null, 2);
+    } catch (error) {
+      this.logger.error('Error exporting analytics:', error);
+      throw error;
     }
   }
 
   /**
-   * Predict user growth using simple linear regression
+   * Get real-time metrics
    */
-  private async predictUserGrowth() {
-    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-    
-    const dailyUsers = await this.analyticsEventModel.aggregate([
-      {
-        $match: {
-          eventType: 'user_registration',
-          timestamp: { $gte: thirtyDaysAgo },
-        },
-      },
-      {
-        $group: {
-          _id: {
-            $dateToString: {
-              format: '%Y-%m-%d',
-              date: '$timestamp',
-            },
-          },
-          count: { $sum: 1 },
-        },
-      },
-      { $sort: { '_id': 1 } },
-    ]);
+  async getRealTimeMetrics() {
+    try {
+      const now = new Date();
+      const lastHour = new Date(now.getTime() - 60 * 60 * 1000);
 
-    if (dailyUsers.length < 7) {
-      return {
-        predictedGrowth: 0,
-        confidence: 0,
-        factors: ['Insufficient data for prediction'],
-      };
-    }
-
-    // Simple linear regression
-    const n = dailyUsers.length;
-    const sumX = dailyUsers.reduce((sum, _, index) => sum + index, 0);
-    const sumY = dailyUsers.reduce((sum, day) => sum + day.count, 0);
-    const sumXY = dailyUsers.reduce((sum, day, index) => sum + index * day.count, 0);
-    const sumXX = dailyUsers.reduce((sum, _, index) => sum + index * index, 0);
-
-    const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
-    const intercept = (sumY - slope * sumX) / n;
-
-    const predictedGrowth = slope * n + intercept;
-    const confidence = Math.min(0.9, dailyUsers.length / 30); // Confidence based on data points
-
-    return {
-      predictedGrowth: Math.max(0, predictedGrowth),
-      confidence,
-      factors: ['Historical registration trends', 'Seasonal patterns', 'Platform growth'],
-    };
-  }
-
-  /**
-   * Predict revenue using trend analysis
-   */
-  private async predictRevenue() {
-    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-    
-    const dailyRevenue = await this.analyticsEventModel.aggregate([
-      {
-        $match: {
-          eventType: { $in: ['payment_success', 'subscription_payment', 'gift_purchase'] },
-          timestamp: { $gte: thirtyDaysAgo },
-        },
-      },
-      {
-        $group: {
-          _id: {
-            $dateToString: {
-              format: '%Y-%m-%d',
-              date: '$timestamp',
-            },
-          },
-          revenue: { $sum: '$metadata.amount' },
-        },
-      },
-      { $sort: { '_id': 1 } },
-    ]);
-
-    if (dailyRevenue.length < 7) {
-      return {
-        predictedRevenue: 0,
-        confidence: 0,
-        trends: ['Insufficient data for prediction'],
-      };
-    }
-
-    // Calculate average daily revenue
-    const totalRevenue = dailyRevenue.reduce((sum, day) => sum + day.revenue, 0);
-    const averageDailyRevenue = totalRevenue / dailyRevenue.length;
-    const predictedRevenue = averageDailyRevenue * 30; // Next 30 days
-
-    return {
-      predictedRevenue,
-      confidence: 0.7,
-      trends: ['Revenue growth trend', 'User monetization increase', 'Premium feature adoption'],
-    };
-  }
-
-  /**
-   * Predict content trends
-   */
-  private async predictContentTrends() {
-    const trendingCategories = await this.getTopCategories(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
-    
-    const predictedTrends = trendingCategories.slice(0, 5).map(category => ({
-      category: category.category,
-      growth: Math.random() * 50 + 10, // Mock growth percentage
-      confidence: Math.random() * 0.3 + 0.6, // Mock confidence
-    }));
-
-    return {
-      trendingCategories: trendingCategories.map(c => c.category),
-      predictedTrends,
-    };
-  }
-
-  /**
-   * Predict user churn
-   */
-  private async predictChurn() {
-    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-    
-    const totalUsers = await this.userModel.countDocuments({
-      createdAt: { $gte: thirtyDaysAgo },
-    });
-
-    const inactiveUsers = await this.userModel.countDocuments({
-      createdAt: { $gte: thirtyDaysAgo },
-      lastActiveAt: { $lt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) },
-    });
-
-    const churnProbability = totalUsers > 0 ? (inactiveUsers / totalUsers) * 100 : 0;
-
-    return {
-      atRiskUsers: inactiveUsers,
-      churnProbability,
-      interventionSuggestions: [
-        'Send re-engagement notifications',
-        'Offer personalized content recommendations',
-        'Provide special incentives for returning users',
-        'Implement gamification elements',
-      ],
-    };
-  }
-
-  /**
-   * Get active streams count
-   */
-  private async getActiveStreamsCount(): Promise<number> {
-    return await this.liveStreamModel.countDocuments({ status: 'live' });
-  }
-
-  /**
-   * Get active users count
-   */
-  private async getActiveUsersCount(): Promise<number> {
-    return await this.userModel.countDocuments({
-      lastActiveAt: { $gte: new Date(Date.now() - 5 * 60 * 1000) }, // Active in last 5 minutes
-    });
-  }
-
-  /**
-   * Get current revenue (last hour)
-   */
-  private async getCurrentRevenue(): Promise<number> {
-    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
-    
-    const result = await this.analyticsEventModel.aggregate([
-      {
-        $match: {
-          eventType: { $in: ['payment_success', 'subscription_payment', 'gift_purchase'] },
-          timestamp: { $gte: oneHourAgo },
-        },
-      },
-      {
-        $group: {
-          _id: null,
-          revenue: { $sum: '$metadata.amount' },
-        },
-      },
-    ]);
-
-    return result.length > 0 ? result[0].revenue : 0;
-  }
-
-  /**
-   * Get top trending content
-   */
-  private async getTopTrendingContent() {
-    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
-    
-    const trending = await this.analyticsEventModel.aggregate([
-      {
-        $match: {
-          eventType: { $in: ['content_watch', 'content_like', 'content_share'] },
-          timestamp: { $gte: oneHourAgo },
-        },
-      },
-      {
-        $group: {
-          _id: '$metadata.contentId',
-          contentType: { $first: '$metadata.contentType' },
-          views: {
-            $sum: {
-              $cond: [
-                { $eq: ['$eventType', 'content_watch'] },
-                1,
-                0
-              ]
+      const [
+        activeStreams,
+        activeUsers,
+        recentTransactions,
+        recentEngagement
+      ] = await Promise.all([
+        this.streamModel.countDocuments({ status: 'live' }),
+        this.userModel.countDocuments({ lastActiveAt: { $gte: lastHour } }),
+        this.transactionModel.countDocuments({ createdAt: { $gte: lastHour } }),
+        this.streamModel.aggregate([
+          {
+            $match: {
+              createdAt: { $gte: lastHour },
+              status: 'completed'
             }
           },
-          engagement: {
-            $sum: {
-              $cond: [
-                { $in: ['$eventType', ['content_like', 'content_share']] },
-                1,
-                0
-              ]
+          {
+            $group: {
+              _id: null,
+              engagement: { $sum: { $add: ['$totalLikes', '$totalComments', '$totalShares'] } }
             }
-          },
-        },
-      },
-      { $sort: { views: -1 } },
-      { $limit: 10 },
-    ]);
+          }
+        ])
+      ]);
 
-    return trending.map(item => ({
-      contentId: item._id,
-      contentType: item.contentType,
-      views: item.views,
-      engagement: item.engagement,
-    }));
-  }
-
-  /**
-   * Get system health metrics
-   */
-  private async getSystemHealth() {
-    // This would typically come from system monitoring
-    // For now, return mock data
-    return {
-      apiLatency: 120, // ms
-      errorRate: 0.02, // 2%
-      activeConnections: 1500,
-      cacheHitRate: 0.85, // 85%
-    };
-  }
-
-  /**
-   * Get active alerts
-   */
-  private async getActiveAlerts() {
-    // This would typically come from monitoring systems
-    // For now, return mock data
-    return [
-      {
-        type: 'warning' as const,
-        message: 'High API response time detected',
-        timestamp: new Date(),
-        severity: 'medium' as const,
-      },
-      {
-        type: 'info' as const,
-        message: 'Cache hit rate is optimal',
-        timestamp: new Date(),
-        severity: 'low' as const,
-      },
-    ];
+      return {
+        activeStreams,
+        activeUsers,
+        recentTransactions,
+        recentEngagement: recentEngagement.length > 0 ? recentEngagement[0].engagement : 0,
+        timestamp: now
+      };
+    } catch (error) {
+      this.logger.error('Error getting real-time metrics:', error);
+      throw error;
+    }
   }
 }
+
+export const advancedAnalyticsService = new AdvancedAnalyticsService();

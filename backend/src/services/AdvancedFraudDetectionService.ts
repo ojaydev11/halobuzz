@@ -1,10 +1,7 @@
-import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { AnalyticsEvent } from '../analytics/models/AnalyticsEvent';
+import { logger } from '../config/logger';
 import { User } from '../models/User';
-import { RedisService } from './RedisService';
-import { Logger } from '@nestjs/common';
+import { Transaction } from '../models/Transaction';
+import { getCache, setCache } from '../config/redis';
 
 interface FraudPattern {
   patternId: string;
@@ -109,15 +106,10 @@ interface AnomalyDetection {
   lastAnalyzed: Date;
 }
 
-@Injectable()
 export class AdvancedFraudDetectionService {
-  private readonly logger = new Logger(AdvancedFraudDetectionService.name);
+  private readonly logger = logger;
 
-  constructor(
-    @InjectModel('AnalyticsEvent') private analyticsEventModel: Model<AnalyticsEvent>,
-    @InjectModel('User') private userModel: Model<User>,
-    private redisService: RedisService,
-  ) {}
+  constructor() {}
 
   /**
    * Create fraud detection pattern

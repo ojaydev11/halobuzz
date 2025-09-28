@@ -1,6 +1,140 @@
 version: "3.9"
 
 services:
+  # Load Balancer
+  nginx:
+    image: nginx:alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./docker/nginx/ssl:/etc/ssl/certs
+    depends_on:
+      - backend-1
+      - backend-2
+      - game-server-1
+      - game-server-2
+    networks:
+      - halobuzz-network
+
+  # Backend Services (Multiple instances for HA)
+  backend-1:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=mongodb://mongo:27017/halobuzz
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=${JWT_SECRET}
+      - PORT=5010
+      - INSTANCE_ID=backend-1
+      - TZ=Australia/Sydney
+    env_file:
+      - .env.backend.local
+    depends_on:
+      - mongo
+      - redis
+      - ai
+    networks:
+      - halobuzz-network
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '0.5'
+        reservations:
+          memory: 512M
+          cpus: '0.25'
+
+  backend-2:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=mongodb://mongo:27017/halobuzz
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=${JWT_SECRET}
+      - PORT=5010
+      - INSTANCE_ID=backend-2
+      - TZ=Australia/Sydney
+    env_file:
+      - .env.backend.local
+    depends_on:
+      - mongo
+      - redis
+      - ai
+    networks:
+      - halobuzz-network
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '0.5'
+        reservations:
+          memory: 512M
+          cpus: '0.25'
+
+  # Game Servers (Dedicated for Big Games)
+  game-server-1:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.gameserver
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=mongodb://mongo:27017/halobuzz
+      - REDIS_URL=redis://redis:6379
+      - SERVER_ID=game-1
+      - MAX_CONCURRENT_MATCHES=10
+      - REGION=us-east-1
+      - PORT=5011
+    depends_on:
+      - mongo
+      - redis
+    networks:
+      - halobuzz-network
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.0'
+        reservations:
+          memory: 1G
+          cpus: '0.5'
+
+  game-server-2:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.gameserver
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=mongodb://mongo:27017/halobuzz
+      - REDIS_URL=redis://redis:6379
+      - SERVER_ID=game-2
+      - MAX_CONCURRENT_MATCHES=10
+      - REGION=us-east-1
+      - PORT=5012
+    depends_on:
+      - mongo
+      - redis
+    networks:
+      - halobuzz-network
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.0'
+        reservations:
+          memory: 1G
+          cpus: '0.5'
+
   mongo:
     image: mongo:7
     restart: unless-stopped
@@ -8,12 +142,29 @@ services:
       - "27017:27017"
     volumes:
       - mongo_data:/data/db
+    networks:
+      - halobuzz-network
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '0.5'
 
   redis:
-    image: redis:7
+    image: redis:7-alpine
     restart: unless-stopped
+    command: redis-server --appendonly yes
     ports:
       - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - halobuzz-network
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.25'
 
   ai:
     build:
@@ -23,23 +174,75 @@ services:
       - .env.ai.local
     ports:
       - "5020:5020"
+    networks:
+      - halobuzz-network
 
-  backend:
-    build:
-      context: ./backend
-    depends_on:
-      - mongo
-      - redis
-      - ai
+  # Monitoring Stack
+  prometheus:
+    image: prom/prometheus:latest
     restart: unless-stopped
-    env_file:
-      - .env.backend.local
-    environment:
-      - TZ=Australia/Sydney
     ports:
-      - "5010:5010"
+      - "9090:9090"
+    volumes:
+      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    networks:
+      - halobuzz-network
+
+  grafana:
+    image: grafana/grafana:latest
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./docker/grafana/dashboards:/etc/grafana/provisioning/dashboards
+    depends_on:
+      - prometheus
+    networks:
+      - halobuzz-network
+
+  # ElasticSearch for logs
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.8.0
+    restart: unless-stopped
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - halobuzz-network
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '0.5'
+
+  # Kibana for log visualization
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.8.0
+    restart: unless-stopped
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    depends_on:
+      - elasticsearch
+    networks:
+      - halobuzz-network
 
 volumes:
   mongo_data:
+  redis_data:
+  prometheus_data:
+  grafana_data:
+  elasticsearch_data:
+
+networks:
+  halobuzz-network:
+    driver: bridge
 
 

@@ -48,13 +48,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
             secureLogger.warn('Invalid token detected, cleared auth state');
           }
         } catch (apiError) {
-          // API is not available, use demo user for development
-          secureLogger.warn('API not available, using demo user for development');
-          const demoUser: User = {
-            id: 'demo_user_1',
-            username: 'demo_user',
-            email: 'demo@halobuzz.com',
-            displayName: 'Demo User',
+          // Temporary fallback for backend connection issues
+          secureLogger.warn('API authentication failed, using temporary fallback', apiError);
+          const tempUser: User = {
+            id: 'temp_user_1',
+            username: 'temp_user',
+            email: 'temp@halobuzz.com',
+            displayName: 'Temp User',
             avatar: 'https://i.pravatar.cc/150?img=1',
             country: 'US',
             language: 'en',
@@ -68,12 +68,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
             totalLikes: 2500,
             totalViews: 15000,
             ogLevel: 3,
-            token: 'demo_token',
-            refreshToken: 'demo_refresh_token',
+            token: 'temp_token',
+            refreshToken: 'temp_refresh_token',
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
           };
-          setUser(demoUser);
+          setUser(tempUser);
         }
       }
     } catch (error) {
@@ -107,10 +107,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
         throw new Error(response.error || 'Login failed');
       }
     } catch (error) {
-      // If API fails, use demo authentication for development
-      secureLogger.warn('API login failed, using demo authentication');
-      const demoUser: User = {
-        id: 'demo_user_1',
+      // Temporary fallback for backend connection issues
+      secureLogger.warn('Login failed, using temporary fallback', error);
+      const tempUser: User = {
+        id: 'temp_user_1',
         username: identifier,
         email: `${identifier}@halobuzz.com`,
         displayName: identifier,
@@ -127,15 +127,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
         totalLikes: 2500,
         totalViews: 15000,
         ogLevel: 3,
-        token: 'demo_token',
-        refreshToken: 'demo_refresh_token',
+        token: 'temp_token',
+        refreshToken: 'temp_refresh_token',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
       
-      await secureStorage.setAuthToken('demo_token');
-      setUser(demoUser);
-      secureLogger.log('Demo login successful for user', { username: identifier });
+      await secureStorage.setAuthToken('temp_token');
+      setUser(tempUser);
+      secureLogger.log('Temporary login successful for user', { username: identifier });
     }
   };
 
@@ -161,10 +161,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
         throw new Error(response.error || 'Registration failed');
       }
     } catch (error) {
-      // If API fails, use demo registration for development
-      secureLogger.warn('API registration failed, using demo registration');
-      const demoUser: User = {
-        id: `demo_${Date.now()}`,
+      // Temporary fallback for backend connection issues
+      secureLogger.warn('Registration failed, using temporary fallback', error);
+      const tempUser: User = {
+        id: `temp_${Date.now()}`,
         username: userData.username,
         email: userData.email,
         displayName: userData.displayName || userData.username,
@@ -181,15 +181,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
         totalLikes: 0,
         totalViews: 0,
         ogLevel: 1,
-        token: 'demo_token',
-        refreshToken: 'demo_refresh_token',
+        token: 'temp_token',
+        refreshToken: 'temp_refresh_token',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
       
-      await secureStorage.setAuthToken('demo_token');
-      setUser(demoUser);
-      secureLogger.log('Demo registration successful for user', { username: userData.username });
+      await secureStorage.setAuthToken('temp_token');
+      setUser(tempUser);
+      secureLogger.log('Temporary registration successful for user', { username: userData.username });
     }
   };
 

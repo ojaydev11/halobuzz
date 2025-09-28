@@ -86,6 +86,7 @@ import {
 
 // Import routes
 import authRoutes from '@/routes/auth';
+import usersRoutes from '@/routes/users';
 import walletRoutes from '@/routes/wallet';
 import streamsRoutes from '@/routes/streams';
 import streamsEnhancedRoutes from '@/routes/streams-enhanced';
@@ -101,6 +102,10 @@ import creatorEconomyRoutes from '@/routes/creator-economy';
 import gamesRoutes from '@/routes/games';
 import gamesRoutesV2 from '@/routes/games-v2';
 import gamesEnhancedRoutes from '@/routes/games-enhanced';
+import advancedGamesRoutes from '@/routes/advanced-games';
+import leaderboardRoutes from '@/routes/leaderboards';
+import socialRoutes from '@/routes/social';
+import monetizationRoutes from '@/routes/monetization';
 import adminRoutes from '@/routes/admin';
 import configRoutes from '@/routes/config';
 import kycRoutes from '@/routes/kyc';
@@ -122,6 +127,19 @@ import aiContentStudioRoutes from '@/routes/aiContentStudio';
 
 // New AI services routes
 import aiContentRoutes from '@/routes/ai-content';
+import moderationRoutes from '@/routes/moderation';
+import haloaiRoutes from '@/routes/haloai';
+import webrtcRoutes from '@/routes/webrtc';
+import subtitlesRoutes from '@/routes/subtitles';
+import securePaymentRoutes from '@/routes/secure-payment';
+
+// Advanced Engine routes
+import aiPersonalizationRoutes from '@/routes/ai-personalization';
+import advancedGiftsRoutes from '@/routes/advanced-gifts';
+import fortressSecurityRoutes from '@/routes/fortress-security';
+import gamificationRoutes from '@/routes/gamification';
+import enhancedAuthRoutes from '@/routes/enhanced-auth';
+import productionMonitoringRoutes from '@/routes/production-monitoring';
 
 // New creator economy routes
 import nftRoutes from '@/routes/nft';
@@ -310,6 +328,7 @@ app.use(async (req, res, next) => {
 // API routes with enhanced security
 logger.info(`Mounting auth routes at /api/${apiVersion}/auth`);
 app.use(`/api/${apiVersion}/auth`, authLimiter, loginSlowDown, authRoutes);
+app.use(`/api/${apiVersion}/users`, usersRoutes);
 app.use(`/api/${apiVersion}/wallet`, authMiddleware, paymentLimiter, walletRoutes);
 app.use(`/api/${apiVersion}/streams`, authMiddleware, socialLimiter, streamsRoutes);
 app.use(`/api/${apiVersion}/streams`, streamsEnhancedRoutes); // Enhanced streams with better functionality
@@ -325,6 +344,10 @@ app.use(`/api/${apiVersion}/creator-economy`, authMiddleware, creatorEconomyRout
 app.use(`/api/${apiVersion}/games`, authMiddleware, gamesRoutes);
 app.use(`/api/${apiVersion}/games/v2`, gamesRoutesV2); // New enhanced games with staking
 app.use(`/api/${apiVersion}/games-enhanced`, gamesEnhancedRoutes); // Enhanced games with coins system
+app.use(`/api/${apiVersion}/advanced-games`, advancedGamesRoutes); // Advanced multiplayer games
+app.use(`/api/${apiVersion}/leaderboards`, leaderboardRoutes); // Global leaderboards and tournaments
+app.use(`/api/${apiVersion}/social`, socialRoutes); // Social features - friends, guilds, chat
+app.use(`/api/${apiVersion}/monetization`, monetizationRoutes); // Monetization - IAP, battle pass, rewards
 app.use(`/api/${apiVersion}/config`, authMiddleware, configRoutes);
 app.use(`/api/${apiVersion}/kyc`, authMiddleware, kycRoutes);
 import { adminOnly } from '@/middleware/admin';
@@ -360,9 +383,26 @@ app.use(`/api/${apiVersion}/ai-content`, authMiddleware, aiContentRoutes);
 import aiBusinessRoutes from '@/routes/ai-business';
 app.use(`/api/${apiVersion}/ai/business`, authMiddleware, aiBusinessRoutes);
 
-// Empire Dashboard routes
+// New AI Services routes
+app.use(`/api/${apiVersion}/moderation`, authMiddleware, moderationRoutes);
+app.use(`/api/${apiVersion}/haloai`, authMiddleware, haloaiRoutes);
+app.use(`/api/${apiVersion}/webrtc`, authMiddleware, webrtcRoutes);
+app.use(`/api/${apiVersion}/subtitles`, authMiddleware, subtitlesRoutes);
+
+// New Security and Monitoring routes
+app.use(`/api/${apiVersion}/secure-payment`, authMiddleware, securePaymentRoutes);
+app.use(`/api/${apiVersion}/enhanced-auth`, enhancedAuthRoutes);
+app.use(`/api/${apiVersion}/production-monitoring`, authMiddleware, productionMonitoringRoutes);
+
+// Advanced Engine routes
+app.use(`/api/${apiVersion}/ai-personalization`, authMiddleware, aiPersonalizationRoutes);
+app.use(`/api/${apiVersion}/advanced-gifts`, authMiddleware, advancedGiftsRoutes);
+app.use(`/api/${apiVersion}/fortress-security`, authMiddleware, fortressSecurityRoutes);
+app.use(`/api/${apiVersion}/gamification`, authMiddleware, gamificationRoutes);
+
+// Empire Dashboard routes - FIXED duplicate mount
 import { empireRoutes } from '@/routes/empire';
-app.use(`/api/${apiVersion}/ai/business`, empireRoutes);
+app.use(`/api/${apiVersion}/empire`, empireRoutes);
 
 // Analytics Scheduler routes
 import analyticsSchedulerRoutes from '@/routes/analytics-scheduler';
@@ -459,6 +499,39 @@ const startServer = async () => {
       logger.info('Security audit service initialized successfully');
     } catch (error) {
       logger.warn('Security audit service initialization failed:', error instanceof Error ? error.message : String(error));
+    }
+
+    // Initialize advanced engine services
+    try {
+      const { aiPersonalization } = await import('@/services/AIHyperPersonalizationEngine');
+      await aiPersonalization.initialize();
+      logger.info('AI Hyper-Personalization Engine initialized successfully');
+    } catch (error) {
+      logger.warn('AI Hyper-Personalization Engine initialization failed:', error instanceof Error ? error.message : String(error));
+    }
+
+    try {
+      const { advancedGiftEconomy } = await import('@/services/AdvancedGiftEconomyService');
+      await advancedGiftEconomy.initialize();
+      logger.info('Advanced Gift Economy Service initialized successfully');
+    } catch (error) {
+      logger.warn('Advanced Gift Economy Service initialization failed:', error instanceof Error ? error.message : String(error));
+    }
+
+    try {
+      const { fortressSecurity } = await import('@/services/FortressSecuritySystem');
+      await fortressSecurity.initialize();
+      logger.info('Fortress Security System initialized successfully');
+    } catch (error) {
+      logger.warn('Fortress Security System initialization failed:', error instanceof Error ? error.message : String(error));
+    }
+
+    try {
+      const { gamificationEngine } = await import('@/services/GamificationAddictionEngine');
+      await gamificationEngine.initialize();
+      logger.info('Gamification Addiction Engine initialized successfully');
+    } catch (error) {
+      logger.warn('Gamification Addiction Engine initialization failed:', error instanceof Error ? error.message : String(error));
       logger.warn('Continuing without automated security audits');
     }
 
@@ -479,6 +552,34 @@ const startServer = async () => {
     } catch (error) {
       logger.warn('Live realtime layer setup failed:', error instanceof Error ? error.message : String(error));
       logger.warn('Continuing without live realtime features');
+    }
+
+    // Initialize multiplayer socket service
+    try {
+      const { multiplayerSocketService } = await import('@/services/MultiplayerSocketService');
+      multiplayerSocketService.initialize(server);
+      logger.info('Multiplayer socket service initialized successfully');
+    } catch (error) {
+      logger.warn('Multiplayer socket service initialization failed:', error instanceof Error ? error.message : String(error));
+      logger.warn('Continuing without multiplayer features');
+    }
+
+    // Initialize gaming services
+    try {
+      const { advancedGamesService } = await import('@/services/AdvancedGamesService');
+      const { leaderboardService } = await import('@/services/LeaderboardService');
+      const { aiOpponentService } = await import('@/services/AIOpponentService');
+      const { socialService } = await import('@/services/SocialService');
+      const { monetizationService } = await import('@/services/MonetizationService');
+
+      logger.info('Gaming services initialized successfully');
+      logger.info(`- Advanced Games: ${advancedGamesService.getAvailableGames().length} games available`);
+      logger.info(`- AI Opponents: ${aiOpponentService.getAIPersonalities().length} personalities loaded`);
+      logger.info(`- Tournaments: ${leaderboardService.getUpcomingTournaments().length} upcoming tournaments`);
+      logger.info(`- IAP Products: ${monetizationService.getIAPProducts().length} products available`);
+    } catch (error) {
+      logger.warn('Gaming services initialization failed:', error instanceof Error ? error.message : String(error));
+      logger.warn('Continuing with limited gaming features');
     }
 
     // Start server

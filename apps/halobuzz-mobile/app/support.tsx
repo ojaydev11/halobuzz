@@ -177,7 +177,7 @@ export default function SupportScreen() {
 
           <Text style={styles.faqQuestion}>How do I change my password?</Text>
           <Text style={styles.faqAnswer}>
-            Go to Settings > Account > Change Password and follow the instructions.
+            Go to Settings → Account → Change Password and follow the instructions.
           </Text>
         </View>
 

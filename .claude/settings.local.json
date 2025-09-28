@@ -27,7 +27,15 @@
       "Bash(npx expo:*)",
       "Bash(mkdir:*)",
       "Bash(ls:*)",
-      "Bash(npm run lint)"
+      "Bash(npm run lint)",
+      "Bash(npx tsc:*)",
+      "Bash(npm run build:android:*)",
+      "Bash(npx @expo/bundle-analyzer@latest:*)",
+      "Bash(dir /s /-c appshalobuzz-mobilenode_modules)",
+      "Bash(npm run build:ts:*)",
+      "Bash(npm run start:*)",
+      "Bash(npm run test:performance:*)",
+      "Bash(chmod:*)"
     ],
     "deny": [],
     "ask": []
