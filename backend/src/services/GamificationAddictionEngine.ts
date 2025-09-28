@@ -119,8 +119,14 @@ export interface UserAddictionProfile {
     duration: number;
   }>;
   completedChallenges: string[];
+  activeChallenges: string[];
+  challengeProgress: Record<string, number>;
   level: number;
   experience: number;
+  dailyStreak: number;
+  weeklyStreak: number;
+  monthlyStreak: number;
+  longestStreak: number;
 }
 
 export interface Achievement {
@@ -863,8 +869,14 @@ export class GamificationAddictionEngine extends EventEmitter {
       dailyRewardStreak: 0,
       activityHistory: [],
       completedChallenges: [],
+      activeChallenges: [],
+      challengeProgress: {},
       level: 1,
-      experience: 0
+      experience: 0,
+      dailyStreak: 0,
+      weeklyStreak: 0,
+      monthlyStreak: 0,
+      longestStreak: 0
     };
 
     // Calculate overall addiction risk level
@@ -1436,11 +1448,22 @@ export class GamificationAddictionEngine extends EventEmitter {
     };
   }
 
-  async getAchievementSystem(): Promise<any> {
-    return {
+  async getAchievementSystem(userId?: string): Promise<any> {
+    const baseSystem = {
       achievements: Array.from(this.achievements.values()),
       categories: ['social', 'economic', 'engagement', 'milestone']
     };
+
+    if (userId) {
+      const profile = await this.getUserAddictionProfile(userId);
+      return {
+        ...baseSystem,
+        userAchievements: profile.unlockedAchievements,
+        totalUnlocked: profile.totalAchievements
+      };
+    }
+
+    return baseSystem;
   }
 
   async unlockAchievement(userId: string, achievementId: string): Promise<any> {
@@ -1460,13 +1483,27 @@ export class GamificationAddictionEngine extends EventEmitter {
     };
   }
 
-  async getRewardSystem(): Promise<any> {
-    return {
+  async getRewardSystem(userId?: string): Promise<any> {
+    const baseSystem = {
       dailyRewards: true,
       streakRewards: true,
       achievementRewards: true,
       socialRewards: true
     };
+
+    if (userId) {
+      const profile = await this.getUserAddictionProfile(userId);
+      return {
+        ...baseSystem,
+        userRewards: {
+          dailyStreak: profile.dailyRewardStreak,
+          lastClaimed: profile.lastDailyReward,
+          availableRewards: this.calculateAvailableRewards(profile)
+        }
+      };
+    }
+
+    return baseSystem;
   }
 
   async claimDailyReward(userId: string): Promise<any> {
@@ -1488,13 +1525,29 @@ export class GamificationAddictionEngine extends EventEmitter {
     };
   }
 
-  async getStreakSystem(): Promise<any> {
-    return {
+  async getStreakSystem(userId?: string): Promise<any> {
+    const baseSystem = {
       dailyLogin: true,
       dailyReward: true,
       socialActivity: true,
       economicActivity: true
     };
+
+    if (userId) {
+      const profile = await this.getUserAddictionProfile(userId);
+      return {
+        ...baseSystem,
+        userStreaks: {
+          dailyStreak: profile.dailyStreak,
+          weeklyStreak: profile.weeklyStreak,
+          monthlyStreak: profile.monthlyStreak,
+          longestStreak: profile.longestStreak,
+          streakCount: profile.streakCount
+        }
+      };
+    }
+
+    return baseSystem;
   }
 
   async updateUserActivity(userId: string, activity: string): Promise<any> {
@@ -1512,32 +1565,49 @@ export class GamificationAddictionEngine extends EventEmitter {
     };
   }
 
-  async getLeaderboards(): Promise<any> {
+  async getLeaderboards(type?: string, period?: string): Promise<any> {
     return {
       global: [],
       friends: [],
       weekly: [],
-      monthly: []
+      monthly: [],
+      type,
+      period
     };
   }
 
-  async getChallenges(): Promise<any> {
-    return {
+  async getChallenges(userId?: string): Promise<any> {
+    const baseSystem = {
       daily: [],
       weekly: [],
       monthly: [],
       special: []
     };
+
+    if (userId) {
+      const profile = await this.getUserAddictionProfile(userId);
+      return {
+        ...baseSystem,
+        userChallenges: {
+          completed: profile.completedChallenges,
+          active: profile.activeChallenges,
+          progress: profile.challengeProgress
+        }
+      };
+    }
+
+    return baseSystem;
   }
 
-  async completeChallenge(userId: string, challengeId: string): Promise<any> {
+  async completeChallenge(userId: string, challengeId: string, metadata?: any): Promise<any> {
     const profile = await this.getUserAddictionProfile(userId);
     profile.completedChallenges.push(challengeId);
 
     return {
       completed: true,
       challengeId,
-      totalCompleted: profile.completedChallenges.length
+      totalCompleted: profile.completedChallenges.length,
+      metadata
     };
   }
 
@@ -1553,16 +1623,31 @@ export class GamificationAddictionEngine extends EventEmitter {
     };
   }
 
-  async getLevelSystem(): Promise<any> {
-    return {
+  async getLevelSystem(userId?: string): Promise<any> {
+    const baseSystem = {
       maxLevel: 100,
       experiencePerLevel: 1000,
       rewards: ['coins', 'badges', 'unlocks']
     };
+
+    if (userId) {
+      const profile = await this.getUserAddictionProfile(userId);
+      return {
+        ...baseSystem,
+        userLevel: {
+          level: profile.level,
+          experience: profile.experience,
+          nextLevelExp: (profile.level + 1) * 1000,
+          progress: (profile.experience % 1000) / 1000
+        }
+      };
+    }
+
+    return baseSystem;
   }
 
-  async getAddictionMetrics(): Promise<any> {
-    return {
+  async getAddictionMetrics(userId?: string): Promise<any> {
+    const baseMetrics = {
       totalUsers: this.userProfiles.size,
       averageEngagement: 0.5,
       addictionRiskDistribution: {
@@ -1571,6 +1656,30 @@ export class GamificationAddictionEngine extends EventEmitter {
         high: 0.1
       }
     };
+
+    if (userId) {
+      const profile = await this.getUserAddictionProfile(userId);
+      return {
+        ...baseMetrics,
+        userMetrics: {
+          addictionRisk: profile.addictionRisk,
+          engagementHeat: profile.currentState.engagementHeat,
+          sessionFrequency: profile.behaviorPatterns.sessionFrequency,
+          averageSessionLength: profile.behaviorPatterns.averageSessionLength
+        }
+      };
+    }
+
+    return baseMetrics;
+  }
+
+  private calculateAvailableRewards(profile: UserAddictionProfile): any[] {
+    // Mock calculation of available rewards
+    return [
+      { type: 'coins', amount: 100, available: true },
+      { type: 'badge', name: 'Daily Streak', available: profile.dailyRewardStreak > 0 },
+      { type: 'unlock', name: 'Premium Feature', available: profile.level >= 10 }
+    ];
   }
 }
 

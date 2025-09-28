@@ -73,10 +73,10 @@ export class NetcodeAgent extends BaseAgent {
   private httpServer: any = null;
   private clients = new Map<string, ClientState>();
   private gameState: GameSnapshot = { tick: 0, timestamp: Date.now(), entities: [], events: [] };
-  private config: NetworkConfig;
+  private networkConfig: NetworkConfig;
   private tickTimer: NodeJS.Timeout | null = null;
   private snapshotHistory: GameSnapshot[] = [];
-  private metrics = {
+  private networkMetrics = {
     totalClients: 0,
     activeClients: 0,
     avgRTT: 0,
@@ -97,7 +97,7 @@ export class NetcodeAgent extends BaseAgent {
       retryCount: 3,
     });
 
-    this.config = {
+    this.networkConfig = {
       tickRate: 30, // 30 Hz default
       bufferSize: 64, // 64 frame buffer
       lagCompensationWindow: 200, // 200ms lag compensation
@@ -124,11 +124,11 @@ export class NetcodeAgent extends BaseAgent {
 
     // Start the server
     await new Promise<void>((resolve, reject) => {
-      this.httpServer.listen(this.config.port, (error: any) => {
+      this.httpServer.listen(this.networkConfig.port, (error: any) => {
         if (error) {
           reject(error);
         } else {
-          this.logger.info(`Netcode server listening on port ${this.config.port}`);
+          this.logger.info(`Netcode server listening on port ${this.networkConfig.port}`);
           resolve();
         }
       });
@@ -177,7 +177,7 @@ export class NetcodeAgent extends BaseAgent {
       return {
         id: this.generateMessageId(),
         type: 'response',
-        from: this.config.id,
+        from: this.networkConfig.id,
         to: message.from,
         data: { error: error.message },
         timestamp: Date.now(),
@@ -222,7 +222,7 @@ export class NetcodeAgent extends BaseAgent {
   private handleNewConnection(socket: WebSocket, request: any): void {
     const clientId = this.generateClientId();
 
-    if (this.clients.size >= this.config.maxClients) {
+    if (this.clients.size >= this.networkConfig.maxClients) {
       socket.close(1013, 'Server full');
       return;
     }
@@ -244,9 +244,9 @@ export class NetcodeAgent extends BaseAgent {
     };
 
     this.clients.set(clientId, client);
-    this.metrics.activeClients = this.clients.size;
+    this.networkMetrics.activeClients = this.clients.size;
 
-    this.logger.info(`Client connected: ${clientId} (${this.clients.size}/${this.config.maxClients})`);
+    this.logger.info(`Client connected: ${clientId} (${this.clients.size}/${this.networkConfig.maxClients})`);
 
     // Set up message handling
     socket.on('message', (data) => {
@@ -266,8 +266,8 @@ export class NetcodeAgent extends BaseAgent {
       type: 'welcome',
       clientId,
       config: {
-        tickRate: this.config.tickRate,
-        bufferSize: this.config.bufferSize,
+        tickRate: this.networkConfig.tickRate,
+        bufferSize: this.networkConfig.bufferSize,
       },
     });
 
@@ -316,17 +316,17 @@ export class NetcodeAgent extends BaseAgent {
     if (!client) return;
 
     this.clients.delete(clientId);
-    this.metrics.activeClients = this.clients.size;
+    this.networkMetrics.activeClients = this.clients.size;
 
     // Remove player entity from game state
     this.gameState.entities = this.gameState.entities.filter(entity => entity.id !== clientId);
 
-    this.logger.info(`Client disconnected: ${clientId} (${this.clients.size}/${this.config.maxClients})`);
+    this.logger.info(`Client disconnected: ${clientId} (${this.clients.size}/${this.networkConfig.maxClients})`);
   }
 
   // Game Tick System
   private startGameTick(): void {
-    const tickInterval = 1000 / this.config.tickRate;
+    const tickInterval = 1000 / this.networkConfig.tickRate;
 
     this.tickTimer = setInterval(() => {
       this.processTick();
@@ -350,7 +350,7 @@ export class NetcodeAgent extends BaseAgent {
     this.sendDeltaSnapshots();
 
     // Send full snapshot periodically
-    if (this.gameState.tick % (this.config.snapshotInterval / (1000 / this.config.tickRate)) === 0) {
+    if (this.gameState.tick % (this.networkConfig.snapshotInterval / (1000 / this.networkConfig.tickRate)) === 0) {
       this.sendFullSnapshot();
     }
 
@@ -359,7 +359,7 @@ export class NetcodeAgent extends BaseAgent {
     this.updateServerMetrics(tickTime);
 
     // Performance budget check
-    const targetFrameTime = 1000 / this.config.tickRate;
+    const targetFrameTime = 1000 / this.networkConfig.tickRate;
     if (tickTime > targetFrameTime * 1.5) {
       this.logger.warn(`Slow server frame: ${tickTime}ms (target: ${targetFrameTime}ms)`);
     }
@@ -394,7 +394,7 @@ export class NetcodeAgent extends BaseAgent {
     }
 
     // Apply movement
-    const deltaTime = 1 / this.config.tickRate;
+    const deltaTime = 1 / this.networkConfig.tickRate;
     const maxSpeed = 10; // units per second
 
     // Clamp movement to prevent cheating
@@ -535,7 +535,7 @@ export class NetcodeAgent extends BaseAgent {
   private getHistoricalSnapshot(timestamp: number): GameSnapshot | null {
     // Find closest snapshot to the timestamp
     return this.snapshotHistory
-      .filter(snap => snap.timestamp <= timestamp + this.config.lagCompensationWindow)
+      .filter(snap => snap.timestamp <= timestamp + this.networkConfig.lagCompensationWindow)
       .sort((a, b) => Math.abs(a.timestamp - timestamp) - Math.abs(b.timestamp - timestamp))[0] || null;
   }
 
@@ -591,12 +591,12 @@ export class NetcodeAgent extends BaseAgent {
     return {
       id: this.generateMessageId(),
       type: 'response',
-      from: this.config.id,
+      from: this.networkConfig.id,
       to: message.from,
       data: {
         status: 'running',
-        metrics: this.metrics,
-        config: this.config,
+        metrics: this.networkMetrics,
+        config: this.networkConfig,
         clients: this.clients.size,
       },
       timestamp: Date.now(),
@@ -611,7 +611,7 @@ export class NetcodeAgent extends BaseAgent {
       throw new Error('Tick rate must be between 10 and 120 Hz');
     }
 
-    this.config.tickRate = newTickRate;
+    this.networkConfig.tickRate = newTickRate;
 
     // Restart tick timer with new rate
     if (this.tickTimer) {
@@ -622,7 +622,7 @@ export class NetcodeAgent extends BaseAgent {
     return {
       id: this.generateMessageId(),
       type: 'response',
-      from: this.config.id,
+      from: this.networkConfig.id,
       to: message.from,
       data: { success: true, newTickRate },
       timestamp: Date.now(),
@@ -679,7 +679,7 @@ export class NetcodeAgent extends BaseAgent {
 
   private updateGameSimulation(): void {
     // Basic physics simulation
-    const deltaTime = 1 / this.config.tickRate;
+    const deltaTime = 1 / this.networkConfig.tickRate;
 
     // Update entity positions based on velocity
     for (const entity of this.gameState.entities) {
@@ -701,11 +701,11 @@ export class NetcodeAgent extends BaseAgent {
   }
 
   private updateServerMetrics(frameTime: number): void {
-    this.metrics.ticksProcessed++;
+    this.networkMetrics.ticksProcessed++;
 
     // Update average frame time
     const alpha = 0.1; // Smoothing factor
-    this.metrics.serverFrameTime = this.metrics.serverFrameTime * (1 - alpha) + frameTime * alpha;
+    this.networkMetrics.serverFrameTime = this.networkMetrics.serverFrameTime * (1 - alpha) + frameTime * alpha;
 
     // Update network metrics from clients
     let totalRTT = 0;
@@ -723,16 +723,16 @@ export class NetcodeAgent extends BaseAgent {
     }
 
     if (activeClients > 0) {
-      this.metrics.avgRTT = totalRTT / activeClients;
-      this.metrics.avgJitter = totalJitter / activeClients;
-      this.metrics.packetLossRate = totalLoss / activeClients;
+      this.networkMetrics.avgRTT = totalRTT / activeClients;
+      this.networkMetrics.avgJitter = totalJitter / activeClients;
+      this.networkMetrics.packetLossRate = totalLoss / activeClients;
     }
   }
 
   private startSnapshotCleanup(): void {
     // Clean up old snapshots every 5 seconds
     setInterval(() => {
-      const cutoff = Date.now() - this.config.lagCompensationWindow * 2;
+      const cutoff = Date.now() - this.networkConfig.lagCompensationWindow * 2;
       this.snapshotHistory = this.snapshotHistory.filter(snap => snap.timestamp > cutoff);
     }, 5000);
   }
@@ -772,7 +772,7 @@ export class NetcodeAgent extends BaseAgent {
     return {
       id: this.generateMessageId(),
       type: 'response',
-      from: this.config.id,
+      from: this.networkConfig.id,
       to: message.from,
       data: { success: !!client, clientId },
       timestamp: Date.now(),
@@ -787,7 +787,7 @@ export class NetcodeAgent extends BaseAgent {
     return {
       id: this.generateMessageId(),
       type: 'response',
-      from: this.config.id,
+      from: this.networkConfig.id,
       to: message.from,
       data: { snapshot, found: !!snapshot },
       timestamp: Date.now(),
@@ -807,7 +807,7 @@ export class NetcodeAgent extends BaseAgent {
     return {
       id: this.generateMessageId(),
       type: 'response',
-      from: this.config.id,
+      from: this.networkConfig.id,
       to: message.from,
       data: { success: true, simulatedClients: clientCount },
       timestamp: Date.now(),

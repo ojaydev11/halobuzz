@@ -82,7 +82,7 @@ router.post('/login', async (req: express.Request, res: express.Response) => {
         mfaVerified: false
       },
       process.env.JWT_SECRET || 'fallback-secret',
-      { expiresIn: process.env.JWT_EXPIRY || '24h' }
+      { expiresIn: (process.env.JWT_EXPIRY || '24h') as any }
     );
 
     // Update user's last activity
@@ -147,7 +147,7 @@ router.post('/verify-mfa', enhancedAuthMiddleware.authenticate.bind(enhancedAuth
     const mfaToken = jwt.sign(
       { userId, timestamp: Date.now() },
       process.env.MFA_SECRET || 'mfa-secret',
-      { expiresIn: '5m' }
+      { expiresIn: '5m' as any }
     );
 
     // Verify MFA code (simplified implementation)

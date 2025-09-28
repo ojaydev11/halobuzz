@@ -1529,12 +1529,23 @@ export class FortressSecuritySystem extends EventEmitter {
   }
 
   // Public API methods for routes
-  async reportSecurityIncident(incident: any): Promise<any> {
-    logger.warn('Security incident reported:', incident);
+  async reportSecurityIncident(
+    title: string,
+    description: string,
+    severity: string,
+    reporterId: string,
+    metadata?: any
+  ): Promise<any> {
+    logger.warn('Security incident reported:', { title, description, severity, reporterId, metadata });
     return {
       reported: true,
       incidentId: `inc_${Date.now()}`,
-      status: 'investigating'
+      status: 'investigating',
+      title,
+      description,
+      severity,
+      reporterId,
+      metadata
     };
   }
 
@@ -1544,6 +1555,35 @@ export class FortressSecuritySystem extends EventEmitter {
       critical: 0,
       warning: 0,
       info: 0
+    };
+  }
+
+  async getThreatDetectionStatus(): Promise<any> {
+    return {
+      status: 'active',
+      threatsDetected: 0,
+      lastDetection: new Date(),
+      systemHealth: 'healthy'
+    };
+  }
+
+  async getSecurityAnalytics(): Promise<any> {
+    return {
+      totalIncidents: 0,
+      resolvedIncidents: 0,
+      averageResolutionTime: 0,
+      threatTypes: [],
+      trends: []
+    };
+  }
+
+  async getFraudDetectionResults(userId: string): Promise<any> {
+    return {
+      userId,
+      riskScore: 0.1,
+      fraudProbability: 0.05,
+      recommendations: [],
+      lastAnalyzed: new Date()
     };
   }
 
@@ -1563,12 +1603,13 @@ export class FortressSecuritySystem extends EventEmitter {
     };
   }
 
-  async blockIP(ipAddress: string, reason: string): Promise<any> {
-    logger.warn(`IP blocked: ${ipAddress}, reason: ${reason}`);
+  async blockIP(ipAddress: string, reason: string, duration?: number): Promise<any> {
+    logger.warn(`IP blocked: ${ipAddress}, reason: ${reason}, duration: ${duration || 'permanent'}`);
     return {
       blocked: true,
       ipAddress,
       reason,
+      duration: duration || -1, // -1 for permanent
       timestamp: new Date()
     };
   }

@@ -12,6 +12,8 @@ export interface AuthenticatedRequest extends Request {
     role: string;
     isVerified: boolean;
     isBanned: boolean;
+    isAdmin?: boolean;
+    username?: string;
   };
 }
 
@@ -79,7 +81,9 @@ export const authMiddleware = async (req: AuthenticatedRequest, res: Response, n
       email: user.email,
       role: user.role || 'user',
       isVerified: user.isVerified,
-      isBanned: user.isBanned
+      isBanned: user.isBanned,
+      isAdmin: user.isAdmin || false,
+      username: user.username
     };
 
     next();
@@ -398,6 +402,7 @@ export async function destroySession(userId: string): Promise<void> {
  * Alias for authMiddleware for backward compatibility
  */
 export const authenticateToken = authMiddleware;
+export const requireAuth = authMiddleware;
 
 /**
  * Age verification middleware

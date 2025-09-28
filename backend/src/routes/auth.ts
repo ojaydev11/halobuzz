@@ -106,13 +106,13 @@ router.post('/register', [
     const accessToken = jwt.sign(
       { userId: user._id, username: user.username, type: 'access' },
       jwtSecret,
-      { expiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '15m' }
+      { expiresIn: (process.env.JWT_ACCESS_EXPIRES_IN || '15m') as any }
     );
 
     const refreshToken = jwt.sign(
       { userId: user._id, username: user.username, type: 'refresh' },
       jwtSecret,
-      { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d' }
+      { expiresIn: (process.env.JWT_REFRESH_EXPIRES_IN || '7d') as any }
     );
 
     res.status(201).json({
@@ -234,13 +234,13 @@ router.post('/login', [
     const accessToken = jwt.sign(
       { userId: user._id, username: user.username, type: 'access' },
       jwtSecret,
-      { expiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '15m' }
+      { expiresIn: (process.env.JWT_ACCESS_EXPIRES_IN || '15m') as any }
     );
 
     const refreshToken = jwt.sign(
       { userId: user._id, username: user.username, type: 'refresh' },
       jwtSecret,
-      { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d' }
+      { expiresIn: (process.env.JWT_REFRESH_EXPIRES_IN || '7d') as any }
     );
 
     res.json({
@@ -427,14 +427,14 @@ router.post('/refresh', async (req, res) => {
     const newAccessToken = jwt.sign(
       { userId: user._id, username: user.username, type: 'access' },
       process.env.JWT_SECRET as jwt.Secret,
-      { expiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '15m' }
+      { expiresIn: (process.env.JWT_ACCESS_EXPIRES_IN || '15m') as any }
     );
 
     // Optionally generate new refresh token for token rotation
     const newRefreshToken = jwt.sign(
       { userId: user._id, username: user.username, type: 'refresh' },
       process.env.JWT_SECRET as jwt.Secret,
-      { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d' }
+      { expiresIn: (process.env.JWT_REFRESH_EXPIRES_IN || '7d') as any }
     );
 
     res.json({
@@ -538,7 +538,7 @@ router.post('/forgot-password', [
     // Generate reset token
     const resetToken = jwt.sign(
       { userId: user._id, type: 'password_reset' },
-      process.env.JWT_SECRET as string,
+      process.env.JWT_SECRET as any,
       { expiresIn: '1h' }
     );
 

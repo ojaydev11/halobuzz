@@ -159,3 +159,6 @@ export class ComplianceService {
     return oldKpiData === 0 && oldAlertData === 0;
   }
 }
+
+// Export instance for backward compatibility
+export const complianceService = new ComplianceService();

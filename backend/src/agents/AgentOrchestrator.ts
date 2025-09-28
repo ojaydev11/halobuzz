@@ -12,7 +12,7 @@ interface AgentConfig {
   retryCount: number;
 }
 
-interface AgentMessage {
+export interface AgentMessage {
   id: string;
   type: 'request' | 'response' | 'event' | 'command';
   from: string;

@@ -67,6 +67,18 @@ export class MatchmakingAgent extends BaseAgent {
   private playerRatings = new Map<string, TrueSkillRating>();
   private matchHistory = new Map<string, any[]>();
 
+  constructor() {
+    super({
+      id: 'matchmaking',
+      name: 'Matchmaking & Ranking Agent',
+      role: 'Gameplay',
+      priority: 2,
+      dependencies: [],
+      timeout: 10000,
+      retryCount: 3,
+    });
+  }
+
   // Game mode configurations
   private gameModeConfig = {
     'halo-royale': { teamSize: 60, teams: 1, maxWaitTime: 30000, fairnessWeight: 0.7 },

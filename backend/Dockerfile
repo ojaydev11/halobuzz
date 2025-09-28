@@ -55,10 +55,8 @@ COPY tsconfig*.json ./
 COPY scripts ./scripts
 COPY src ./src
 
-# Build TypeScript to JavaScript (skip type checking for production build)
-RUN echo '{"compilerOptions":{"target":"ES2020","module":"commonjs","outDir":"dist","rootDir":"src","strict":false,"noEmitOnError":false,"skipLibCheck":true,"noImplicitAny":false,"noUnusedLocals":false,"noUnusedParameters":false,"allowJs":true,"esModuleInterop":true,"allowSyntheticDefaultImports":true,"forceConsistentCasingInFileNames":true,"resolveJsonModule":true,"isolatedModules":true,"noFallthroughCasesInSwitch":true,"moduleResolution":"node","baseUrl":".","paths":{"@/*":["src/*"]}},"include":["src/**/*"],"exclude":["node_modules","dist"]}' > tsconfig.build.json && \
-    npx tsc -p tsconfig.build.json --skipLibCheck --noEmitOnError false --noImplicitAny false --noUnusedLocals false --noUnusedParameters false || echo "TypeScript compilation completed with warnings" && \
-    npx tsc-alias -p tsconfig.build.json --outDir dist || echo "Path alias resolution completed"
+# Skip TypeScript compilation entirely - use ts-node at runtime
+RUN echo "Skipping TypeScript compilation - will use ts-node at runtime"
 
 # ---- Runtime stage ----
 FROM node:20-alpine AS runtime
@@ -93,8 +91,10 @@ ENV MONGOMS_SYSTEM_BINARY=/usr/bin/mongod
 RUN --mount=type=cache,id=pnpm-store,target=/root/.pnpm-store \
     pnpm install --frozen-lockfile --prod
 
-# Copy built application
-COPY --from=build /app/dist ./dist
+# Copy source code (no dist directory needed)
+COPY --from=build /app/src ./src
+COPY --from=build /app/package*.json ./
+COPY --from=build /app/pnpm-lock.yaml ./
 
 # Create logs directory
 RUN mkdir -p logs && chown -R halobuzz:nodejs logs

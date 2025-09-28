@@ -186,7 +186,7 @@ router.post('/ml-optimization/model/train',
       const modelData = req.body as ModelTrainRequest;
 
       const service = await initializeService();
-      const model = await service.trainModel(modelData);
+      const model = await service.trainModel(modelData, modelData.trainingData || []);
 
       return res.json({
           success: true,

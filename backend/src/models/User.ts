@@ -16,6 +16,7 @@ export interface IUser extends Document {
   isVerified: boolean;
   isBanned: boolean;
   isActive?: boolean;
+  isAdmin?: boolean;
   role?: string;
   banReason?: string;
   banExpiresAt?: Date;
@@ -34,6 +35,7 @@ export interface IUser extends Document {
   kycStatus: 'pending' | 'verified' | 'rejected';
   ageVerified: boolean;
   totpSecret?: string;
+  mfaSecret?: string;
   mfaEnabled?: boolean;
   backupCodes?: Array<{
     code: string;
