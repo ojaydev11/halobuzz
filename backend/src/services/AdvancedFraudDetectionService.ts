@@ -108,8 +108,26 @@ interface AnomalyDetection {
 
 export class AdvancedFraudDetectionService {
   private readonly logger = logger;
+  private redisService: any;
+  private userModel: any;
+  private analyticsEventModel: any;
 
-  constructor() {}
+  constructor() {
+    // Initialize services
+    this.redisService = {
+      hset: async (key: string, data: any) => {
+        await setCache(key, data, 3600);
+      },
+      hget: async (key: string) => {
+        return await getCache(key);
+      },
+      del: async (key: string) => {
+        // Redis delete implementation
+      }
+    };
+    this.userModel = User;
+    this.analyticsEventModel = null; // Will be injected if needed
+  }
 
   /**
    * Create fraud detection pattern
@@ -131,7 +149,7 @@ export class AdvancedFraudDetectionService {
         isActive: pattern.isActive.toString(),
       });
 
-      this.logger.log(`Created fraud pattern: ${patternId} - ${pattern.name}`);
+      this.logger.info(`Created fraud pattern: ${patternId} - ${pattern.name}`);
       
       return fraudPattern;
     } catch (error) {
@@ -411,7 +429,7 @@ export class AdvancedFraudDetectionService {
         appId: 'halobuzz',
       });
 
-      this.logger.log(`Resolved fraud alert: ${alertId} by ${resolvedBy}`);
+      this.logger.info(`Resolved fraud alert: ${alertId} by ${resolvedBy}`);
       
       return true;
     } catch (error) {

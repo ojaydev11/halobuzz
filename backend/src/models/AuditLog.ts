@@ -175,4 +175,34 @@ auditLogSchema.statics.getSecurityEvents = async function(startDate: Date, endDa
   .lean();
 };
 
+auditLogSchema.statics.getComplianceReport = async function(startDate: Date, endDate: Date) {
+  return this.aggregate([
+    {
+      $match: {
+        createdAt: { $gte: startDate, $lte: endDate }
+      }
+    },
+    {
+      $group: {
+        _id: null,
+        totalRequests: { $sum: 1 },
+        gdprApplicableRequests: {
+          $sum: {
+            $cond: [{ $eq: ['$complianceFlags.gdprApplicable', true] }, 1, 0]
+          }
+        },
+        uniqueUserCount: { $addToSet: '$userId' }
+      }
+    },
+    {
+      $project: {
+        _id: 0,
+        totalRequests: 1,
+        gdprApplicableRequests: 1,
+        uniqueUserCount: { $size: '$uniqueUserCount' }
+      }
+    }
+  ]);
+};
+
 export const AuditLog = mongoose.model<IAuditLog>('AuditLog', auditLogSchema);

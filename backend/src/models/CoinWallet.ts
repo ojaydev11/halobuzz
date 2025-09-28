@@ -101,6 +101,11 @@ export interface ICoinWallet extends Document {
   isLocked: boolean;
   lockedAt?: Date;
   lockedBy?: string; // Transaction ID that locked the wallet
+
+  // Instance methods
+  canSpend(amount: number): boolean;
+  canWithdraw(amount: number): boolean;
+  updateDailyUsage(type: string, amount: number): void;
 }
 
 const CoinWalletSchema = new Schema<ICoinWallet>({
