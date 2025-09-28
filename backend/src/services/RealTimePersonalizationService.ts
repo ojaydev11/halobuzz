@@ -1,12 +1,10 @@
-import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { AnalyticsEvent } from '../analytics/models/AnalyticsEvent';
 import { User } from '../models/User';
 import { LiveStream } from '../models/LiveStream';
 import { ShortVideo } from '../models/ShortVideo';
-import { RedisService } from './RedisService';
-import { Logger } from '@nestjs/common';
+import { logger } from '../config/logger';
+import { getCache, setCache } from '../config/redis';
 
 interface UserContext {
   userId: string;
@@ -135,17 +133,19 @@ interface PersonalizationMetrics {
   }>;
 }
 
-@Injectable()
 export class RealTimePersonalizationService {
-  private readonly logger = new Logger(RealTimePersonalizationService.name);
+  private readonly logger = logger;
+  private analyticsEventModel: Model<AnalyticsEvent>;
+  private userModel: Model<User>;
+  private liveStreamModel: Model<LiveStream>;
+  private shortVideoModel: Model<ShortVideo>;
 
-  constructor(
-    @InjectModel('AnalyticsEvent') private analyticsEventModel: Model<AnalyticsEvent>,
-    @InjectModel('User') private userModel: Model<User>,
-    @InjectModel('LiveStream') private liveStreamModel: Model<LiveStream>,
-    @InjectModel('ShortVideo') private shortVideoModel: Model<ShortVideo>,
-    private redisService: RedisService,
-  ) {}
+  constructor() {
+    this.analyticsEventModel = AnalyticsEvent as any;
+    this.userModel = User as any;
+    this.liveStreamModel = LiveStream as any;
+    this.shortVideoModel = ShortVideo as any;
+  }
 
   /**
    * Build comprehensive user context for personalization
@@ -328,10 +328,10 @@ export class RealTimePersonalizationService {
       };
 
       // Store rule
-      await this.redisService.hset(`personalization_rule:${ruleId}`, {
+      await setCache(`personalization_rule:${ruleId}`, {
         config: JSON.stringify(personalizationRule),
         isActive: rule.isActive.toString(),
-      });
+      }, 3600);
 
       this.logger.log(`Created personalization rule: ${ruleId} - ${rule.name}`);
       
@@ -530,7 +530,7 @@ export class RealTimePersonalizationService {
    */
   private async cacheUserContext(userId: string, context: UserContext): Promise<void> {
     const cacheKey = `user_context:${userId}`;
-    await this.redisService.setex(cacheKey, 300, JSON.stringify(context)); // 5 minutes cache
+    await setCache(cacheKey, context, 300); // 5 minutes cache
   }
 
   /**

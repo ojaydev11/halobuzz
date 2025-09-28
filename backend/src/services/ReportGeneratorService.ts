@@ -8,10 +8,15 @@ import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 
 export interface ReportOptions {
-  period: 'daily' | 'weekly' | 'monthly';
+  period: 'daily' | 'weekly' | 'monthly' | 'custom';
   format: 'pdf' | 'xlsx';
   country?: string;
   includeCharts?: boolean;
+  includeComparison?: boolean;
+  includeExecutiveSummary?: boolean;
+  chartTypes?: string[];
+  from?: string;
+  to?: string;
   userId: string;
 }
 
@@ -73,7 +78,7 @@ export class ReportGeneratorService {
   }
 
   private async collectReportData(options: ReportOptions): Promise<ReportData> {
-    const dateRange = this.getDateRange(options.period);
+    const dateRange = this.getDateRange(options);
     
     // Collect KPIs
     const kpis = await this.kpiService.getKPIs({
@@ -83,7 +88,7 @@ export class ReportGeneratorService {
     });
 
     // Collect KPIs for comparison (previous period)
-    const comparisonDateRange = this.getComparisonDateRange(options.period);
+    const comparisonDateRange = this.getComparisonDateRange(options);
     const comparisonKpis = await this.kpiService.getKPIs({
       from: comparisonDateRange.from,
       to: comparisonDateRange.to,
@@ -125,14 +130,21 @@ export class ReportGeneratorService {
     };
   }
 
-  private getDateRange(period: string): { from: Date; to: Date } {
+  private getDateRange(options: ReportOptions): { from: Date; to: Date } {
+    if (options.period === 'custom') {
+      return {
+        from: new Date(options.from!),
+        to: new Date(options.to!)
+      };
+    }
+
     const now = new Date();
     const to = new Date(now);
     to.setHours(23, 59, 59, 999);
 
     const from = new Date(now);
 
-    switch (period) {
+    switch (options.period) {
       case 'daily':
         from.setDate(from.getDate() - 1);
         from.setHours(0, 0, 0, 0);
@@ -146,20 +158,31 @@ export class ReportGeneratorService {
         from.setHours(0, 0, 0, 0);
         break;
       default:
-        throw new Error(`Invalid period: ${period}`);
+        throw new Error(`Invalid period: ${options.period}`);
     }
 
     return { from, to };
   }
 
-  private getComparisonDateRange(period: string): { from: Date; to: Date } {
+  private getComparisonDateRange(options: ReportOptions): { from: Date; to: Date } {
+    if (options.period === 'custom') {
+      const originalFrom = new Date(options.from!);
+      const originalTo = new Date(options.to!);
+      const duration = originalTo.getTime() - originalFrom.getTime();
+
+      return {
+        from: new Date(originalFrom.getTime() - duration),
+        to: new Date(originalFrom.getTime() - 1)
+      };
+    }
+
     const now = new Date();
     const to = new Date(now);
     to.setHours(23, 59, 59, 999);
 
     const from = new Date(now);
 
-    switch (period) {
+    switch (options.period) {
       case 'daily':
         // Compare with previous day
         from.setDate(from.getDate() - 2);
@@ -182,7 +205,7 @@ export class ReportGeneratorService {
         to.setHours(23, 59, 59, 999);
         break;
       default:
-        throw new Error(`Invalid period: ${period}`);
+        throw new Error(`Invalid period: ${options.period}`);
     }
 
     return { from, to };
@@ -221,28 +244,28 @@ export class ReportGeneratorService {
 
       // Executive Summary Sheet (with narratives)
       if (data.narratives) {
-        const summarySheet = this.createSummarySheet(data.narratives);
+        const summarySheet = this.createSummarySheet(data.narratives, XLSX);
         XLSX.utils.book_append_sheet(workbook, summarySheet, 'Executive Summary');
       }
 
       // KPI Summary Sheet
-      const kpiSheet = this.createKPISheet(data.kpis);
+      const kpiSheet = this.createKPISheet(data.kpis, XLSX);
       XLSX.utils.book_append_sheet(workbook, kpiSheet, 'KPI Summary');
 
       // Revenue Details Sheet
-      const revenueSheet = this.createRevenueSheet(data.kpis.revenue);
+      const revenueSheet = this.createRevenueSheet(data.kpis.revenue, XLSX);
       XLSX.utils.book_append_sheet(workbook, revenueSheet, 'Revenue Details');
 
       // Engagement Details Sheet
-      const engagementSheet = this.createEngagementSheet(data.kpis.engagement);
+      const engagementSheet = this.createEngagementSheet(data.kpis.engagement, XLSX);
       XLSX.utils.book_append_sheet(workbook, engagementSheet, 'Engagement Details');
 
       // Forecasts Sheet
-      const forecastSheet = this.createForecastSheet(data.forecasts);
+      const forecastSheet = this.createForecastSheet(data.forecasts, XLSX);
       XLSX.utils.book_append_sheet(workbook, forecastSheet, 'Forecasts');
 
       // Alerts Sheet
-      const alertsSheet = this.createAlertsSheet(data.alerts);
+      const alertsSheet = this.createAlertsSheet(data.alerts, XLSX);
       XLSX.utils.book_append_sheet(workbook, alertsSheet, 'Alerts');
 
       // Generate buffer
@@ -250,9 +273,9 @@ export class ReportGeneratorService {
 
       // Save file
       const filename = `report-${options.period}-${Date.now()}.xlsx`;
-      const filepath = path.join(this.reportsDir, String(new Date().getFullYear()), 
+      const filepath = path.join(this.reportsDir, String(new Date().getFullYear()),
         String(new Date().getMonth() + 1).padStart(2, '0'), filename);
-      
+
       fs.writeFileSync(filepath, buffer);
 
       return buffer;
@@ -263,7 +286,7 @@ export class ReportGeneratorService {
     }
   }
 
-  private createSummarySheet(narratives: any): any {
+  private createSummarySheet(narratives: any, XLSX: any): any {
     const data = [
       ['Executive Summary', ''],
       ['Short Summary', narratives.short],
@@ -290,7 +313,7 @@ export class ReportGeneratorService {
     return XLSX.utils.aoa_to_sheet(data);
   }
 
-  private createKPISheet(kpis: any): any {
+  private createKPISheet(kpis: any, XLSX: any): any {
     const data = [
       ['Metric', 'Value', 'Growth %'],
       ['Revenue Total', kpis.revenue.total, kpis.revenue.growth],
@@ -308,7 +331,7 @@ export class ReportGeneratorService {
     return XLSX.utils.aoa_to_sheet(data);
   }
 
-  private createRevenueSheet(revenue: any): any {
+  private createRevenueSheet(revenue: any, XLSX: any): any {
     const data = [
       ['Revenue Breakdown', 'Amount', 'Percentage'],
       ['Total Revenue', revenue.total, '100%'],
@@ -326,7 +349,7 @@ export class ReportGeneratorService {
     return XLSX.utils.aoa_to_sheet(data);
   }
 
-  private createEngagementSheet(engagement: any): any {
+  private createEngagementSheet(engagement: any, XLSX: any): any {
     const data = [
       ['Engagement Metric', 'Value'],
       ['Daily Active Users', engagement.dau],
@@ -343,7 +366,7 @@ export class ReportGeneratorService {
     return XLSX.utils.aoa_to_sheet(data);
   }
 
-  private createForecastSheet(forecasts: any[]): any {
+  private createForecastSheet(forecasts: any[], XLSX: any): any {
     const data = [
       ['Date', 'Metric', 'Forecast Value', 'Confidence', 'Trend', 'Lower Bound', 'Upper Bound']
     ];
@@ -363,7 +386,7 @@ export class ReportGeneratorService {
     return XLSX.utils.aoa_to_sheet(data);
   }
 
-  private createAlertsSheet(alerts: any[]): any {
+  private createAlertsSheet(alerts: any[], XLSX: any): any {
     const data = [
       ['Alert ID', 'Type', 'Severity', 'Status', 'Title', 'Current Value', 'Threshold', 'Deviation %', 'Created At']
     ];
@@ -521,6 +544,57 @@ export class ReportGeneratorService {
     // This would generate chart data for the report
     // For now, return empty array
     return [];
+  }
+
+  /**
+   * Validate report request parameters
+   */
+  validateReportRequest(request: any): void {
+    const validPeriods = ['daily', 'weekly', 'monthly', 'custom'];
+    const validFormats = ['pdf', 'xlsx'];
+
+    if (!request.period || !validPeriods.includes(request.period)) {
+      throw new Error('Invalid period. Must be one of: daily, weekly, monthly, custom');
+    }
+
+    if (!request.format || !validFormats.includes(request.format)) {
+      throw new Error('Invalid format. Must be either pdf or xlsx');
+    }
+
+    if (!request.userId) {
+      throw new Error('User ID is required');
+    }
+
+    if (request.period === 'custom') {
+      if (!request.from || !request.to) {
+        throw new Error('Custom period requires from and to dates');
+      }
+
+      const fromDate = new Date(request.from);
+      const toDate = new Date(request.to);
+
+      if (fromDate > toDate) {
+        throw new Error('Invalid date range: from date must be before to date');
+      }
+    }
+  }
+
+  /**
+   * Get report metadata
+   */
+  getReportMetadata(format: string, period: string, country: string): any {
+    const timestamp = new Date().toISOString().split('T')[0].replace(/-/g, '');
+    const filename = `halobuzz-report-${period}-${country}-${timestamp}.${format}`;
+
+    const metadata = {
+      filename,
+      extension: `.${format}`,
+      mimeType: format === 'pdf'
+        ? 'application/pdf'
+        : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    };
+
+    return metadata;
   }
 }
 

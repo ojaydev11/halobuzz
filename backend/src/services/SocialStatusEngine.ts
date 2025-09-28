@@ -1069,9 +1069,9 @@ class SocialStatusEngine extends EventEmitter {
     return achievement.requirements.every(req => {
       switch (req.type) {
         case 'gifts_sent':
-          return hierarchy.socialMetrics.totalGiftsGiven >= req.value;
+          return hierarchy.socialMetrics.totalGiftsGiven >= Number(req.value);
         case 'followers':
-          return hierarchy.socialMetrics.followers >= req.value;
+          return hierarchy.socialMetrics.followers >= Number(req.value);
         case 'coins_spent':
           // Would need to track total spending
           return false;

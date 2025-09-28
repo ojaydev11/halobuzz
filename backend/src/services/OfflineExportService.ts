@@ -3,7 +3,6 @@ import ReportGeneratorService from './ReportGeneratorService';
 import { AnalyticsDailyKPI } from '../analytics/models/AnalyticsDailyKPI';
 import { AnalyticsAlert } from '../analytics/models/AnalyticsAlert';
 import { AnalyticsForecast } from '../analytics/models/AnalyticsForecast';
-import { empireRoutes } from '../routes/empire';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as cron from 'node-cron';

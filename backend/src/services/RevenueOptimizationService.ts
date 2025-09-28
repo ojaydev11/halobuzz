@@ -182,13 +182,13 @@ export class RevenueOptimizationService {
       const opportunities: MonetizationOpportunity[] = [];
 
       // Subscription opportunity
-      if (user.followers > 1000 && !user.isPremium) {
+      if (user.followers > 1000 && !(user as any).isPremium) {
         const subscriptionOpp = await this.analyzeSubscriptionOpportunity(user);
         opportunities.push(subscriptionOpp);
       }
 
       // Premium features opportunity
-      if (user.totalStreams > 10) {
+      if ((user as any).totalStreams > 10) {
         const premiumFeaturesOpp = await this.analyzePremiumFeaturesOpportunity(user);
         opportunities.push(premiumFeaturesOpp);
       }
@@ -609,8 +609,8 @@ export class RevenueOptimizationService {
 
   private calculatePricingConfidence(multipliers: any): number {
     // Higher confidence when multipliers are closer to 1.0
-    const variance = Object.values(multipliers).reduce((sum: number, val: any) => 
-      sum + Math.pow(val - 1.0, 2), 0) / Object.keys(multipliers).length;
+    const variance = Object.values(multipliers).reduce((sum: number, val: any) =>
+      sum + Math.pow(Number(val) - 1.0, 2), 0) / Object.keys(multipliers).length;
     return Math.max(0, 1 - variance);
   }
 

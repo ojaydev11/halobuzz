@@ -1,6 +1,6 @@
 import { logger } from '../config/logger';
 import { getCache, setCache } from '../config/redis';
-import { agoraService } from './AgoraService';
+import AgoraService from './AgoraService';
 
 interface WebRTCConfig {
   iceServers: RTCIceServer[];
@@ -319,7 +319,7 @@ a=ssrc:1234567892 label:${this.generateRandomString(16)}`;
   private async checkAgoraAvailability(): Promise<boolean> {
     try {
       // Check if Agora service is available
-      const agoraHealth = await agoraService.getRegionStats();
+      const agoraHealth = await AgoraService.getRegionStats();
       return agoraHealth.length > 0;
     } catch (error) {
       this.logger.warn('Agora service unavailable, falling back to WebRTC');

@@ -279,7 +279,7 @@ export class TrustCredibilityService {
       }
 
       // Check if user already has this badge
-      if (user.trustBadges && user.trustBadges.includes(badgeId)) {
+      if ((user as any).trustBadges && (user as any).trustBadges.includes(badgeId)) {
         return { success: false, message: 'User already has this badge' };
       }
 
@@ -550,10 +550,10 @@ export class TrustCredibilityService {
   private async calculateFinancialTrust(userId: string): Promise<any> {
     const transactions = await Transaction.find({ userId });
     const totalEarnings = transactions
-      .filter(t => t.type === 'earning')
+      .filter(t => t.type === 'gift_received' || t.type === 'og_bonus')
       .reduce((sum, t) => sum + t.amount, 0);
-    
-    const chargebacks = transactions.filter(t => t.type === 'chargeback').length;
+
+    const chargebacks = transactions.filter(t => t.type === 'refund').length;
     const chargebackRate = transactions.length > 0 ? chargebacks / transactions.length : 0;
 
     return {

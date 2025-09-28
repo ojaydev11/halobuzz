@@ -121,13 +121,13 @@ export class ViralGrowthService {
     referrerId?: string;
   }> {
     try {
-      const referralData = await getCache(`referral:${referralCode}`);
+      const referralData = await getCache(`referral:${referralCode}`) as any;
       if (!referralData) {
         return { success: false, referrerReward: 0, refereeReward: 0 };
       }
 
       const referrerId = referralData.userId;
-      
+
       // Check if referral limit reached
       if (referralData.uses >= referralData.maxUses) {
         return { success: false, referrerReward: 0, refereeReward: 0 };
@@ -172,7 +172,7 @@ export class ViralGrowthService {
       // Update referral usage
       await setCache(`referral:${referralCode}`, {
         ...referralData,
-        uses: referralData.uses + 1
+        uses: (referralData as any).uses + 1
       }, this.referralProgram.expirationDays * 24 * 60 * 60);
 
       // Mark referral as used
@@ -246,7 +246,7 @@ export class ViralGrowthService {
       }
 
       // Add user to challenge participants
-      const participants = await getCache(`challenge_participants:${challengeId}`) || [];
+      const participants = (await getCache(`challenge_participants:${challengeId}`) as any[]) || [];
       if (participants.includes(userId)) {
         return { success: false, message: 'Already participating' };
       }
@@ -540,7 +540,7 @@ export class ViralGrowthService {
       return true;
     }
 
-    if (campaign.requirements.eligibilityCriteria.minStreams && user.totalStreams >= campaign.requirements.eligibilityCriteria.minStreams) {
+    if (campaign.requirements.eligibilityCriteria.minStreams && (user as any).totalStreams >= campaign.requirements.eligibilityCriteria.minStreams) {
       return true;
     }
 
