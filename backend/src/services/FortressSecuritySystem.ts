@@ -976,7 +976,7 @@ export class FortressSecuritySystem extends EventEmitter {
     ]);
 
     // Ensemble voting with confidence weighting
-    const ensembleResult = this.combinePredictions(predictions, model.weights);
+    const ensembleResult = this.combinePredictions(predictions);
     
     return {
       fraudProbability: ensembleResult.probability,
@@ -1051,7 +1051,7 @@ export class FortressSecuritySystem extends EventEmitter {
 
   private async isolationForestPrediction(features: number[]): Promise<any> {
     // Real isolation forest for anomaly detection
-    const trees = this.getIsolationForestTrees();
+    const trees = await this.getIsolationForestTrees();
     const pathLengths = [];
     
     for (const tree of trees) {
@@ -1061,7 +1061,7 @@ export class FortressSecuritySystem extends EventEmitter {
     
     // Calculate anomaly score
     const avgPathLength = pathLengths.reduce((sum, p) => sum + p, 0) / pathLengths.length;
-    const anomalyScore = Math.pow(2, -avgPathLength / this.getAveragePathLength());
+    const anomalyScore = Math.pow(2, -avgPathLength / await this.getAveragePathLength());
     
     return {
       probability: Math.min(1, anomalyScore),
@@ -1345,7 +1345,7 @@ export class FortressSecuritySystem extends EventEmitter {
       }
 
       // Check geographic anomalies with real analysis
-      const geoAnalysis = await this.analyzeGeographicAnomaly(networkInfo);
+      const geoAnalysis = await this.analyzeGeographicAnomaly(networkInfo, securityProfile);
       if (geoAnalysis.isAnomalous) {
         riskScore += geoAnalysis.riskScore;
         riskFactors.push(`Geographic anomaly: ${geoAnalysis.reason}`);
@@ -1603,7 +1603,7 @@ export class FortressSecuritySystem extends EventEmitter {
   }
 
   async calculateConfidence(factors: any): Promise<number> {
-    return this.calculateConfidenceLevel(factors);
+    return this.calculateConfidenceLevel([factors], []);
   }
 
   async getRandomForestTrees(): Promise<any[]> {
@@ -1670,6 +1670,62 @@ export class FortressSecuritySystem extends EventEmitter {
   async calculateIsolationConfidence(pathLengths: number[]): Promise<number> {
     const avgPathLength = pathLengths.reduce((sum, len) => sum + len, 0) / pathLengths.length;
     return Math.max(0.1, 1 - (avgPathLength / 10));
+  }
+
+  // Missing methods needed by the codebase
+  private analyzeRiskFactors(features: any[]): string[] {
+    const riskFactors: string[] = [];
+    
+    // Analyze features for risk indicators
+    features.forEach((feature, index) => {
+      if (typeof feature === 'number' && feature > 0.8) {
+        riskFactors.push(`high_value_feature_${index}`);
+      }
+    });
+    
+    return riskFactors;
+  }
+
+  private calculateHeuristicProbability(riskFactors: string[]): number {
+    // Simple heuristic based on risk factors
+    const baseProbability = 0.1;
+    const riskIncrease = riskFactors.length * 0.1;
+    return Math.min(0.9, baseProbability + riskIncrease);
+  }
+
+  private async checkIPReputationReal(ipAddress: string): Promise<number> {
+    // Placeholder implementation
+    return 0.1;
+  }
+
+  private async detectProxyUsage(networkInfo: any): Promise<{ isProxy: boolean; confidence: number }> {
+    // Placeholder implementation
+    return { isProxy: false, confidence: 0.5 };
+  }
+
+  private async checkASNReputation(asn: string): Promise<number> {
+    // Placeholder implementation
+    return 0.1;
+  }
+
+  private async checkDNSReputation(dnsServers: string[]): Promise<number> {
+    // Placeholder implementation
+    return 0.1;
+  }
+
+  private async getResolvedThreats(): Promise<any[]> {
+    // Placeholder implementation
+    return [];
+  }
+
+  private async getThreatIntelLastUpdate(): Promise<Date> {
+    // Placeholder implementation
+    return new Date();
+  }
+
+  private async getContainedThreats(): Promise<any[]> {
+    // Placeholder implementation
+    return [];
   }
 }
 

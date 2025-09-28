@@ -206,7 +206,7 @@ class AIGameService {
 
       // Validate player actions with anti-cheat
       const antiCheatResult = await this.validatePlayerActions(session, playerActions);
-      if (antiCheatResult.result === 'blocked') {
+      if (antiCheatResult.result === 'fail') {
         return { success: false, error: 'Game blocked due to suspicious activity' };
       }
 
@@ -729,7 +729,7 @@ class AIGameService {
       }
 
       // Check cache
-      const cachedSession = await getCache(`ai_game:${sessionId}`);
+      const cachedSession = await getCache(`ai_game:${sessionId}`) as AIGameSession;
       if (cachedSession) {
         return cachedSession;
       }

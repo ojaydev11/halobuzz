@@ -307,7 +307,7 @@ export class AIOpponentService extends EventEmitter {
     const currentPhase = gameState.gamePhase || 'middle_game';
 
     // Adjust move quality based on difficulty and traits
-    const moveQuality = (difficulty / 100) * personality.traits.analytical;
+    const moveQuality = (difficulty / 100) * personality.traits.precision;
     const thinkingDepth = Math.floor(moveQuality / 10) + 1; // 1-10 moves ahead
 
     // Mock chess move generation
@@ -641,7 +641,7 @@ export class AIOpponentService extends EventEmitter {
     for (const [action, weight] of adjustedWeights) {
       currentWeight += weight as number;
       if (random <= currentWeight) {
-        return action;
+        return action as string;
       }
     }
 

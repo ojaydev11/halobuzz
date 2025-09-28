@@ -1,10 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { User } from '../models/User';
-import { LiveStream } from '../models/LiveStream';
-import { ShortVideo } from '../models/ShortVideo';
-import { AnalyticsEvent } from '../analytics/models/AnalyticsEvent';
+import { User, IUser } from '../models/User';
+import { LiveStream, ILiveStream } from '../models/LiveStream';
+import { ShortVideo, IShortVideo } from '../models/ShortVideo';
+import { AnalyticsEvent, IAnalyticsEvent } from '../analytics/models/AnalyticsEvent';
 import { RedisService } from './RedisService';
 import { Logger } from '@nestjs/common';
 
@@ -86,10 +85,10 @@ export class AIContentRecommendationService {
   private readonly logger = new Logger(AIContentRecommendationService.name);
 
   constructor(
-    @InjectModel('User') private userModel: Model<User>,
-    @InjectModel('LiveStream') private liveStreamModel: Model<LiveStream>,
-    @InjectModel('ShortVideo') private shortVideoModel: Model<ShortVideo>,
-    @InjectModel('AnalyticsEvent') private analyticsEventModel: Model<AnalyticsEvent>,
+    private userModel: Model<IUser>,
+    private liveStreamModel: Model<ILiveStream>,
+    private shortVideoModel: Model<IShortVideo>,
+    private analyticsEventModel: Model<IAnalyticsEvent>,
     private redisService: RedisService,
   ) {}
 
@@ -766,7 +765,7 @@ export class AIContentRecommendationService {
     }
 
     const topCategories = Object.entries(categoryCounts)
-      .map(([category, count]) => ({ category, count }))
+      .map(([category, count]) => ({ category, count: Number(count) }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 10);
 

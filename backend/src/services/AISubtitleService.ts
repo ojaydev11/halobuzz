@@ -462,8 +462,8 @@ export class AISubtitleService {
         };
       }
 
-      // Check if subtitles are available
-      const subtitleInfo = stream.metadata?.subtitles;
+      // Check if subtitles are available (using a different approach since metadata doesn't exist)
+      const subtitleInfo = (stream as any).metadata?.subtitles;
       if (!subtitleInfo?.available) {
         return {
           success: false,

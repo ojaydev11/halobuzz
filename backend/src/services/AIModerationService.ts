@@ -319,8 +319,7 @@ export class AIModerationService {
         return {
           isAdult: false,
           confidence: 0.0,
-          action: 'block',
-          reason: 'User not found'
+          action: 'block'
         };
       }
 
@@ -376,16 +375,14 @@ export class AIModerationService {
       return {
         isAdult: false,
         confidence: 0.0,
-        action: 'review',
-        reason: 'Age verification required'
+        action: 'review'
       };
     } catch (error) {
       this.logger.error('Error verifying user age:', error);
       return {
         isAdult: false,
         confidence: 0.0,
-        action: 'review',
-        reason: 'Age verification error'
+        action: 'review'
       };
     }
   }
