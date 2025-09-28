@@ -26,8 +26,8 @@ describe('ReportGeneratorService', () => {
 
     // Mock narrative generator
     mockNarrativeGenerator.generateNarratives.mockReturnValue({
-      short: 'Revenue increased by 10%',
-      long: 'Detailed analysis shows revenue growth across all segments',
+      short: 'Revenue increased by 10%' as string,
+      long: 'Detailed analysis shows revenue growth across all segments' as string,
       insights: [
         {
           metric: 'Total Revenue',

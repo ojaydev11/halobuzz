@@ -267,3 +267,12 @@ export const searchLimiter = (req: Request, res: Response, next: NextFunction) =
   // Search rate limiting - placeholder implementation
   next();
 };
+
+/**
+ * Anonymize User Data Middleware
+ * Anonymizes user data for privacy compliance
+ */
+export const anonymizeUserData = (req: Request, res: Response, next: NextFunction) => {
+  // Anonymize user data - placeholder implementation
+  next();
+};

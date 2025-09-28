@@ -3,6 +3,13 @@ import { setupLogger } from './logger';
 
 const logger = setupLogger();
 
+export const getMongoDB = async () => {
+  if (!mongoose.connection.db) {
+    await connectDatabase();
+  }
+  return mongoose.connection.db;
+};
+
 export const connectDatabase = async (): Promise<void> => {
   try {
     const mongoUri = process.env.MONGODB_URI;
