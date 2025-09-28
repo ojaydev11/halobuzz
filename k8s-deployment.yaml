@@ -1,0 +1,265 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: halobuzz
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: halobuzz-backend
+  namespace: halobuzz
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: halobuzz-backend
+  template:
+    metadata:
+      labels:
+        app: halobuzz-backend
+    spec:
+      containers:
+      - name: backend
+        image: halobuzz/backend:latest
+        ports:
+        - containerPort: 5010
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: halobuzz-secrets
+              key: database-url
+        - name: REDIS_URL
+          value: "redis://halobuzz-redis:6379"
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: halobuzz-secrets
+              key: jwt-secret
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 5010
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 5010
+          initialDelaySeconds: 5
+          periodSeconds: 5
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: halobuzz-gameserver
+  namespace: halobuzz
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: halobuzz-gameserver
+  template:
+    metadata:
+      labels:
+        app: halobuzz-gameserver
+    spec:
+      containers:
+      - name: gameserver
+        image: halobuzz/gameserver:latest
+        ports:
+        - containerPort: 5011
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: halobuzz-secrets
+              key: database-url
+        - name: REDIS_URL
+          value: "redis://halobuzz-redis:6379"
+        - name: MAX_CONCURRENT_MATCHES
+          value: "20"
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 5011
+          initialDelaySeconds: 30
+          periodSeconds: 10
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: halobuzz-backend-service
+  namespace: halobuzz
+spec:
+  selector:
+    app: halobuzz-backend
+  ports:
+  - port: 5010
+    targetPort: 5010
+  type: ClusterIP
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: halobuzz-gameserver-service
+  namespace: halobuzz
+spec:
+  selector:
+    app: halobuzz-gameserver
+  ports:
+  - port: 5011
+    targetPort: 5011
+  type: ClusterIP
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: halobuzz-redis
+  namespace: halobuzz
+spec:
+  selector:
+    app: redis
+  ports:
+  - port: 6379
+    targetPort: 6379
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  namespace: halobuzz
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+      - name: redis
+        image: redis:7-alpine
+        ports:
+        - containerPort: 6379
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: halobuzz-ingress
+  namespace: halobuzz
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+spec:
+  tls:
+  - hosts:
+    - api.halobuzz.com
+    secretName: halobuzz-tls
+  rules:
+  - host: api.halobuzz.com
+    http:
+      paths:
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: halobuzz-backend-service
+            port:
+              number: 5010
+      - path: /ws
+        pathType: Prefix
+        backend:
+          service:
+            name: halobuzz-gameserver-service
+            port:
+              number: 5011
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: halobuzz-backend-hpa
+  namespace: halobuzz
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: halobuzz-backend
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: halobuzz-gameserver-hpa
+  namespace: halobuzz
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: halobuzz-gameserver
+  minReplicas: 3
+  maxReplicas: 20
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 60
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 75

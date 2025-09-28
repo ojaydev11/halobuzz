@@ -1,0 +1,943 @@
+openapi: 3.0.3
+info:
+  title: HaloBuzz API
+  description: |
+    # HaloBuzz Live Streaming & Social Platform API
+
+    The HaloBuzz API provides comprehensive functionality for:
+    - **Authentication & User Management** - Secure JWT-based auth with MFA
+    - **Live Streaming** - Agora-powered real-time streaming
+    - **Social Features** - Follow/unfollow, reels, comments, likes
+    - **Gaming Integration** - Multi-game support with real-time multiplayer
+    - **Payment System** - Secure transactions, wallets, virtual currency
+    - **AI-Powered Features** - Content moderation, recommendations
+    - **Real-time Communication** - WebSocket-based chat and notifications
+
+    ## Authentication
+    All protected endpoints require JWT token in Authorization header:
+    ```
+    Authorization: Bearer <your_jwt_token>
+    ```
+
+    ## Rate Limiting
+    - Standard endpoints: 100 requests/15 minutes
+    - Auth endpoints: 10 requests/15 minutes
+    - Payment endpoints: 20 requests/15 minutes
+
+    ## Error Handling
+    All errors follow consistent format:
+    ```json
+    {
+      "success": false,
+      "error": "Error message",
+      "code": "ERROR_CODE",
+      "details": {}
+    }
+    ```
+
+  version: 2.1.0
+  termsOfService: 'https://halobuzz.com/terms'
+  contact:
+    name: HaloBuzz API Support
+    url: 'https://halobuzz.com/support'
+    email: api-support@halobuzz.com
+  license:
+    name: Proprietary
+    url: 'https://halobuzz.com/license'
+
+servers:
+  - url: 'https://api.halobuzz.com/v2'
+    description: Production Server
+  - url: 'https://staging-api.halobuzz.com/v2'
+    description: Staging Server
+  - url: 'https://dev-api.halobuzz.com/v2'
+    description: Development Server
+
+security:
+  - BearerAuth: []
+  - ApiKeyAuth: []
+
+tags:
+  - name: Authentication
+    description: User authentication and authorization
+  - name: Users
+    description: User profile management
+  - name: Social
+    description: Social features (follow, friends, etc.)
+  - name: Streams
+    description: Live streaming functionality
+  - name: Reels
+    description: Short-form video content
+  - name: Games
+    description: Gaming and multiplayer features
+  - name: Payments
+    description: Financial transactions and wallet
+  - name: Chat
+    description: Real-time messaging
+  - name: Admin
+    description: Administrative functions
+  - name: Analytics
+    description: Performance and usage analytics
+
+paths:
+  # Authentication Endpoints
+  /auth/register:
+    post:
+      tags: [Authentication]
+      summary: Register new user
+      description: Create a new user account with email verification
+      operationId: registerUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+            examples:
+              standard_user:
+                summary: Standard user registration
+                value:
+                  username: johndoe
+                  email: john@example.com
+                  password: SecureP@ss123
+                  phone: "+1234567890"
+                  country: US
+                  language: en
+                  agreeToTerms: true
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '429':
+          $ref: '#/components/responses/RateLimit'
+
+  /auth/login:
+    post:
+      tags: [Authentication]
+      summary: User login
+      description: Authenticate user and receive JWT tokens
+      operationId: loginUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimit'
+
+  /auth/refresh:
+    post:
+      tags: [Authentication]
+      summary: Refresh access token
+      description: Get new access token using refresh token
+      operationId: refreshToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refreshToken:
+                  type: string
+                  description: Valid refresh token
+              required: [refreshToken]
+      responses:
+        '200':
+          description: Token refreshed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      token:
+                        type: string
+                        description: New access token
+                      refreshToken:
+                        type: string
+                        description: New refresh token (optional)
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # User Endpoints
+  /users/{userId}:
+    get:
+      tags: [Users]
+      summary: Get user profile
+      description: Retrieve user profile information
+      operationId: getUserProfile
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: User ID or username
+      responses:
+        '200':
+          description: User profile retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /users/{userId}/follow:
+    post:
+      tags: [Social]
+      summary: Follow/unfollow user
+      description: Follow or unfollow another user
+      operationId: followUser
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                action:
+                  type: string
+                  enum: [follow, unfollow]
+                  description: Action to perform
+              required: [action]
+      responses:
+        '200':
+          description: Follow action completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  isFollowing:
+                    type: boolean
+                  message:
+                    type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # Reels Endpoints
+  /reels:
+    get:
+      tags: [Reels]
+      summary: Get reels feed
+      description: Retrieve personalized reels feed
+      operationId: getReelsFeed
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 20
+          description: Number of reels to return
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+          description: Pagination offset
+        - name: category
+          in: query
+          schema:
+            type: string
+          description: Filter by category
+      responses:
+        '200':
+          description: Reels feed retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      reels:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Reel'
+                      hasMore:
+                        type: boolean
+                      nextOffset:
+                        type: integer
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /reels/{reelId}/like:
+    post:
+      tags: [Reels]
+      summary: Like/unlike reel
+      description: Toggle like status for a reel
+      operationId: likeReel
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: reelId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                action:
+                  type: string
+                  enum: [like, unlike]
+      responses:
+        '200':
+          description: Like action completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  isLiked:
+                    type: boolean
+                  likesCount:
+                    type: integer
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # Streaming Endpoints
+  /streams:
+    get:
+      tags: [Streams]
+      summary: Get live streams
+      description: Get list of active live streams
+      operationId: getStreams
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: country
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: sortBy
+          in: query
+          schema:
+            type: string
+            enum: [viewers, recent, trending]
+            default: viewers
+      responses:
+        '200':
+          description: Streams retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      streams:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Stream'
+                      total:
+                        type: integer
+
+    post:
+      tags: [Streams]
+      summary: Create new stream
+      description: Start a new live stream
+      operationId: createStream
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateStreamRequest'
+      responses:
+        '201':
+          description: Stream created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      stream:
+                        $ref: '#/components/schemas/Stream'
+                      agoraToken:
+                        type: string
+                        description: Agora RTC token
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # Payment Endpoints
+  /wallet/balance:
+    get:
+      tags: [Payments]
+      summary: Get wallet balance
+      description: Retrieve current wallet balance
+      operationId: getWalletBalance
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Wallet balance retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WalletBalance'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /wallet/transactions:
+    get:
+      tags: [Payments]
+      summary: Get transaction history
+      description: Retrieve user's transaction history
+      operationId: getTransactions
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [deposit, withdrawal, purchase, reward]
+      responses:
+        '200':
+          description: Transactions retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      transactions:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Transaction'
+                      total:
+                        type: integer
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token obtained from login endpoint
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key for service-to-service communication
+
+  schemas:
+    RegisterRequest:
+      type: object
+      required:
+        - username
+        - email
+        - password
+        - agreeToTerms
+      properties:
+        username:
+          type: string
+          minLength: 3
+          maxLength: 30
+          pattern: '^[a-zA-Z0-9_-]+$'
+          description: Unique username (3-30 chars, alphanumeric, underscore, hyphen)
+        email:
+          type: string
+          format: email
+          description: Valid email address
+        password:
+          type: string
+          minLength: 8
+          description: Password (min 8 chars, must include uppercase, lowercase, number, special char)
+        phone:
+          type: string
+          pattern: '^\+?[1-9]\d{1,14}$'
+          description: Optional phone number in E.164 format
+        country:
+          type: string
+          minLength: 2
+          maxLength: 2
+          description: ISO 3166-1 alpha-2 country code
+        language:
+          type: string
+          default: en
+          description: Preferred language (ISO 639-1)
+        agreeToTerms:
+          type: boolean
+          description: Must be true to register
+        marketingOptIn:
+          type: boolean
+          default: false
+          description: Opt-in for marketing communications
+
+    LoginRequest:
+      type: object
+      required:
+        - identifier
+        - password
+      properties:
+        identifier:
+          type: string
+          description: Email or username
+        password:
+          type: string
+          description: User password
+        rememberMe:
+          type: boolean
+          default: false
+          description: Extended session duration
+        deviceId:
+          type: string
+          description: Device identifier for security
+
+    AuthResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        data:
+          type: object
+          properties:
+            user:
+              $ref: '#/components/schemas/User'
+            token:
+              type: string
+              description: JWT access token
+            refreshToken:
+              type: string
+              description: Refresh token
+            expiresIn:
+              type: integer
+              description: Token expiration in seconds
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+        avatar:
+          type: string
+          format: uri
+          nullable: true
+        displayName:
+          type: string
+          nullable: true
+        bio:
+          type: string
+          maxLength: 500
+          nullable: true
+        country:
+          type: string
+        language:
+          type: string
+        isVerified:
+          type: boolean
+        kycStatus:
+          type: string
+          enum: [pending, verified, rejected]
+        ogLevel:
+          type: integer
+          minimum: 0
+          maximum: 100
+        coins:
+          type: object
+          properties:
+            balance:
+              type: integer
+            totalEarned:
+              type: integer
+            totalSpent:
+              type: integer
+        trust:
+          type: object
+          properties:
+            score:
+              type: integer
+              minimum: 0
+              maximum: 100
+            level:
+              type: string
+              enum: [novice, trusted, expert, legendary]
+        createdAt:
+          type: string
+          format: date-time
+        lastActiveAt:
+          type: string
+          format: date-time
+
+    UserProfile:
+      allOf:
+        - $ref: '#/components/schemas/User'
+        - type: object
+          properties:
+            followers:
+              type: integer
+            following:
+              type: integer
+            totalLikes:
+              type: integer
+            totalViews:
+              type: integer
+            isFollowing:
+              type: boolean
+              description: Whether current user follows this user
+            mutualFollowers:
+              type: integer
+              description: Count of mutual followers
+
+    Reel:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+          maxLength: 100
+        description:
+          type: string
+          maxLength: 500
+          nullable: true
+        videoUrl:
+          type: string
+          format: uri
+        thumbnailUrl:
+          type: string
+          format: uri
+        duration:
+          type: integer
+          description: Duration in seconds
+        creator:
+          type: object
+          properties:
+            id:
+              type: string
+            username:
+              type: string
+            avatar:
+              type: string
+              format: uri
+            isVerified:
+              type: boolean
+        stats:
+          type: object
+          properties:
+            likes:
+              type: integer
+            comments:
+              type: integer
+            shares:
+              type: integer
+            views:
+              type: integer
+        isLiked:
+          type: boolean
+        isFollowing:
+          type: boolean
+        tags:
+          type: array
+          items:
+            type: string
+          maxItems: 10
+        category:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    Stream:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        thumbnailUrl:
+          type: string
+          format: uri
+        streamer:
+          type: object
+          properties:
+            id:
+              type: string
+            username:
+              type: string
+            avatar:
+              type: string
+            isVerified:
+              type: boolean
+        category:
+          type: string
+        viewers:
+          type: integer
+        isLive:
+          type: boolean
+        startedAt:
+          type: string
+          format: date-time
+        agoraChannelName:
+          type: string
+          description: Agora channel identifier
+
+    CreateStreamRequest:
+      type: object
+      required:
+        - title
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 100
+        description:
+          type: string
+          maxLength: 500
+        category:
+          type: string
+        thumbnailUrl:
+          type: string
+          format: uri
+        isPrivate:
+          type: boolean
+          default: false
+
+    WalletBalance:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            coins:
+              type: integer
+            gems:
+              type: integer
+            totalEarned:
+              type: integer
+            totalSpent:
+              type: integer
+            lastUpdated:
+              type: string
+              format: date-time
+
+    Transaction:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [deposit, withdrawal, purchase, reward, gift_sent, gift_received]
+        amount:
+          type: integer
+          description: Amount in coins/gems
+        currency:
+          type: string
+          enum: [coins, gems, USD, EUR]
+        description:
+          type: string
+        status:
+          type: string
+          enum: [pending, completed, failed, cancelled]
+        createdAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+        metadata:
+          type: object
+          additionalProperties: true
+
+    Error:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          description: Human-readable error message
+        code:
+          type: string
+          description: Machine-readable error code
+        details:
+          type: object
+          additionalProperties: true
+          description: Additional error details
+        requestId:
+          type: string
+          description: Request ID for tracking
+
+  responses:
+    BadRequest:
+      description: Bad Request - Invalid input data
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            success: false
+            error: "Validation failed"
+            code: "VALIDATION_ERROR"
+            details:
+              fields:
+                - field: "email"
+                  message: "Invalid email format"
+
+    Unauthorized:
+      description: Unauthorized - Invalid or missing authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            success: false
+            error: "Authentication required"
+            code: "UNAUTHORIZED"
+
+    Forbidden:
+      description: Forbidden - Insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    NotFound:
+      description: Not Found - Resource does not exist
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    Conflict:
+      description: Conflict - Resource already exists
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    RateLimit:
+      description: Too Many Requests - Rate limit exceeded
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+          description: Seconds to wait before next request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            success: false
+            error: "Rate limit exceeded"
+            code: "RATE_LIMIT_EXCEEDED"
+            details:
+              retryAfter: 900
+
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'

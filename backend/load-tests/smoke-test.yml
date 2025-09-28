@@ -1,0 +1,61 @@
+config:
+  target: '{{ $processEnvironment.API_BASE || "http://localhost:4000" }}'
+  phases:
+    - duration: 30
+      arrivalRate: 5
+      name: "Smoke Test Phase"
+  defaults:
+    headers:
+      Content-Type: 'application/json'
+      Authorization: 'Bearer {{ $processEnvironment.TOKEN || "test_token" }}'
+
+scenarios:
+  - name: "AI Recommendations Smoke Test"
+    weight: 25
+    flow:
+      - get:
+          url: "/api/v1/ai-recommendations"
+          qs:
+            limit: 20
+          expect:
+            - statusCode: 200
+            - hasProperty: "success"
+            - hasProperty: "data"
+
+  - name: "Advanced Analytics Smoke Test"
+    weight: 25
+    flow:
+      - get:
+          url: "/api/v1/advanced-analytics/dashboard"
+          qs:
+            timeRange: "day"
+            granularity: "hour"
+          expect:
+            - statusCode: 200
+            - hasProperty: "success"
+            - hasProperty: "data"
+
+  - name: "Real-Time Personalization Smoke Test"
+    weight: 25
+    flow:
+      - get:
+          url: "/api/v1/personalization/content-feed"
+          qs:
+            sessionId: "test_session_{{ $randomString() }}"
+            currentPage: "home"
+            limit: 10
+          expect:
+            - statusCode: 200
+            - hasProperty: "success"
+            - hasProperty: "data"
+
+  - name: "Fraud Detection Smoke Test"
+    weight: 25
+    flow:
+      - get:
+          url: "/api/v1/fraud-detection/risk-score/test_user_{{ $randomString() }}"
+          expect:
+            - statusCode: 200
+            - hasProperty: "success"
+            - hasProperty: "data"
+

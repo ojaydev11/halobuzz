@@ -1,22 +1,33 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { OptimizedNavigator, createPerformantScreenOptions } from '@/components/OptimizedNavigator';
 
 export default function TabLayout() {
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: '#007AFF',
-        tabBarInactiveTintColor: '#888',
-        tabBarStyle: {
-          backgroundColor: '#1a1a1a',
-          borderTopColor: '#333',
-        },
-        headerStyle: {
-          backgroundColor: '#000',
-        },
-        headerTintColor: '#fff',
-      }}
-    >
+    <OptimizedNavigator>
+      <Tabs
+        screenOptions={{
+          // Performance: Hide headers to reduce layout complexity
+          headerShown: false,
+
+          // Tab bar optimization
+          tabBarActiveTintColor: '#007AFF',
+          tabBarInactiveTintColor: '#888',
+          tabBarStyle: {
+            backgroundColor: '#1a1a1a',
+            borderTopColor: '#333',
+            elevation: 0, // Remove shadow on Android for better performance
+            shadowOpacity: 0, // Remove shadow on iOS
+          },
+
+          // Performance: Enable lazy rendering
+          lazy: true,
+
+          // Animation optimization
+          animationEnabled: true,
+          ...createPerformantScreenOptions('tab'),
+        }}
+      >
       <Tabs.Screen
         name="index"
         options={{
@@ -80,6 +91,7 @@ export default function TabLayout() {
           ),
         }}
       />
-    </Tabs>
+      </Tabs>
+    </OptimizedNavigator>
   );
 }

@@ -1,0 +1,18 @@
+{
+  "android": {
+    "proguardMinifyEnabled": true,
+    "enableProguardInReleaseBuilds": true,
+    "enableSeparateBuildPerCPUArchitecture": true,
+    "packagingOptions": {
+      "pickFirst": ["**/libc++_shared.so", "**/libjsc.so"]
+    },
+    "compileSdkVersion": 34,
+    "targetSdkVersion": 34,
+    "buildToolsVersion": "34.0.0"
+  },
+  "ios": {
+    "deploymentTarget": "13.4",
+    "useFrameworks": "static",
+    "bundler": "metro"
+  }
+}

@@ -7,6 +7,34 @@ import { logger } from '../config/logger';
 import { AuthenticatedRequest } from '../middleware/auth';
 import { InputValidator } from '../utils/inputValidator';
 import { EmailService } from '../services/emailService';
+import rateLimit from 'express-rate-limit';
+
+// Stronger password requirements
+const passwordValidator = (password: string) => {
+  const minLength = 8;
+  const hasUpperCase = /[A-Z]/.test(password);
+  const hasLowerCase = /[a-z]/.test(password);
+  const hasNumbers = /\d/.test(password);
+  const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
+  if (password.length < minLength) {
+    throw new Error('Password must be at least 8 characters long');
+  }
+  if (!hasUpperCase) {
+    throw new Error('Password must contain at least one uppercase letter');
+  }
+  if (!hasLowerCase) {
+    throw new Error('Password must contain at least one lowercase letter');
+  }
+  if (!hasNumbers) {
+    throw new Error('Password must contain at least one number');
+  }
+  if (!hasSpecialChar) {
+    throw new Error('Password must contain at least one special character');
+  }
+
+  return true;
+};
 
 const router = express.Router();
 
@@ -21,8 +49,8 @@ router.post('/register', [
     .normalizeEmail()
     .withMessage('Valid email is required'),
   body('password')
-    .isLength({ min: 6 })
-    .withMessage('Password must be at least 6 characters'),
+    .custom(passwordValidator)
+    .withMessage('Password requirements not met'),
   body('phone')
     .optional()
     .matches(/^\+?[1-9]\d{1,14}$/)
@@ -69,15 +97,22 @@ router.post('/register', [
 
     await user.save();
 
-    // Generate JWT token
+    // Generate JWT tokens
     const jwtSecret = process.env.JWT_SECRET;
     if (!jwtSecret) {
       throw new Error('JWT_SECRET environment variable is not set');
     }
-    const token = jwt.sign(
-      { userId: user._id, username: user.username },
+
+    const accessToken = jwt.sign(
+      { userId: user._id, username: user.username, type: 'access' },
       jwtSecret,
-      { expiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '1h' } as jwt.SignOptions
+      { expiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '15m' }
+    );
+
+    const refreshToken = jwt.sign(
+      { userId: user._id, username: user.username, type: 'refresh' },
+      jwtSecret,
+      { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d' }
     );
 
     res.status(201).json({
@@ -93,7 +128,8 @@ router.post('/register', [
           isVerified: user.isVerified,
           kycStatus: user.kycStatus
         },
-        token
+        token: accessToken,
+        refreshToken: refreshToken
       }
     });
 
@@ -189,15 +225,22 @@ router.post('/login', [
       // Continue with login even if this fails
     }
 
-    // Generate JWT token
+    // Generate JWT tokens
     const jwtSecret = process.env.JWT_SECRET;
     if (!jwtSecret) {
       throw new Error('JWT_SECRET environment variable is not set');
     }
-    const token = jwt.sign(
-      { userId: user._id, username: user.username },
+
+    const accessToken = jwt.sign(
+      { userId: user._id, username: user.username, type: 'access' },
       jwtSecret,
-      { expiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '1h' } as jwt.SignOptions
+      { expiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '15m' }
+    );
+
+    const refreshToken = jwt.sign(
+      { userId: user._id, username: user.username, type: 'refresh' },
+      jwtSecret,
+      { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d' }
     );
 
     res.json({
@@ -217,7 +260,8 @@ router.post('/login', [
           coins: user.coins,
           trust: user.trust
         },
-        token
+        token: accessToken,
+        refreshToken: refreshToken
       }
     });
 
@@ -351,37 +395,53 @@ router.get('/me', async (req, res) => {
 // Refresh token
 router.post('/refresh', async (req, res) => {
   try {
-    const { token } = req.body;
+    const { refreshToken } = req.body;
 
-    if (!token) {
+    if (!refreshToken) {
       return res.status(400).json({
         success: false,
-        error: 'Token is required'
+        error: 'Refresh token is required'
       });
     }
 
-    // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET as jwt.Secret) as any;
-    const user = await User.findById(decoded.userId);
+    // Verify refresh token
+    const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET as jwt.Secret) as any;
 
-    if (!user) {
+    if (decoded.type !== 'refresh') {
       return res.status(401).json({
         success: false,
-        error: 'Invalid token'
+        error: 'Invalid token type'
       });
     }
 
-    // Generate new token
-    const newToken = jwt.sign(
-      { userId: user._id, username: user.username },
+    const user = await User.findById(decoded.userId);
+
+    if (!user || user.isBanned) {
+      return res.status(401).json({
+        success: false,
+        error: 'User not found or banned'
+      });
+    }
+
+    // Generate new access token
+    const newAccessToken = jwt.sign(
+      { userId: user._id, username: user.username, type: 'access' },
       process.env.JWT_SECRET as jwt.Secret,
-      { expiresIn: '7d' }
+      { expiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '15m' }
+    );
+
+    // Optionally generate new refresh token for token rotation
+    const newRefreshToken = jwt.sign(
+      { userId: user._id, username: user.username, type: 'refresh' },
+      process.env.JWT_SECRET as jwt.Secret,
+      { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d' }
     );
 
     res.json({
       success: true,
       data: {
-        token: newToken
+        token: newAccessToken,
+        refreshToken: newRefreshToken
       }
     });
 
@@ -389,7 +449,7 @@ router.post('/refresh', async (req, res) => {
     logger.error('Token refresh failed:', error);
     res.status(401).json({
       success: false,
-      error: 'Invalid token'
+      error: 'Invalid or expired refresh token'
     });
   }
 });

@@ -10,9 +10,8 @@ import {
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useAuth } from '@/store/AuthContext';
+import { useAuth } from '@/store/AuthContextOptimized';
 import { router } from 'expo-router';
-import { toast } from '@/lib/toast';
 
 export default function LoginScreen() {
   const [identifier, setIdentifier] = useState('');
@@ -22,17 +21,14 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     if (!identifier.trim() || !password.trim()) {
-      toast.error('Please fill in all fields', 'Missing Information');
       return;
     }
 
     setIsLoading(true);
     try {
       await login(identifier, password);
-      toast.success('Login successful!', 'Welcome');
       router.replace('/(tabs)');
     } catch (error) {
-      // Error handling is now done in the API client with toast notifications
       console.error('Login error:', error);
     } finally {
       setIsLoading(false);

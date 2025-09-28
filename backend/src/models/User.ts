@@ -1,5 +1,5 @@
 import mongoose, { Document, Schema } from 'mongoose';
-import bcrypt from 'bcryptjs';
+import * as bcrypt from 'bcryptjs';
 
 export interface IUser extends Document {
   username: string;
@@ -15,11 +15,14 @@ export interface IUser extends Document {
   language: string;
   isVerified: boolean;
   isBanned: boolean;
+  isActive?: boolean;
+  role?: string;
   banReason?: string;
   banExpiresAt?: Date;
   lastActiveAt: Date;
-  totalCoinsEarned: number;
-  totalCoinsSpent: number;
+  lastLoginIP?: string;
+  lastLoginDevice?: string;
+  // Removed duplicate coin tracking - using coins object instead
   followers: number;
   following: number;
   totalLikes: number;
@@ -31,6 +34,13 @@ export interface IUser extends Document {
   kycStatus: 'pending' | 'verified' | 'rejected';
   ageVerified: boolean;
   totpSecret?: string;
+  mfaEnabled?: boolean;
+  backupCodes?: Array<{
+    code: string;
+    used: boolean;
+    createdAt: Date;
+    usedAt?: Date;
+  }>;
   boundDevices?: string[];
   kycDocuments?: {
     idCard?: string;
@@ -67,6 +77,17 @@ export interface IUser extends Document {
     };
   };
   deviceTokens: string[];
+  notificationPreferences?: {
+    pushEnabled: boolean;
+    streamNotifications: boolean;
+    giftNotifications: boolean;
+    followNotifications: boolean;
+    messageNotifications: boolean;
+    achievementNotifications: boolean;
+    systemNotifications: boolean;
+    soundEnabled: boolean;
+    vibrateEnabled: boolean;
+  };
   trust: {
     score: number;
     level: 'low' | 'medium' | 'high' | 'verified';
@@ -178,6 +199,15 @@ const userSchema = new Schema<IUser>({
     type: Boolean,
     default: false
   },
+  isActive: {
+    type: Boolean,
+    default: true
+  },
+  role: {
+    type: String,
+    default: 'user',
+    enum: ['user', 'admin', 'moderator', 'super_admin']
+  },
   banReason: {
     type: String,
     default: null
@@ -190,16 +220,15 @@ const userSchema = new Schema<IUser>({
     type: Date,
     default: Date.now
   },
-  totalCoinsEarned: {
-    type: Number,
-    default: 0,
-    min: 0
+  lastLoginIP: {
+    type: String,
+    required: false
   },
-  totalCoinsSpent: {
-    type: Number,
-    default: 0,
-    min: 0
+  lastLoginDevice: {
+    type: String,
+    required: false
   },
+  // Removed duplicate coin fields - using coins object instead
   followers: {
     type: Number,
     default: 0,
@@ -247,6 +276,16 @@ const userSchema = new Schema<IUser>({
     type: String,
     default: null
   },
+  mfaEnabled: {
+    type: Boolean,
+    default: false
+  },
+  backupCodes: [{
+    code: String,
+    used: { type: Boolean, default: false },
+    createdAt: { type: Date, default: Date.now },
+    usedAt: Date
+  }],
   boundDevices: [{
     type: String,
     default: []
@@ -293,6 +332,17 @@ const userSchema = new Schema<IUser>({
     type: String,
     default: []
   }],
+  notificationPreferences: {
+    pushEnabled: { type: Boolean, default: true },
+    streamNotifications: { type: Boolean, default: true },
+    giftNotifications: { type: Boolean, default: true },
+    followNotifications: { type: Boolean, default: true },
+    messageNotifications: { type: Boolean, default: true },
+    achievementNotifications: { type: Boolean, default: true },
+    systemNotifications: { type: Boolean, default: true },
+    soundEnabled: { type: Boolean, default: true },
+    vibrateEnabled: { type: Boolean, default: true }
+  },
   trust: {
     score: { type: Number, default: 0, min: 0, max: 100 },
     level: { 
@@ -403,6 +453,17 @@ userSchema.virtual('isHaloThroneActive').get(function() {
   if (!this.haloThroneExpiresAt) return false;
   return new Date() < this.haloThroneExpiresAt;
 });
+
+// Compatibility virtuals for legacy coin access
+userSchema.virtual('totalCoinsEarned').get(function() {
+  return this.coins?.totalEarned || 0;
+});
+
+userSchema.virtual('totalCoinsSpent').get(function() {
+  return this.coins?.totalSpent || 0;
+});
+
+userSchema.set('toJSON', { virtuals: true });
 
 // Static method to find users by country
 userSchema.statics.findByCountry = function(country: string) {

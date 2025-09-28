@@ -160,7 +160,7 @@ PORT=5010
 TZ=Australia/Sydney
 
 # Database
-MONGODB_URI=mongodb+srv://user:pass@cluster/db?retryWrites=true&w=majority
+MONGODB_URI=mongodb+srv://<username>:<password>@<cluster>.mongodb.net/<database>?retryWrites=true&w=majority
 REDIS_URL=redis://:password@host:6379
 
 # Security

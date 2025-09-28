@@ -1,0 +1,168 @@
+name: Performance Budgets Gate
+
+on:
+  pull_request:
+    branches: [ main, feat/* ]
+  push:
+    branches: [ main ]
+
+jobs:
+  performance-budgets:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: apps/halobuzz-mobile/package-lock.json
+
+    - name: Install dependencies
+      working-directory: apps/halobuzz-mobile
+      run: |
+        npm ci --prefer-offline --no-audit
+
+    - name: Cache Metro
+      uses: actions/cache@v3
+      with:
+        path: |
+          apps/halobuzz-mobile/.metro-cache
+          apps/halobuzz-mobile/node_modules/.cache/metro
+        key: metro-cache-${{ runner.os }}-${{ hashFiles('**/metro.config.js', '**/package-lock.json') }}
+        restore-keys: |
+          metro-cache-${{ runner.os }}-
+
+    - name: Build for performance analysis
+      working-directory: apps/halobuzz-mobile
+      run: |
+        # Build optimized bundle for analysis
+        npx react-native bundle \
+          --platform android \
+          --dev false \
+          --entry-file index.js \
+          --bundle-output android-release.bundle \
+          --sourcemap-output android-release.map
+
+    - name: Analyze bundle size
+      working-directory: apps/halobuzz-mobile
+      run: |
+        # Check bundle size (budget: 2MB)
+        BUNDLE_SIZE=$(stat -f%z android-release.bundle 2>/dev/null || stat --printf="%s" android-release.bundle)
+        BUNDLE_SIZE_MB=$((BUNDLE_SIZE / 1024 / 1024))
+
+        echo "Bundle size: ${BUNDLE_SIZE_MB}MB"
+
+        if [ $BUNDLE_SIZE_MB -gt 2 ]; then
+          echo "❌ Bundle size ${BUNDLE_SIZE_MB}MB exceeds budget of 2MB"
+          exit 1
+        else
+          echo "✅ Bundle size ${BUNDLE_SIZE_MB}MB within budget"
+        fi
+
+    - name: Run memory leak tests
+      working-directory: apps/halobuzz-mobile
+      run: |
+        npm run test -- --testPathPattern=memory --runInBand
+
+    - name: Check for performance regressions
+      working-directory: apps/halobuzz-mobile
+      run: |
+        # Run performance tests
+        npm run test -- --testPathPattern=performance --runInBand
+
+        # Check TypeScript compilation speed
+        time npm run typecheck
+
+    - name: Lighthouse CI (Web Build)
+      if: github.event_name == 'pull_request'
+      working-directory: apps/halobuzz-mobile
+      run: |
+        # Build web version for Lighthouse
+        npx expo export:web
+
+        # Run Lighthouse CI with performance budgets
+        npx @lhci/cli@0.12.x autorun --config=.lighthouserc.js
+
+    - name: Comment PR with performance results
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+
+          let comment = '## 📊 Performance Analysis\n\n';
+
+          try {
+            const bundleStats = fs.readFileSync('apps/halobuzz-mobile/bundle-stats.json', 'utf8');
+            const stats = JSON.parse(bundleStats);
+
+            comment += `### Bundle Analysis\n`;
+            comment += `- **Size**: ${stats.size}MB (Budget: 2MB)\n`;
+            comment += `- **Modules**: ${stats.modules}\n`;
+            comment += `- **Status**: ${stats.size < 2 ? '✅ Within budget' : '❌ Exceeds budget'}\n\n`;
+          } catch (error) {
+            comment += `### Bundle Analysis\n❌ Could not analyze bundle\n\n`;
+          }
+
+          comment += `### Performance Budgets\n`;
+          comment += `- Cold Start: ≤1.5s mobile, ≤1.0s tablets\n`;
+          comment += `- First Interactive: ≤1.8s\n`;
+          comment += `- Memory: ≤220MB Android, ≤300MB iOS\n`;
+          comment += `- CPU (idle): <6%\n`;
+          comment += `- Bundle Size: -30% vs baseline\n\n`;
+          comment += `### Next Steps\n`;
+          comment += `- Run device testing on target hardware\n`;
+          comment += `- Monitor real-world performance metrics\n`;
+          comment += `- Consider PR-P2: Navigation & Code-Split if budgets exceeded\n`;
+
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: comment
+          });
+
+  device-testing:
+    runs-on: macos-latest
+    timeout-minutes: 45
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install dependencies
+      working-directory: apps/halobuzz-mobile
+      run: npm ci
+
+    - name: Setup iOS Simulator
+      run: |
+        # Boot iPhone 14 (mid-tier device for testing)
+        xcrun simctl boot "iPhone 14" || true
+        xcrun simctl bootstatus "iPhone 14" -b
+
+    - name: Run startup performance tests
+      working-directory: apps/halobuzz-mobile
+      run: |
+        # Run automated startup time tests
+        npm run test:performance -- --testNamePattern="startup"
+
+        # Measure cold start time (budget: 1.5s)
+        npm run test:startup
+
+    - name: Memory pressure testing
+      working-directory: apps/halobuzz-mobile
+      run: |
+        # Run 10-minute active session memory test
+        npm run test:memory -- --testNamePattern="session"

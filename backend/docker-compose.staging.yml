@@ -1,0 +1,69 @@
+version: '3.8'
+
+services:
+  halobuzz-backend-staging:
+    build:
+      context: .
+      dockerfile: Dockerfile.staging
+    ports:
+      - "4001:4000"
+    environment:
+      - NODE_ENV=staging
+      - PORT=4000
+      - MONGODB_URI=mongodb://mongo-staging:27017/halobuzz_staging
+      - REDIS_URL=redis://redis-staging:6379
+      - JWT_SECRET=${JWT_SECRET}
+      - AGORA_APP_ID=${AGORA_APP_ID}
+      - AGORA_APP_CERTIFICATE=${AGORA_APP_CERTIFICATE}
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_REGION=${AWS_REGION}
+      - AWS_S3_BUCKET=${AWS_S3_BUCKET}
+    depends_on:
+      - mongo-staging
+      - redis-staging
+    volumes:
+      - ./logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4000/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  mongo-staging:
+    image: mongo:7.0
+    ports:
+      - "27018:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_ROOT_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD}
+    volumes:
+      - mongo-staging-data:/data/db
+      - ./scripts/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    restart: unless-stopped
+
+  redis-staging:
+    image: redis:7.2-alpine
+    ports:
+      - "6380:6379"
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis-staging-data:/data
+    restart: unless-stopped
+
+  nginx-staging:
+    image: nginx:alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx/nginx.staging.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - halobuzz-backend-staging
+    restart: unless-stopped
+
+volumes:
+  mongo-staging-data:
+  redis-staging-data:
+

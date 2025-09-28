@@ -10,16 +10,19 @@ export interface ITransaction extends Document {
   paymentProvider?: string;
   transactionId?: string;
   referenceId?: string;
+  idempotencyKey?: string; // Add for duplicate prevention
   description: string;
   metadata?: {
     giftId?: string;
     streamId?: string;
     ogTier?: number;
     festivalId?: string;
+    orderId?: string; // Add for idempotency
     [key: string]: any;
   };
   fees: number;
   netAmount: number;
+  hash?: string; // Add for ledger integrity
   createdAt: Date;
   updatedAt: Date;
 }
@@ -68,6 +71,11 @@ const transactionSchema = new Schema<ITransaction>({
     type: String,
     default: null
   },
+  idempotencyKey: {
+    type: String,
+    default: null,
+    sparse: true
+  },
   description: {
     type: String,
     required: true,
@@ -85,6 +93,10 @@ const transactionSchema = new Schema<ITransaction>({
   netAmount: {
     type: Number,
     required: true
+  },
+  hash: {
+    type: String,
+    default: null
   }
 }, {
   timestamps: true
@@ -98,11 +110,19 @@ transactionSchema.index({ transactionId: 1 }, { unique: true, sparse: true });
 transactionSchema.index({ referenceId: 1 });
 transactionSchema.index({ createdAt: -1 });
 
-// Pre-save middleware to calculate net amount
+// Pre-save middleware to calculate net amount and generate hash
 transactionSchema.pre('save', function(next) {
   if (this.isModified('amount') || this.isModified('fees')) {
     this.netAmount = this.amount - this.fees;
   }
+  
+  // Generate hash for ledger integrity
+  if (this.isNew) {
+    const crypto = require('crypto');
+    const hashData = `${this.userId}-${this.amount}-${this.type}-${Date.now()}`;
+    this.hash = crypto.createHash('sha256').update(hashData).digest('hex');
+  }
+  
   next();
 });
 
@@ -144,6 +164,7 @@ transactionSchema.index({ userId: 1, type: 1, status: 1 });
 
 // Payment idempotency - CRITICAL for data integrity
 transactionSchema.index({ 'metadata.orderId': 1 }, { sparse: true, unique: true });
+transactionSchema.index({ idempotencyKey: 1 }, { sparse: true, unique: true });
 
 // Cleanup jobs for failed transactions
 transactionSchema.index({ status: 1, createdAt: 1 });

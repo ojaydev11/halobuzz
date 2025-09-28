@@ -1,0 +1,310 @@
+name: HaloBuzz Big Games CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          cd backend
+          npm ci
+
+      - name: Run linter
+        run: |
+          cd backend
+          npm run lint
+
+      - name: Run type check
+        run: |
+          cd backend
+          npm run typecheck
+
+      - name: Run unit tests
+        run: |
+          cd backend
+          npm run test
+
+      - name: Run load tests
+        run: |
+          cd backend
+          npm run test:load
+
+  build-backend:
+    name: Build Backend
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    outputs:
+      image: ${{ steps.image.outputs.image }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/backend
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix={{branch}}-
+
+      - name: Build and push backend image
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Output image
+        id: image
+        run: echo "image=${{ steps.meta.outputs.tags }}" >> $GITHUB_OUTPUT
+
+  build-gameserver:
+    name: Build Game Server
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    outputs:
+      image: ${{ steps.image.outputs.image }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/gameserver
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix={{branch}}-
+
+      - name: Build and push gameserver image
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile.gameserver
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Output image
+        id: image
+        run: echo "image=${{ steps.meta.outputs.tags }}" >> $GITHUB_OUTPUT
+
+  build-mobile:
+    name: Build Mobile App
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Setup Expo
+        uses: expo/setup-expo@v2
+        with:
+          expo-version: latest
+
+      - name: Install dependencies
+        run: |
+          cd apps/halobuzz-mobile
+          npm ci
+
+      - name: Build for production
+        run: |
+          cd apps/halobuzz-mobile
+          npx expo export --platform web
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-build
+          path: apps/halobuzz-mobile/dist
+
+  deploy-staging:
+    name: Deploy to Staging
+    needs: [build-backend, build-gameserver]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop'
+    environment: staging
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'v1.28.0'
+
+      - name: Configure kubectl
+        run: |
+          echo "${{ secrets.KUBE_CONFIG_STAGING }}" | base64 -d > /tmp/kubeconfig
+          echo "KUBECONFIG=/tmp/kubeconfig" >> $GITHUB_ENV
+
+      - name: Update deployment images
+        run: |
+          kubectl set image deployment/halobuzz-backend backend=${{ needs.build-backend.outputs.image }} -n halobuzz-staging
+          kubectl set image deployment/halobuzz-gameserver gameserver=${{ needs.build-gameserver.outputs.image }} -n halobuzz-staging
+          kubectl rollout status deployment/halobuzz-backend -n halobuzz-staging --timeout=300s
+          kubectl rollout status deployment/halobuzz-gameserver -n halobuzz-staging --timeout=300s
+
+      - name: Run health checks
+        run: |
+          kubectl get pods -n halobuzz-staging
+          kubectl get services -n halobuzz-staging
+
+  performance-test:
+    name: Performance Testing
+    needs: deploy-staging
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: |
+          cd backend
+          npm ci
+
+      - name: Run performance tests
+        run: |
+          cd backend
+          npm run test:performance
+        env:
+          TEST_ENDPOINT: https://staging-api.halobuzz.com
+
+      - name: Upload performance results
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-results
+          path: backend/performance-results.json
+
+  deploy-production:
+    name: Deploy to Production
+    needs: [build-backend, build-gameserver, performance-test]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'v1.28.0'
+
+      - name: Configure kubectl
+        run: |
+          echo "${{ secrets.KUBE_CONFIG_PRODUCTION }}" | base64 -d > /tmp/kubeconfig
+          echo "KUBECONFIG=/tmp/kubeconfig" >> $GITHUB_ENV
+
+      - name: Blue-Green Deployment
+        run: |
+          # Create new deployment with different label
+          kubectl patch deployment halobuzz-backend -p '{"spec":{"selector":{"matchLabels":{"version":"green"}},"template":{"metadata":{"labels":{"version":"green"}}}}}' -n halobuzz
+          kubectl patch deployment halobuzz-gameserver -p '{"spec":{"selector":{"matchLabels":{"version":"green"}},"template":{"metadata":{"labels":{"version":"green"}}}}}' -n halobuzz
+
+          # Update images
+          kubectl set image deployment/halobuzz-backend backend=${{ needs.build-backend.outputs.image }} -n halobuzz
+          kubectl set image deployment/halobuzz-gameserver gameserver=${{ needs.build-gameserver.outputs.image }} -n halobuzz
+
+          # Wait for rollout
+          kubectl rollout status deployment/halobuzz-backend -n halobuzz --timeout=300s
+          kubectl rollout status deployment/halobuzz-gameserver -n halobuzz --timeout=300s
+
+      - name: Health check and traffic switch
+        run: |
+          # Health check
+          sleep 30
+          kubectl get pods -n halobuzz
+
+          # Switch service to green version
+          kubectl patch service halobuzz-backend-service -p '{"spec":{"selector":{"version":"green"}}}' -n halobuzz
+          kubectl patch service halobuzz-gameserver-service -p '{"spec":{"selector":{"version":"green"}}}' -n halobuzz
+
+      - name: Final verification
+        run: |
+          echo "Production deployment complete!"
+          kubectl get all -n halobuzz
+
+  notify:
+    name: Notify Team
+    needs: [deploy-production]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Notify deployment status
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: |
+            HaloBuzz Big Games deployment ${{ job.status }}!
+            Branch: ${{ github.ref }}
+            Commit: ${{ github.sha }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}

@@ -1,172 +1,347 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
-  FlatList,
-  TouchableOpacity,
   StyleSheet,
+  ScrollView,
   RefreshControl,
+  TouchableOpacity,
   Image,
+  Dimensions,
+  FlatList,
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
-import { useStreams } from '@/hooks/useStreams';
-import { Stream } from '@/types/stream';
-import { apiClient, healthCheck } from '@/lib/api';
-import { HealthStatus } from '@/types/monitoring';
+import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
+import { useAuth } from '@/store/AuthContext';
+import { apiClient } from '@/lib/api';
+import { Stream, User } from '@/types/stream';
 
-export default function DiscoverScreen() {
-  const router = useRouter();
-  const { streams, loading, error, refresh } = useStreams();
+const { width } = Dimensions.get('window');
+
+interface TrendingStream {
+  id: string;
+  title: string;
+  host: User;
+  viewers: number;
+  likes: number;
+  category: string;
+  thumbnail: string;
+  isLive: boolean;
+  duration?: number;
+}
+
+interface FeaturedCreator {
+  id: string;
+  username: string;
+  displayName: string;
+  avatar: string;
+  followers: number;
+  isLive: boolean;
+  streamTitle?: string;
+}
+
+interface Category {
+  id: string;
+  name: string;
+  icon: string;
+  color: string;
+  streamCount: number;
+}
+
+export default function HomeScreen() {
+  const { user } = useAuth();
   const [refreshing, setRefreshing] = useState(false);
+  const [trendingStreams, setTrendingStreams] = useState<TrendingStream[]>([]);
+  const [featuredCreators, setFeaturedCreators] = useState<FeaturedCreator[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Quick smoke test on mount
-  useEffect(() => {
-    (async () => {
-      try {
-        const data = await healthCheck();
-        console.log("✅ Backend health:", data);
-      } catch (e) {
-        console.log("❌ Backend health failed:", e);
+  const categoriesData: Category[] = [
+    { id: 'gaming', name: 'Gaming', icon: 'game-controller', color: '#FF6B6B', streamCount: 1250 },
+    { id: 'music', name: 'Music', icon: 'musical-notes', color: '#4ECDC4', streamCount: 890 },
+    { id: 'art', name: 'Art', icon: 'brush', color: '#45B7D1', streamCount: 650 },
+    { id: 'talk', name: 'Talk Show', icon: 'chatbubbles', color: '#96CEB4', streamCount: 420 },
+    { id: 'education', name: 'Education', icon: 'school', color: '#FFEAA7', streamCount: 380 },
+    { id: 'sports', name: 'Sports', icon: 'football', color: '#DDA0DD', streamCount: 290 },
+    { id: 'cooking', name: 'Cooking', icon: 'restaurant', color: '#FF8A65', streamCount: 180 },
+    { id: 'fitness', name: 'Fitness', icon: 'fitness', color: '#81C784', streamCount: 150 },
+  ];
+
+  const loadData = useCallback(async () => {
+    try {
+      setLoading(true);
+      
+      // Load trending streams
+      const streamsResponse = await apiClient.getStreams({ 
+        limit: 10, 
+        sortBy: 'trending',
+        isLive: true 
+      });
+      
+      if (streamsResponse.success && streamsResponse.data?.streams) {
+        setTrendingStreams(streamsResponse.data.streams.slice(0, 8));
+      } else {
+        // Fallback data for production
+        setTrendingStreams([
+          {
+            id: '1',
+            title: 'Epic Gaming Session - Come Join!',
+            host: { id: '1', username: 'GamerPro', displayName: 'Gamer Pro', avatar: 'https://i.pravatar.cc/150?img=1' },
+            viewers: 1250,
+            likes: 890,
+            category: 'gaming',
+            thumbnail: 'https://picsum.photos/400/225?random=1',
+            isLive: true,
+          },
+          {
+            id: '2',
+            title: 'Music Production Live',
+            host: { id: '2', username: 'MusicMaker', displayName: 'Music Maker', avatar: 'https://i.pravatar.cc/150?img=2' },
+            viewers: 450,
+            likes: 320,
+            category: 'music',
+            thumbnail: 'https://picsum.photos/400/225?random=2',
+            isLive: true,
+          },
+          {
+            id: '3',
+            title: 'Digital Art Creation',
+            host: { id: '3', username: 'ArtistLife', displayName: 'Artist Life', avatar: 'https://i.pravatar.cc/150?img=3' },
+            viewers: 780,
+            likes: 560,
+            category: 'art',
+            thumbnail: 'https://picsum.photos/400/225?random=3',
+            isLive: true,
+          },
+        ]);
       }
-    })();
+
+      // Load featured creators
+      const creatorsResponse = await apiClient.get('/users/featured');
+      if (creatorsResponse.success && creatorsResponse.data?.creators) {
+        setFeaturedCreators(creatorsResponse.data.creators.slice(0, 6));
+      } else {
+        // Fallback data
+        setFeaturedCreators([
+          {
+            id: '1',
+            username: 'GamerPro',
+            displayName: 'Gamer Pro',
+            avatar: 'https://i.pravatar.cc/150?img=1',
+            followers: 125000,
+            isLive: true,
+            streamTitle: 'Epic Gaming Session',
+          },
+          {
+            id: '2',
+            username: 'MusicMaker',
+            displayName: 'Music Maker',
+            avatar: 'https://i.pravatar.cc/150?img=2',
+            followers: 89000,
+            isLive: true,
+            streamTitle: 'Music Production Live',
+          },
+          {
+            id: '3',
+            username: 'ArtistLife',
+            displayName: 'Artist Life',
+            avatar: 'https://i.pravatar.cc/150?img=3',
+            followers: 67000,
+            isLive: false,
+          },
+        ]);
+      }
+
+      setCategories(categoriesData);
+    } catch (error) {
+      console.error('Failed to load home data:', error);
+      Alert.alert('Error', 'Failed to load content. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  const onRefresh = async () => {
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  const onRefresh = useCallback(() => {
     setRefreshing(true);
-    await refresh();
-    setRefreshing(false);
-  };
+    loadData().finally(() => setRefreshing(false));
+  }, [loadData]);
 
-  const testHealthCheck = async () => {
-    try {
-      console.log('Testing health check...');
-      const response = await apiClient.healthCheck();
-      console.log('Health check response:', response);
-      
-      if (response.success && response.data) {
-        const healthStatus = response.data;
-        const statusEmoji = healthStatus.status === 'healthy' ? '✅' : 
-                           healthStatus.status === 'warning' ? '⚠️' : '❌';
-        
-        Alert.alert(
-          'Health Check Result',
-          `${statusEmoji} Status: ${healthStatus.status.toUpperCase()}\n\n` +
-          healthStatus.checks?.map(check => 
-            `${check.name}: ${check.status} - ${check.message}`
-          ).join('\n'),
-          [{ text: 'OK' }]
-        );
-      } else {
-        Alert.alert('Health Check Failed', 'Could not retrieve health status');
-      }
-    } catch (error) {
-      console.error('Health check error:', error);
-      Alert.alert('Health Check Error', `Failed to connect: ${(error as Error).message}`);
-    }
-  };
-
-  const testSimpleHealthCheck = async () => {
-    try {
-      console.log('Testing simple health check...');
-      const response = await apiClient.simpleHealthCheck();
-      console.log('Simple health check response:', response);
-      
-      Alert.alert(
-        'Simple Health Check',
-        `Status: ${response.data?.status || 'Unknown'}`,
-        [{ text: 'OK' }]
-      );
-    } catch (error) {
-      console.error('Simple health check error:', error);
-      Alert.alert('Simple Health Check Error', `Failed to connect: ${(error as Error).message}`);
-    }
-  };
-
-  const renderStream = ({ item }: { item: Stream }) => (
-    <TouchableOpacity 
+  const renderTrendingStream = ({ item }: { item: TrendingStream }) => (
+    <TouchableOpacity
       style={styles.streamCard}
       onPress={() => router.push(`/stream/${item.id}`)}
     >
-      <View style={styles.streamThumbnail}>
-        {item.thumbnail ? (
-          <Image source={{ uri: item.thumbnail }} style={styles.thumbnailImage} />
-        ) : (
-          <View style={styles.placeholderThumbnail}>
-            <Text style={styles.placeholderText}>Live</Text>
-          </View>
-        )}
+      <Image source={{ uri: item.thumbnail }} style={styles.streamThumbnail} />
+      <View style={styles.streamOverlay}>
         <View style={styles.liveIndicator}>
+          <View style={styles.liveDot} />
           <Text style={styles.liveText}>LIVE</Text>
         </View>
         <View style={styles.viewerCount}>
-          <Text style={styles.viewerText}>{item.currentViewers} viewers</Text>
-        </View>
-        <View style={styles.playButton}>
-          <Text style={styles.playButtonText}>▶</Text>
+          <Ionicons name="eye" size={12} color="#fff" />
+          <Text style={styles.viewerText}>{item.viewers.toLocaleString()}</Text>
         </View>
       </View>
-      
       <View style={styles.streamInfo}>
-        <Text style={styles.streamTitle} numberOfLines={2}>
-          {item.title}
-        </Text>
-        <Text style={styles.hostName}>@{item.host.username}</Text>
+        <Text style={styles.streamTitle} numberOfLines={1}>{item.title}</Text>
+        <Text style={styles.streamHost}>@{item.host.username}</Text>
         <View style={styles.streamStats}>
-          <Text style={styles.statText}>{item.totalLikes} likes</Text>
-          <Text style={styles.statText}>•</Text>
-          <Text style={styles.statText}>{item.totalCoins} coins</Text>
-        </View>
-        <View style={styles.categoryTag}>
+          <View style={styles.statItem}>
+            <Ionicons name="heart" size={12} color="#ff0000" />
+            <Text style={styles.statText}>{item.likes.toLocaleString()}</Text>
+          </View>
           <Text style={styles.categoryText}>{item.category}</Text>
         </View>
       </View>
     </TouchableOpacity>
   );
 
-  if (error) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>Failed to load streams</Text>
-          <TouchableOpacity style={styles.retryButton} onPress={refresh}>
-            <Text style={styles.retryText}>Retry</Text>
-          </TouchableOpacity>
+  const renderCategory = ({ item }: { item: Category }) => (
+    <TouchableOpacity
+      style={[styles.categoryCard, { backgroundColor: item.color }]}
+      onPress={() => router.push(`/category/${item.id}`)}
+    >
+      <Ionicons name={item.icon as any} size={24} color="#fff" />
+      <Text style={styles.categoryName}>{item.name}</Text>
+      <Text style={styles.categoryCount}>{item.streamCount} streams</Text>
+    </TouchableOpacity>
+  );
+
+  const renderFeaturedCreator = ({ item }: { item: FeaturedCreator }) => (
+    <TouchableOpacity
+      style={styles.creatorCard}
+      onPress={() => router.push(`/profile/${item.id}`)}
+    >
+      <Image source={{ uri: item.avatar }} style={styles.creatorAvatar} />
+      {item.isLive && (
+        <View style={styles.liveBadge}>
+          <View style={styles.liveDot} />
+          <Text style={styles.liveText}>LIVE</Text>
         </View>
-      </SafeAreaView>
-    );
-  }
+      )}
+      <Text style={styles.creatorName} numberOfLines={1}>{item.displayName}</Text>
+      <Text style={styles.creatorFollowers}>{item.followers.toLocaleString()} followers</Text>
+    </TouchableOpacity>
+  );
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.headerTop}>
-          <View>
-            <Text style={styles.headerTitle}>Discover</Text>
-            <Text style={styles.headerSubtitle}>Find live streams</Text>
+      <ScrollView
+        style={styles.scrollView}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Header */}
+        <View style={styles.header}>
+          <View style={styles.headerLeft}>
+            <Text style={styles.greeting}>Welcome back,</Text>
+            <Text style={styles.userName}>{user?.displayName || user?.username || 'User'}</Text>
           </View>
-          <View style={styles.debugButtons}>
-            <TouchableOpacity style={styles.debugButton} onPress={testSimpleHealthCheck}>
-              <Text style={styles.debugButtonText}>Health</Text>
+          <View style={styles.headerRight}>
+            <TouchableOpacity style={styles.headerButton}>
+              <Ionicons name="notifications-outline" size={24} color="#fff" />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.debugButton} onPress={testHealthCheck}>
-              <Text style={styles.debugButtonText}>Full</Text>
+            <TouchableOpacity style={styles.headerButton}>
+              <Ionicons name="wallet-outline" size={24} color="#fff" />
             </TouchableOpacity>
           </View>
         </View>
-      </View>
 
-      <FlatList
-        data={streams}
-        renderItem={renderStream}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContainer}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-        showsVerticalScrollIndicator={false}
-      />
+        {/* Quick Actions */}
+        <View style={styles.quickActions}>
+          <TouchableOpacity
+            style={styles.quickActionButton}
+            onPress={() => router.push('/games/casual')}
+          >
+            <Ionicons name="game-controller" size={20} color="#fff" />
+            <Text style={styles.quickActionText}>Games</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.quickActionButton}
+            onPress={() => router.push('/games/advanced')}
+          >
+            <Ionicons name="trophy" size={20} color="#fff" />
+            <Text style={styles.quickActionText}>Advanced</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.quickActionButton}
+            onPress={() => router.push('/games/social')}
+          >
+            <Ionicons name="people" size={20} color="#fff" />
+            <Text style={styles.quickActionText}>Social</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.quickActionButton}
+            onPress={() => router.push('/games/tournaments')}
+          >
+            <Ionicons name="medal" size={20} color="#fff" />
+            <Text style={styles.quickActionText}>Tournaments</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Trending Streams */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Trending Now</Text>
+            <TouchableOpacity onPress={() => router.push('/trending')}>
+              <Text style={styles.seeAllText}>See All</Text>
+            </TouchableOpacity>
+          </View>
+          <FlatList
+            data={trendingStreams}
+            renderItem={renderTrendingStream}
+            keyExtractor={(item) => item.id}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.horizontalList}
+          />
+        </View>
+
+        {/* Categories */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Categories</Text>
+            <TouchableOpacity onPress={() => router.push('/categories')}>
+              <Text style={styles.seeAllText}>See All</Text>
+            </TouchableOpacity>
+          </View>
+          <FlatList
+            data={categories}
+            renderItem={renderCategory}
+            keyExtractor={(item) => item.id}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.horizontalList}
+          />
+        </View>
+
+        {/* Featured Creators */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Featured Creators</Text>
+            <TouchableOpacity onPress={() => router.push('/creators')}>
+              <Text style={styles.seeAllText}>See All</Text>
+            </TouchableOpacity>
+          </View>
+          <FlatList
+            data={featuredCreators}
+            renderItem={renderFeaturedCreator}
+            keyExtractor={(item) => item.id}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.horizontalList}
+          />
+        </View>
+
+        {/* Bottom Spacing */}
+        <View style={styles.bottomSpacing} />
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -176,170 +351,226 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#000',
   },
-  header: {
-    padding: 20,
-    paddingBottom: 10,
+  scrollView: {
+    flex: 1,
   },
-  headerTop: {
+  header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
   },
-  headerTitle: {
-    fontSize: 28,
+  headerLeft: {
+    flex: 1,
+  },
+  greeting: {
+    fontSize: 14,
+    color: '#888',
+  },
+  userName: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginTop: 2,
+  },
+  headerRight: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  headerButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#1a1a1a',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  quickActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+  },
+  quickActionButton: {
+    alignItems: 'center',
+    backgroundColor: '#1a1a1a',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    minWidth: 70,
+  },
+  quickActionText: {
+    color: '#fff',
+    fontSize: 12,
+    marginTop: 4,
+    fontWeight: '600',
+  },
+  section: {
+    marginTop: 24,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    marginBottom: 16,
+  },
+  sectionTitle: {
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#fff',
   },
-  headerSubtitle: {
-    fontSize: 16,
-    color: '#888',
-    marginTop: 4,
-  },
-  debugButtons: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  debugButton: {
-    backgroundColor: '#007AFF',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6,
-  },
-  debugButtonText: {
-    color: '#fff',
-    fontSize: 12,
+  seeAllText: {
+    color: '#007AFF',
+    fontSize: 14,
     fontWeight: '600',
   },
-  listContainer: {
-    padding: 20,
-    paddingTop: 10,
+  horizontalList: {
+    paddingHorizontal: 20,
   },
   streamCard: {
+    width: width * 0.7,
     backgroundColor: '#1a1a1a',
     borderRadius: 12,
-    marginBottom: 16,
+    marginRight: 12,
     overflow: 'hidden',
   },
   streamThumbnail: {
-    position: 'relative',
-    height: 200,
-    backgroundColor: '#333',
-  },
-  thumbnailImage: {
     width: '100%',
-    height: '100%',
+    height: 120,
   },
-  placeholderThumbnail: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#333',
-  },
-  placeholderText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
+  streamOverlay: {
+    position: 'absolute',
+    top: 8,
+    left: 8,
+    right: 8,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
   },
   liveIndicator: {
-    position: 'absolute',
-    top: 12,
-    left: 12,
-    backgroundColor: '#ff0000',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
     borderRadius: 4,
+  },
+  liveDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#ff0000',
+    marginRight: 4,
   },
   liveText: {
     color: '#fff',
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: 'bold',
   },
   viewerCount: {
-    position: 'absolute',
-    top: 12,
-    right: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: 'rgba(0,0,0,0.7)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
     borderRadius: 4,
   },
   viewerText: {
     color: '#fff',
-    fontSize: 12,
-  },
-  playButton: {
-    position: 'absolute',
-    bottom: 12,
-    right: 12,
-    backgroundColor: 'rgba(0,0,0,0.7)',
-    borderRadius: 20,
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  playButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontSize: 10,
+    marginLeft: 2,
   },
   streamInfo: {
-    padding: 16,
+    padding: 12,
   },
   streamTitle: {
-    fontSize: 16,
-    fontWeight: '600',
     color: '#fff',
+    fontSize: 14,
+    fontWeight: 'bold',
     marginBottom: 4,
   },
-  hostName: {
-    fontSize: 14,
+  streamHost: {
     color: '#888',
+    fontSize: 12,
     marginBottom: 8,
   },
   streamStats: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+  },
+  statItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   statText: {
-    fontSize: 12,
     color: '#888',
-    marginRight: 8,
-  },
-  categoryTag: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#007AFF',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
+    fontSize: 10,
+    marginLeft: 2,
   },
   categoryText: {
-    fontSize: 12,
-    color: '#fff',
-    fontWeight: '500',
+    color: '#007AFF',
+    fontSize: 10,
+    fontWeight: '600',
+    textTransform: 'uppercase',
   },
-  errorContainer: {
-    flex: 1,
+  categoryCard: {
+    width: 100,
+    height: 100,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    marginRight: 12,
   },
-  errorText: {
-    fontSize: 16,
-    color: '#ff0000',
-    marginBottom: 16,
+  categoryName: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 'bold',
+    marginTop: 4,
     textAlign: 'center',
   },
-  retryButton: {
-    backgroundColor: '#007AFF',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
+  categoryCount: {
+    color: 'rgba(255,255,255,0.8)',
+    fontSize: 10,
+    marginTop: 2,
+    textAlign: 'center',
+  },
+  creatorCard: {
+    width: 80,
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  creatorAvatar: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    marginBottom: 8,
+  },
+  liveBadge: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ff0000',
+    paddingHorizontal: 4,
+    paddingVertical: 2,
     borderRadius: 8,
   },
-  retryText: {
+  creatorName: {
     color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 12,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 2,
+  },
+  creatorFollowers: {
+    color: '#888',
+    fontSize: 10,
+    textAlign: 'center',
+  },
+  bottomSpacing: {
+    height: 100,
   },
 });

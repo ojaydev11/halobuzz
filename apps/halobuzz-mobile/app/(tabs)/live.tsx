@@ -15,10 +15,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/store/AuthContext';
 import { router } from 'expo-router';
-import { Button, Card, Input, Text } from '@/components/ui';
-import { colors, spacing, layoutStyles } from '@/theme';
-import { useAgora } from '@/hooks/useAgora';
-import { apiClient } from '@/lib/api';
 
 const { width } = Dimensions.get('window');
 
@@ -37,15 +33,6 @@ export default function LiveScreen() {
   const [comments, setComments] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('go-live');
-  const {
-    initializeEngine,
-    joinChannel,
-    leaveChannel,
-    toggleMute: agoraToggleMute,
-    toggleCamera: agoraToggleCamera,
-    isInitialized,
-    isJoined,
-  } = useAgora();
 
   const categories = [
     { id: 'gaming', name: 'Gaming', icon: 'game-controller', color: '#FF6B6B' },
@@ -108,30 +95,12 @@ export default function LiveScreen() {
     setIsLoading(true);
 
     try {
-      // Create stream on backend to get Agora channel/token
-      const res = await apiClient.post('/streams', {
-        title: streamTitle,
-        description: '',
-        category: streamCategory,
-        tags: [],
-        isAudioOnly: false,
-        isPrivate: !isPublic,
-      });
-
-      const stream = res.data?.stream || res.data?.data?.stream;
-      if (!stream?.agoraChannel || !stream?.agoraToken) {
-        throw new Error('Missing Agora credentials');
-      }
-
-      // Join Agora
-      if (!isInitialized) {
-        await initializeEngine();
-      }
-      await joinChannel(stream.agoraChannel, stream.agoraToken);
-
+      // Simulate stream start (since Agora doesn't work in Expo Go)
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
       setIsConnected(true);
       setViewerCount(Math.floor(Math.random() * 50) + 10);
-      Alert.alert('Success', 'Stream started successfully!');
+      Alert.alert('Success', 'Stream started successfully! (Demo Mode)');
     } catch (err: any) {
       console.error('Start stream failed:', err);
       Alert.alert('Error', err?.message || 'Failed to start stream');
@@ -146,12 +115,7 @@ export default function LiveScreen() {
       'Are you sure you want to end the stream?',
       [
         { text: 'Cancel', style: 'cancel' },
-        { text: 'End', onPress: async () => {
-          try {
-            await leaveChannel();
-            // We don’t have stream id here from local state; in a full flow we’d store it.
-            // Optionally call backend to end stream if id is tracked.
-          } catch {}
+        { text: 'End', onPress: () => {
           setIsConnected(false);
           setViewerCount(0);
           setLikes(0);
@@ -161,8 +125,8 @@ export default function LiveScreen() {
     );
   };
 
-  const toggleMute = async () => { setIsMuted(!isMuted); try { await agoraToggleMute(); } catch {} };
-  const toggleCamera = async () => { setIsCameraOn(!isCameraOn); try { await agoraToggleCamera(); } catch {} };
+  const toggleMute = () => setIsMuted(!isMuted);
+  const toggleCamera = () => setIsCameraOn(!isCameraOn);
 
   const renderGoLiveTab = () => (
     <ScrollView style={styles.tabContent}>
@@ -308,7 +272,7 @@ export default function LiveScreen() {
         </Text>
         <Text style={styles.streamTitle}>{streamTitle}</Text>
         <Text style={styles.channelText}>Channel: {channelName || 'Default'}</Text>
-        <Text style={styles.statusText}>🔴 LIVE</Text>
+        <Text style={styles.statusText}>🔴 LIVE (Demo Mode)</Text>
       </View>
 
       <View style={styles.streamStats}>

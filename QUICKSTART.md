@@ -194,7 +194,7 @@ kill -9 <PID>
 mongod --dbpath /tmp/mongodb
 
 # Or update connection string in .env
-MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/halobuzz
+MONGODB_URI=mongodb+srv://<username>:<password>@<cluster>.mongodb.net/halobuzz
 ```
 
 ### Redis Connection Issues
