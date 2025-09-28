@@ -1,8 +1,14 @@
-import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+import { Router, Response } from 'express';
+import { AuthenticatedRequest } from '@/middleware/auth';
 import { RealTimePersonalizationService } from '../services/RealTimePersonalizationService';
 import { requireAuth, requireAdmin } from '../middleware/enhancedSecurity';
 import { validateInput } from '../middleware/enhancedSecurity';
 import { createRateLimit } from '../middleware/enhancedSecurity';
+import { getMongoDB } from '@/config/database';
+import { getRedisClient } from '@/config/redis';
+import { logger } from '@/config/logger';
+
+const router = Router();
 
 interface PersonalizationRuleRequest {
   name: string;
@@ -40,14 +46,24 @@ interface PricingPersonalizationRequest {
   basePrice: number;
 }
 
-export default async function realTimePersonalizationRoutes(fastify: FastifyInstance) {
-  const realTimePersonalizationService = new RealTimePersonalizationService(
-    fastify.mongo.db.collection('analytics_events'),
-    fastify.mongo.db.collection('users'),
-    fastify.mongo.db.collection('livestreams'),
-    fastify.mongo.db.collection('shortvideos'),
-    fastify.redis,
-  );
+// Initialize service with MongoDB and Redis
+let realTimePersonalizationService: RealTimePersonalizationService;
+
+const initializeService = async () => {
+  if (!realTimePersonalizationService) {
+    const db = await getMongoDB();
+    const redis = await getRedisClient();
+    
+    realTimePersonalizationService = new RealTimePersonalizationService(
+      db.collection('analytics_events'),
+      db.collection('users'),
+      db.collection('livestreams'),
+      db.collection('shortvideos'),
+      redis,
+    );
+  }
+  return realTimePersonalizationService;
+};
 
   // Rate limiting for personalization endpoints
   const personalizationRateLimit = createRateLimit({
@@ -66,743 +82,342 @@ export default async function realTimePersonalizationRoutes(fastify: FastifyInst
    * GET /api/v1/personalization/content-feed
    * Get personalized content feed for user
    */
-  fastify.get<{
-    Querystring: ContentFeedRequest;
-  }>('/personalization/content-feed', {
-    preHandler: [requireAuth, personalizationRateLimit, validateInput],
-    schema: {
-      querystring: {
-        type: 'object',
-        required: ['sessionId', 'currentPage'],
-        properties: {
-          sessionId: { type: 'string' },
-          currentPage: { type: 'string' },
-          limit: { type: 'integer', minimum: 1, maximum: 100, default: 20 },
-        },
-      },
-      response: {
-        200: {
-          type: 'object',
-          properties: {
-            success: { type: 'boolean' },
-            data: {
-              type: 'array',
-              items: {
-                type: 'object',
-                properties: {
-                  contentId: { type: 'string' },
-                  contentType: { type: 'string', enum: ['stream', 'video', 'ad', 'notification'] },
-                  personalizationScore: { type: 'number' },
-                  reason: { type: 'string' },
-                  metadata: {
-                    type: 'object',
-                    properties: {
-                      category: { type: 'string' },
-                      creator: { type: 'string' },
-                      duration: { type: 'number' },
-                      engagement: { type: 'number' },
-                    },
-                  },
-                  adaptations: {
-                    type: 'array',
-                    items: {
-                      type: 'object',
-                      properties: {
-                        type: { type: 'string' },
-                        originalValue: { type: 'object' },
-                        personalizedValue: { type: 'object' },
-                        reason: { type: 'string' },
-                      },
-                    },
-                  },
-                },
-              },
-            },
-            message: { type: 'string' },
-          },
-        },
-      },
-    },
-  }, async (request: FastifyRequest<{ Querystring: ContentFeedRequest }>, reply: FastifyReply) => {
+router.get('/personalization/content-feed', 
+  requireAuth, 
+  personalizationRateLimit, 
+  validateInput,
+  async (req: AuthenticatedRequest, res: Response) => {
     try {
-      const userId = (request as any).user.id;
-      const { sessionId, currentPage, limit = 20 } = request.query;
+      const { sessionId, currentPage, limit = 20 } = req.query as ContentFeedRequest;
+      const userId = req.user?.userId;
 
-      const personalizedContent = await realTimePersonalizationService.personalizeContentFeed(
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          error: 'Authentication required'
+        });
+      }
+
+      const service = await initializeService();
+      const personalizedFeed = await service.getPersonalizedContentFeed(
         userId,
         sessionId,
         currentPage,
+        limit
       );
 
-      // Apply limit
-      const limitedContent = personalizedContent.slice(0, limit);
-
-      return {
+      return res.json({
         success: true,
-        data: limitedContent,
-        message: `Generated ${limitedContent.length} personalized content items`,
-      };
+        data: personalizedFeed
+      });
     } catch (error) {
-      fastify.log.error('Error personalizing content feed:', error);
-      reply.code(500);
-      return {
+      logger.error('Error getting personalized content feed:', error);
+      return res.status(500).json({
         success: false,
-        data: [],
-        message: 'Failed to personalize content feed',
-      };
+        error: 'Failed to get personalized content feed'
+      });
     }
-  });
+  }
+);
 
-  /**
-   * GET /api/v1/personalization/ui
-   * Get personalized UI elements for user
-   */
-  fastify.get<{
-    Querystring: UIPersonalizationRequest;
-  }>('/personalization/ui', {
-    preHandler: [requireAuth, personalizationRateLimit, validateInput],
-    schema: {
-      querystring: {
-        type: 'object',
-        required: ['sessionId', 'currentPage'],
-        properties: {
-          sessionId: { type: 'string' },
-          currentPage: { type: 'string' },
-        },
-      },
-      response: {
-        200: {
-          type: 'object',
-          properties: {
-            success: { type: 'boolean' },
-            data: {
-              type: 'object',
-              properties: {
-                layout: {
-                  type: 'object',
-                  properties: {
-                    recommendedContent: {
-                      type: 'array',
-                      items: {
-                        type: 'object',
-                        properties: {
-                          contentId: { type: 'string' },
-                          contentType: { type: 'string' },
-                          personalizationScore: { type: 'number' },
-                          reason: { type: 'string' },
-                          metadata: { type: 'object' },
-                          adaptations: { type: 'array' },
-                        },
-                      },
-                    },
-                    trendingContent: {
-                      type: 'array',
-                      items: {
-                        type: 'object',
-                        properties: {
-                          contentId: { type: 'string' },
-                          contentType: { type: 'string' },
-                          personalizationScore: { type: 'number' },
-                          reason: { type: 'string' },
-                          metadata: { type: 'object' },
-                          adaptations: { type: 'array' },
-                        },
-                      },
-                    },
-                    followingContent: {
-                      type: 'array',
-                      items: {
-                        type: 'object',
-                        properties: {
-                          contentId: { type: 'string' },
-                          contentType: { type: 'string' },
-                          personalizationScore: { type: 'number' },
-                          reason: { type: 'string' },
-                          metadata: { type: 'object' },
-                          adaptations: { type: 'array' },
-                        },
-                      },
-                    },
-                    categories: {
-                      type: 'array',
-                      items: {
-                        type: 'object',
-                        properties: {
-                          name: { type: 'string' },
-                          order: { type: 'number' },
-                          isVisible: { type: 'boolean' },
-                        },
-                      },
-                    },
-                  },
-                },
-                features: {
-                  type: 'object',
-                  properties: {
-                    showNotifications: { type: 'boolean' },
-                    showTrending: { type: 'boolean' },
-                    showFollowing: { type: 'boolean' },
-                    showRecommendations: { type: 'boolean' },
-                    showAds: { type: 'boolean' },
-                  },
-                },
-                styling: {
-                  type: 'object',
-                  properties: {
-                    theme: { type: 'string', enum: ['light', 'dark', 'auto'] },
-                    fontSize: { type: 'string', enum: ['small', 'medium', 'large'] },
-                    colorScheme: { type: 'string' },
-                  },
-                },
-                interactions: {
-                  type: 'object',
-                  properties: {
-                    autoPlay: { type: 'boolean' },
-                    showSubtitles: { type: 'boolean' },
-                    enableComments: { type: 'boolean' },
-                    enableSharing: { type: 'boolean' },
-                  },
-                },
-              },
-            },
-            message: { type: 'string' },
-          },
-        },
-      },
-    },
-  }, async (request: FastifyRequest<{ Querystring: UIPersonalizationRequest }>, reply: FastifyReply) => {
+/**
+ * GET /api/v1/personalization/ui-config
+ * Get personalized UI configuration
+ */
+router.get('/personalization/ui-config',
+  requireAuth,
+  personalizationRateLimit,
+  validateInput,
+  async (req: AuthenticatedRequest, res: Response) => {
     try {
-      const userId = (request as any).user.id;
-      const { sessionId, currentPage } = request.query;
+      const { sessionId, currentPage } = req.query as UIPersonalizationRequest;
+      const userId = req.user?.userId;
 
-      const personalizedUI = await realTimePersonalizationService.personalizeUI(
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          error: 'Authentication required'
+        });
+      }
+
+      const service = await initializeService();
+      const uiConfig = await service.getPersonalizedUIConfig(
         userId,
         sessionId,
-        currentPage,
+        currentPage
       );
 
-      return {
+      return res.json({
         success: true,
-        data: personalizedUI,
-        message: 'UI personalized successfully',
-      };
+        data: uiConfig
+      });
     } catch (error) {
-      fastify.log.error('Error personalizing UI:', error);
-      reply.code(500);
-      return {
+      logger.error('Error getting personalized UI config:', error);
+      return res.status(500).json({
         success: false,
-        data: {
-          layout: {
-            recommendedContent: [],
-            trendingContent: [],
-            followingContent: [],
-            categories: [],
-          },
-          features: {
-            showNotifications: true,
-            showTrending: true,
-            showFollowing: true,
-            showRecommendations: true,
-            showAds: true,
-          },
-          styling: {
-            theme: 'light',
-            fontSize: 'medium',
-            colorScheme: 'default',
-          },
-          interactions: {
-            autoPlay: false,
-            showSubtitles: false,
-            enableComments: true,
-            enableSharing: true,
-          },
-        },
-        message: 'Failed to personalize UI',
-      };
+        error: 'Failed to get personalized UI config'
+      });
     }
-  });
+  }
+);
 
   /**
    * GET /api/v1/personalization/notifications
-   * Get personalized notifications for user
-   */
-  fastify.get<{
-    Querystring: NotificationPersonalizationRequest;
-  }>('/personalization/notifications', {
-    preHandler: [requireAuth, personalizationRateLimit, validateInput],
-    schema: {
-      querystring: {
-        type: 'object',
-        properties: {
-          limit: { type: 'integer', minimum: 1, maximum: 50, default: 10 },
-        },
-      },
-      response: {
-        200: {
-          type: 'object',
-          properties: {
-            success: { type: 'boolean' },
-            data: {
-              type: 'array',
-              items: {
-                type: 'object',
-                properties: {
-                  type: { type: 'string' },
-                  title: { type: 'string' },
-                  message: { type: 'string' },
-                  priority: { type: 'string', enum: ['low', 'medium', 'high'] },
-                  timing: { type: 'string', format: 'date-time' },
-                  personalizationScore: { type: 'number' },
-                },
-              },
-            },
-            message: { type: 'string' },
-          },
-        },
-      },
-    },
-  }, async (request: FastifyRequest<{ Querystring: NotificationPersonalizationRequest }>, reply: FastifyReply) => {
+ * Get personalized notifications
+ */
+router.get('/personalization/notifications',
+  requireAuth,
+  personalizationRateLimit,
+  async (req: AuthenticatedRequest, res: Response) => {
     try {
-      const userId = (request as any).user.id;
-      const { limit = 10 } = request.query;
+      const { limit = 10 } = req.query as NotificationPersonalizationRequest;
+      const userId = req.user?.userId;
 
-      const personalizedNotifications = await realTimePersonalizationService.personalizeNotifications(userId);
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          error: 'Authentication required'
+        });
+      }
 
-      // Apply limit
-      const limitedNotifications = personalizedNotifications.slice(0, limit);
+      const service = await initializeService();
+      const notifications = await service.getPersonalizedNotifications(userId, limit);
 
-      return {
+      return res.json({
         success: true,
-        data: limitedNotifications,
-        message: `Generated ${limitedNotifications.length} personalized notifications`,
-      };
+        data: notifications
+      });
     } catch (error) {
-      fastify.log.error('Error personalizing notifications:', error);
-      reply.code(500);
-      return {
+      logger.error('Error getting personalized notifications:', error);
+      return res.status(500).json({
         success: false,
-        data: [],
-        message: 'Failed to personalize notifications',
-      };
+        error: 'Failed to get personalized notifications'
+      });
     }
-  });
+  }
+);
 
   /**
    * POST /api/v1/personalization/pricing
-   * Get personalized pricing for user
-   */
-  fastify.post<{
-    Body: PricingPersonalizationRequest;
-  }>('/personalization/pricing', {
-    preHandler: [requireAuth, personalizationRateLimit, validateInput],
-    schema: {
-      body: {
-        type: 'object',
-        required: ['productId', 'basePrice'],
-        properties: {
-          productId: { type: 'string' },
-          basePrice: { type: 'number', minimum: 0 },
-        },
-      },
-      response: {
-        200: {
-          type: 'object',
-          properties: {
-            success: { type: 'boolean' },
-            data: {
-              type: 'object',
-              properties: {
-                personalizedPrice: { type: 'number' },
-                discount: { type: 'number' },
-                reason: { type: 'string' },
-                personalizationScore: { type: 'number' },
-              },
-            },
-            message: { type: 'string' },
-          },
-        },
-      },
-    },
-  }, async (request: FastifyRequest<{ Body: PricingPersonalizationRequest }>, reply: FastifyReply) => {
+ * Get personalized pricing
+ */
+router.post('/personalization/pricing',
+  requireAuth,
+  personalizationRateLimit,
+  validateInput,
+  async (req: AuthenticatedRequest, res: Response) => {
     try {
-      const userId = (request as any).user.id;
-      const { productId, basePrice } = request.body;
+      const { productId, basePrice } = req.body as PricingPersonalizationRequest;
+      const userId = req.user?.userId;
 
-      const pricingResult = await realTimePersonalizationService.personalizePricing(
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          error: 'Authentication required'
+        });
+      }
+
+      const service = await initializeService();
+      const personalizedPricing = await service.getPersonalizedPricing(
         userId,
         productId,
-        basePrice,
+        basePrice
       );
 
-      return {
+      return res.json({
         success: true,
-        data: pricingResult,
-        message: 'Pricing personalized successfully',
-      };
-    } catch (error) {
-      fastify.log.error('Error personalizing pricing:', error);
-      reply.code(500);
-      return {
-        success: false,
-        data: {
-          personalizedPrice: 0,
-          discount: 0,
-          reason: 'Personalization failed',
-          personalizationScore: 0,
-        },
-        message: 'Failed to personalize pricing',
-      };
-    }
-  });
-
-  /**
-   * POST /api/v1/personalization/rules
-   * Create personalization rule (admin only)
-   */
-  fastify.post<{
-    Body: PersonalizationRuleRequest;
-  }>('/personalization/rules', {
-    preHandler: [requireAuth, requireAdmin, adminRateLimit, validateInput],
-    schema: {
-      body: {
-        type: 'object',
-        required: ['name', 'description', 'conditions', 'actions', 'priority', 'isActive'],
-        properties: {
-          name: { type: 'string' },
-          description: { type: 'string' },
-          conditions: {
-            type: 'array',
-            items: {
-              type: 'object',
-              required: ['field', 'operator', 'value'],
-              properties: {
-                field: { type: 'string' },
-                operator: { type: 'string', enum: ['equals', 'contains', 'greater_than', 'less_than', 'in', 'not_in'] },
-                value: { type: 'object' },
-              },
-            },
-          },
-          actions: {
-            type: 'array',
-            items: {
-              type: 'object',
-              required: ['type', 'config'],
-              properties: {
-                type: { type: 'string', enum: ['show_content', 'hide_content', 'modify_ui', 'send_notification', 'adjust_pricing'] },
-                config: { type: 'object' },
-              },
-            },
-          },
-          priority: { type: 'number', minimum: 1, maximum: 100 },
-          isActive: { type: 'boolean' },
-        },
-      },
-      response: {
-        200: {
-          type: 'object',
-          properties: {
-            success: { type: 'boolean' },
-            data: {
-              type: 'object',
-              properties: {
-                ruleId: { type: 'string' },
-                name: { type: 'string' },
-                status: { type: 'string' },
-                createdAt: { type: 'string', format: 'date-time' },
-              },
-            },
-            message: { type: 'string' },
-          },
-        },
-      },
-    },
-  }, async (request: FastifyRequest<{ Body: PersonalizationRuleRequest }>, reply: FastifyReply) => {
-    try {
-      const adminUser = (request as any).user;
-      const ruleConfig = request.body;
-
-      const rule = await realTimePersonalizationService.createPersonalizationRule(ruleConfig);
-
-      // Log rule creation
-      await fastify.mongo.db.collection('analytics_events').insertOne({
-        userId: adminUser.id,
-        eventType: 'admin_action',
-        metadata: {
-          action: 'create_personalization_rule',
-          ruleId: rule.ruleId,
-          ruleName: rule.name,
-          conditions: rule.conditions.length,
-          actions: rule.actions.length,
-        },
-        timestamp: new Date(),
-        appId: 'halobuzz',
+        data: personalizedPricing
       });
-
-      return {
-        success: true,
-        data: {
-          ruleId: rule.ruleId,
-          name: rule.name,
-          status: rule.isActive ? 'active' : 'inactive',
-          createdAt: rule.createdAt.toISOString(),
-        },
-        message: 'Personalization rule created successfully',
-      };
     } catch (error) {
-      fastify.log.error('Error creating personalization rule:', error);
-      reply.code(500);
-      return {
+      logger.error('Error getting personalized pricing:', error);
+      return res.status(500).json({
         success: false,
-        data: {
-          ruleId: '',
-          name: '',
-          status: 'error',
-          createdAt: new Date().toISOString(),
-        },
-        message: 'Failed to create personalization rule',
-      };
+        error: 'Failed to get personalized pricing'
+      });
     }
-  });
+  }
+);
 
-  /**
-   * GET /api/v1/personalization/metrics
-   * Get personalization metrics (admin only)
-   */
-  fastify.get<{
-    Querystring: {
-      timeRange?: 'hour' | 'day' | 'week' | 'month';
-    };
-  }>('/personalization/metrics', {
-    preHandler: [requireAuth, requireAdmin, adminRateLimit],
-    schema: {
-      querystring: {
-        type: 'object',
-        properties: {
-          timeRange: { type: 'string', enum: ['hour', 'day', 'week', 'month'], default: 'day' },
-        },
-      },
-      response: {
-        200: {
-          type: 'object',
-          properties: {
-            success: { type: 'boolean' },
-            data: {
-              type: 'object',
-              properties: {
-                totalPersonalizations: { type: 'number' },
-                successRate: { type: 'number' },
-                userSatisfaction: { type: 'number' },
-                engagementImprovement: { type: 'number' },
-                conversionImprovement: { type: 'number' },
-                topPersonalizationTypes: {
-                  type: 'array',
-                  items: {
-                    type: 'object',
-                    properties: {
-                      type: { type: 'string' },
-                      count: { type: 'number' },
-                      successRate: { type: 'number' },
-                    },
-                  },
-                },
-                userSegments: {
-                  type: 'array',
-                  items: {
-                    type: 'object',
-                    properties: {
-                      segment: { type: 'string' },
-                      personalizationCount: { type: 'number' },
-                      averageScore: { type: 'number' },
-                    },
-                  },
-                },
-              },
-            },
-            message: { type: 'string' },
-          },
-        },
-      },
-    },
-  }, async (request: FastifyRequest<{ Querystring: { timeRange?: 'hour' | 'day' | 'week' | 'month' } }>, reply: FastifyReply) => {
+/**
+ * POST /api/v1/personalization/rules (Admin only)
+ * Create personalization rule
+ */
+router.post('/personalization/rules',
+  requireAdmin,
+  adminRateLimit,
+  validateInput,
+  async (req: AuthenticatedRequest, res: Response) => {
     try {
-      const { timeRange = 'day' } = request.query;
+      const ruleData = req.body as PersonalizationRuleRequest;
 
-      const metrics = await realTimePersonalizationService.getPersonalizationMetrics(timeRange);
+      const service = await initializeService();
+      const rule = await service.createPersonalizationRule(ruleData);
 
-      return {
+      return res.json({
         success: true,
-        data: metrics,
-        message: 'Personalization metrics retrieved successfully',
-      };
+        data: rule
+      });
     } catch (error) {
-      fastify.log.error('Error getting personalization metrics:', error);
-      reply.code(500);
-      return {
+      logger.error('Error creating personalization rule:', error);
+      return res.status(500).json({
         success: false,
-        data: {
-          totalPersonalizations: 0,
-          successRate: 0,
-          userSatisfaction: 0,
-          engagementImprovement: 0,
-          conversionImprovement: 0,
-          topPersonalizationTypes: [],
-          userSegments: [],
-        },
-        message: 'Failed to retrieve personalization metrics',
-      };
+        error: 'Failed to create personalization rule'
+      });
     }
-  });
+  }
+);
 
-  /**
-   * GET /api/v1/personalization/user-context
-   * Get user context for personalization (admin only)
-   */
-  fastify.get<{
-    Params: { userId: string };
-    Querystring: {
-      sessionId?: string;
-      currentPage?: string;
-    };
-  }>('/personalization/user-context/:userId', {
-    preHandler: [requireAuth, requireAdmin, adminRateLimit],
-    schema: {
-      params: {
-        type: 'object',
-        required: ['userId'],
-        properties: {
-          userId: { type: 'string' },
-        },
-      },
-      querystring: {
-        type: 'object',
-        properties: {
-          sessionId: { type: 'string' },
-          currentPage: { type: 'string' },
-        },
-      },
-      response: {
-        200: {
-          type: 'object',
-          properties: {
-            success: { type: 'boolean' },
-            data: {
-              type: 'object',
-              properties: {
-                userId: { type: 'string' },
-                sessionId: { type: 'string' },
-                currentPage: { type: 'string' },
-                deviceInfo: { type: 'object' },
-                location: { type: 'object' },
-                behavior: { type: 'object' },
-                preferences: { type: 'object' },
-                realTimeData: { type: 'object' },
-              },
-            },
-            message: { type: 'string' },
-          },
-        },
-      },
-    },
-  }, async (request: FastifyRequest<{ Params: { userId: string }; Querystring: { sessionId?: string; currentPage?: string } }>, reply: FastifyReply) => {
+/**
+ * GET /api/v1/personalization/rules (Admin only)
+ * Get all personalization rules
+ */
+router.get('/personalization/rules',
+  requireAdmin,
+  adminRateLimit,
+  async (req: AuthenticatedRequest, res: Response) => {
     try {
-      const { userId } = request.params;
-      const { sessionId = '', currentPage = 'home' } = request.query;
+      const service = await initializeService();
+      const rules = await service.getAllPersonalizationRules();
 
-      const userContext = await realTimePersonalizationService.buildUserContext(
-        userId,
-        sessionId,
-        currentPage,
-      );
-
-      return {
+      return res.json({
         success: true,
-        data: userContext,
-        message: 'User context retrieved successfully',
-      };
+        data: rules
+      });
     } catch (error) {
-      fastify.log.error('Error getting user context:', error);
-      reply.code(500);
-      return {
+      logger.error('Error getting personalization rules:', error);
+      return res.status(500).json({
         success: false,
-        data: {
-          userId: '',
-          sessionId: '',
-          currentPage: '',
-          deviceInfo: {},
-          location: {},
-          behavior: {},
-          preferences: {},
-          realTimeData: {},
-        },
-        message: 'Failed to retrieve user context',
-      };
+        error: 'Failed to get personalization rules'
+      });
     }
-  });
+  }
+);
+
+/**
+ * PUT /api/v1/personalization/rules/:ruleId (Admin only)
+ * Update personalization rule
+ */
+router.put('/personalization/rules/:ruleId',
+  requireAdmin,
+  adminRateLimit,
+  validateInput,
+  async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const { ruleId } = req.params;
+      const ruleData = req.body as Partial<PersonalizationRuleRequest>;
+
+      const service = await initializeService();
+      const rule = await service.updatePersonalizationRule(ruleId, ruleData);
+
+      return res.json({
+        success: true,
+        data: rule
+      });
+    } catch (error) {
+      logger.error('Error updating personalization rule:', error);
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to update personalization rule'
+      });
+    }
+  }
+);
+
+/**
+ * DELETE /api/v1/personalization/rules/:ruleId (Admin only)
+ * Delete personalization rule
+ */
+router.delete('/personalization/rules/:ruleId',
+  requireAdmin,
+  adminRateLimit,
+  async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const { ruleId } = req.params;
+
+      const service = await initializeService();
+      await service.deletePersonalizationRule(ruleId);
+
+      return res.json({
+        success: true,
+        message: 'Personalization rule deleted successfully'
+      });
+    } catch (error) {
+      logger.error('Error deleting personalization rule:', error);
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to delete personalization rule'
+      });
+    }
+  }
+);
+
+/**
+ * GET /api/v1/personalization/analytics (Admin only)
+ * Get personalization analytics
+ */
+router.get('/personalization/analytics',
+  requireAdmin,
+  adminRateLimit,
+  async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const service = await initializeService();
+      const analytics = await service.getPersonalizationAnalytics();
+
+      return res.json({
+        success: true,
+        data: analytics
+      });
+    } catch (error) {
+      logger.error('Error getting personalization analytics:', error);
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to get personalization analytics'
+      });
+    }
+  }
+);
 
   /**
    * POST /api/v1/personalization/feedback
-   * Provide feedback on personalization
-   */
-  fastify.post<{
-    Body: {
-      personalizationType: string;
-      contentId?: string;
-      rating: number;
-      feedback?: string;
-    };
-  }>('/personalization/feedback', {
-    preHandler: [requireAuth, personalizationRateLimit, validateInput],
-    schema: {
-      body: {
-        type: 'object',
-        required: ['personalizationType', 'rating'],
-        properties: {
-          personalizationType: { type: 'string' },
-          contentId: { type: 'string' },
-          rating: { type: 'number', minimum: 1, maximum: 5 },
-          feedback: { type: 'string' },
-        },
-      },
-      response: {
-        200: {
-          type: 'object',
-          properties: {
-            success: { type: 'boolean' },
-            message: { type: 'string' },
-          },
-        },
-      },
-    },
-  }, async (request: FastifyRequest<{ Body: { personalizationType: string; contentId?: string; rating: number; feedback?: string } }>, reply: FastifyReply) => {
+ * Submit personalization feedback
+ */
+router.post('/personalization/feedback',
+  requireAuth,
+  personalizationRateLimit,
+  validateInput,
+  async (req: AuthenticatedRequest, res: Response) => {
     try {
-      const userId = (request as any).user.id;
-      const { personalizationType, contentId, rating, feedback } = request.body;
+      const { contentId, contentType, feedback, rating } = req.body;
+      const userId = req.user?.userId;
 
-      // Log feedback
-      await fastify.mongo.db.collection('analytics_events').insertOne({
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          error: 'Authentication required'
+        });
+      }
+
+      const service = await initializeService();
+      await service.submitPersonalizationFeedback({
         userId,
-        eventType: 'personalization_feedback',
-        metadata: {
-          personalizationType,
           contentId,
-          rating,
+        contentType,
           feedback,
-        },
-        timestamp: new Date(),
-        appId: 'halobuzz',
+        rating
       });
 
-      return {
+      return res.json({
         success: true,
-        message: 'Personalization feedback recorded successfully',
-      };
+        message: 'Feedback submitted successfully'
+      });
     } catch (error) {
-      fastify.log.error('Error recording personalization feedback:', error);
-      reply.code(500);
-      return {
+      logger.error('Error submitting personalization feedback:', error);
+      return res.status(500).json({
         success: false,
-        message: 'Failed to record personalization feedback',
-      };
+        error: 'Failed to submit personalization feedback'
+      });
     }
-  });
 }
+);
+
+export default router;

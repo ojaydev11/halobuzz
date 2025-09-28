@@ -1,8 +1,14 @@
-import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+import { Router, Response } from 'express';
+import { AuthenticatedRequest } from '@/middleware/auth';
 import { AIContentRecommendationService } from '../services/AIContentRecommendationService';
 import { requireAuth } from '../middleware/auth';
 import { validateInput } from '../middleware/enhancedSecurity';
 import { createRateLimit } from '../middleware/enhancedSecurity';
+import { getMongoDB } from '@/config/database';
+import { getRedisClient } from '@/config/redis';
+import { logger } from '@/config/logger';
+
+const router = Router();
 
 interface RecommendationQuery {
   limit?: number;
@@ -49,14 +55,24 @@ interface AnalyticsResponse {
   message: string;
 }
 
-export default async function aiRecommendationRoutes(fastify: FastifyInstance) {
-  const aiRecommendationService = new AIContentRecommendationService(
-    fastify.mongo.db.collection('users'),
-    fastify.mongo.db.collection('livestreams'),
-    fastify.mongo.db.collection('shortvideos'),
-    fastify.mongo.db.collection('analytics_events'),
-    fastify.redis,
-  );
+// Initialize service with MongoDB and Redis
+let aiRecommendationService: AIContentRecommendationService;
+
+const initializeService = async () => {
+  if (!aiRecommendationService) {
+    const db = await getMongoDB();
+    const redis = await getRedisClient();
+    
+    aiRecommendationService = new AIContentRecommendationService(
+      db.collection('users'),
+      db.collection('livestreams'),
+      db.collection('shortvideos'),
+      db.collection('analytics_events'),
+      redis,
+    );
+  }
+  return aiRecommendationService;
+};
 
   // Rate limiting for recommendation endpoints
   const recommendationRateLimit = createRateLimit({
@@ -75,563 +91,244 @@ export default async function aiRecommendationRoutes(fastify: FastifyInstance) {
    * GET /api/v1/ai-recommendations
    * Get personalized content recommendations for the authenticated user
    */
-  fastify.get<{
-    Querystring: RecommendationQuery;
-  }>('/ai-recommendations', {
-    preHandler: [requireAuth, recommendationRateLimit, validateInput],
-    schema: {
-      querystring: {
-        type: 'object',
-        properties: {
-          limit: { type: 'integer', minimum: 1, maximum: 50, default: 20 },
-          contentType: { type: 'string', enum: ['stream', 'video', 'all'], default: 'all' },
-          category: { type: 'string' },
-          language: { type: 'string' },
-        },
-      },
-      response: {
-        200: {
-          type: 'object',
-          properties: {
-            success: { type: 'boolean' },
-            data: {
-              type: 'object',
-              properties: {
-                recommendations: {
-                  type: 'array',
-                  items: {
-                    type: 'object',
-                    properties: {
-                      contentId: { type: 'string' },
-                      contentType: { type: 'string', enum: ['stream', 'video'] },
-                      score: { type: 'number' },
-                      reason: { type: 'string' },
-                      confidence: { type: 'number' },
-                      metadata: {
-                        type: 'object',
-                        properties: {
-                          category: { type: 'string' },
-                          creator: { type: 'string' },
-                          duration: { type: 'number' },
-                          engagement: { type: 'number' },
-                        },
-                      },
-                    },
-                  },
-                },
-                totalCount: { type: 'number' },
-                generatedAt: { type: 'string', format: 'date-time' },
-                cacheHit: { type: 'boolean' },
-              },
-            },
-            message: { type: 'string' },
-          },
-        },
-      },
-    },
-  }, async (request: FastifyRequest<{ Querystring: RecommendationQuery }>, reply: FastifyReply): Promise<RecommendationResponse> => {
+router.get('/ai-recommendations',
+  requireAuth,
+  recommendationRateLimit,
+  validateInput,
+  async (req: AuthenticatedRequest, res: Response) => {
     try {
-      const userId = (request as any).user.id;
-      const { limit = 20, contentType = 'all', category, language } = request.query;
+      const { limit = 20, contentType = 'all', category, language } = req.query as RecommendationQuery;
+      const userId = req.user?.userId;
 
-      // Check for cached recommendations first
-      const cachedRecommendations = await aiRecommendationService.getCachedRecommendations(userId);
-      
-      let recommendations;
-      let cacheHit = false;
-
-      if (cachedRecommendations && cachedRecommendations.length > 0) {
-        recommendations = cachedRecommendations;
-        cacheHit = true;
-      } else {
-        // Generate new recommendations
-        recommendations = await aiRecommendationService.generateRecommendations(
-          userId,
-          limit,
-          contentType,
-        );
-      }
-
-      // Apply additional filters if specified
-      if (category || language) {
-        recommendations = recommendations.filter(rec => {
-          if (category && rec.metadata.category !== category) return false;
-          if (language && rec.metadata.language !== language) return false;
-          return true;
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          error: 'Authentication required'
         });
       }
 
-      // Log recommendation request for analytics
-      await fastify.mongo.db.collection('analytics_events').insertOne({
-        userId,
-        eventType: 'recommendation_request',
-        metadata: {
-          limit,
-          contentType,
-          category,
-          language,
-          cacheHit,
-          recommendationCount: recommendations.length,
-        },
-        timestamp: new Date(),
-        appId: 'halobuzz',
-      });
+      const service = await initializeService();
+      const recommendations = await service.getPersonalizedRecommendations(
+          userId,
+        {
+          limit: parseInt(limit as string),
+          contentType: contentType as 'stream' | 'video' | 'all',
+          category: category as string,
+          language: language as string
+        }
+      );
 
-      return {
+      return res.json({
         success: true,
-        data: {
-          recommendations,
-          totalCount: recommendations.length,
-          generatedAt: new Date(),
-          cacheHit,
-        },
-        message: `Generated ${recommendations.length} personalized recommendations`,
-      };
+        data: recommendations,
+        message: 'Recommendations generated successfully'
+      });
     } catch (error) {
-      fastify.log.error('Error getting AI recommendations:', error);
-      reply.code(500);
-      return {
+      logger.error('Error getting AI recommendations:', error);
+      return res.status(500).json({
         success: false,
-        data: {
-          recommendations: [],
-          totalCount: 0,
-          generatedAt: new Date(),
-          cacheHit: false,
-        },
-        message: 'Failed to generate recommendations',
-      };
+        error: 'Failed to get recommendations'
+      });
     }
-  });
+  }
+);
+
+/**
+ * GET /api/v1/ai-recommendations/similar/:contentId
+ * Get similar content recommendations based on a specific content item
+ */
+router.get('/ai-recommendations/similar/:contentId',
+  requireAuth,
+  recommendationRateLimit,
+  validateInput,
+  async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const { contentId } = req.params;
+      const { limit = 10 } = req.query;
+      const userId = req.user?.userId;
+
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          error: 'Authentication required'
+        });
+      }
+
+      const service = await initializeService();
+      const similarContent = await service.getSimilarContent(
+        contentId,
+        userId,
+        parseInt(limit as string)
+      );
+
+      return res.json({
+        success: true,
+        data: similarContent,
+        message: 'Similar content recommendations generated successfully'
+      });
+    } catch (error) {
+      logger.error('Error getting similar content:', error);
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to get similar content'
+      });
+    }
+  }
+);
 
   /**
    * POST /api/v1/ai-recommendations/feedback
-   * Provide feedback on recommendations to improve the algorithm
-   */
-  fastify.post<{
-    Body: {
-      contentId: string;
-      contentType: 'stream' | 'video';
-      action: 'click' | 'like' | 'share' | 'skip' | 'watch';
-      watchTime?: number;
-      rating?: number;
-    };
-  }>('/ai-recommendations/feedback', {
-    preHandler: [requireAuth, recommendationRateLimit, validateInput],
-    schema: {
-      body: {
-        type: 'object',
-        required: ['contentId', 'contentType', 'action'],
-        properties: {
-          contentId: { type: 'string' },
-          contentType: { type: 'string', enum: ['stream', 'video'] },
-          action: { type: 'string', enum: ['click', 'like', 'share', 'skip', 'watch'] },
-          watchTime: { type: 'number', minimum: 0 },
-          rating: { type: 'number', minimum: 1, maximum: 5 },
-        },
-      },
-      response: {
-        200: {
-          type: 'object',
-          properties: {
-            success: { type: 'boolean' },
-            message: { type: 'string' },
-          },
-        },
-      },
-    },
-  }, async (request: FastifyRequest<{
-    Body: {
-      contentId: string;
-      contentType: 'stream' | 'video';
-      action: 'click' | 'like' | 'share' | 'skip' | 'watch';
-      watchTime?: number;
-      rating?: number;
-    };
-  }>, reply: FastifyReply) => {
+ * Submit feedback on recommendations to improve the AI model
+ */
+router.post('/ai-recommendations/feedback',
+  requireAuth,
+  recommendationRateLimit,
+  validateInput,
+  async (req: AuthenticatedRequest, res: Response) => {
     try {
-      const userId = (request as any).user.id;
-      const { contentId, contentType, action, watchTime, rating } = request.body;
+      const { contentId, contentType, feedback, rating } = req.body;
+      const userId = req.user?.userId;
 
-      // Update user preferences based on feedback
-      await aiRecommendationService.updateUserPreferences(userId, contentId, contentType, action);
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          error: 'Authentication required'
+        });
+      }
 
-      // Log feedback for analytics
-      await fastify.mongo.db.collection('analytics_events').insertOne({
+      const service = await initializeService();
+      await service.submitRecommendationFeedback({
         userId,
-        eventType: 'recommendation_feedback',
-        metadata: {
           contentId,
           contentType,
-          action,
-          watchTime,
-          rating,
-        },
-        timestamp: new Date(),
-        appId: 'halobuzz',
+        feedback,
+        rating
       });
 
-      return {
+      return res.json({
         success: true,
-        message: 'Feedback recorded successfully',
-      };
+        message: 'Feedback submitted successfully'
+      });
     } catch (error) {
-      fastify.log.error('Error recording recommendation feedback:', error);
-      reply.code(500);
-      return {
+      logger.error('Error submitting recommendation feedback:', error);
+      return res.status(500).json({
         success: false,
-        message: 'Failed to record feedback',
-      };
+        error: 'Failed to submit feedback'
+      });
     }
-  });
+  }
+);
 
-  /**
-   * GET /api/v1/ai-recommendations/analytics
-   * Get recommendation analytics for admin dashboard (admin only)
-   */
-  fastify.get('/ai-recommendations/analytics', {
-    preHandler: [requireAuth, analyticsRateLimit],
-    schema: {
-      response: {
-        200: {
-          type: 'object',
-          properties: {
-            success: { type: 'boolean' },
-            data: {
-              type: 'object',
-              properties: {
-                totalRecommendations: { type: 'number' },
-                averageScore: { type: 'number' },
-                topCategories: {
-                  type: 'array',
-                  items: {
-                    type: 'object',
-                    properties: {
-                      category: { type: 'string' },
-                      count: { type: 'number' },
-                    },
-                  },
-                },
-                userEngagement: {
-                  type: 'object',
-                  properties: {
-                    clickThroughRate: { type: 'number' },
-                    watchTime: { type: 'number' },
-                    conversionRate: { type: 'number' },
-                  },
-                },
-              },
-            },
-            message: { type: 'string' },
-          },
-        },
-      },
-    },
-  }, async (request: FastifyRequest, reply: FastifyReply): Promise<AnalyticsResponse> => {
+/**
+ * GET /api/v1/ai-recommendations/trending
+ * Get trending content recommendations
+ */
+router.get('/ai-recommendations/trending',
+  requireAuth,
+  recommendationRateLimit,
+  async (req: AuthenticatedRequest, res: Response) => {
     try {
-      const user = (request as any).user;
-      
-      // Check if user is admin
-      if (user.role !== 'admin' && user.role !== 'super_admin') {
-        reply.code(403);
-        return {
+      const { limit = 20, timeRange = '24h' } = req.query;
+      const userId = req.user?.userId;
+
+      if (!userId) {
+        return res.status(401).json({
           success: false,
-          data: {
-            totalRecommendations: 0,
-            averageScore: 0,
-            topCategories: [],
-            userEngagement: {
-              clickThroughRate: 0,
-              watchTime: 0,
-              conversionRate: 0,
-            },
-          },
-          message: 'Access denied. Admin privileges required.',
-        };
+          error: 'Authentication required'
+        });
       }
 
-      const analytics = await aiRecommendationService.getRecommendationAnalytics();
-
-      return {
-        success: true,
-        data: analytics,
-        message: 'Recommendation analytics retrieved successfully',
-      };
-    } catch (error) {
-      fastify.log.error('Error getting recommendation analytics:', error);
-      reply.code(500);
-      return {
-        success: false,
-        data: {
-          totalRecommendations: 0,
-          averageScore: 0,
-          topCategories: [],
-          userEngagement: {
-            clickThroughRate: 0,
-            watchTime: 0,
-            conversionRate: 0,
-          },
-        },
-        message: 'Failed to retrieve analytics',
-      };
-    }
-  });
-
-  /**
-   * POST /api/v1/ai-recommendations/refresh
-   * Force refresh recommendations for a user (admin only)
-   */
-  fastify.post<{
-    Body: {
-      userId: string;
-      contentType?: 'stream' | 'video' | 'all';
-    };
-  }>('/ai-recommendations/refresh', {
-    preHandler: [requireAuth, analyticsRateLimit, validateInput],
-    schema: {
-      body: {
-        type: 'object',
-        required: ['userId'],
-        properties: {
-          userId: { type: 'string' },
-          contentType: { type: 'string', enum: ['stream', 'video', 'all'] },
-        },
-      },
-      response: {
-        200: {
-          type: 'object',
-          properties: {
-            success: { type: 'boolean' },
-            message: { type: 'string' },
-          },
-        },
-      },
-    },
-  }, async (request: FastifyRequest<{
-    Body: {
-      userId: string;
-      contentType?: 'stream' | 'video' | 'all';
-    };
-  }>, reply: FastifyReply) => {
-    try {
-      const adminUser = (request as any).user;
-      
-      // Check if user is admin
-      if (adminUser.role !== 'admin' && adminUser.role !== 'super_admin') {
-        reply.code(403);
-        return {
-          success: false,
-          message: 'Access denied. Admin privileges required.',
-        };
-      }
-
-      const { userId, contentType = 'all' } = request.body;
-
-      // Clear cached recommendations
-      await fastify.redis.del(`recommendations:${userId}`);
-
-      // Generate new recommendations
-      const recommendations = await aiRecommendationService.generateRecommendations(
+      const service = await initializeService();
+      const trendingContent = await service.getTrendingRecommendations(
         userId,
-        20,
-        contentType,
+        parseInt(limit as string),
+        timeRange as string
       );
 
-      // Log admin action
-      await fastify.mongo.db.collection('analytics_events').insertOne({
-        userId: adminUser.id,
-        eventType: 'admin_action',
-        metadata: {
-          action: 'refresh_recommendations',
-          targetUserId: userId,
-          contentType,
-          recommendationCount: recommendations.length,
-        },
-        timestamp: new Date(),
-        appId: 'halobuzz',
+      return res.json({
+        success: true,
+        data: trendingContent,
+        message: 'Trending recommendations generated successfully'
       });
-
-      return {
-        success: true,
-        message: `Refreshed ${recommendations.length} recommendations for user ${userId}`,
-      };
     } catch (error) {
-      fastify.log.error('Error refreshing recommendations:', error);
-      reply.code(500);
-      return {
+      logger.error('Error getting trending recommendations:', error);
+      return res.status(500).json({
         success: false,
-        message: 'Failed to refresh recommendations',
-      };
+        error: 'Failed to get trending recommendations'
+      });
     }
-  });
+  }
+);
 
-  /**
-   * GET /api/v1/ai-recommendations/trending
-   * Get trending content recommendations
-   */
-  fastify.get<{
-    Querystring: {
-      limit?: number;
-      category?: string;
-      timeRange?: 'hour' | 'day' | 'week';
-    };
-  }>('/ai-recommendations/trending', {
-    preHandler: [recommendationRateLimit],
-    schema: {
-      querystring: {
-        type: 'object',
-        properties: {
-          limit: { type: 'integer', minimum: 1, maximum: 50, default: 20 },
-          category: { type: 'string' },
-          timeRange: { type: 'string', enum: ['hour', 'day', 'week'], default: 'day' },
-        },
-      },
-      response: {
-        200: {
-          type: 'object',
-          properties: {
-            success: { type: 'boolean' },
-            data: {
-              type: 'object',
-              properties: {
-                trendingContent: {
-                  type: 'array',
-                  items: {
-                    type: 'object',
-                    properties: {
-                      contentId: { type: 'string' },
-                      contentType: { type: 'string', enum: ['stream', 'video'] },
-                      engagement: { type: 'number' },
-                      growth: { type: 'number' },
-                      metadata: {
-                        type: 'object',
-                        properties: {
-                          category: { type: 'string' },
-                          creator: { type: 'string' },
-                          title: { type: 'string' },
-                        },
-                      },
-                    },
-                  },
-                },
-                timeRange: { type: 'string' },
-                generatedAt: { type: 'string', format: 'date-time' },
-              },
-            },
-            message: { type: 'string' },
-          },
-        },
-      },
-    },
-  }, async (request: FastifyRequest<{
-    Querystring: {
-      limit?: number;
-      category?: string;
-      timeRange?: 'hour' | 'day' | 'week';
-    };
-  }>, reply: FastifyReply) => {
+/**
+ * GET /api/v1/ai-recommendations/analytics
+ * Get recommendation analytics for the authenticated user
+ */
+router.get('/ai-recommendations/analytics',
+  requireAuth,
+  analyticsRateLimit,
+  async (req: AuthenticatedRequest, res: Response) => {
     try {
-      const { limit = 20, category, timeRange = 'day' } = request.query;
+      const userId = req.user?.userId;
 
-      // Calculate time range
-      const now = new Date();
-      let startTime: Date;
-      
-      switch (timeRange) {
-        case 'hour':
-          startTime = new Date(now.getTime() - 60 * 60 * 1000);
-          break;
-        case 'day':
-          startTime = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-          break;
-        case 'week':
-          startTime = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-          break;
-        default:
-          startTime = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          error: 'Authentication required'
+        });
       }
 
-      // Get trending content based on engagement
-      const trendingQuery: any = {
-        timestamp: { $gte: startTime },
-        eventType: { $in: ['content_like', 'content_share', 'content_comment', 'content_watch'] },
-      };
+      const service = await initializeService();
+      const analytics = await service.getRecommendationAnalytics(userId);
 
-      if (category) {
-        trendingQuery['metadata.category'] = category;
-      }
-
-      const trendingEvents = await fastify.mongo.db.collection('analytics_events')
-        .aggregate([
-          { $match: trendingQuery },
-          {
-            $group: {
-              _id: '$metadata.contentId',
-              contentType: { $first: '$metadata.contentType' },
-              category: { $first: '$metadata.category' },
-              creator: { $first: '$metadata.creatorId' },
-              title: { $first: '$metadata.title' },
-              totalEngagement: {
-                $sum: {
-                  $cond: [
-                    { $eq: ['$eventType', 'content_watch'] },
-                    { $multiply: ['$metadata.watchTime', 0.1] },
-                    { $cond: [
-                      { $eq: ['$eventType', 'content_like'] },
-                      1,
-                      { $cond: [
-                        { $eq: ['$eventType', 'content_share'] },
-                        3,
-                        { $cond: [
-                          { $eq: ['$eventType', 'content_comment'] },
-                          2,
-                          0
-                        ]}
-                      ]}
-                    ]}
-                  ]
-                }
-              },
-              engagementCount: { $sum: 1 },
-            },
-          },
-          { $sort: { totalEngagement: -1 } },
-          { $limit: limit },
-        ])
-        .toArray();
-
-      const trendingContent = trendingEvents.map(event => ({
-        contentId: event._id,
-        contentType: event.contentType,
-        engagement: event.totalEngagement,
-        growth: event.engagementCount,
-        metadata: {
-          category: event.category,
-          creator: event.creator,
-          title: event.title,
-        },
-      }));
-
-      return {
+      return res.json({
         success: true,
-        data: {
-          trendingContent,
-          timeRange,
-          generatedAt: new Date(),
-        },
-        message: `Retrieved ${trendingContent.length} trending content items`,
-      };
+        data: analytics,
+        message: 'Recommendation analytics retrieved successfully'
+      });
     } catch (error) {
-      fastify.log.error('Error getting trending content:', error);
-      reply.code(500);
-      return {
+      logger.error('Error getting recommendation analytics:', error);
+      return res.status(500).json({
         success: false,
-        data: {
-          trendingContent: [],
-          timeRange: 'day',
-          generatedAt: new Date(),
-        },
-        message: 'Failed to retrieve trending content',
-      };
+        error: 'Failed to get recommendation analytics'
+      });
     }
-  });
-}
+  }
+);
+
+/**
+ * POST /api/v1/ai-recommendations/refresh
+ * Refresh user's recommendation profile
+ */
+router.post('/ai-recommendations/refresh',
+  requireAuth,
+  recommendationRateLimit,
+  async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const userId = req.user?.userId;
+
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          error: 'Authentication required'
+        });
+      }
+
+      const service = await initializeService();
+      await service.refreshUserProfile(userId);
+
+      return res.json({
+        success: true,
+        message: 'Recommendation profile refreshed successfully'
+      });
+    } catch (error) {
+      logger.error('Error refreshing recommendation profile:', error);
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to refresh recommendation profile'
+      });
+    }
+  }
+);
+
+export default router;

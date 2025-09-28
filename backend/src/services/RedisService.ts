@@ -282,7 +282,7 @@ export class RedisService {
   async zrevrange(key: string, start: number, stop: number): Promise<string[]> {
     try {
       await this.connect();
-      return await this.client.zRevRange(key, start, stop);
+      return await this.client.zRange(key, start, stop, { REV: true });
     } catch (error) {
       logger.error('Redis ZREVRANGE error:', error);
       return [];

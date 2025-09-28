@@ -2,6 +2,25 @@ import { logger } from '../config/logger';
 import { getCache, setCache } from '../config/redis';
 import AgoraService from './AgoraService';
 
+// WebRTC type definitions
+interface RTCIceServer {
+  urls: string | string[];
+  username?: string;
+  credential?: string;
+}
+
+interface RTCSessionDescriptionInit {
+  type: 'offer' | 'answer' | 'pranswer' | 'rollback';
+  sdp: string;
+}
+
+interface RTCStats {
+  timestamp: number;
+  type: string;
+  id: string;
+  [key: string]: any;
+}
+
 interface WebRTCConfig {
   iceServers: RTCIceServer[];
   maxBitrate: number;

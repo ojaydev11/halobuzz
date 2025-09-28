@@ -1,494 +1,252 @@
-import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
-import { body, validationResult } from 'express-validator';
+import { Router, Response } from 'express';
+import { AuthenticatedRequest } from '@/middleware/auth';
 import { viralGrowthService } from '@/services/ViralGrowthService';
+import { authMiddleware } from '@/middleware/auth';
+import { socialLimiter } from '@/middleware/security';
 import { logger } from '@/config/logger';
-import jwt from 'jsonwebtoken';
 
-// Simple authentication middleware for Fastify
-const authenticate = async (request: FastifyRequest, reply: FastifyReply) => {
-  const token = request.headers.authorization?.replace('Bearer ', '');
-  if (!token) {
-    return reply.status(401).send({ error: 'Unauthorized' });
-  }
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!);
-    (request as any).user = decoded;
-  } catch (error) {
-    return reply.status(401).send({ error: 'Invalid token' });
-  }
-};
+const router = Router();
 
-// Simple admin middleware for Fastify
-const requireAdmin = async (request: FastifyRequest, reply: FastifyReply) => {
-  const user = (request as any).user;
-  if (!user || user.role !== 'admin') {
-    return reply.status(403).send({ error: 'Admin access required' });
-  }
-};
+// Apply authentication and rate limiting to all routes
+router.use(authMiddleware);
+router.use(socialLimiter);
 
 /**
  * Viral Growth Routes
  * Handles referral programs, viral campaigns, and growth mechanics
  */
 
-interface ViralRequest extends FastifyRequest {
-  user?: {
-    userId: string;
-    email: string;
-  };
-}
+// Generate referral code
+router.post('/referral/generate', async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const userId = req.user?.userId;
 
-export default async function viralGrowthRoutes(fastify: FastifyInstance) {
-  // Generate referral code
-  fastify.post('/referral/generate', {
-    preHandler: [authenticate],
-    schema: {
-      response: {
-        200: {
-          type: 'object',
-          properties: {
-            success: { type: 'boolean' },
-            data: {
-              type: 'object',
-              properties: {
-                referralCode: { type: 'string' },
-                referralUrl: { type: 'string' },
-                rewards: {
-                  type: 'object',
-                  properties: {
-                    referrerReward: { type: 'number' },
-                    refereeReward: { type: 'number' }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }, async (request: ViralRequest, reply: FastifyReply) => {
-    try {
-      const userId = request.user?.userId;
-
-      if (!userId) {
-        return reply.status(401).send({
-          success: false,
-          error: 'Authentication required'
-        });
-      }
-
-      const referralCode = await viralGrowthService.generateReferralCode(userId);
-      const referralUrl = `https://halobuzz.com/invite/${referralCode}`;
-
-      return reply.send({
-        success: true,
-        data: {
-          referralCode,
-          referralUrl,
-          rewards: {
-            referrerReward: 100,
-            refereeReward: 50
-          }
-        }
-      });
-    } catch (error) {
-      logger.error('Failed to generate referral code:', error);
-      return reply.status(500).send({
+    if (!userId) {
+      return res.status(401).json({
         success: false,
-        error: 'Failed to generate referral code'
+        error: 'Authentication required'
       });
     }
-  });
 
-  // Process referral signup
-  fastify.post('/referral/signup', {
-    schema: {
-      body: {
-        type: 'object',
-        required: ['referralCode', 'userId'],
-        properties: {
-          referralCode: { type: 'string' },
-          userId: { type: 'string' }
-        }
+    const referralCode = await viralGrowthService.generateReferralCode(userId);
+
+    return res.json({
+      success: true,
+      data: {
+        referralCode,
+        userId,
+        createdAt: new Date()
       }
-    }
-  }, async (request: FastifyRequest, reply: FastifyReply) => {
-    try {
-      const errors = validationResult(request);
-      if (!errors.isEmpty()) {
-        return reply.status(400).send({
-          success: false,
-          errors: errors.array()
-        });
-      }
+    });
+  } catch (error) {
+    logger.error('Error generating referral code:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to generate referral code'
+    });
+  }
+});
 
-      const { referralCode, userId } = request.body as {
-        referralCode: string;
-        userId: string;
-      };
+// Get referral stats
+router.get('/referral/stats', async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const userId = req.user?.userId;
 
-      const result = await viralGrowthService.processReferralSignup(referralCode, userId);
-
-      return reply.send({
-        success: result.success,
-        data: result.success ? {
-          referrerReward: result.referrerReward,
-          refereeReward: result.refereeReward,
-          referrerId: result.referrerId
-        } : null,
-        message: result.success ? 'Referral processed successfully' : 'Invalid or expired referral code'
-      });
-    } catch (error) {
-      logger.error('Failed to process referral signup:', error);
-      return reply.status(500).send({
+    if (!userId) {
+      return res.status(401).json({
         success: false,
-        error: 'Failed to process referral signup'
+        error: 'Authentication required'
       });
     }
-  });
 
-  // Create viral challenge
-  fastify.post('/challenges/create', {
-    preHandler: [authenticate, requireAdmin],
-    schema: {
-      body: {
-        type: 'object',
-        required: ['name', 'type', 'reward'],
-        properties: {
-          name: { type: 'string' },
-          type: { type: 'string', enum: ['referral', 'challenge', 'contest', 'trending', 'collaboration'] },
-          startDate: { type: 'string' },
-          endDate: { type: 'string' },
-          reward: {
-            type: 'object',
-            properties: {
-              coins: { type: 'number' },
-              experience: { type: 'number' },
-              specialBadges: { type: 'array', items: { type: 'string' } },
-              exclusiveAccess: { type: 'array', items: { type: 'string' } }
-            }
-          },
-          requirements: {
-            type: 'object',
-            properties: {
-              minParticipants: { type: 'number' },
-              maxParticipants: { type: 'number' },
-              eligibilityCriteria: { type: 'object' }
-            }
-          },
-          viralMultiplier: { type: 'number', default: 2.0 }
-        }
-      }
-    }
-  }, async (request: ViralRequest, reply: FastifyReply) => {
-    try {
-      const challengeData = request.body as any;
-      
-      // Convert date strings to Date objects
-      if (challengeData.startDate) {
-        challengeData.startDate = new Date(challengeData.startDate);
-      }
-      if (challengeData.endDate) {
-        challengeData.endDate = new Date(challengeData.endDate);
-      }
+    const stats = await viralGrowthService.getReferralStats(userId);
 
-      const challengeId = await viralGrowthService.createViralChallenge(challengeData);
+    return res.json({
+      success: true,
+      data: stats
+    });
+  } catch (error) {
+    logger.error('Error getting referral stats:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to get referral stats'
+    });
+  }
+});
 
-      return reply.send({
-        success: true,
-        data: {
-          challengeId,
-          message: 'Viral challenge created successfully'
-        }
-      });
-    } catch (error) {
-      logger.error('Failed to create viral challenge:', error);
-      return reply.status(500).send({
+// Use referral code
+router.post('/referral/use', async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { referralCode } = req.body;
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      return res.status(401).json({
         success: false,
-        error: 'Failed to create viral challenge'
+        error: 'Authentication required'
       });
     }
-  });
 
-  // Join viral challenge
-  fastify.post('/challenges/:challengeId/join', {
-    preHandler: [authenticate],
-    schema: {
-      params: {
-        type: 'object',
-        properties: {
-          challengeId: { type: 'string' }
-        }
+    const result = await viralGrowthService.useReferralCode(userId, referralCode);
+
+    return res.json({
+      success: true,
+      data: result
+    });
+  } catch (error) {
+    logger.error('Error using referral code:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to use referral code'
+    });
+  }
+});
+
+// Get viral campaigns (Admin only)
+router.get('/campaigns', async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const campaigns = await viralGrowthService.getViralCampaigns();
+
+    return res.json({
+      success: true,
+      data: campaigns
+    });
+  } catch (error) {
+    logger.error('Error getting viral campaigns:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to get viral campaigns'
+    });
+  }
+});
+
+// Create viral campaign (Admin only)
+router.post('/campaigns', async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const campaignData = req.body;
+
+    const campaign = await viralGrowthService.createViralCampaign(campaignData);
+
+    return res.json({
+      success: true,
+      data: campaign
+    });
+  } catch (error) {
+    logger.error('Error creating viral campaign:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to create viral campaign'
+    });
+  }
+});
+
+// Get growth metrics (Admin only)
+router.get('/metrics', async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { timeRange = '7d' } = req.query;
+
+    const metrics = await viralGrowthService.getGrowthMetrics(timeRange as string);
+
+    return res.json({
+      success: true,
+      data: metrics
+    });
+  } catch (error) {
+    logger.error('Error getting growth metrics:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to get growth metrics'
+    });
+  }
+});
+
+// Get viral coefficient (Admin only)
+router.get('/viral-coefficient', async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const coefficient = await viralGrowthService.getViralCoefficient();
+
+    return res.json({
+      success: true,
+      data: {
+        coefficient,
+        timestamp: new Date()
       }
-    }
-  }, async (request: ViralRequest, reply: FastifyReply) => {
-    try {
-      const { challengeId } = request.params as { challengeId: string };
-      const userId = request.user?.userId;
+    });
+  } catch (error) {
+    logger.error('Error getting viral coefficient:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to get viral coefficient'
+    });
+  }
+});
 
-      if (!userId) {
-        return reply.status(401).send({
-          success: false,
-          error: 'Authentication required'
-        });
-      }
+// Get top referrers (Admin only)
+router.get('/top-referrers', async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { limit = 10 } = req.query;
 
-      const result = await viralGrowthService.joinViralChallenge(challengeId, userId);
+    const topReferrers = await viralGrowthService.getTopReferrers(parseInt(limit as string));
 
-      return reply.send({
-        success: result.success,
-        data: result.success ? result.reward : null,
-        message: result.message || (result.success ? 'Successfully joined challenge' : 'Failed to join challenge')
-      });
-    } catch (error) {
-      logger.error('Failed to join viral challenge:', error);
-      return reply.status(500).send({
+    return res.json({
+      success: true,
+      data: topReferrers
+    });
+  } catch (error) {
+    logger.error('Error getting top referrers:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to get top referrers'
+    });
+  }
+});
+
+// Get referral leaderboard
+router.get('/leaderboard', async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { limit = 50 } = req.query;
+
+    const leaderboard = await viralGrowthService.getReferralLeaderboard(parseInt(limit as string));
+
+    return res.json({
+      success: true,
+      data: leaderboard
+    });
+  } catch (error) {
+    logger.error('Error getting referral leaderboard:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to get referral leaderboard'
+    });
+  }
+});
+
+// Track viral event
+router.post('/track-event', async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { eventType, metadata } = req.body;
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      return res.status(401).json({
         success: false,
-        error: 'Failed to join viral challenge'
+        error: 'Authentication required'
       });
     }
-  });
 
-  // Calculate viral score
-  fastify.post('/content/viral-score', {
-    preHandler: [authenticate],
-    schema: {
-      body: {
-        type: 'object',
-        required: ['contentId', 'contentType'],
-        properties: {
-          contentId: { type: 'string' },
-          contentType: { type: 'string', enum: ['stream', 'reel', 'game'] }
-        }
-      }
-    }
-  }, async (request: ViralRequest, reply: FastifyReply) => {
-    try {
-      const { contentId, contentType } = request.body as {
-        contentId: string;
-        contentType: 'stream' | 'reel' | 'game';
-      };
+    await viralGrowthService.trackViralEvent(userId, eventType, metadata);
 
-      const viralScore = await viralGrowthService.calculateViralScore(contentId, contentType);
+    return res.json({
+      success: true,
+      message: 'Viral event tracked successfully'
+    });
+  } catch (error) {
+    logger.error('Error tracking viral event:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to track viral event'
+    });
+  }
+});
 
-      return reply.send({
-        success: true,
-        data: viralScore
-      });
-    } catch (error) {
-      logger.error('Failed to calculate viral score:', error);
-      return reply.status(500).send({
-        success: false,
-        error: 'Failed to calculate viral score'
-      });
-    }
-  });
-
-  // Boost content visibility
-  fastify.post('/content/:contentId/boost', {
-    preHandler: [authenticate],
-    schema: {
-      params: {
-        type: 'object',
-        properties: {
-          contentId: { type: 'string' }
-        }
-      },
-      body: {
-        type: 'object',
-        required: ['boostType'],
-        properties: {
-          boostType: { type: 'string', enum: ['trending', 'featured', 'viral'] }
-        }
-      }
-    }
-  }, async (request: ViralRequest, reply: FastifyReply) => {
-    try {
-      const { contentId } = request.params as { contentId: string };
-      const { boostType } = request.body as { boostType: 'trending' | 'featured' | 'viral' };
-
-      const result = await viralGrowthService.boostContentVisibility(contentId, boostType);
-
-      return reply.send({
-        success: result.success,
-        data: {
-          boostMultiplier: result.boostMultiplier,
-          duration: result.duration,
-          message: `Content boosted with ${boostType} multiplier`
-        }
-      });
-    } catch (error) {
-      logger.error('Failed to boost content visibility:', error);
-      return reply.status(500).send({
-        success: false,
-        error: 'Failed to boost content visibility'
-      });
-    }
-  });
-
-  // Get social proof data
-  fastify.get('/social-proof', {
-    schema: {
-      response: {
-        200: {
-          type: 'object',
-          properties: {
-            success: { type: 'boolean' },
-            data: {
-              type: 'object',
-              properties: {
-                totalUsers: { type: 'number' },
-                activeStreamers: { type: 'number' },
-                totalGiftsSent: { type: 'number' },
-                totalHoursStreamed: { type: 'number' },
-                trendingHashtags: { type: 'array', items: { type: 'string' } },
-                topCountries: {
-                  type: 'array',
-                  items: {
-                    type: 'object',
-                    properties: {
-                      country: { type: 'string' },
-                      users: { type: 'number' }
-                    }
-                  }
-                },
-                successStories: {
-                  type: 'array',
-                  items: {
-                    type: 'object',
-                    properties: {
-                      userId: { type: 'string' },
-                      achievement: { type: 'string' },
-                      earnings: { type: 'number' },
-                      followers: { type: 'number' }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }, async (request: FastifyRequest, reply: FastifyReply) => {
-    try {
-      const socialProof = await viralGrowthService.generateSocialProof();
-
-      return reply.send({
-        success: true,
-        data: socialProof
-      });
-    } catch (error) {
-      logger.error('Failed to get social proof:', error);
-      return reply.status(500).send({
-        success: false,
-        error: 'Failed to get social proof data'
-      });
-    }
-  });
-
-  // Create collaboration opportunities
-  fastify.post('/collaborations/opportunities', {
-    preHandler: [authenticate],
-    schema: {
-      body: {
-        type: 'object',
-        properties: {
-          targetAudience: { type: 'object' }
-        }
-      }
-    }
-  }, async (request: ViralRequest, reply: FastifyReply) => {
-    try {
-      const userId = request.user?.userId;
-      const { targetAudience } = request.body as { targetAudience: any };
-
-      if (!userId) {
-        return reply.status(401).send({
-          success: false,
-          error: 'Authentication required'
-        });
-      }
-
-      const opportunities = await viralGrowthService.createCollaborationOpportunity(userId, targetAudience);
-
-      return reply.send({
-        success: opportunities.success,
-        data: opportunities.opportunities
-      });
-    } catch (error) {
-      logger.error('Failed to create collaboration opportunities:', error);
-      return reply.status(500).send({
-        success: false,
-        error: 'Failed to create collaboration opportunities'
-      });
-    }
-  });
-
-  // Get viral campaigns
-  fastify.get('/campaigns', {
-    schema: {
-      response: {
-        200: {
-          type: 'object',
-          properties: {
-            success: { type: 'boolean' },
-            data: {
-              type: 'array',
-              items: {
-                type: 'object',
-                properties: {
-                  id: { type: 'string' },
-                  name: { type: 'string' },
-                  type: { type: 'string' },
-                  startDate: { type: 'string' },
-                  endDate: { type: 'string' },
-                  reward: { type: 'object' },
-                  requirements: { type: 'object' },
-                  viralMultiplier: { type: 'number' },
-                  isActive: { type: 'boolean' }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }, async (request: FastifyRequest, reply: FastifyReply) => {
-    try {
-      // Mock implementation - would get actual campaigns
-      const campaigns = [
-        {
-          id: 'new-user-bonus',
-          name: 'New User Welcome Bonus',
-          type: 'referral',
-          startDate: new Date().toISOString(),
-          endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-          reward: {
-            coins: 100,
-            experience: 50,
-            specialBadges: ['welcome'],
-            exclusiveAccess: []
-          },
-          requirements: {
-            minParticipants: 1,
-            eligibilityCriteria: { isNewUser: true }
-          },
-          viralMultiplier: 1.5,
-          isActive: true
-        }
-      ];
-
-      return reply.send({
-        success: true,
-        data: campaigns
-      });
-    } catch (error) {
-      logger.error('Failed to get viral campaigns:', error);
-      return reply.status(500).send({
-        success: false,
-        error: 'Failed to get viral campaigns'
-      });
-    }
-  });
-}
+export default router;

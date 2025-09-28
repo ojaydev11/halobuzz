@@ -1,543 +1,252 @@
-import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
-import { body, validationResult } from 'express-validator';
+import { Router, Response } from 'express';
+import { AuthenticatedRequest } from '@/middleware/auth';
 import { revenueOptimizationService } from '@/services/RevenueOptimizationService';
+import { authMiddleware } from '@/middleware/auth';
+import { socialLimiter } from '@/middleware/security';
 import { logger } from '@/config/logger';
+
+const router = Router();
+
+// Apply authentication and rate limiting to all routes
+router.use(authMiddleware);
+router.use(socialLimiter);
 
 /**
  * Revenue Optimization Routes
  * Handles dynamic pricing, monetization opportunities, and revenue analytics
  */
 
-interface RevenueRequest extends FastifyRequest {
-  user?: {
-    userId: string;
-    email: string;
-  };
-}
+// Calculate dynamic pricing
+router.post('/pricing/dynamic', async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { productId, basePrice } = req.body as {
+      productId: string;
+      basePrice: number;
+    };
+    const userId = req.user?.userId;
 
-export default async function revenueOptimizationRoutes(fastify: FastifyInstance) {
-  // Calculate dynamic pricing
-  fastify.post('/pricing/dynamic', {
-    preHandler: [fastify.authenticate],
-    schema: {
-      body: {
-        type: 'object',
-        required: ['productId', 'basePrice'],
-        properties: {
-          productId: { type: 'string' },
-          basePrice: { type: 'number' }
-        }
-      }
-    }
-  }, async (request: RevenueRequest, reply: FastifyReply) => {
-    try {
-      const { productId, basePrice } = request.body as {
-        productId: string;
-        basePrice: number;
-      };
-      const userId = request.user?.userId;
-
-      if (!userId) {
-        return reply.status(401).json({
-          success: false,
-          error: 'Authentication required'
-        });
-      }
-
-      const dynamicPricing = await revenueOptimizationService.calculateDynamicPricing(
-        productId,
-        userId,
-        basePrice
-      );
-
-      return reply.json({
-        success: true,
-        data: dynamicPricing
-      });
-    } catch (error) {
-      logger.error('Failed to calculate dynamic pricing:', error);
-      return reply.status(500).json({
+    if (!userId) {
+      return res.status(401).json({
         success: false,
-        error: 'Failed to calculate dynamic pricing'
+        error: 'Authentication required'
       });
     }
-  });
 
-  // Get monetization opportunities
-  fastify.get('/opportunities', {
-    preHandler: [fastify.authenticate],
-    schema: {
-      response: {
-        200: {
-          type: 'object',
-          properties: {
-            success: { type: 'boolean' },
-            data: {
-              type: 'array',
-              items: {
-                type: 'object',
-                properties: {
-                  userId: { type: 'string' },
-                  type: { type: 'string' },
-                  potential: { type: 'number' },
-                  confidence: { type: 'number' },
-                  recommendations: { type: 'array', items: { type: 'string' } },
-                  estimatedRevenue: { type: 'number' },
-                  implementationCost: { type: 'number' },
-                  roi: { type: 'number' }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }, async (request: RevenueRequest, reply: FastifyReply) => {
-    try {
-      const userId = request.user?.userId;
+    const dynamicPricing = await revenueOptimizationService.calculateDynamicPricing(
+      productId,
+      userId,
+      basePrice
+    );
 
-      if (!userId) {
-        return reply.status(401).json({
-          success: false,
-          error: 'Authentication required'
-        });
-      }
+    return res.json({
+      success: true,
+      data: dynamicPricing
+    });
+  } catch (error) {
+    logger.error('Error calculating dynamic pricing:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to calculate dynamic pricing'
+    });
+  }
+});
 
-      const opportunities = await revenueOptimizationService.identifyMonetizationOpportunities(userId);
+// Get monetization opportunities
+router.get('/opportunities', async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const userId = req.user?.userId;
 
-      return reply.json({
-        success: true,
-        data: opportunities
-      });
-    } catch (error) {
-      logger.error('Failed to get monetization opportunities:', error);
-      return reply.status(500).json({
+    if (!userId) {
+      return res.status(401).json({
         success: false,
-        error: 'Failed to get monetization opportunities'
+        error: 'Authentication required'
       });
     }
-  });
 
-  // Generate personalized offers
-  fastify.get('/offers/personalized', {
-    preHandler: [fastify.authenticate],
-    schema: {
-      response: {
-        200: {
-          type: 'object',
-          properties: {
-            success: { type: 'boolean' },
-            data: {
-              type: 'array',
-              items: {
-                type: 'object',
-                properties: {
-                  type: { type: 'string' },
-                  title: { type: 'string' },
-                  description: { type: 'string' },
-                  value: { type: 'number' },
-                  currency: { type: 'string' },
-                  expirationDate: { type: 'string' },
-                  conditions: { type: 'array', items: { type: 'string' } },
-                  expectedConversion: { type: 'number' },
-                  estimatedRevenue: { type: 'number' }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }, async (request: RevenueRequest, reply: FastifyReply) => {
-    try {
-      const userId = request.user?.userId;
+    const opportunities = await revenueOptimizationService.getMonetizationOpportunities(userId);
 
-      if (!userId) {
-        return reply.status(401).json({
-          success: false,
-          error: 'Authentication required'
-        });
-      }
+    return res.json({
+      success: true,
+      data: opportunities
+    });
+  } catch (error) {
+    logger.error('Error getting monetization opportunities:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to get monetization opportunities'
+    });
+  }
+});
 
-      const offers = await revenueOptimizationService.generatePersonalizedOffers(userId);
+// Get personalized offers
+router.get('/offers/personalized', async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const userId = req.user?.userId;
 
-      return reply.json({
-        success: true,
-        data: offers
-      });
-    } catch (error) {
-      logger.error('Failed to generate personalized offers:', error);
-      return reply.status(500).json({
+    if (!userId) {
+      return res.status(401).json({
         success: false,
-        error: 'Failed to generate personalized offers'
+        error: 'Authentication required'
       });
     }
-  });
 
-  // Get revenue analytics
-  fastify.get('/analytics', {
-    preHandler: [fastify.authenticate, fastify.requireAdmin],
-    schema: {
-      querystring: {
-        type: 'object',
-        properties: {
-          timeframe: { type: 'string', enum: ['day', 'week', 'month', 'quarter'], default: 'month' }
-        }
-      }
-    }
-  }, async (request: RevenueRequest, reply: FastifyReply) => {
-    try {
-      const { timeframe = 'month' } = request.query as { timeframe: 'day' | 'week' | 'month' | 'quarter' };
+    const offers = await revenueOptimizationService.getPersonalizedOffers(userId);
 
-      const analytics = await revenueOptimizationService.calculateRevenueAnalytics(timeframe);
+    return res.json({
+      success: true,
+      data: offers
+    });
+  } catch (error) {
+    logger.error('Error getting personalized offers:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to get personalized offers'
+    });
+  }
+});
 
-      return reply.json({
-        success: true,
-        data: analytics
-      });
-    } catch (error) {
-      logger.error('Failed to get revenue analytics:', error);
-      return reply.status(500).json({
-        success: false,
-        error: 'Failed to get revenue analytics'
-      });
-    }
-  });
+// Get revenue analytics (Admin only)
+router.get('/analytics', async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const analytics = await revenueOptimizationService.getRevenueAnalytics();
 
-  // Run A/B test
-  fastify.post('/ab-test', {
-    preHandler: [fastify.authenticate, fastify.requireAdmin],
-    schema: {
-      body: {
-        type: 'object',
-        required: ['testName', 'variants', 'duration'],
-        properties: {
-          testName: { type: 'string' },
-          variants: {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                name: { type: 'string' },
-                parameters: { type: 'object' },
-                traffic: { type: 'number' }
-              }
-            }
-          },
-          duration: { type: 'number' }
-        }
-      }
-    }
-  }, async (request: RevenueRequest, reply: FastifyReply) => {
-    try {
-      const { testName, variants, duration } = request.body as {
-        testName: string;
-        variants: Array<{ name: string; parameters: any; traffic: number }>;
-        duration: number;
-      };
+    return res.json({
+      success: true,
+      data: analytics
+    });
+  } catch (error) {
+    logger.error('Error getting revenue analytics:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to get revenue analytics'
+    });
+  }
+});
 
-      const result = await revenueOptimizationService.runRevenueABTest(testName, variants, duration);
+// Create A/B test (Admin only)
+router.post('/ab-test', async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { testName, variants, metrics, duration } = req.body;
 
-      return reply.json({
-        success: true,
-        data: {
-          testId: result.testId,
-          status: result.status,
-          message: 'A/B test started successfully'
-        }
-      });
-    } catch (error) {
-      logger.error('Failed to run A/B test:', error);
-      return reply.status(500).json({
-        success: false,
-        error: 'Failed to run A/B test'
-      });
-    }
-  });
+    const abTest = await revenueOptimizationService.createABTest({
+      testName,
+      variants,
+      metrics,
+      duration
+    });
 
-  // Implement revenue strategy
-  fastify.post('/strategy/:strategyId/implement', {
-    preHandler: [fastify.authenticate, fastify.requireAdmin],
-    schema: {
-      params: {
-        type: 'object',
-        properties: {
-          strategyId: { type: 'string' }
-        }
-      },
-      body: {
-        type: 'object',
-        required: ['targetUsers'],
-        properties: {
-          targetUsers: { type: 'array', items: { type: 'string' } }
-        }
-      }
-    }
-  }, async (request: RevenueRequest, reply: FastifyReply) => {
-    try {
-      const { strategyId } = request.params as { strategyId: string };
-      const { targetUsers } = request.body as { targetUsers: string[] };
+    return res.json({
+      success: true,
+      data: abTest
+    });
+  } catch (error) {
+    logger.error('Error creating A/B test:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to create A/B test'
+    });
+  }
+});
 
-      const result = await revenueOptimizationService.implementRevenueStrategy(strategyId, targetUsers);
+// Implement revenue strategy (Admin only)
+router.post('/strategy/:strategyId/implement', async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { strategyId } = req.params;
+    const { parameters } = req.body;
 
-      return reply.json({
-        success: result.success,
-        data: {
-          strategy: result.strategy,
-          impact: result.impact
-        }
-      });
-    } catch (error) {
-      logger.error('Failed to implement revenue strategy:', error);
-      return reply.status(500).json({
-        success: false,
-        error: 'Failed to implement revenue strategy'
-      });
-    }
-  });
+    const result = await revenueOptimizationService.implementStrategy(strategyId, parameters);
 
-  // Get pricing tiers
-  fastify.get('/pricing/tiers', {
-    schema: {
-      response: {
-        200: {
-          type: 'object',
-          properties: {
-            success: { type: 'boolean' },
-            data: {
-              type: 'array',
-              items: {
-                type: 'object',
-                properties: {
-                  id: { type: 'string' },
-                  name: { type: 'string' },
-                  price: { type: 'number' },
-                  currency: { type: 'string' },
-                  features: { type: 'array', items: { type: 'string' } },
-                  benefits: { type: 'object' },
-                  targetAudience: { type: 'array', items: { type: 'string' } },
-                  conversionRate: { type: 'number' },
-                  revenue: { type: 'number' }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }, async (request: FastifyRequest, reply: FastifyReply) => {
-    try {
-      // Mock implementation - would get actual pricing tiers
-      const tiers = [
-        {
-          id: 'basic',
-          name: 'Basic Creator',
-          price: 9.99,
-          currency: 'USD',
-          features: ['basic_analytics', 'standard_support'],
-          benefits: {
-            coins: 1000,
-            bonusMultiplier: 1.0,
-            exclusiveAccess: [],
-            prioritySupport: false
-          },
-          targetAudience: ['new_creators'],
-          conversionRate: 0.05,
-          revenue: 0
-        },
-        {
-          id: 'premium',
-          name: 'Premium Creator',
-          price: 29.99,
-          currency: 'USD',
-          features: ['advanced_analytics', 'priority_support', 'custom_branding'],
-          benefits: {
-            coins: 3000,
-            bonusMultiplier: 1.5,
-            exclusiveAccess: ['premium_features'],
-            prioritySupport: true
-          },
-          targetAudience: ['established_creators'],
-          conversionRate: 0.12,
-          revenue: 0
-        }
-      ];
+    return res.json({
+      success: true,
+      data: result
+    });
+  } catch (error) {
+    logger.error('Error implementing strategy:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to implement strategy'
+    });
+  }
+});
 
-      return reply.json({
-        success: true,
-        data: tiers
-      });
-    } catch (error) {
-      logger.error('Failed to get pricing tiers:', error);
-      return reply.status(500).json({
-        success: false,
-        error: 'Failed to get pricing tiers'
-      });
-    }
-  });
+// Get pricing tiers
+router.get('/pricing/tiers', async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const tiers = await revenueOptimizationService.getPricingTiers();
 
-  // Optimize pricing tiers
-  fastify.post('/pricing/optimize', {
-    preHandler: [fastify.authenticate, fastify.requireAdmin],
-    schema: {
-      response: {
-        200: {
-          type: 'object',
-          properties: {
-            success: { type: 'boolean' },
-            data: {
-              type: 'array',
-              items: {
-                type: 'object',
-                properties: {
-                  tier: { type: 'object' },
-                  optimizations: {
-                    type: 'array',
-                    items: {
-                      type: 'object',
-                      properties: {
-                        parameter: { type: 'string' },
-                        currentValue: { type: 'any' },
-                        suggestedValue: { type: 'any' },
-                        expectedImpact: { type: 'number' }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }, async (request: RevenueRequest, reply: FastifyReply) => {
-    try {
-      const optimizations = await revenueOptimizationService.optimizePricingTiers();
+    return res.json({
+      success: true,
+      data: tiers
+    });
+  } catch (error) {
+    logger.error('Error getting pricing tiers:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to get pricing tiers'
+    });
+  }
+});
 
-      return reply.json({
-        success: true,
-        data: optimizations
-      });
-    } catch (error) {
-      logger.error('Failed to optimize pricing tiers:', error);
-      return reply.status(500).json({
-        success: false,
-        error: 'Failed to optimize pricing tiers'
-      });
-    }
-  });
+// Optimize pricing (Admin only)
+router.post('/pricing/optimize', async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { productId, optimizationType, parameters } = req.body;
 
-  // Get revenue strategies
-  fastify.get('/strategies', {
-    preHandler: [fastify.authenticate, fastify.requireAdmin],
-    schema: {
-      response: {
-        200: {
-          type: 'object',
-          properties: {
-            success: { type: 'boolean' },
-            data: {
-              type: 'array',
-              items: {
-                type: 'object',
-                properties: {
-                  id: { type: 'string' },
-                  name: { type: 'string' },
-                  type: { type: 'string' },
-                  target: { type: 'string' },
-                  parameters: { type: 'object' },
-                  expectedROI: { type: 'number' },
-                  isActive: { type: 'boolean' },
-                  startDate: { type: 'string' },
-                  endDate: { type: 'string' }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }, async (request: RevenueRequest, reply: FastifyReply) => {
-    try {
-      // Mock implementation - would get actual strategies
-      const strategies = [
-        {
-          id: 'premium-upsell',
-          name: 'Premium Feature Upsell',
-          type: 'monetization',
-          target: 'creators',
-          parameters: {
-            trigger: 'stream_completion',
-            offer: 'premium_analytics',
-            discount: 0.2
-          },
-          expectedROI: 2.5,
-          isActive: true,
-          startDate: new Date().toISOString(),
-          endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
-        }
-      ];
+    const optimization = await revenueOptimizationService.optimizePricing(
+      productId,
+      optimizationType,
+      parameters
+    );
 
-      return reply.json({
-        success: true,
-        data: strategies
-      });
-    } catch (error) {
-      logger.error('Failed to get revenue strategies:', error);
-      return reply.status(500).json({
-        success: false,
-        error: 'Failed to get revenue strategies'
-      });
-    }
-  });
+    return res.json({
+      success: true,
+      data: optimization
+    });
+  } catch (error) {
+    logger.error('Error optimizing pricing:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to optimize pricing'
+    });
+  }
+});
 
-  // Get A/B test results
-  fastify.get('/ab-test/:testId/results', {
-    preHandler: [fastify.authenticate, fastify.requireAdmin],
-    schema: {
-      params: {
-        type: 'object',
-        properties: {
-          testId: { type: 'string' }
-        }
-      }
-    }
-  }, async (request: RevenueRequest, reply: FastifyReply) => {
-    try {
-      const { testId } = request.params as { testId: string };
+// Get revenue strategies (Admin only)
+router.get('/strategies', async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const strategies = await revenueOptimizationService.getRevenueStrategies();
 
-      // Mock implementation - would get actual A/B test results
-      const results = [
-        {
-          variant: 'control',
-          revenue: 10000,
-          conversionRate: 0.05,
-          users: 1000
-        },
-        {
-          variant: 'variant_a',
-          revenue: 12000,
-          conversionRate: 0.06,
-          users: 1000
-        }
-      ];
+    return res.json({
+      success: true,
+      data: strategies
+    });
+  } catch (error) {
+    logger.error('Error getting revenue strategies:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to get revenue strategies'
+    });
+  }
+});
 
-      return reply.json({
-        success: true,
-        data: {
-          testId,
-          results,
-          status: 'completed',
-          winner: 'variant_a',
-          confidence: 0.95
-        }
-      });
-    } catch (error) {
-      logger.error('Failed to get A/B test results:', error);
-      return reply.status(500).json({
-        success: false,
-        error: 'Failed to get A/B test results'
-      });
-    }
-  });
-}
+// Get A/B test results (Admin only)
+router.get('/ab-test/:testId/results', async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { testId } = req.params;
+
+    const results = await revenueOptimizationService.getABTestResults(testId);
+
+    return res.json({
+      success: true,
+      data: results
+    });
+  } catch (error) {
+    logger.error('Error getting A/B test results:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to get A/B test results'
+    });
+  }
+});
+
+export default router;
