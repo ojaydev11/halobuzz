@@ -1,0 +1,17 @@
+{
+  "version": "7.0.0",
+  "downloadDir": "/opt/mongodb-binaries",
+  "systemBinary": "/usr/bin/mongod",
+  "disablePostinstall": true,
+  "binary": {
+    "skipMD5": true,
+    "checkMD5": false
+  },
+  "runtime": {
+    "port": 0,
+    "ip": "127.0.0.1",
+    "storageEngine": "wiredTiger",
+    "dbName": "halobuzz-test"
+  },
+  "autoStart": false
+}

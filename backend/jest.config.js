@@ -127,5 +127,23 @@ module.exports = {
         module: 'esnext'
       }
     }
-  }
+  },
+
+  // MongoDB Memory Server configuration for Alpine Linux
+  testEnvironmentOptions: {
+    MONGOMS_DOWNLOAD_DIR: '/opt/mongodb-binaries',
+    MONGOMS_VERSION: '7.0.0',
+    MONGOMS_DISABLE_POSTINSTALL: 'true',
+    MONGOMS_SYSTEM_BINARY: '/usr/bin/mongod'
+  },
+
+  // Handle optional dependencies gracefully
+  modulePathIgnorePatterns: [
+    '<rootDir>/node_modules/unix-dgram'
+  ],
+
+  // Ignore native modules that may fail to load
+  transformIgnorePatterns: [
+    'node_modules/(?!(unix-dgram)/)'
+  ]
 };
