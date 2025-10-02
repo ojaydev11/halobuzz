@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Redirect } from 'expo-router';
 import { StyleSheet } from 'react-native';
-import { useAuth } from '@/store/AuthContextOptimized';
+import { useAuth } from '@/store/AuthContext';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 
 export default function Index() {

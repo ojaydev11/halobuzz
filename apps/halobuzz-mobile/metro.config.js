@@ -36,4 +36,28 @@ config.resetCache = true;
 // Fix for require cycle warnings
 config.resolver.unstable_enablePackageExports = true;
 
+// Development server configuration
+config.server = {
+  port: 8081,
+  enhanceMiddleware: (middleware) => {
+    return (req, res, next) => {
+      // Add CORS headers for development
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+      
+      if (req.method === 'OPTIONS') {
+        res.statusCode = 200;
+        res.end();
+        return;
+      }
+      
+      return middleware(req, res, next);
+    };
+  }
+};
+
+// Network configuration for development
+config.resolver.sourceExts = [...config.resolver.sourceExts, 'cjs'];
+
 module.exports = config;

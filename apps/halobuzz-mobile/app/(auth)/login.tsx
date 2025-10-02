@@ -10,7 +10,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useAuth } from '@/store/AuthContextOptimized';
+import { useAuth } from '@/store/AuthContext';
 import { router } from 'expo-router';
 
 export default function LoginScreen() {

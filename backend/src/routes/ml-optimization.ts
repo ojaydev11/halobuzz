@@ -1,5 +1,5 @@
 import { Router, Response } from 'express';
-import { AuthenticatedRequest } from '@/middleware/auth';
+import { AuthenticatedRequest } from '@/middleware/enhancedSecurity';
 import { MachineLearningOptimizationService } from '../services/MachineLearningOptimizationService';
 import { requireAuth, requireAdmin } from '../middleware/enhancedSecurity';
 import { validateInput } from '../middleware/enhancedSecurity';
@@ -7,6 +7,8 @@ import { createRateLimit } from '../middleware/enhancedSecurity';
 import { getMongoDB } from '@/config/database';
 import { getRedisClient } from '@/config/redis';
 import { logger } from '@/config/logger';
+import { User } from '@/models/User';
+import { AnalyticsEvent } from '@/analytics/models/AnalyticsEvent';
 
 const router = Router();
 
@@ -65,8 +67,8 @@ const initializeService = async () => {
     const redis = await getRedisClient();
     
     mlOptimizationService = new MachineLearningOptimizationService(
-      db.collection('analytics_events'),
-      db.collection('users'),
+      AnalyticsEvent.find({}).limit(1000),
+      User.find({}).limit(1000),
       redis,
     );
   }

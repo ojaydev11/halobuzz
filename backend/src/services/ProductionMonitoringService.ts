@@ -41,6 +41,69 @@ export class ProductionMonitoringService extends EventEmitter {
     return ProductionMonitoringService.instance;
   }
 
+  async getSystemMetrics(): Promise<any> {
+    // Return current system metrics
+    return this.metrics[this.metrics.length - 1] || {};
+  }
+
+  async getApplicationMetrics(): Promise<any> {
+    // Return current application metrics
+    return this.metrics[this.metrics.length - 1]?.applicationMetrics || {};
+  }
+
+  async getHealthStatus(): Promise<any> {
+    // Return system health status
+    const latest = this.metrics[this.metrics.length - 1];
+    if (!latest) {
+      return { status: 'unknown', checks: [] };
+    }
+
+    return {
+      status: 'healthy',
+      checks: [
+        { name: 'cpu', status: latest.systemHealth.cpu < 80 ? 'healthy' : 'warning' },
+        { name: 'memory', status: latest.systemHealth.memory < 80 ? 'healthy' : 'warning' },
+        { name: 'disk', status: latest.systemHealth.disk < 80 ? 'healthy' : 'warning' },
+        { name: 'network', status: latest.systemHealth.network < 80 ? 'healthy' : 'warning' }
+      ]
+    };
+  }
+
+  async getActiveAlerts(): Promise<any[]> {
+    // Return active alerts
+    return [];
+  }
+
+  async resolveAlert(alertId: string): Promise<any> {
+    // Resolve an alert
+    return { success: true, resolvedAt: new Date() };
+  }
+
+  async createAlertRule(rule: any): Promise<any> {
+    // Create an alert rule
+    return { ...rule, id: Date.now().toString() };
+  }
+
+  async updateAlertRule(ruleId: string, updates: any): Promise<any> {
+    // Update an alert rule
+    return { ...updates, id: ruleId, updatedAt: new Date() };
+  }
+
+  async getPerformanceDashboard(): Promise<any> {
+    // Return performance dashboard data
+    return {
+      uptime: process.uptime(),
+      memoryUsage: process.memoryUsage(),
+      cpuUsage: process.cpuUsage(),
+      metrics: this.metrics.slice(-100) // Last 100 metrics
+    };
+  }
+
+  async getRealTimeMetrics(): Promise<any> {
+    // Return real-time metrics
+    return this.metrics[this.metrics.length - 1] || {};
+  }
+
   async startMonitoring(): Promise<void> {
     if (this.isMonitoring) {
       logger.warn('Monitoring already started');

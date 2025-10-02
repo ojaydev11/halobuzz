@@ -81,7 +81,9 @@ import {
   createRateLimit,
   requireAdmin,
   requireSuperAdmin,
-  requireMFA
+  requireMFA,
+  csrfProtection,
+  generateCsrfToken
 } from '@/middleware/enhancedSecurity';
 
 // Import routes
@@ -116,12 +118,12 @@ import notificationRoutes from '@/routes/notifications';
 import viralGrowthRoutes from '@/routes/viral-growth';
 import trustCredibilityRoutes from '@/routes/trust-credibility';
 import revenueOptimizationRoutes from '@/routes/revenue-optimization';
-// Temporarily disabled AI/ML services for deployment
-// import aiRecommendationRoutes from '@/routes/ai-recommendations';
-// import advancedAnalyticsRoutes from '@/routes/advanced-analytics';
-// import mlOptimizationRoutes from '@/routes/ml-optimization';
-// import realTimePersonalizationRoutes from '@/routes/real-time-personalization';
-// import advancedFraudDetectionRoutes from '@/routes/advanced-fraud-detection';
+// AI/ML services - enabled for production
+import aiRecommendationRoutes from '@/routes/ai-recommendations';
+import advancedAnalyticsRoutes from '@/routes/advanced-analytics';
+import mlOptimizationRoutes from '@/routes/ml-optimization';
+import realTimePersonalizationRoutes from '@/routes/real-time-personalization';
+import advancedFraudDetectionRoutes from '@/routes/advanced-fraud-detection';
 import agoraRoutes from '@/routes/agora';
 import aiContentStudioRoutes from '@/routes/aiContentStudio';
 
@@ -259,8 +261,8 @@ app.use(rateLimitMonitoringMiddleware);
 app.use(suspiciousPatternDetectionMiddleware);
 app.use(fileUploadMonitoringMiddleware);
 
-// Body parsing middleware with stricter limits
-app.use(express.json({ 
+// Body parsing middleware with stricter limits and file upload protection
+app.use(express.json({
   limit: '512kb',
   verify: (req, res, buf) => {
     // Store raw body for webhook signature verification
@@ -270,6 +272,13 @@ app.use(express.json({
   }
 }));
 app.use(express.urlencoded({ extended: true, limit: '512kb' }));
+
+// File upload rate limiting (separate from general API limits)
+const fileUploadLimiter = createRateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10, // 10 file uploads per 15 minutes
+  message: 'File upload rate limit exceeded. Please wait before uploading more files.'
+});
 
 // Compression middleware
 app.use(compression());
@@ -328,13 +337,13 @@ app.use(async (req, res, next) => {
 // API routes with enhanced security
 logger.info(`Mounting auth routes at /api/${apiVersion}/auth`);
 app.use(`/api/${apiVersion}/auth`, authLimiter, loginSlowDown, authRoutes);
-app.use(`/api/${apiVersion}/users`, usersRoutes);
-app.use(`/api/${apiVersion}/wallet`, authMiddleware, paymentLimiter, walletRoutes);
-app.use(`/api/${apiVersion}/streams`, authMiddleware, socialLimiter, streamsRoutes);
+app.use(`/api/${apiVersion}/users`, authMiddleware, csrfProtection, usersRoutes);
+app.use(`/api/${apiVersion}/wallet`, authMiddleware, paymentLimiter, csrfProtection, walletRoutes);
+app.use(`/api/${apiVersion}/streams`, authMiddleware, socialLimiter, csrfProtection, streamsRoutes);
 app.use(`/api/${apiVersion}/streams`, streamsEnhancedRoutes); // Enhanced streams with better functionality
-app.use(`/api/${apiVersion}/gifts`, authMiddleware, socialLimiter, giftsRoutes);
+app.use(`/api/${apiVersion}/gifts`, authMiddleware, socialLimiter, csrfProtection, giftsRoutes);
 app.use(`/api/${apiVersion}/gifts`, giftsEnhancedRoutes); // Enhanced gifts system
-app.use(`/api/${apiVersion}/throne`, authMiddleware, socialLimiter, throneRoutes);
+app.use(`/api/${apiVersion}/throne`, authMiddleware, socialLimiter, csrfProtection, throneRoutes);
 app.use(`/api/${apiVersion}/og`, authMiddleware, ogRoutes);
 app.use(`/api/${apiVersion}/chat`, authMiddleware, socialLimiter, chatRoutes);
 app.use(`/api/${apiVersion}/reels`, authMiddleware, reelsRoutes);
@@ -350,8 +359,8 @@ app.use(`/api/${apiVersion}/social`, socialRoutes); // Social features - friends
 app.use(`/api/${apiVersion}/monetization`, monetizationRoutes); // Monetization - IAP, battle pass, rewards
 app.use(`/api/${apiVersion}/config`, authMiddleware, configRoutes);
 app.use(`/api/${apiVersion}/kyc`, authMiddleware, kycRoutes);
-import { adminOnly } from '@/middleware/admin';
-app.use(`/api/${apiVersion}/admin`, authMiddleware, adminOnly, adminRoutes);
+import { requireAdmin } from '@/middleware/enhancedSecurity';
+app.use(`/api/${apiVersion}/admin`, authMiddleware, requireAdmin, adminRoutes);
 app.use(`/api/${apiVersion}/monitoring`, monitoringRoutes);
 app.use(`/api/${apiVersion}/security`, securityRoutes);
 app.use(`/api/${apiVersion}/mfa`, mfaRoutes);
@@ -359,12 +368,12 @@ app.use(`/api/${apiVersion}/notifications`, authMiddleware, notificationRoutes);
 app.use(`/api/${apiVersion}/viral`, authMiddleware, viralGrowthRoutes);
 app.use(`/api/${apiVersion}/trust`, authMiddleware, trustCredibilityRoutes);
 app.use(`/api/${apiVersion}/revenue`, authMiddleware, revenueOptimizationRoutes);
-// Temporarily disabled AI/ML services for deployment
-// app.use(`/api/${apiVersion}/ai-recommendations`, authMiddleware, aiRecommendationRoutes);
-// app.use(`/api/${apiVersion}/advanced-analytics`, authMiddleware, advancedAnalyticsRoutes);
-// app.use(`/api/${apiVersion}/ml-optimization`, authMiddleware, mlOptimizationRoutes);
-// app.use(`/api/${apiVersion}/personalization`, authMiddleware, realTimePersonalizationRoutes);
-// app.use(`/api/${apiVersion}/fraud-detection`, authMiddleware, advancedFraudDetectionRoutes);
+// AI/ML services routes - enabled for production
+app.use(`/api/${apiVersion}/ai-recommendations`, authMiddleware, aiRecommendationRoutes);
+app.use(`/api/${apiVersion}/advanced-analytics`, authMiddleware, advancedAnalyticsRoutes);
+app.use(`/api/${apiVersion}/ml-optimization`, authMiddleware, mlOptimizationRoutes);
+app.use(`/api/${apiVersion}/personalization`, authMiddleware, realTimePersonalizationRoutes);
+app.use(`/api/${apiVersion}/fraud-detection`, authMiddleware, advancedFraudDetectionRoutes);
 app.use(`/api/${apiVersion}/agora`, authMiddleware, agoraRoutes);
 
 // New creator economy routes

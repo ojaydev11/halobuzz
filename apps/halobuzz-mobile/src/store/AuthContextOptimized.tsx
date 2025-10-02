@@ -182,7 +182,7 @@ export const useAuthDispatch = () => {
 };
 
 // Performance: Memoized combined hook for backward compatibility
-export const useAuth = React.memo(() => {
+const useAuthHook = React.memo(() => {
   const state = useAuthState();
   const dispatch = useAuthDispatch();
 
@@ -201,5 +201,7 @@ export const useAuth = React.memo(() => {
 
   return { ...state, ...actions };
 });
+
+export const useAuth = useAuthHook;
 
 AuthProvider.displayName = 'AuthProvider';

@@ -9,18 +9,22 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ApiResponse, AuthResponse, LoginRequest, RegisterRequest, User } from '@/types/auth';
 import { StreamsResponse, CreateStreamRequest, Stream } from '@/types/stream';
 import { toast } from './toast';
-// Removed mock authentication for production
+import { getConfig } from '@/config/development';
 
-// Get API configuration from environment - PRODUCTION MODE
-const API_BASE = process.env.EXPO_PUBLIC_API_BASE_URL ?? "https://halo-api-production.up.railway.app";
-const rawPrefix = process.env.EXPO_PUBLIC_API_PREFIX ?? "/api/v1";
-const API_PREFIX = rawPrefix && rawPrefix.trim().length > 0 ? rawPrefix : "/api/v1";
-// PRODUCTION MODE - Real backend integration
-const USE_MOCK_AUTH = false;
+// Get configuration based on environment
+const config = getConfig();
 
-// Ensure API base URL is HTTPS for production
-if (!API_BASE.startsWith('https://')) {
-  throw new Error('API base URL must use HTTPS for security');
+// Get API configuration from environment - DEVELOPMENT MODE SUPPORT
+const API_BASE = process.env.EXPO_PUBLIC_API_BASE_URL ?? config.API_BASE_URL;
+const rawPrefix = process.env.EXPO_PUBLIC_API_PREFIX ?? config.API_PREFIX;
+const API_PREFIX = rawPrefix && rawPrefix.trim().length > 0 ? rawPrefix : config.API_PREFIX;
+// DEVELOPMENT MODE - Use local server when available
+const USE_MOCK_AUTH = config.USE_MOCK_DATA;
+
+// Ensure API base URL is HTTPS for production, HTTP for development
+const isDevelopment = __DEV__ || config.DEV_MODE;
+if (!isDevelopment && !API_BASE.startsWith('https://')) {
+  throw new Error('API base URL must use HTTPS for production security');
 }
 
 interface ApiError {
@@ -52,7 +56,7 @@ class ApiClient {
         'Content-Type': 'application/json',
         'User-Agent': 'HaloBuzz-Mobile/1.0.0',
       },
-      timeout: 15000,
+      timeout: config.NETWORK_TIMEOUT,
       validateStatus: (status) => status < 500,
     });
 
@@ -74,9 +78,11 @@ class ApiClient {
           config.headers['X-Request-ID'] = this.generateRequestId();
           
           // Log full URL in development
-          if (__DEV__) {
+          if (config.DEBUG_NETWORK) {
             const fullUrl = `${config.baseURL}${config.url}`;
             console.log(`🌐 API Request: ${config.method?.toUpperCase()} ${fullUrl}`);
+            console.log(`📡 Development Mode: ${isDevelopment ? 'ON' : 'OFF'}`);
+            console.log(`🔗 API Base: ${API_BASE}`);
           }
           
           return config;
@@ -94,7 +100,7 @@ class ApiClient {
     // Response interceptor
     this.client.interceptors.response.use(
       (response) => {
-        if (__DEV__) {
+        if (config.DEBUG_NETWORK) {
           console.log(`✅ API Response: ${response.status} ${response.config.url}`);
         }
         return response;
@@ -132,10 +138,22 @@ class ApiClient {
         
         // Show user-friendly error messages
         if (error.response?.status === 404) {
-          toast.showApiError({
-            status: 404,
-            message: 'Server route not found — check API base/prefix in .env'
-          });
+          if (config.DEBUG_NETWORK) {
+            console.warn('🔍 404 Error - Server route not found. Check if backend is running and API routes are correct.');
+            console.warn(`🔗 Trying to reach: ${API_BASE}${API_PREFIX}`);
+            console.warn(`📱 Development Mode: ${isDevelopment ? 'ON' : 'OFF'}`);
+          }
+        } else if (error.code === 'ECONNREFUSED' || error.code === 'NETWORK_ERROR') {
+          if (config.DEBUG_NETWORK) {
+            console.warn('🌐 Network Error - Backend server may not be running. Using offline mode.');
+            console.warn(`🔗 Server: ${API_BASE}${API_PREFIX}`);
+            console.warn('💡 Tip: Start your backend server or use offline mode');
+          }
+        } else if (error.code === 'TIMEOUT') {
+          if (config.DEBUG_NETWORK) {
+            console.warn('⏱️ Request Timeout - Server is taking too long to respond.');
+            console.warn(`⏰ Timeout: ${config.NETWORK_TIMEOUT}ms`);
+          }
         }
         
         return Promise.reject(this.formatError(error));

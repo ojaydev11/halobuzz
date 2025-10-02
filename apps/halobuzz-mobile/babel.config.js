@@ -1,19 +1,19 @@
 module.exports = function (api) {
   api.cache(true);
   return {
-    presets: [
-      ['babel-preset-expo', {
-        // Performance: Enable inline requires for faster startup
-        native: {
-          inlineRequires: true,
-        },
-        // Enable React compiler optimizations
-        unstable_transformProfile: 'default',
-      }]
-    ],
+    presets: ['babel-preset-expo'],
     plugins: [
-      // Performance: Transform imports for better tree-shaking
-      ['transform-inline-environment-variables'],
+      // Tree shaking optimizations
+      ['babel-plugin-transform-imports', {
+        'lodash': {
+          'transform': 'lodash/${member}',
+          'preventFullImport': true
+        },
+        '@expo/vector-icons': {
+          'transform': '@expo/vector-icons/${member}',
+          'preventFullImport': true
+        }
+      }],
       [
         'module-resolver',
         {
@@ -25,20 +25,12 @@ module.exports = function (api) {
             '@/types': './src/types',
             '@/hooks': './src/hooks',
             '@/store': './src/store',
+            '@/services': './src/services',
+            '@/screens': './src/screens',
           },
         },
       ],
-      // Performance: Remove console.log in production
-      ['transform-remove-console', { exclude: ['error', 'warn'] }],
+      'react-native-reanimated/plugin',
     ],
-    env: {
-      production: {
-        plugins: [
-          // Additional production optimizations
-          ['transform-remove-console'],
-          ['transform-react-remove-prop-types'],
-        ],
-      },
-    },
   };
 };

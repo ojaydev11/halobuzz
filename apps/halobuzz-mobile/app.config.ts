@@ -48,8 +48,10 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   scheme: "halobuzz",
   extra: {
-    apiBaseUrl: "https://halo-api-production.up.railway.app",
+    // Production backend on Northflank with MongoDB Atlas
+    apiBaseUrl: process.env.EXPO_PUBLIC_API_BASE_URL || "https://halo-api-production.up.railway.app",
     apiPrefix: "/api/v1",
+    wsUrl: process.env.EXPO_PUBLIC_WS_URL || "wss://halo-api-production.up.railway.app",
     eas: {
       projectId: "halobuzz-mobile-project"
     }

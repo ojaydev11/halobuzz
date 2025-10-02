@@ -288,4 +288,42 @@ router.get('/engagement-analysis', authMiddleware, async (req, res) => {
   }
 });
 
+/**
+ * @route PUT /ai/features/voice-cloning
+ * @desc Update voice cloning settings
+ */
+router.put('/features/voice-cloning', authMiddleware, async (req, res) => {
+  try {
+    const { enabled, voiceId, settings } = req.body;
+    const userId = req.user?.id;
+
+    // Update user's voice cloning preferences
+    await User.findByIdAndUpdate(userId, {
+      $set: {
+        'aiFeatures.voiceCloning': {
+          enabled: enabled || false,
+          voiceId: voiceId || null,
+          settings: settings || {}
+        }
+      }
+    });
+
+    res.json({
+      success: true,
+      message: 'Voice cloning settings updated successfully',
+      data: {
+        enabled: enabled || false,
+        voiceId: voiceId || null,
+        settings: settings || {}
+      }
+    });
+  } catch (error) {
+    console.error('Error updating voice cloning settings:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update voice cloning settings'
+    });
+  }
+});
+
 export default router;

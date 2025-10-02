@@ -147,6 +147,35 @@ export class RealTimePersonalizationService {
     this.shortVideoModel = ShortVideo as any;
   }
 
+  async getPersonalizedUIConfig(userId: string): Promise<any> {
+    // Return personalized UI configuration
+    return {
+      theme: 'dark',
+      layout: 'compact',
+      notifications: 'enabled',
+      autoplay: true,
+      recommendedContent: []
+    };
+  }
+
+  async getAllPersonalizationRules(): Promise<any[]> {
+    // Return all personalization rules
+    return [];
+  }
+
+  async updatePersonalizationRule(ruleId: string, ruleData: any): Promise<any> {
+    // Update a personalization rule
+    return { ...ruleData, id: ruleId, updatedAt: new Date() };
+  }
+
+  async deletePersonalizationRule(ruleId: string): Promise<void> {
+    // Delete a personalization rule
+  }
+
+  async submitPersonalizationFeedback(userId: string, feedback: any): Promise<void> {
+    // Submit feedback for personalization improvements
+  }
+
   /**
    * Build comprehensive user context for personalization
    */

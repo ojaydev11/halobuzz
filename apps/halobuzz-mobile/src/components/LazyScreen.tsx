@@ -1,118 +1,122 @@
-import React, { Suspense } from 'react';
-import { View, StyleSheet } from 'react-native';
-import { LoadingSpinner } from './LoadingSpinner';
+import React, { Suspense, lazy, ComponentType } from 'react';
+import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { PerformanceMonitor } from '@/utils/performanceMonitor';
 
-interface LazyScreenProps {
-  componentName: string;
-  children: React.ComponentType<any>;
-  fallback?: React.ComponentType;
-  preloadDelay?: number;
-}
+// Loading fallback component
+const ScreenLoadingFallback: React.FC<{ screenName?: string }> = ({ screenName }) => (
+  <View style={styles.loadingContainer}>
+    <ActivityIndicator size="large" color="#007AFF" />
+  </View>
+);
 
-// HOC for lazy screen loading with preload capability
-export const createLazyScreen = (
-  importFn: () => Promise<{ default: React.ComponentType<any> }>,
-  componentName: string,
-  preloadDelay: number = 0
-) => {
-  // Create lazy component
-  const LazyComponent = React.lazy(() => {
-    PerformanceMonitor.markStart(`screen_load_${componentName}`);
-    return importFn().then(module => {
-      PerformanceMonitor.markEnd(`screen_load_${componentName}`);
-      return module;
-    });
-  });
+// Lazy loading wrapper with performance tracking
+export const createLazyScreen = <P extends object>(
+  importFn: () => Promise<{ default: ComponentType<P> }>,
+  screenName: string
+): ComponentType<P> => {
+  const LazyComponent = lazy(importFn);
 
-  // Preload function for prefetching
-  let preloadPromise: Promise<any> | null = null;
-  const preload = () => {
-    if (!preloadPromise) {
-      preloadPromise = importFn();
-    }
-    return preloadPromise;
-  };
+  const WrappedComponent: ComponentType<P> = React.memo((props: P) => {
+    React.useEffect(() => {
+      PerformanceMonitor.markStart(`screen_load_${screenName}`);
+      
+      return () => {
+        PerformanceMonitor.markEnd(`screen_load_${screenName}`);
+      };
+    }, []);
 
-  // Auto-preload with delay if specified
-  if (preloadDelay > 0) {
-    setTimeout(() => {
-      preload();
-    }, preloadDelay);
-  }
-
-  // Screen wrapper component
-  const ScreenWrapper: React.FC<any> = (props) => {
     return (
-      <Suspense fallback={<LazyScreenFallback screenName={componentName} />}>
+      <Suspense fallback={<ScreenLoadingFallback screenName={screenName} />}>
         <LazyComponent {...props} />
       </Suspense>
     );
-  };
+  });
 
-  ScreenWrapper.displayName = `LazyScreen(${componentName})`;
-  ScreenWrapper.preload = preload;
-
-  return ScreenWrapper;
+  WrappedComponent.displayName = `LazyScreen(${screenName})`;
+  return WrappedComponent;
 };
-
-// Optimized fallback component with shimmer
-const LazyScreenFallback: React.FC<{ screenName: string }> = React.memo(({ screenName }) => {
-  React.useEffect(() => {
-    PerformanceMonitor.markStart(`screen_transition_${screenName}`);
-    return () => {
-      PerformanceMonitor.markEnd(`screen_transition_${screenName}`);
-    };
-  }, [screenName]);
-
-  return (
-    <View style={styles.fallbackContainer}>
-      <LoadingSpinner useShimmer />
-    </View>
-  );
-});
 
 // Screen preloader utility
 export class ScreenPreloader {
   private static preloadedScreens = new Set<string>();
+  private static preloadPromises = new Map<string, Promise<any>>();
 
-  static preloadScreen(screenName: string, importFn: () => Promise<any>) {
+  // Preload a specific screen
+  static async preloadScreen(screenName: string, importFn: () => Promise<any>): Promise<void> {
     if (this.preloadedScreens.has(screenName)) {
       return;
     }
 
-    this.preloadedScreens.add(screenName);
+    if (this.preloadPromises.has(screenName)) {
+      return this.preloadPromises.get(screenName);
+    }
 
-    // Use requestIdleCallback for non-blocking preload
-    if ('requestIdleCallback' in global) {
-      (global as any).requestIdleCallback(() => {
-        importFn().catch(() => {
-          // Remove from cache on failure so it can be retried
-          this.preloadedScreens.delete(screenName);
-        });
+    const promise = importFn()
+      .then(() => {
+        this.preloadedScreens.add(screenName);
+        PerformanceMonitor.markEnd(`preload_${screenName}`);
+      })
+      .catch((error) => {
+        console.warn(`Failed to preload screen ${screenName}:`, error);
+        this.preloadPromises.delete(screenName);
       });
-    } else {
+
+    this.preloadPromises.set(screenName, promise);
+    PerformanceMonitor.markStart(`preload_${screenName}`);
+    
+    return promise;
+  }
+
+  // Preload critical screens that are likely to be accessed
+  static async preloadCriticalScreens(): Promise<void> {
+    const criticalScreens = [
+      { name: 'ProfileScreen', importFn: () => import('@/screens/ProfileScreen') },
+      { name: 'GamesScreen', importFn: () => import('@/screens/GamesScreen') },
+      { name: 'LiveScreen', importFn: () => import('@/screens/LiveScreen') },
+      { name: 'SearchScreen', importFn: () => import('@/components/SearchScreen') },
+    ];
+
+    // Preload screens with staggered timing to avoid blocking
+    for (let i = 0; i < criticalScreens.length; i++) {
+      const { name, importFn } = criticalScreens[i];
       setTimeout(() => {
-        importFn().catch(() => {
-          this.preloadedScreens.delete(screenName);
-        });
-      }, 100);
+        this.preloadScreen(name, importFn);
+      }, i * 200); // 200ms stagger
     }
   }
 
-  static preloadCriticalScreens() {
-    // Preload screens likely to be visited first
-    this.preloadScreen('profile', () => import('@/screens/ProfileScreen'));
-    this.preloadScreen('search', () => import('@/screens/SearchScreen'));
-    this.preloadScreen('games', () => import('@/screens/GamesScreen'));
+  // Check if a screen is already preloaded
+  static isPreloaded(screenName: string): boolean {
+    return this.preloadedScreens.has(screenName);
+  }
+
+  // Clear preload cache (useful for memory management)
+  static clearCache(): void {
+    this.preloadedScreens.clear();
+    this.preloadPromises.clear();
   }
 }
 
+// Higher-order component for lazy screen loading
+export const withLazyLoading = <P extends object>(
+  Component: ComponentType<P>,
+  screenName: string
+): ComponentType<P> => {
+  return createLazyScreen(() => Promise.resolve({ default: Component }), screenName);
+};
+
+// Hook for screen preloading
+export const useScreenPreload = (screenName: string, importFn: () => Promise<any>) => {
+  React.useEffect(() => {
+    ScreenPreloader.preloadScreen(screenName, importFn);
+  }, [screenName, importFn]);
+};
+
 const styles = StyleSheet.create({
-  fallbackContainer: {
+  loadingContainer: {
     flex: 1,
-    backgroundColor: '#0B0B10',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#000',
   },
 });
-
-LazyScreenFallback.displayName = 'LazyScreenFallback';

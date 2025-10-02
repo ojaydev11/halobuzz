@@ -134,15 +134,15 @@ export default function ProfileScreen() {
     );
   };
 
-  const renderStatItem = (label: string, value: string | number, icon: string) => (
+  const renderStatItem = React.useCallback((label: string, value: string | number, icon: string) => (
     <View style={styles.statItem}>
       <Ionicons name={icon as any} size={20} color="#007AFF" />
       <Text style={styles.statValue}>{value.toLocaleString()}</Text>
       <Text style={styles.statLabel}>{label}</Text>
     </View>
-  );
+  ), []);
 
-  const renderAchievement = (achievement: Achievement) => (
+  const renderAchievement = React.useCallback((achievement: Achievement) => (
     <View key={achievement.id} style={styles.achievementItem}>
       <View style={styles.achievementIcon}>
         <Ionicons
@@ -174,9 +174,9 @@ export default function ProfileScreen() {
         <Ionicons name="checkmark-circle" size={20} color="#007AFF" />
       )}
     </View>
-  );
+  ), []);
 
-  const renderSettingsItem = (
+  const renderSettingsItem = React.useCallback((
     title: string,
     subtitle: string,
     icon: string,
@@ -196,7 +196,7 @@ export default function ProfileScreen() {
       </View>
       {rightElement || <Ionicons name="chevron-forward" size={20} color="#888" />}
     </TouchableOpacity>
-  );
+  ), []);
 
   return (
     <SafeAreaView style={styles.container}>

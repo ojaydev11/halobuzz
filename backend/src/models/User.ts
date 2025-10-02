@@ -167,7 +167,23 @@ const userSchema = new Schema<IUser>({
     unique: true,
     sparse: true,
     trim: true,
-    match: /^\+?[1-9]\d{1,14}$/
+    validate: {
+      validator: function(phone: string) {
+        // More restrictive phone validation
+        const phoneRegex = /^\+?[1-9]\d{1,14}$/;
+        if (!phoneRegex.test(phone)) return false;
+
+        // Additional validation for common formats
+        const cleanPhone = phone.replace(/^\+/, '');
+        if (cleanPhone.length < 10 || cleanPhone.length > 15) return false;
+
+        // Check for valid country codes (simplified)
+        const validCountryCodes = ['1', '7', '20', '27', '30', '31', '32', '33', '34', '36', '39', '40', '41', '43', '44', '45', '46', '47', '48', '49', '51', '52', '53', '54', '55', '56', '57', '58', '60', '61', '62', '63', '64', '65', '66', '81', '82', '84', '86', '90', '91', '92', '93', '94', '95', '98'];
+        const countryCode = cleanPhone.substring(0, 2);
+        return validCountryCodes.includes(countryCode) || cleanPhone.length <= 10;
+      },
+      message: 'Invalid phone number format'
+    }
   },
   password: {
     type: String,
@@ -493,21 +509,36 @@ userSchema.statics.findTopCreators = function(limit: number = 10) {
 
 // Critical indexes for performance and security
 // Authentication performance - HIGH PRIORITY
-userSchema.index({ email: 1, status: 1, isBanned: 1 });
-userSchema.index({ username: 1, status: 1, isBanned: 1 });
-userSchema.index({ phoneNumber: 1 }, { sparse: true });
+userSchema.index({ email: 1, isActive: 1, isBanned: 1 });
+userSchema.index({ username: 1, isActive: 1, isBanned: 1 });
+userSchema.index({ phone: 1, isActive: 1, isBanned: 1 }, { sparse: true });
 
 // Session management and analytics
-userSchema.index({ lastLoginAt: 1 });
-userSchema.index({ isBanned: 1, bannedUntil: 1 }, { sparse: true });
+userSchema.index({ lastActiveAt: -1 });
+userSchema.index({ lastLoginIP: 1, lastActiveAt: -1 });
 
 // Geographic user analytics
-userSchema.index({ 'location.country': 1, status: 1 });
+userSchema.index({ country: 1, isActive: 1 });
 
 // OG tier queries
+userSchema.index({ ogLevel: -1, followers: -1 });
 userSchema.index({ ogLevel: 1, ogExpiresAt: 1 });
 
 // KYC and verification
 userSchema.index({ kycStatus: 1, ageVerified: 1 });
+
+// Trust and karma queries
+userSchema.index({ 'trust.score': -1 });
+userSchema.index({ 'karma.total': -1 });
+
+// Gaming and social queries
+userSchema.index({ followers: -1, totalViews: -1 });
+userSchema.index({ totalLikes: -1 });
+
+// Device tracking for security
+userSchema.index({ deviceTokens: 1 }, { sparse: true });
+
+// Search performance
+userSchema.index({ username: 'text', displayName: 'text' });
 
 export const User = mongoose.model<IUser>('User', userSchema);

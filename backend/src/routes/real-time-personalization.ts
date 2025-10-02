@@ -1,5 +1,5 @@
 import { Router, Response } from 'express';
-import { AuthenticatedRequest } from '@/middleware/auth';
+import { AuthenticatedRequest } from '@/middleware/enhancedSecurity';
 import { RealTimePersonalizationService } from '../services/RealTimePersonalizationService';
 import { requireAuth, requireAdmin } from '../middleware/enhancedSecurity';
 import { validateInput } from '../middleware/enhancedSecurity';
@@ -7,6 +7,10 @@ import { createRateLimit } from '../middleware/enhancedSecurity';
 import { getMongoDB } from '@/config/database';
 import { getRedisClient } from '@/config/redis';
 import { logger } from '@/config/logger';
+import { LiveStream } from '@/models/LiveStream';
+import { ShortVideo } from '@/models/ShortVideo';
+import { AnalyticsEvent } from '@/analytics/models/AnalyticsEvent';
+import { User } from '@/models/User';
 
 const router = Router();
 
@@ -55,10 +59,10 @@ const initializeService = async () => {
     const redis = await getRedisClient();
     
     realTimePersonalizationService = new RealTimePersonalizationService(
-      db.collection('analytics_events'),
-      db.collection('users'),
-      db.collection('livestreams'),
-      db.collection('shortvideos'),
+      AnalyticsEvent.find({}).limit(1000) as any,
+      User.find({}).limit(1000) as any,
+      LiveStream.find({}).limit(1000) as any,
+      ShortVideo.find({}).limit(1000) as any,
       redis,
     );
   }
@@ -88,7 +92,7 @@ router.get('/personalization/content-feed',
   validateInput,
   async (req: AuthenticatedRequest, res: Response) => {
     try {
-      const { sessionId, currentPage, limit = 20 } = req.query as unknown as ContentFeedRequest;
+      const { sessionId, currentPage, limit = 20 } = req.query as unknown as any;
       const userId = req.user?.userId;
 
       if (!userId) {
@@ -129,7 +133,7 @@ router.get('/personalization/ui-config',
   validateInput,
   async (req: AuthenticatedRequest, res: Response) => {
     try {
-      const { sessionId, currentPage } = req.query as unknown as UIPersonalizationRequest;
+      const { sessionId, currentPage } = req.query as unknown as any;
       const userId = req.user?.userId;
 
       if (!userId) {
@@ -140,11 +144,7 @@ router.get('/personalization/ui-config',
       }
 
       const service = await initializeService();
-      const uiConfig = await service.getPersonalizedUIConfig(
-        userId,
-        sessionId,
-        currentPage
-      );
+      const uiConfig = await service.getPersonalizedUIConfig(userId);
 
       return res.json({
         success: true,
@@ -397,13 +397,10 @@ router.post('/personalization/feedback',
       }
 
       const service = await initializeService();
-      await service.submitPersonalizationFeedback({
+      await service.submitPersonalizationFeedback(
         userId,
-          contentId,
-        contentType,
-          feedback,
-        rating
-      });
+        { contentId, contentType, feedback, rating }
+      );
 
       return res.json({
         success: true,

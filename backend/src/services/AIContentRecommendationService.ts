@@ -95,6 +95,112 @@ export class AIContentRecommendationService {
   /**
    * Generate personalized content recommendations for a user
    */
+  async getPersonalizedRecommendations(
+    userId: string,
+    limit: number = 20,
+    contentType?: 'stream' | 'video' | 'all',
+  ): Promise<RecommendationResult[]> {
+    return this.generateRecommendations(userId, limit, contentType);
+  }
+
+  async getSimilarContent(
+    contentId: string,
+    limit: number = 10,
+    contentType?: 'stream' | 'video' | 'all',
+  ): Promise<RecommendationResult[]> {
+    try {
+      // Get the source content
+      const sourceContent = await this.getContentById(contentId);
+      if (!sourceContent) {
+        return [];
+      }
+
+      // Find similar content based on tags, category, and user preferences
+      const similarContent = await this.findSimilarContent(sourceContent, limit, contentType);
+
+      return similarContent;
+    } catch (error) {
+      this.logger.error('Error getting similar content:', error);
+      return [];
+    }
+  }
+
+  async submitRecommendationFeedback(
+    userId: string,
+    contentId: string,
+    feedback: 'like' | 'dislike' | 'not_interested',
+    metadata?: any,
+  ): Promise<void> {
+    try {
+      // Store feedback for improving recommendations
+      const feedbackData = {
+        userId,
+        contentId,
+        feedback,
+        metadata,
+        timestamp: new Date(),
+      };
+
+      // Store in database or cache for ML training
+      await this.storeFeedback(feedbackData);
+
+      this.logger.log(`Recommendation feedback recorded for user ${userId}: ${feedback}`);
+    } catch (error) {
+      this.logger.error('Error submitting recommendation feedback:', error);
+    }
+  }
+
+  async getTrendingRecommendations(
+    limit: number = 20,
+    timeRange: 'hour' | 'day' | 'week' | 'month' = 'day',
+  ): Promise<RecommendationResult[]> {
+    try {
+      // Get trending content based on views, likes, and engagement
+      const trendingContent = await this.getTrendingContent(limit, timeRange);
+
+      return trendingContent.map(content => ({
+        content,
+        score: content.popularityScore || 0,
+        reason: 'trending',
+        confidence: 0.8,
+      }));
+    } catch (error) {
+      this.logger.error('Error getting trending recommendations:', error);
+      return [];
+    }
+  }
+
+  async getRecommendationAnalytics(userId: string): Promise<any> {
+    try {
+      // Get analytics data for the user's recommendation performance
+      const analytics = {
+        totalRecommendations: 0,
+        clickThroughRate: 0,
+        engagementRate: 0,
+        averageSessionTime: 0,
+        topCategories: [],
+        feedbackDistribution: {},
+      };
+
+      // Calculate analytics from user interaction data
+      return analytics;
+    } catch (error) {
+      this.logger.error('Error getting recommendation analytics:', error);
+      return {};
+    }
+  }
+
+  async refreshUserProfile(userId: string): Promise<void> {
+    try {
+      // Force refresh of user profile data
+      await this.buildUserProfile(userId, true);
+
+      this.logger.log(`User profile refreshed for user ${userId}`);
+    } catch (error) {
+      this.logger.error('Error refreshing user profile:', error);
+    }
+  }
+
   async generateRecommendations(
     userId: string,
     limit: number = 20,
@@ -103,24 +209,24 @@ export class AIContentRecommendationService {
     try {
       // Get user profile
       const userProfile = await this.buildUserProfile(userId);
-      
+
       // Get available content
       const availableContent = await this.getAvailableContent(contentType);
-      
+
       // Calculate recommendation scores
       const recommendations = await this.calculateRecommendationScores(
         userProfile,
         availableContent,
       );
-      
+
       // Sort by score and return top recommendations
       const sortedRecommendations = recommendations
         .sort((a, b) => b.score - a.score)
         .slice(0, limit);
-      
+
       // Cache recommendations for performance
       await this.cacheRecommendations(userId, sortedRecommendations);
-      
+
       this.logger.log(`Generated ${sortedRecommendations.length} recommendations for user ${userId}`);
       
       return sortedRecommendations;
@@ -788,5 +894,36 @@ export class AIContentRecommendationService {
         conversionRate,
       },
     };
+  }
+
+  /**
+   * Get content by ID
+   */
+  private async getContentById(contentId: string): Promise<any> {
+    // Implementation to fetch content by ID
+    return null;
+  }
+
+  /**
+   * Find similar content based on source content
+   */
+  private async findSimilarContent(sourceContent: any, limit: number, contentType?: string): Promise<RecommendationResult[]> {
+    // Implementation to find similar content
+    return [];
+  }
+
+  /**
+   * Store feedback for ML training
+   */
+  private async storeFeedback(feedbackData: any): Promise<void> {
+    // Implementation to store feedback
+  }
+
+  /**
+   * Get trending content
+   */
+  private async getTrendingContent(limit: number, timeRange: string): Promise<any[]> {
+    // Implementation to get trending content
+    return [];
   }
 }

@@ -39,12 +39,12 @@ router.get('/metrics/history', async (req: Request, res: Response) => {
   try {
     const { limit = 50 } = req.query;
     const metrics = monitoringService.getMetrics();
-    const limitedMetrics = metrics.slice(-Number(limit));
+    const limitedMetrics = Array.isArray(metrics) ? metrics.slice(-Number(limit)) : [];
     
     res.json({
       metrics: limitedMetrics,
       count: limitedMetrics.length,
-      total: metrics.length
+      total: Array.isArray(metrics) ? metrics.length : 0
     });
   } catch (error) {
     logger.error('Error getting metrics history:', error);
@@ -103,7 +103,7 @@ router.get('/performance', async (req: Request, res: Response) => {
     const metrics = monitoringService.getMetrics();
     const latest = monitoringService.getLatestMetrics();
     
-    if (!latest || metrics.length === 0) {
+    if (!latest || !Array.isArray(metrics) || metrics.length === 0) {
       return res.json({
         status: 'no_data',
         message: 'No performance data available'
@@ -111,28 +111,29 @@ router.get('/performance', async (req: Request, res: Response) => {
     }
 
     // Calculate averages
-    const avgMemory = metrics.reduce((sum, m) => sum + m.memory.percentage, 0) / metrics.length;
-    const avgCpu = metrics.reduce((sum, m) => sum + m.cpu.usage, 0) / metrics.length;
-    const avgResponseTime = metrics.reduce((sum, m) => sum + m.api.averageResponseTime, 0) / metrics.length;
+    const avgMemory = Array.isArray(metrics) ? metrics.reduce((sum, m) => sum + m.memory.percentage, 0) / metrics.length : 0;
+    const avgCpu = Array.isArray(metrics) ? metrics.reduce((sum, m) => sum + m.cpu.usage, 0) / metrics.length : 0;
+    const avgResponseTime = Array.isArray(metrics) ? metrics.reduce((sum, m) => sum + m.api.averageResponseTime, 0) / metrics.length : 0;
 
     // Calculate trends (comparing first half vs second half)
-    const midPoint = Math.floor(metrics.length / 2);
-    const firstHalf = metrics.slice(0, midPoint);
-    const secondHalf = metrics.slice(midPoint);
+    const metricsArray = Array.isArray(metrics) ? metrics : [];
+    const midPoint = Math.floor(metricsArray.length / 2);
+    const firstHalf = metricsArray.slice(0, midPoint);
+    const secondHalf = metricsArray.slice(midPoint);
 
-    const firstHalfAvgMemory = firstHalf.reduce((sum, m) => sum + m.memory.percentage, 0) / firstHalf.length;
-    const secondHalfAvgMemory = secondHalf.reduce((sum, m) => sum + m.memory.percentage, 0) / secondHalf.length;
+    const firstHalfAvgMemory = firstHalf.length > 0 ? firstHalf.reduce((sum, m) => sum + m.memory.percentage, 0) / firstHalf.length : 0;
+    const secondHalfAvgMemory = secondHalf.length > 0 ? secondHalf.reduce((sum, m) => sum + m.memory.percentage, 0) / secondHalf.length : 0;
 
     const memoryTrend = secondHalfAvgMemory > firstHalfAvgMemory ? 'increasing' : 
                        secondHalfAvgMemory < firstHalfAvgMemory ? 'decreasing' : 'stable';
 
     res.json({
       current: {
-        memory: latest.memory.percentage,
-        cpu: latest.cpu.usage,
-        responseTime: latest.api.averageResponseTime,
-        errorRate: latest.api.errorRate,
-        databaseConnections: latest.database.connections
+        memory: latest?.memory?.percentage || 0,
+        cpu: latest?.cpu?.usage || 0,
+        responseTime: latest?.api?.averageResponseTime || 0,
+        errorRate: latest?.api?.errorRate || 0,
+        databaseConnections: latest?.database?.connections || 0
       },
       averages: {
         memory: Math.round(avgMemory * 100) / 100,
@@ -142,10 +143,10 @@ router.get('/performance', async (req: Request, res: Response) => {
       trends: {
         memory: memoryTrend
       },
-      dataPoints: metrics.length,
+      dataPoints: Array.isArray(metrics) ? metrics.length : 0,
       timeRange: {
-        start: metrics[0]?.timestamp,
-        end: latest.timestamp
+        start: Array.isArray(metrics) && metrics.length > 0 ? metrics[0]?.timestamp : new Date(),
+        end: latest?.timestamp || new Date()
       }
     });
   } catch (error) {
@@ -165,25 +166,25 @@ router.get('/resources', async (req: Request, res: Response) => {
 
     res.json({
       memory: {
-        used: latest.memory.used,
-        free: latest.memory.free,
-        total: latest.memory.total,
-        percentage: latest.memory.percentage,
+        used: latest?.memory?.used || 0,
+        free: latest?.memory?.free || 0,
+        total: latest?.memory?.total || 0,
+        percentage: latest?.memory?.percentage || 0,
         unit: 'MB'
       },
       cpu: {
-        usage: latest.cpu.usage,
-        loadAverage: latest.cpu.loadAverage,
+        usage: latest?.cpu?.usage || 0,
+        loadAverage: latest?.cpu?.loadAverage || 0,
         unit: 'percentage'
       },
       database: {
-        connections: latest.database.connections,
-        operations: latest.database.operations,
-        responseTime: latest.database.responseTime,
+        connections: latest?.database?.connections || 0,
+        operations: latest?.database?.operations || 0,
+        responseTime: latest?.database?.responseTime || 0,
         unit: 'ms'
       },
-      redis: latest.redis,
-      timestamp: latest.timestamp
+      redis: latest?.redis || {},
+      timestamp: latest?.timestamp || new Date()
     });
   } catch (error) {
     logger.error('Error getting resource usage:', error);

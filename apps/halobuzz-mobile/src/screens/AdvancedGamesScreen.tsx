@@ -149,9 +149,8 @@ const AdvancedGamesScreen: React.FC = ({ navigation }: any) => {
               participation: 0
             },
             requirements: {
-              level: 10,
-              winRate: 0.3,
-              experience: 5000
+              level: 1, // Lowered for testing
+              experience: 0 // No experience requirement for testing
             }
           },
           {
@@ -173,8 +172,8 @@ const AdvancedGamesScreen: React.FC = ({ navigation }: any) => {
               participation: 0
             },
             requirements: {
-              level: 5,
-              experience: 1000
+              level: 1, // Lowered for testing
+              experience: 0 // No experience requirement for testing
             }
           },
           {
@@ -240,9 +239,9 @@ const AdvancedGamesScreen: React.FC = ({ navigation }: any) => {
               participation: 10
             },
             requirements: {
-              level: 15,
-              winRate: 0.4,
-              experience: 10000
+              level: 1, // Lowered for testing
+              winRate: 0.0, // No win rate requirement for testing
+              experience: 0 // No experience requirement for testing
             }
           },
           {

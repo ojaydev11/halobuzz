@@ -257,4 +257,209 @@ router.get('/:userId/profile', userLimit, async (req: Request, res: Response) =>
   }
 });
 
+/**
+ * GET /users/featured
+ * Get featured users
+ */
+router.get('/featured', userLimit, async (req: Request, res: Response) => {
+  try {
+    const { limit = 10, category } = req.query;
+    
+    // Build query for featured users
+    const query: any = {
+      isVerified: true,
+      isActive: true
+    };
+    
+    if (category) {
+      query.category = category;
+    }
+    
+    // Get featured users with followers count
+    const featuredUsers = await User.aggregate([
+      { $match: query },
+      {
+        $lookup: {
+          from: 'follows',
+          localField: '_id',
+          foreignField: 'following',
+          as: 'followers'
+        }
+      },
+      {
+        $addFields: {
+          followersCount: { $size: '$followers' },
+          isFeatured: true
+        }
+      },
+      {
+        $project: {
+          username: 1,
+          displayName: 1,
+          avatar: 1,
+          bio: 1,
+          isVerified: 1,
+          followersCount: 1,
+          category: 1,
+          createdAt: 1
+        }
+      },
+      { $sort: { followersCount: -1, createdAt: -1 } },
+      { $limit: parseInt(limit as string) }
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        users: featuredUsers,
+        total: featuredUsers.length
+      }
+    });
+  } catch (error) {
+    logger.error('Error fetching featured users:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch featured users'
+    });
+  }
+});
+
+/**
+ * GET /users/:userId/stats
+ * Get user statistics
+ */
+router.get('/:userId/stats', userLimit, async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params;
+    
+    // Get user stats
+    const stats = await User.aggregate([
+      { $match: { _id: userId } },
+      {
+        $lookup: {
+          from: 'follows',
+          localField: '_id',
+          foreignField: 'following',
+          as: 'followers'
+        }
+      },
+      {
+        $lookup: {
+          from: 'follows',
+          localField: '_id',
+          foreignField: 'follower',
+          as: 'following'
+        }
+      },
+      {
+        $lookup: {
+          from: 'livestreams',
+          localField: '_id',
+          foreignField: 'userId',
+          as: 'streams'
+        }
+      },
+      {
+        $addFields: {
+          followersCount: { $size: '$followers' },
+          followingCount: { $size: '$following' },
+          streamsCount: { $size: '$streams' },
+          totalViews: { $sum: '$streams.viewerCount' },
+          totalLikes: { $sum: '$streams.likes' }
+        }
+      },
+      {
+        $project: {
+          followersCount: 1,
+          followingCount: 1,
+          streamsCount: 1,
+          totalViews: 1,
+          totalLikes: 1,
+          joinDate: '$createdAt',
+          lastActive: '$updatedAt'
+        }
+      }
+    ]);
+
+    if (stats.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'User not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: stats[0]
+    });
+  } catch (error) {
+    logger.error('Error fetching user stats:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch user stats'
+    });
+  }
+});
+
+/**
+ * GET /users/:userId/achievements
+ * Get user achievements
+ */
+router.get('/:userId/achievements', userLimit, async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params;
+    
+    // Get user achievements (mock data for now)
+    const achievements = [
+      {
+        id: 'first_stream',
+        title: 'First Stream',
+        description: 'Completed your first live stream',
+        icon: '🎥',
+        unlockedAt: new Date().toISOString(),
+        isUnlocked: true
+      },
+      {
+        id: 'social_butterfly',
+        title: 'Social Butterfly',
+        description: 'Gained 100 followers',
+        icon: '🦋',
+        unlockedAt: new Date().toISOString(),
+        isUnlocked: true
+      },
+      {
+        id: 'gaming_master',
+        title: 'Gaming Master',
+        description: 'Won 10 games in a row',
+        icon: '🎮',
+        unlockedAt: null,
+        isUnlocked: false
+      },
+      {
+        id: 'content_creator',
+        title: 'Content Creator',
+        description: 'Created 50 pieces of content',
+        icon: '✨',
+        unlockedAt: null,
+        isUnlocked: false
+      }
+    ];
+
+    res.json({
+      success: true,
+      data: {
+        achievements,
+        totalUnlocked: achievements.filter(a => a.isUnlocked).length,
+        totalAchievements: achievements.length
+      }
+    });
+  } catch (error) {
+    logger.error('Error fetching user achievements:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch user achievements'
+    });
+  }
+});
+
 export default router;

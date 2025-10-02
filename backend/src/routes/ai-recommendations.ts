@@ -1,5 +1,5 @@
 import { Router, Response } from 'express';
-import { AuthenticatedRequest } from '@/middleware/auth';
+import { AuthenticatedRequest } from '@/middleware/enhancedSecurity';
 import { AIContentRecommendationService } from '../services/AIContentRecommendationService';
 import { requireAuth } from '../middleware/auth';
 import { validateInput } from '../middleware/enhancedSecurity';
@@ -7,6 +7,10 @@ import { createRateLimit } from '../middleware/enhancedSecurity';
 import { getMongoDB } from '@/config/database';
 import { getRedisClient } from '@/config/redis';
 import { logger } from '@/config/logger';
+import { LiveStream } from '@/models/LiveStream';
+import { ShortVideo } from '@/models/ShortVideo';
+import { AnalyticsEvent } from '@/analytics/models/AnalyticsEvent';
+import { User } from '@/models/User';
 
 const router = Router();
 
@@ -64,10 +68,10 @@ const initializeService = async () => {
     const redis = await getRedisClient();
     
     aiRecommendationService = new AIContentRecommendationService(
-      db.collection('users'),
-      db.collection('livestreams'),
-      db.collection('shortvideos'),
-      db.collection('analytics_events'),
+      User.find({}).limit(1000),
+      LiveStream.find({}).limit(1000),
+      ShortVideo.find({}).limit(1000),
+      AnalyticsEvent.find({}).limit(1000),
       redis,
     );
   }
@@ -97,7 +101,7 @@ router.get('/ai-recommendations',
   validateInput,
   async (req: AuthenticatedRequest, res: Response) => {
     try {
-      const { limit = 20, contentType = 'all', category, language } = req.query as RecommendationQuery;
+      const { limit = 20, contentType = 'all', category, language } = req.query as any;
       const userId = req.user?.userId;
 
       if (!userId) {
@@ -109,13 +113,8 @@ router.get('/ai-recommendations',
 
       const service = await initializeService();
       const recommendations = await service.getPersonalizedRecommendations(
-          userId,
-        {
-          limit: parseInt(limit as string),
-          contentType: contentType as 'stream' | 'video' | 'all',
-          category: category as string,
-          language: language as string
-        }
+        userId,
+        contentType as 'stream' | 'video' | 'all'
       );
 
       return res.json({
@@ -197,13 +196,12 @@ router.post('/ai-recommendations/feedback',
       }
 
       const service = await initializeService();
-      await service.submitRecommendationFeedback({
+      await service.submitRecommendationFeedback(
         userId,
-          contentId,
-          contentType,
+        contentId,
         feedback,
-        rating
-      });
+        { contentType, rating }
+      );
 
       return res.json({
         success: true,
@@ -240,9 +238,8 @@ router.get('/ai-recommendations/trending',
 
       const service = await initializeService();
       const trendingContent = await service.getTrendingRecommendations(
-        userId,
         parseInt(limit as string),
-        timeRange as string
+        timeRange as 'hour' | 'day' | 'week' | 'month'
       );
 
       return res.json({

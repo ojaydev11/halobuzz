@@ -11,13 +11,17 @@ import {
   RefreshControl,
   Modal,
   TextInput,
-  ScrollView
+  ScrollView,
+  Animated,
+  Vibration
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../store/AuthContext';
 import { apiClient } from '../lib/api';
+import GameEngine, { GameConfig, GameRound } from '../services/GameEngine';
+import GameMonetizationService from '../services/GameMonetizationService';
 
 interface Game {
   _id: string;
@@ -49,10 +53,10 @@ interface GameRound {
 
 const GamesScreen: React.FC = ({ navigation, router }: any) => {
   const { user } = useAuth();
-  const [games, setGames] = useState<Game[]>([]);
+  const [games, setGames] = useState<GameConfig[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [selectedGame, setSelectedGame] = useState<Game | null>(null);
+  const [selectedGame, setSelectedGame] = useState<GameConfig | null>(null);
   const [currentRound, setCurrentRound] = useState<GameRound | null>(null);
   const [stakeAmount, setStakeAmount] = useState('100');
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
@@ -60,11 +64,17 @@ const GamesScreen: React.FC = ({ navigation, router }: any) => {
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [userBalance, setUserBalance] = useState(0);
   const [gameHistory, setGameHistory] = useState<any[]>([]);
+  const [placingStake, setPlacingStake] = useState(false);
+  const [gameEngine] = useState(() => GameEngine);
+  const [monetizationService] = useState(() => GameMonetizationService);
+
+  // Animation values
+  const fadeAnim = useState(new Animated.Value(0))[0];
+  const scaleAnim = useState(new Animated.Value(1))[0];
 
   useEffect(() => {
-    fetchGames();
-    fetchUserBalance();
-    fetchGameHistory();
+    initializeGameSystem();
+    startAnimations();
   }, []);
 
   useEffect(() => {
@@ -76,379 +86,189 @@ const GamesScreen: React.FC = ({ navigation, router }: any) => {
     }
   }, [currentRound]);
 
-  const fetchGames = async () => {
+  const startAnimations = () => {
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 1000,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const initializeGameSystem = async () => {
     try {
-      const response = await apiClient.get('/games/v2/list');
-      if (response.data && response.data.games) {
-        setGames(response.data.games);
-      } else {
-        // Fallback games data for production
-        setGames([
-          {
-            _id: '1',
-            name: 'Coin Flip',
-            code: 'coin-flip',
-            description: 'Flip a coin and win!',
-            type: 'instant',
-            category: 'coin-flip',
-            minStake: 10,
-            maxStake: 1000,
-            roundDuration: 30,
-            rules: ['Choose heads or tails', 'Win 2x your stake'],
-            config: { options: 2, multipliers: [2], targetRTP: 95 }
-          },
-          {
-            _id: '2',
-            name: 'Color Game',
-            code: 'color',
-            description: 'Pick a color and win!',
-            type: 'instant',
-            category: 'color',
-            minStake: 5,
-            maxStake: 500,
-            roundDuration: 20,
-            rules: ['Choose red, green, or blue', 'Win 3x your stake'],
-            config: { options: 3, multipliers: [3], targetRTP: 90 }
-          },
-          {
-            _id: '3',
-            name: 'Rock Paper Scissors',
-            code: 'rps',
-            description: 'Classic RPS game!',
-            type: 'instant',
-            category: 'rps',
-            minStake: 15,
-            maxStake: 750,
-            roundDuration: 25,
-            rules: ['Choose rock, paper, or scissors', 'Win 2.5x your stake'],
-            config: { options: 3, multipliers: [2.5], targetRTP: 92 }
-          }
-        ]);
-      }
+      setLoading(true);
+      
+      // Initialize monetization service
+      await monetizationService.initialize(user?.id || 'temp_user');
+      
+      // Load games from engine
+      const gameConfigs = gameEngine.getAllGameConfigs();
+      setGames(gameConfigs);
+      
+      // Load user balance
+      const balance = await monetizationService.getBalance();
+      setUserBalance(balance);
+      
+      // Load game history
+      const history = await monetizationService.getGameHistory();
+      setGameHistory(history);
+      
     } catch (error) {
-      console.error('Failed to fetch games:', error);
-      // Set fallback games on error
-      setGames([
-        {
-          _id: '1',
-          name: 'Coin Flip',
-          code: 'coin-flip',
-          description: 'Flip a coin and win!',
-          type: 'instant',
-          category: 'coin-flip',
-          minStake: 10,
-          maxStake: 1000,
-          roundDuration: 30,
-          rules: ['Choose heads or tails', 'Win 2x your stake'],
-          config: { options: 2, multipliers: [2], targetRTP: 95 }
-        },
-        {
-          _id: '2',
-          name: 'Color Game',
-          code: 'color',
-          description: 'Pick a color and win!',
-          type: 'instant',
-          category: 'color',
-          minStake: 5,
-          maxStake: 500,
-          roundDuration: 20,
-          rules: ['Choose red, green, or blue', 'Win 3x your stake'],
-          config: { options: 3, multipliers: [3], targetRTP: 90 }
-        }
-      ]);
+      console.error('Failed to initialize game system:', error);
+      // Fallback to basic games
+      setGames(gameEngine.getAllGameConfigs());
+      setUserBalance(1000);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   };
 
-  const fetchUserBalance = async () => {
-    try {
-      const response = await apiClient.get('/wallet');
-      if (response.data && response.data.wallet && response.data.wallet.balance) {
-        setUserBalance(response.data.wallet.balance);
-      } else {
-        // Fallback balance
-        setUserBalance(500);
-      }
-    } catch (error) {
-      console.error('Failed to fetch balance:', error);
-      // Set fallback balance on error
-      setUserBalance(500);
-    }
+  const refreshGames = async () => {
+    setRefreshing(true);
+    await initializeGameSystem();
   };
 
-  const fetchGameHistory = async () => {
-    try {
-      const response = await apiClient.get('/games/v2/history');
-      if (response.data && response.data.history) {
-        setGameHistory(response.data.history);
-      } else {
-        // Fallback game history data
-        setGameHistory([
-          {
-            _id: '1',
-            gameName: 'Coin Flip',
-            stake: 50,
-            result: 'win',
-            multiplier: 2,
-            payout: 100,
-            timestamp: new Date().toISOString(),
-          },
-          {
-            _id: '2',
-            gameName: 'Color Game',
-            stake: 25,
-            result: 'loss',
-            multiplier: 0,
-            payout: 0,
-            timestamp: new Date(Date.now() - 3600000).toISOString(),
-          }
-        ]);
-      }
-    } catch (error) {
-      console.error('Failed to fetch game history:', error);
-      // Set fallback history on error
-      setGameHistory([
-        {
-          _id: '1',
-          gameName: 'Coin Flip',
-          stake: 50,
-          result: 'win',
-          multiplier: 2,
-          payout: 100,
-          timestamp: new Date().toISOString(),
-        },
-        {
-          _id: '2',
-          gameName: 'Color Game',
-          stake: 25,
-          result: 'loss',
-          multiplier: 0,
-          payout: 0,
-          timestamp: new Date(Date.now() - 3600000).toISOString(),
-        }
-      ]);
-    }
-  };
-
-  const fetchCurrentRound = async (gameCode: string) => {
-    try {
-      const response = await apiClient.get(`/games/v2/${gameCode}/current-round`);
-      if (response.data && response.data.timeRemaining !== undefined) {
-        setCurrentRound(response.data);
-        setTimeRemaining(response.data.timeRemaining);
-      } else {
-        // Fallback current round data
-        const fallbackRound = {
-          roundId: `round_${Date.now()}`,
-          startAt: new Date().toISOString(),
-          endAt: new Date(Date.now() + 30000).toISOString(),
-          timeRemaining: 30,
-          totalStake: 0,
-          status: 'waiting',
-          optionsCount: 2,
-        };
-        setCurrentRound(fallbackRound);
-        setTimeRemaining(30);
-      }
-    } catch (error) {
-      console.error('Failed to fetch current round:', error);
-      // Set fallback round on error
-      const fallbackRound = {
-        roundId: `round_${Date.now()}`,
-        startAt: new Date().toISOString(),
-        endAt: new Date(Date.now() + 30000).toISOString(),
-        timeRemaining: 30,
-        totalStake: 0,
-        status: 'waiting',
-        optionsCount: 2,
-      };
-      setCurrentRound(fallbackRound);
-      setTimeRemaining(30);
-    }
-  };
-
-  const openGameModal = async (game: Game) => {
+  const openGameModal = async (game: GameConfig) => {
     setSelectedGame(game);
     setModalVisible(true);
-    await fetchCurrentRound(game.code);
+    
+    // Get or create current round
+    let round = gameEngine.getCurrentRound(game.id);
+    if (!round) {
+      round = gameEngine.createGameRound(game.id, 30);
+    }
+    
+    setCurrentRound(round);
+    setTimeRemaining(round.timeRemaining);
+    
+    // Update balance
+    const balance = await monetizationService.getBalance();
+    setUserBalance(balance);
   };
+
 
   const placeStake = async () => {
-    if (!selectedGame || !stakeAmount) return;
-
-    const amount = parseInt(stakeAmount);
-    if (amount < selectedGame.minStake || amount > selectedGame.maxStake) {
-      Alert.alert('Invalid Stake', `Stake must be between ${selectedGame.minStake} and ${selectedGame.maxStake} coins`);
-      return;
-    }
-
-    if (amount > userBalance) {
-      Alert.alert('Insufficient Balance', 'You do not have enough coins for this stake');
-      return;
-    }
+    if (!selectedGame || !stakeAmount || !currentRound || selectedOption === null) return;
 
     try {
-      const payload: any = { amount };
-      
-      // Add game-specific data
-      if (selectedGame.category === 'coin-flip' || selectedGame.category === 'color' || selectedGame.category === 'rps') {
-        if (selectedOption === null) {
-          Alert.alert('Selection Required', 'Please make a selection before staking');
-          return;
-        }
-        payload.selectedOption = selectedOption;
-      }
+      setPlacingStake(true);
+      Vibration.vibrate([0, 50]);
 
-      const response = await apiClient.post(`/games/v2/${selectedGame.code}/stake`, payload);
-      
-      if (response.success) {
-        Alert.alert('Success', 'Stake placed successfully!', [
-          { text: 'OK', onPress: () => {
-            setModalVisible(false);
-            fetchUserBalance();
-            setSelectedOption(null);
-            setStakeAmount('100');
-          }}
-        ]);
+      const amount = parseInt(stakeAmount);
+      const result = await gameEngine.placeStake(
+        currentRound.roundId,
+        user?.id || 'temp_user',
+        amount,
+        selectedOption
+      );
+
+      if (result.success) {
+        // Update balance immediately
+        const newBalance = await monetizationService.getBalance();
+        setUserBalance(newBalance);
+
+        // Show success message
+        Alert.alert(
+          'Stake Placed!',
+          `You've placed ${amount} coins on ${selectedGame.options[selectedOption]}`,
+          [{ text: 'OK' }]
+        );
+
+        // Reset form
+        setSelectedOption(null);
+        setStakeAmount('100');
+      } else {
+        Alert.alert('Error', result.message || 'Failed to place stake');
       }
-    } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.error || 'Failed to place stake');
+    } catch (error) {
+      console.error('Failed to place stake:', error);
+      Alert.alert('Error', 'Failed to place stake. Please try again.');
+    } finally {
+      setPlacingStake(false);
     }
   };
 
-  const getGameIcon = (category: string) => {
+  const getGameIcon = (gameId: string) => {
     const icons: { [key: string]: string } = {
       'coin-flip': '🪙',
       'dice': '🎲',
-      'wheel': '🎡',
-      'predictor': '🔮',
       'color': '🌈',
       'rps': '✂️',
-      'treasure': '💎',
-      'clicker': '⚡'
+      'number-guess': '🔢'
     };
-    return icons[category] || '🎮';
+    return icons[gameId] || '🎮';
   };
 
-  const getGameColor = (type: string): [string, string] => {
+  const getGameColor = (gameId: string): [string, string] => {
     const colors: { [key: string]: [string, string] } = {
-      'instant': ['#FF6B6B', '#FF8787'],
-      'luck': ['#4ECDC4', '#44A3AA'],
-      'skill': ['#95E1D3', '#3FC1C9'],
-      'multiplayer': ['#A8E6CF', '#7FD8BE'],
-      'timed': ['#FFD93D', '#FCB69F']
+      'coin-flip': ['#FF6B6B', '#FF8787'],
+      'color': ['#4ECDC4', '#44A3AA'],
+      'rps': ['#95E1D3', '#3FC1C9'],
+      'dice': ['#A8E6CF', '#7FD8BE'],
+      'number-guess': ['#FFD93D', '#FCB69F']
     };
-    return colors[type] || ['#667EEA', '#764BA2'];
+    return colors[gameId] || ['#667EEA', '#764BA2'];
   };
 
-  const renderGameCard = ({ item }: { item: Game }) => (
-    <TouchableOpacity onPress={() => openGameModal(item)} style={styles.gameCard}>
-      <LinearGradient
-        colors={getGameColor(item.type)}
-        style={styles.gameGradient}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-      >
-        <View style={styles.gameHeader}>
-          <Text style={styles.gameIcon}>{getGameIcon(item.category)}</Text>
-          <View style={styles.gameInfo}>
-            <Text style={styles.gameName}>{item.name}</Text>
-            <Text style={styles.gameType}>{item.type.toUpperCase()}</Text>
+  const renderGameCard = ({ item }: { item: GameConfig }) => (
+    <Animated.View style={[styles.gameCard, { opacity: fadeAnim }]}>
+      <TouchableOpacity onPress={() => openGameModal(item)} style={styles.gameCard}>
+        <LinearGradient
+          colors={getGameColor(item.id)}
+          style={styles.gameGradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        >
+          <View style={styles.gameHeader}>
+            <Text style={styles.gameIcon}>{getGameIcon(item.id)}</Text>
+            <View style={styles.gameInfo}>
+              <Text style={styles.gameName}>{item.name}</Text>
+              <Text style={styles.gameType}>{item.type.toUpperCase()}</Text>
+            </View>
           </View>
-        </View>
-        <Text style={styles.gameDescription} numberOfLines={2}>{item.description}</Text>
-        <View style={styles.gameStats}>
-          <View style={styles.statItem}>
-            <Text style={styles.statLabel}>Min Stake</Text>
-            <Text style={styles.statValue}>{item.minStake} 🪙</Text>
+          <Text style={styles.gameDescription} numberOfLines={2}>{item.description}</Text>
+          <View style={styles.gameStats}>
+            <View style={styles.statItem}>
+              <Text style={styles.statLabel}>Min Stake</Text>
+              <Text style={styles.statValue}>{item.minStake} 🪙</Text>
+            </View>
+            <View style={styles.statItem}>
+              <Text style={styles.statLabel}>Max Win</Text>
+              <Text style={styles.statValue}>{item.multiplier.toFixed(1)}x</Text>
+            </View>
+            <View style={styles.statItem}>
+              <Text style={styles.statLabel}>RTP</Text>
+              <Text style={styles.statValue}>{((1 - item.houseEdge) * 100).toFixed(0)}%</Text>
+            </View>
           </View>
-          <View style={styles.statItem}>
-            <Text style={styles.statLabel}>Max Win</Text>
-            <Text style={styles.statValue}>{Math.max(...(item.config.multipliers || [1]))}x</Text>
-          </View>
-          <View style={styles.statItem}>
-            <Text style={styles.statLabel}>Round</Text>
-            <Text style={styles.statValue}>{item.roundDuration}s</Text>
-          </View>
-        </View>
-      </LinearGradient>
-    </TouchableOpacity>
+        </LinearGradient>
+      </TouchableOpacity>
+    </Animated.View>
   );
 
   const renderGameOptions = () => {
     if (!selectedGame) return null;
 
-    switch (selectedGame.category) {
-      case 'coin-flip':
-        return (
-          <View style={styles.optionsContainer}>
-            <Text style={styles.optionTitle}>Choose Your Side:</Text>
-            <View style={styles.coinOptions}>
-              <TouchableOpacity
-                style={[styles.coinOption, selectedOption === 0 && styles.selectedOption]}
-                onPress={() => setSelectedOption(0)}
-              >
-                <Text style={styles.coinText}>HEADS</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.coinOption, selectedOption === 1 && styles.selectedOption]}
-                onPress={() => setSelectedOption(1)}
-              >
-                <Text style={styles.coinText}>TAILS</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        );
-
-      case 'color':
-        const colors = ['Red', 'Blue', 'Green', 'Yellow', 'Purple', 'Orange'];
-        return (
-          <View style={styles.optionsContainer}>
-            <Text style={styles.optionTitle}>Pick a Color:</Text>
-            <View style={styles.colorGrid}>
-              {colors.map((color, index) => (
-                <TouchableOpacity
-                  key={index}
-                  style={[
-                    styles.colorOption,
-                    { backgroundColor: color.toLowerCase() },
-                    selectedOption === index && styles.selectedColorOption
-                  ]}
-                  onPress={() => setSelectedOption(index)}
-                >
-                  <Text style={styles.colorText}>{color}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-        );
-
-      case 'rps':
-        const choices = ['Rock', 'Paper', 'Scissors'];
-        const icons = ['🪨', '📄', '✂️'];
-        return (
-          <View style={styles.optionsContainer}>
-            <Text style={styles.optionTitle}>Make Your Move:</Text>
-            <View style={styles.rpsOptions}>
-              {choices.map((choice, index) => (
-                <TouchableOpacity
-                  key={index}
-                  style={[styles.rpsOption, selectedOption === index && styles.selectedOption]}
-                  onPress={() => setSelectedOption(index)}
-                >
-                  <Text style={styles.rpsIcon}>{icons[index]}</Text>
-                  <Text style={styles.rpsText}>{choice}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-        );
-
-      default:
-        return null;
-    }
+    return (
+      <View style={styles.optionsContainer}>
+        <Text style={styles.optionTitle}>Choose Your Option:</Text>
+        <View style={styles.optionsGrid}>
+          {selectedGame.options.map((option, index) => (
+            <TouchableOpacity
+              key={index}
+              style={[
+                styles.gameOption,
+                selectedOption === index && styles.selectedOption
+              ]}
+              onPress={() => setSelectedOption(index)}
+            >
+              <Text style={styles.optionText}>{option}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+    );
   };
 
   return (
@@ -466,13 +286,10 @@ const GamesScreen: React.FC = ({ navigation, router }: any) => {
         <FlatList
           data={games}
           renderItem={renderGameCard}
-          keyExtractor={(item: Game) => item._id}
+          keyExtractor={(item: GameConfig) => item.id}
           contentContainerStyle={styles.gamesList}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={() => {
-              setRefreshing(true);
-              fetchGames();
-            }} />
+            <RefreshControl refreshing={refreshing} onRefresh={refreshGames} />
           }
         />
       )}
@@ -536,20 +353,28 @@ const GamesScreen: React.FC = ({ navigation, router }: any) => {
                 </View>
 
                 <TouchableOpacity
-                  style={[styles.stakeButton, (!stakeAmount || timeRemaining === 0) && styles.disabledButton]}
+                  style={[
+                    styles.stakeButton, 
+                    (!stakeAmount || timeRemaining === 0 || selectedOption === null || placingStake) && styles.disabledButton
+                  ]}
                   onPress={placeStake}
-                  disabled={!stakeAmount || timeRemaining === 0}
+                  disabled={!stakeAmount || timeRemaining === 0 || selectedOption === null || placingStake}
                 >
                   <Text style={styles.stakeButtonText}>
-                    {timeRemaining === 0 ? 'Round Ended' : `Stake ${stakeAmount || 0} Coins`}
+                    {placingStake ? 'Placing Stake...' : 
+                     timeRemaining === 0 ? 'Round Ended' : 
+                     selectedOption === null ? 'Select Option First' :
+                     `Stake ${stakeAmount || 0} Coins`}
                   </Text>
                 </TouchableOpacity>
 
                 <View style={styles.rulesContainer}>
-                  <Text style={styles.rulesTitle}>Rules:</Text>
-                  {selectedGame.rules.map((rule: string, index: number) => (
-                    <Text key={index} style={styles.ruleText}>• {rule}</Text>
-                  ))}
+                  <Text style={styles.rulesTitle}>Game Info:</Text>
+                  <Text style={styles.ruleText}>• Choose your option and place your stake</Text>
+                  <Text style={styles.ruleText}>• Win {selectedGame.multiplier.toFixed(1)}x your stake if you're correct</Text>
+                  <Text style={styles.ruleText}>• RTP: {((1 - selectedGame.houseEdge) * 100).toFixed(0)}%</Text>
+                  <Text style={styles.ruleText}>• Minimum stake: {selectedGame.minStake} coins</Text>
+                  <Text style={styles.ruleText}>• Maximum stake: {selectedGame.maxStake} coins</Text>
                 </View>
               </ScrollView>
             )}
@@ -730,74 +555,26 @@ const styles = StyleSheet.create({
     color: '#2D3748',
     marginBottom: 10
   },
-  coinOptions: {
-    flexDirection: 'row',
-    justifyContent: 'space-between'
-  },
-  coinOption: {
-    flex: 1,
-    backgroundColor: '#F7FAFC',
-    padding: 20,
-    marginHorizontal: 5,
-    borderRadius: 12,
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: 'transparent'
-  },
-  selectedOption: {
-    borderColor: '#667EEA',
-    backgroundColor: '#EBF4FF'
-  },
-  coinText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#2D3748'
-  },
-  colorGrid: {
+  optionsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between'
   },
-  colorOption: {
+  gameOption: {
     width: '30%',
-    aspectRatio: 1,
-    marginBottom: 10,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 3,
-    borderColor: 'transparent'
-  },
-  selectedColorOption: {
-    borderColor: '#2D3748'
-  },
-  colorText: {
-    color: '#FFF',
-    fontWeight: 'bold',
-    fontSize: 12
-  },
-  rpsOptions: {
-    flexDirection: 'row',
-    justifyContent: 'space-between'
-  },
-  rpsOption: {
-    flex: 1,
     backgroundColor: '#F7FAFC',
     padding: 15,
-    marginHorizontal: 5,
+    marginBottom: 10,
     borderRadius: 12,
     alignItems: 'center',
     borderWidth: 2,
     borderColor: 'transparent'
   },
-  rpsIcon: {
-    fontSize: 30,
-    marginBottom: 5
-  },
-  rpsText: {
-    fontSize: 12,
+  optionText: {
+    fontSize: 14,
     fontWeight: '600',
-    color: '#2D3748'
+    color: '#2D3748',
+    textAlign: 'center'
   },
   stakeContainer: {
     marginBottom: 20

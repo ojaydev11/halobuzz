@@ -23,9 +23,8 @@ export default function TabLayout() {
           // Performance: Enable lazy rendering
           lazy: true,
 
-          // Animation optimization
+          // Simplified animation configuration
           animationEnabled: true,
-          ...createPerformantScreenOptions('tab'),
         }}
       >
       <Tabs.Screen

@@ -75,6 +75,21 @@ export const AdvancedGamesScreen = createLazyScreen(
   'AdvancedGamesScreen'
 );
 
+export const AIOpponentsScreen = createLazyScreen(
+  () => import('./AIOpponentsScreen'),
+  'AIOpponentsScreen'
+);
+
+export const LeaderboardsScreen = createLazyScreen(
+  () => import('./LeaderboardsScreen'),
+  'LeaderboardsScreen'
+);
+
+export const TournamentsScreen = createLazyScreen(
+  () => import('./TournamentsScreen'),
+  'TournamentsScreen'
+);
+
 export const MonetizationScreen = createLazyScreen(
   () => import('./MonetizationScreen'),
   'MonetizationScreen'

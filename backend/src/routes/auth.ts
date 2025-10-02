@@ -9,13 +9,19 @@ import { InputValidator } from '../utils/inputValidator';
 import { EmailService } from '../services/emailService';
 import rateLimit from 'express-rate-limit';
 
-// Stronger password requirements
+// Stronger password requirements with common password check
 const passwordValidator = (password: string) => {
   const minLength = 8;
   const hasUpperCase = /[A-Z]/.test(password);
   const hasLowerCase = /[a-z]/.test(password);
   const hasNumbers = /\d/.test(password);
   const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
+  // Common weak passwords list
+  const commonPasswords = [
+    'password', '123456', 'password123', 'admin', 'qwerty',
+    'letmein', 'welcome', 'monkey', 'dragon', 'password1'
+  ];
 
   if (password.length < minLength) {
     throw new Error('Password must be at least 8 characters long');
@@ -31,6 +37,9 @@ const passwordValidator = (password: string) => {
   }
   if (!hasSpecialChar) {
     throw new Error('Password must contain at least one special character');
+  }
+  if (commonPasswords.includes(password.toLowerCase())) {
+    throw new Error('Password is too common. Please choose a stronger password');
   }
 
   return true;
@@ -73,15 +82,29 @@ router.post('/register', [
 
     const { username, email, password, phone, country, language } = req.body;
 
-    // Check if user already exists
+    // Check if user already exists with proper validation
     const existingUser = await User.findOne({
-      $or: [{ email }, { username }, { phone }]
-    });
+      $or: [
+        { email: email.toLowerCase().trim() },
+        { username: username.toLowerCase().trim() },
+        ...(phone ? [{ phone: phone.trim() }] : [])
+      ]
+    }).select('_id email username phone');
 
     if (existingUser) {
+      let conflictField = '';
+      if (existingUser.email === email.toLowerCase().trim()) {
+        conflictField = 'email';
+      } else if (existingUser.username === username.toLowerCase().trim()) {
+        conflictField = 'username';
+      } else if (phone && existingUser.phone === phone.trim()) {
+        conflictField = 'phone';
+      }
+
       return res.status(400).json({
         success: false,
-        error: 'User already exists with this email, username, or phone'
+        error: `User already exists with this ${conflictField}`,
+        field: conflictField
       });
     }
 

@@ -144,4 +144,23 @@ moderationFlagSchema.methods.flag = function() {
   return this.save();
 };
 
+// Static method to find flags by user
+moderationFlagSchema.statics.findByUser = function(userId: string, limit: number = 50) {
+  return this.find({ userId }).sort({ createdAt: -1 }).limit(limit);
+};
+
+// Static method to find pending flags
+moderationFlagSchema.statics.findPending = function(limit: number = 50) {
+  return this.find({ status: 'pending' }).sort({ createdAt: -1 }).limit(limit);
+};
+
+// Instance method to resolve a flag
+moderationFlagSchema.methods.resolve = function(adminId: string, resolution: string) {
+  this.status = 'resolved';
+  this.reviewedBy = adminId;
+  this.reviewedAt = new Date();
+  this.resolution = resolution;
+  return this.save();
+};
+
 export const ModerationFlag = mongoose.model<IModerationFlag>('ModerationFlag', moderationFlagSchema);

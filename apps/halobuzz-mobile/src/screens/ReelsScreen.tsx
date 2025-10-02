@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { VideoView, useVideoPlayer } from 'expo-video';
 import { LinearGradient } from 'expo-linear-gradient';
 import { apiClient } from '@/lib/api';
-import { useAuth } from '@/store/AuthContextOptimized';
+import { useAuth } from '@/store/AuthContext';
 
 interface ReelItemDto {
   id: string;

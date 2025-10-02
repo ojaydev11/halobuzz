@@ -608,9 +608,9 @@ export class PaymentService {
         body: JSON.stringify({ token })
       });
 
-      const result = await response.json();
+      const result = await response.json() as any;
 
-      if (result.state && result.state.name === 'Completed') {
+      if (result?.state && result.state.name === 'Completed') {
         // Find transaction by token
         const transaction = await Transaction.findOne({ 
           'metadata.token': token,

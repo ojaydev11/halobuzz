@@ -169,7 +169,7 @@ router.get('/history', async (req: AuthenticatedRequest, res: Response) => {
     if (cachedHistory) {
       return res.json({
         success: true,
-        data: JSON.parse(cachedHistory)
+        data: typeof cachedHistory === 'string' ? JSON.parse(cachedHistory) : cachedHistory
       });
     }
 
@@ -270,7 +270,7 @@ router.get('/unread-count', async (req: AuthenticatedRequest, res: Response) => 
       return res.json({
         success: true,
         data: {
-          count: parseInt(cachedCount)
+          count: typeof cachedCount === 'string' ? parseInt(cachedCount) : cachedCount
         }
       });
     }

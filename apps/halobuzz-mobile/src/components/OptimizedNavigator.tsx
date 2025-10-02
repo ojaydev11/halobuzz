@@ -1,5 +1,5 @@
 import React, { useCallback, useRef } from 'react';
-import { Platform } from 'react-native';
+import { Platform, View } from 'react-native';
 import { PerformanceMonitor } from '@/utils/performanceMonitor';
 import { useNavigationPrefetch, useTabPrefetch } from '@/hooks/useNavigationPrefetch';
 
@@ -58,12 +58,12 @@ export const OptimizedNavigator: React.FC<{
   }, [transitionTimeout]);
 
   return (
-    <div
+    <View
       {...(Platform.OS === 'web' ? {} : gesturePrefetch?.panHandlers)}
       style={{ flex: 1 }}
     >
       {children}
-    </div>
+    </View>
   );
 });
 

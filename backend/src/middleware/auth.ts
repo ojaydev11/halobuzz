@@ -4,18 +4,8 @@ import { User } from '../models/User';
 import { logger } from '../config/logger';
 import { getCache, setCache } from '../config/redis';
 
-export interface AuthenticatedRequest extends Request {
-  user?: {
-    userId: string;
-    id: string; // Add id field for compatibility
-    email: string;
-    role: string;
-    isVerified: boolean;
-    isBanned: boolean;
-    isAdmin?: boolean;
-    username?: string;
-  };
-}
+// Use the AuthenticatedRequest interface from enhancedSecurity for consistency
+export { AuthenticatedRequest } from './enhancedSecurity';
 
 interface SessionData {
   userId: string;

@@ -69,3 +69,4 @@ Write-Host "AI Engine: http://localhost:5020" -ForegroundColor Cyan
 Write-Host "Mobile App: Scan QR code above with Expo Go" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "Press Ctrl+C to stop all services" -ForegroundColor Yellow
+

@@ -1,0 +1,167 @@
+{
+  "timestamp": "2025-10-02T06:09:25.085Z",
+  "summary": {
+    "totalOptimizations": 6,
+    "estimatedSavings": 55296
+  },
+  "results": {
+    "deadCodeRemoval": {
+      "unusedFiles": [
+        "D:\\halobuzz by cursor\\apps\\halobuzz-mobile\\src\\animations\\SmoothAnimations.tsx",
+        "D:\\halobuzz by cursor\\apps\\halobuzz-mobile\\src\\components\\LiveRoomGames.tsx",
+        "D:\\halobuzz by cursor\\apps\\halobuzz-mobile\\src\\lib\\routeDiscovery.ts",
+        "D:\\halobuzz by cursor\\apps\\halobuzz-mobile\\src\\screens\\AIContentStudioScreen.tsx",
+        "D:\\halobuzz by cursor\\apps\\halobuzz-mobile\\src\\screens\\BigGamesLobbyScreen.tsx",
+        "D:\\halobuzz by cursor\\apps\\halobuzz-mobile\\src\\screens\\EnhancedGamesScreen.tsx",
+        "D:\\halobuzz by cursor\\apps\\halobuzz-mobile\\src\\screens\\HaloArenaGameScreen.tsx",
+        "D:\\halobuzz by cursor\\apps\\halobuzz-mobile\\src\\services\\haloBuzzAPI.ts",
+        "D:\\halobuzz by cursor\\apps\\halobuzz-mobile\\src\\services\\NotificationService.ts",
+        "D:\\halobuzz by cursor\\apps\\halobuzz-mobile\\src\\services\\OptimizedSocket.ts"
+      ],
+      "unusedExports": [],
+      "savings": 55296
+    },
+    "assetOptimization": {
+      "before": 280,
+      "after": 280,
+      "optimized": []
+    },
+    "dependencyAnalysis": {
+      "total": 53,
+      "unused": [
+        {
+          "name": "expo-font",
+          "version": "~14.0.8"
+        },
+        {
+          "name": "expo-splash-screen",
+          "version": "~31.0.10"
+        },
+        {
+          "name": "expo-system-ui",
+          "version": "~6.0.7"
+        },
+        {
+          "name": "jotai",
+          "version": "^2.6.0"
+        },
+        {
+          "name": "react-dom",
+          "version": "19.1.0"
+        },
+        {
+          "name": "react-native-screens",
+          "version": "~4.16.0"
+        },
+        {
+          "name": "react-native-super-grid",
+          "version": "^6.0.2"
+        },
+        {
+          "name": "react-native-web",
+          "version": "^0.21.0"
+        },
+        {
+          "name": "react-native-worklets",
+          "version": "0.5.1"
+        },
+        {
+          "name": "react-native-worklets-core",
+          "version": "^1.6.2"
+        },
+        {
+          "name": "zod",
+          "version": "^3.22.4"
+        },
+        {
+          "name": "@babel/core",
+          "version": "^7.20.0"
+        },
+        {
+          "name": "@react-native-community/cli",
+          "version": "^20.0.2"
+        },
+        {
+          "name": "@types/crypto-js",
+          "version": "^4.2.2"
+        },
+        {
+          "name": "@types/jest",
+          "version": "^29.5.0"
+        },
+        {
+          "name": "@types/node",
+          "version": "^20.10.0"
+        },
+        {
+          "name": "@types/react",
+          "version": "~19.1.10"
+        },
+        {
+          "name": "babel-plugin-module-resolver",
+          "version": "^5.0.0"
+        },
+        {
+          "name": "babel-plugin-transform-imports",
+          "version": "^2.0.0"
+        },
+        {
+          "name": "babel-plugin-transform-inline-environment-variables",
+          "version": "^0.4.4"
+        },
+        {
+          "name": "babel-plugin-transform-react-remove-prop-types",
+          "version": "^0.4.24"
+        },
+        {
+          "name": "babel-plugin-transform-remove-console",
+          "version": "^6.9.4"
+        },
+        {
+          "name": "expo-build-properties",
+          "version": "~1.0.9"
+        },
+        {
+          "name": "jest-expo",
+          "version": "~54.0.12"
+        },
+        {
+          "name": "typescript",
+          "version": "~5.9.2"
+        }
+      ],
+      "heavy": [
+        {
+          "name": "react-native-agora",
+          "size": "2.1MB"
+        },
+        {
+          "name": "socket.io-client",
+          "size": "400KB"
+        }
+      ],
+      "duplicates": [],
+      "suggestions": []
+    },
+    "bundleSplitting": {
+      "configUpdated": true,
+      "optimizations": [
+        "minification",
+        "tree-shaking",
+        "chunk-splitting"
+      ]
+    },
+    "codeShaking": {
+      "enabled": true,
+      "libraries": [
+        "lodash",
+        "@expo/vector-icons"
+      ]
+    },
+    "localeOptimization": {
+      "removed": 0,
+      "kept": 12,
+      "savings": 0
+    }
+  }
+}

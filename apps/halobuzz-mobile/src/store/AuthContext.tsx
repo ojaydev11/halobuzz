@@ -4,6 +4,8 @@ import { User, LoginRequest, RegisterRequest } from '@/types/auth';
 import { apiClient } from '@/lib/api';
 import { SecureStorageManager, secureLogger } from '@/lib/security';
 import { validateDemoCredentials, generateDemoToken, DemoUser } from '@/utils/demoAuth';
+import { useOfflineMode } from '@/hooks/useOfflineMode';
+import { devServerManager, shouldUseOfflineMode } from '@/utils/devServer';
 
 interface AuthContextType {
   user: User | null;
@@ -26,60 +28,99 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const secureStorage = new SecureStorageManager();
+  const { isOffline } = useOfflineMode();
 
   const isAuthenticated = !!user;
 
   useEffect(() => {
-    checkAuthState();
+    initializeAuth();
   }, []);
+
+  const initializeAuth = async () => {
+    try {
+      // In development, check if local server is running
+      if (__DEV__) {
+        const serverRunning = await devServerManager.checkServerHealth();
+        if (serverRunning) {
+          secureLogger.log('Development server is running, using live API');
+        } else {
+          secureLogger.warn('Development server not running, using offline mode');
+        }
+      }
+      
+      await checkAuthState();
+    } catch (error) {
+      secureLogger.error('Auth initialization failed', error);
+      setIsLoading(false);
+    }
+  };
 
   const checkAuthState = async () => {
     try {
-      const token = await secureStorage.getAuthToken();
-      if (token) {
-        try {
-          const response = await apiClient.getCurrentUser();
-          if (response.success && response.data) {
-            setUser(response.data.user);
-            secureLogger.log('Auth state restored for user', { username: response.data.user.username });
-          } else {
-            // Token is invalid, clear it
-            await secureStorage.clearAuthTokens();
-            secureLogger.warn('Invalid token detected, cleared auth state');
+      // Add timeout to prevent infinite loading
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Auth check timeout')), 5000);
+      });
+
+      const authCheckPromise = async () => {
+        const token = await secureStorage.getAuthToken();
+        if (token) {
+          try {
+            const response = await apiClient.getCurrentUser();
+            if (response.success && response.data) {
+              setUser(response.data.user);
+              secureLogger.log('Auth state restored for user', { username: response.data.user.username });
+            } else {
+              // Token is invalid, clear it
+              await secureStorage.clearAuthTokens();
+              secureLogger.warn('Invalid token detected, cleared auth state');
+            }
+          } catch (apiError) {
+            // If offline or server error, use temporary fallback
+            if (isOffline || (apiError as any)?.code === 'ECONNREFUSED' || (apiError as any)?.code === 'NETWORK_ERROR') {
+              secureLogger.warn('Offline mode or server unavailable, using temporary fallback', apiError);
+              const tempUser: User = {
+                id: 'temp_user_1',
+                username: 'temp_user',
+                email: 'temp@halobuzz.com',
+                displayName: 'Temp User',
+                avatar: 'https://i.pravatar.cc/150?img=1',
+                country: 'US',
+                language: 'en',
+                isVerified: true,
+                kycStatus: 'verified',
+                ageVerified: true,
+                totalCoinsEarned: 1000,
+                coins: 500,
+                followers: 150,
+                following: 75,
+                totalLikes: 2500,
+                totalViews: 15000,
+                ogLevel: 3,
+                token: 'temp_token',
+                refreshToken: 'temp_refresh_token',
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+              };
+              setUser(tempUser);
+            } else {
+              // For other errors, clear the token
+              await secureStorage.clearAuthTokens();
+              secureLogger.error('Auth check failed, cleared tokens', apiError);
+            }
           }
-        } catch (apiError) {
-          // Temporary fallback for backend connection issues
-          secureLogger.warn('API authentication failed, using temporary fallback', apiError);
-          const tempUser: User = {
-            id: 'temp_user_1',
-            username: 'temp_user',
-            email: 'temp@halobuzz.com',
-            displayName: 'Temp User',
-            avatar: 'https://i.pravatar.cc/150?img=1',
-            country: 'US',
-            language: 'en',
-            isVerified: true,
-            kycStatus: 'verified',
-            ageVerified: true,
-            totalCoinsEarned: 1000,
-            coins: 500,
-            followers: 150,
-            following: 75,
-            totalLikes: 2500,
-            totalViews: 15000,
-            ogLevel: 3,
-            token: 'temp_token',
-            refreshToken: 'temp_refresh_token',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          };
-          setUser(tempUser);
         }
-      }
+      };
+
+      await Promise.race([authCheckPromise(), timeoutPromise]);
     } catch (error) {
-      secureLogger.error('Auth check failed', error);
-      // Clear invalid token
-      await secureStorage.clearAuthTokens();
+      secureLogger.error('Auth check failed or timed out', error);
+      // Clear invalid token and continue without authentication
+      try {
+        await secureStorage.clearAuthTokens();
+      } catch (clearError) {
+        secureLogger.error('Failed to clear auth tokens', clearError);
+      }
     } finally {
       setIsLoading(false);
     }

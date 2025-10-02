@@ -160,14 +160,20 @@ const gameSchema = new Schema<IGame>({
   timestamps: true
 });
 
-// Indexes
-gameSchema.index({ isActive: 1 });
-gameSchema.index({ type: 1 });
-gameSchema.index({ category: 1 });
-gameSchema.index({ code: 1 });
-gameSchema.index({ entryFee: 1 });
+// Performance-optimized indexes
+gameSchema.index({ isActive: 1, type: 1 }); // Active games by type
+gameSchema.index({ category: 1, isActive: 1 }); // Games by category
+gameSchema.index({ code: 1 }, { unique: true }); // Unique game codes
+gameSchema.index({ minStake: 1, maxStake: 1, isActive: 1 }); // Stake range queries
+gameSchema.index({ roundDuration: 1, isActive: 1 }); // Game duration queries
+
+// Analytics indexes
 gameSchema.index({ 'metadata.totalPlayed': -1 });
 gameSchema.index({ 'metadata.averagePlayers': -1 });
+gameSchema.index({ 'metadata.totalPrizePool': -1 });
+
+// Search and filtering
+gameSchema.index({ name: 'text', description: 'text' }); // Full-text search
 
 // Pre-save middleware to update metadata
 gameSchema.pre('save', function(next) {

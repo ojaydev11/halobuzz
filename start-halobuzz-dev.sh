@@ -83,3 +83,4 @@ echo "AI Engine: http://localhost:5020"
 echo "Mobile App: Scan QR code above with Expo Go"
 echo ""
 echo "Press Ctrl+C to stop all services"
+

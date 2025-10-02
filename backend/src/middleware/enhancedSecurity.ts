@@ -8,6 +8,7 @@ import { body, validationResult } from 'express-validator';
 import { User } from '@/models/User';
 import { logger } from '@/config/logger';
 import { getCache, setCache } from '@/config/redis';
+import csurf from 'csurf';
 
 /**
  * Enhanced Security Middleware addressing OWASP Top 10 vulnerabilities
@@ -71,18 +72,20 @@ export class EnhancedRBAC {
  * 2. CRYPTOGRAPHIC FAILURES - Enhanced encryption and hashing
  */
 export class CryptographicSecurity {
-  private static readonly ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || crypto.randomBytes(32);
+  private static readonly ENCRYPTION_KEY = process.env.ENCRYPTION_KEY ?
+    crypto.scryptSync(process.env.ENCRYPTION_KEY, 'salt', 32) :
+    crypto.randomBytes(32);
   private static readonly ALGORITHM = 'aes-256-gcm';
 
   static encrypt(text: string): { encrypted: string; iv: string; tag: string } {
     const iv = crypto.randomBytes(16);
-    const cipher = crypto.createCipher(this.ALGORITHM, this.ENCRYPTION_KEY);
-    
+    const cipher = crypto.createCipherGCM(this.ALGORITHM, this.ENCRYPTION_KEY);
+
     let encrypted = cipher.update(text, 'utf8', 'hex');
     encrypted += cipher.final('hex');
-    
+
     const tag = cipher.getAuthTag();
-    
+
     return {
       encrypted,
       iv: iv.toString('hex'),
@@ -91,12 +94,12 @@ export class CryptographicSecurity {
   }
 
   static decrypt(encryptedData: { encrypted: string; iv: string; tag: string }): string {
-    const decipher = crypto.createDecipher(this.ALGORITHM, this.ENCRYPTION_KEY);
+    const decipher = crypto.createDecipherGCM(this.ALGORITHM, this.ENCRYPTION_KEY, Buffer.from(encryptedData.iv, 'hex'));
     decipher.setAuthTag(Buffer.from(encryptedData.tag, 'hex'));
-    
+
     let decrypted = decipher.update(encryptedData.encrypted, 'hex', 'utf8');
     decrypted += decipher.final('utf8');
-    
+
     return decrypted;
   }
 
@@ -303,6 +306,22 @@ export class MFAService {
       codes.push(crypto.randomBytes(4).toString('hex').toUpperCase());
     }
     return codes;
+  }
+
+  static generateSecret(): string {
+    return this.generateTOTPSecret();
+  }
+
+  static getQRCodeUrl(email: string, secret: string): string {
+    return `otpauth://totp/HaloBuzz:${email}?secret=${secret}&issuer=HaloBuzz`;
+  }
+
+  static verifyToken(secret: string, token: string): boolean {
+    return this.verifyTOTPCode(secret, token);
+  }
+
+  static verifyBackupCode(backupCodes: string[], code: string): boolean {
+    return backupCodes.includes(code.toUpperCase());
   }
 }
 
@@ -660,6 +679,31 @@ export const createRateLimit = (options: {
       });
     }
   });
+};
+
+/**
+ * CSRF Protection Middleware
+ */
+export const csrfProtection = csurf({
+  cookie: {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  },
+  value: (req: Request) => {
+    // Use custom header if provided, fallback to token in body
+    return (req.headers['x-csrf-token'] as string) || (req.body && req.body._csrf);
+  }
+});
+
+/**
+ * Generate CSRF token for requests
+ */
+export const generateCsrfToken = (req: Request, res: Response) => {
+  const token = req.csrfToken();
+  res.locals.csrfToken = token;
+  return token;
 };
 
 /**

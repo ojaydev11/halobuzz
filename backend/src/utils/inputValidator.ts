@@ -135,10 +135,22 @@ export class InputValidator {
   static sanitizeInput(input: any): any {
     if (typeof input === 'string') {
       return input
-        .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '') // Remove script tags
-        .replace(/javascript:/gi, '') // Remove javascript: protocol
-        .replace(/on\w+\s*=/gi, '') // Remove event handlers
-        .replace(/[<>]/g, '') // Remove angle brackets
+        // Remove script tags and content
+        .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+        // Remove javascript: protocol
+        .replace(/javascript:/gi, '')
+        // Remove event handlers
+        .replace(/on\w+\s*=/gi, '')
+        // Remove data URLs that could contain scripts
+        .replace(/data:(text\/html|application\/javascript|text\/javascript)[^;]/gi, '')
+        // Remove potential SQL injection patterns
+        .replace(/(\b(union|select|insert|update|delete|drop|create|alter|exec|execute)\b)/gi, '')
+        // Remove HTML tags
+        .replace(/<[^>]*>/g, '')
+        // Remove null bytes
+        .replace(/\0/g, '')
+        // Normalize unicode
+        .normalize('NFKC')
         .trim();
     }
 
@@ -149,7 +161,10 @@ export class InputValidator {
     if (typeof input === 'object' && input !== null) {
       const sanitized: any = {};
       for (const [key, value] of Object.entries(input)) {
-        sanitized[key] = this.sanitizeInput(value);
+        // Skip dangerous keys
+        if (!['__proto__', 'constructor', 'prototype'].includes(key)) {
+          sanitized[key] = this.sanitizeInput(value);
+        }
       }
       return sanitized;
     }
