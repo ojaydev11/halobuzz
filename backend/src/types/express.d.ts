@@ -38,7 +38,7 @@ export interface AuthUser {
   isBanned: boolean;
 
   /** Admin privileges */
-  isAdmin?: boolean;
+  isAdmin: boolean;
 
   /** User roles (for RBAC) */
   roles?: string[];
