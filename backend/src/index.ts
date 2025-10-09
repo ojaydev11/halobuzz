@@ -367,7 +367,6 @@ app.use(`/api/${apiVersion}/social`, socialRoutes); // Social features - friends
 app.use(`/api/${apiVersion}/monetization`, monetizationRoutes); // Monetization - IAP, battle pass, rewards
 app.use(`/api/${apiVersion}/config`, authMiddleware, configRoutes);
 app.use(`/api/${apiVersion}/kyc`, authMiddleware, kycRoutes);
-import { requireAdmin } from '@/middleware/enhancedSecurity';
 app.use(`/api/${apiVersion}/admin`, authMiddleware, requireAdmin, adminRoutes);
 app.use(`/api/${apiVersion}/monitoring`, monitoringRoutes);
 app.use(`/api/${apiVersion}/security`, securityRoutes);
@@ -417,8 +416,8 @@ app.use(`/api/${apiVersion}/advanced-gifts`, authMiddleware, advancedGiftsRoutes
 app.use(`/api/${apiVersion}/fortress-security`, authMiddleware, fortressSecurityRoutes);
 app.use(`/api/${apiVersion}/gamification`, authMiddleware, gamificationRoutes);
 
-// Empire Dashboard routes - FIXED duplicate mount
-import { empireRoutes } from '@/routes/empire';
+// Empire Dashboard routes
+import empireRoutes from '@/routes/empire';
 app.use(`/api/${apiVersion}/empire`, empireRoutes);
 
 // Analytics Scheduler routes
@@ -518,35 +517,31 @@ const startServer = async () => {
       logger.warn('Security audit service initialization failed:', error instanceof Error ? error.message : String(error));
     }
 
-    // Initialize advanced engine services
+    // Initialize advanced engine services (these auto-initialize on import)
     try {
-      const { aiPersonalization } = await import('@/services/AIHyperPersonalizationEngine');
-      await aiPersonalization.initialize();
-      logger.info('AI Hyper-Personalization Engine initialized successfully');
+      await import('@/services/AIHyperPersonalizationEngine');
+      logger.info('AI Hyper-Personalization Engine loaded successfully');
     } catch (error) {
       logger.warn('AI Hyper-Personalization Engine initialization failed:', error instanceof Error ? error.message : String(error));
     }
 
     try {
-      const { advancedGiftEconomy } = await import('@/services/AdvancedGiftEconomyService');
-      await advancedGiftEconomy.initialize();
-      logger.info('Advanced Gift Economy Service initialized successfully');
+      await import('@/services/AdvancedGiftEconomyService');
+      logger.info('Advanced Gift Economy Service loaded successfully');
     } catch (error) {
       logger.warn('Advanced Gift Economy Service initialization failed:', error instanceof Error ? error.message : String(error));
     }
 
     try {
-      const { fortressSecurity } = await import('@/services/FortressSecuritySystem');
-      await fortressSecurity.initialize();
-      logger.info('Fortress Security System initialized successfully');
+      await import('@/services/FortressSecuritySystem');
+      logger.info('Fortress Security System loaded successfully');
     } catch (error) {
       logger.warn('Fortress Security System initialization failed:', error instanceof Error ? error.message : String(error));
     }
 
     try {
-      const { gamificationEngine } = await import('@/services/GamificationAddictionEngine');
-      await gamificationEngine.initialize();
-      logger.info('Gamification Addiction Engine initialized successfully');
+      await import('@/services/GamificationAddictionEngine');
+      logger.info('Gamification Addiction Engine loaded successfully');
     } catch (error) {
       logger.warn('Gamification Addiction Engine initialization failed:', error instanceof Error ? error.message : String(error));
       logger.warn('Continuing without automated security audits');

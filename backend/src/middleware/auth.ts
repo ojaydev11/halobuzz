@@ -408,10 +408,10 @@ export const requireAgeVerification = async (req: AuthenticatedRequest, res: Res
 
     // Check if user has verified their age
     const user = await User.findById(req.user.userId);
-    if (!user || !user.isAgeVerified) {
-      return res.status(403).json({ 
-        success: false, 
-        error: 'Age verification required' 
+    if (!user || !user.ageVerified) {
+      return res.status(403).json({
+        success: false,
+        error: 'Age verification required'
       });
     }
 
