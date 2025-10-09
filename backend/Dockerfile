@@ -96,6 +96,7 @@ RUN --mount=type=cache,id=pnpm-store,target=/root/.pnpm-store \
 COPY --from=build /app/src ./src
 COPY --from=build /app/package*.json ./
 COPY --from=build /app/pnpm-lock.yaml ./
+COPY --from=build /app/tsconfig*.json ./
 
 # Create logs directory
 RUN mkdir -p logs && chown -R halobuzz:nodejs logs

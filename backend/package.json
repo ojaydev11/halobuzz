@@ -6,10 +6,11 @@
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only -r tsconfig-paths/register src/index.ts",
     "seed": "ts-node scripts/seeds/index.ts",
-    "build": "node scripts/build.js",
+    "build": "tsc && tsc-alias",
     "build:dev": "ts-node-dev --transpile-only src/index.ts",
     "build:ts": "tsc",
-    "start": "node dist/index.js",
+    "start": "node -r tsconfig-paths/register dist/index.js",
+    "start:prod": "ts-node -r tsconfig-paths/register src/index.ts",
     "test": "jest --runInBand",
     "test:watch": "jest --watchAll",
     "test:unit": "jest --testPathPattern=unit --runInBand",
