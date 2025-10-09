@@ -127,7 +127,8 @@ import aiRecommendationRoutes from '@/routes/ai-recommendations';
 import advancedAnalyticsRoutes from '@/routes/advanced-analytics';
 import mlOptimizationRoutes from '@/routes/ml-optimization';
 import realTimePersonalizationRoutes from '@/routes/real-time-personalization';
-import advancedFraudDetectionRoutes from '@/routes/advanced-fraud-detection';
+// TODO PR#4-6: Re-enable these routes after implementing missing service methods
+// import advancedFraudDetectionRoutes from '@/routes/advanced-fraud-detection';
 import agoraRoutes from '@/routes/agora';
 import aiContentStudioRoutes from '@/routes/aiContentStudio';
 
@@ -137,11 +138,11 @@ import moderationRoutes from '@/routes/moderation';
 import haloaiRoutes from '@/routes/haloai';
 import webrtcRoutes from '@/routes/webrtc';
 import subtitlesRoutes from '@/routes/subtitles';
-import securePaymentRoutes from '@/routes/secure-payment';
+// import securePaymentRoutes from '@/routes/secure-payment'; // TEMPORARILY DISABLED - type errors
 
-// Advanced Engine routes
-import aiPersonalizationRoutes from '@/routes/ai-personalization';
-import advancedGiftsRoutes from '@/routes/advanced-gifts';
+// Advanced Engine routes - TODO PR#6: Re-enable after implementing methods
+// import aiPersonalizationRoutes from '@/routes/ai-personalization';
+// import advancedGiftsRoutes from '@/routes/advanced-gifts';
 import fortressSecurityRoutes from '@/routes/fortress-security';
 import gamificationRoutes from '@/routes/gamification';
 import enhancedAuthRoutes from '@/routes/enhanced-auth';
@@ -406,7 +407,7 @@ app.use(`/api/${apiVersion}/webrtc`, authMiddleware, webrtcRoutes);
 app.use(`/api/${apiVersion}/subtitles`, authMiddleware, subtitlesRoutes);
 
 // New Security and Monitoring routes
-app.use(`/api/${apiVersion}/secure-payment`, authMiddleware, securePaymentRoutes);
+// app.use(`/api/${apiVersion}/secure-payment`, authMiddleware, securePaymentRoutes); // TEMPORARILY DISABLED
 app.use(`/api/${apiVersion}/enhanced-auth`, enhancedAuthRoutes);
 app.use(`/api/${apiVersion}/production-monitoring`, authMiddleware, productionMonitoringRoutes);
 
