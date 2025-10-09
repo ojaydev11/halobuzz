@@ -26,9 +26,9 @@ ENV MONGOMS_VERSION=7.0.0
 ENV MONGOMS_DISABLE_POSTINSTALL=1
 ENV MONGOMS_SYSTEM_BINARY=/usr/bin/mongod
 
-# Install dependencies with cache mount
+# Install dependencies with cache mount (skip optional deps to save memory)
 RUN --mount=type=cache,id=pnpm-store,target=/root/.pnpm-store \
-    pnpm install --frozen-lockfile
+    pnpm install --frozen-lockfile --no-optional --ignore-scripts
 
 # ---- Build stage ----
 FROM node:20-alpine AS build
@@ -87,10 +87,10 @@ ENV MONGOMS_VERSION=7.0.0
 ENV MONGOMS_DISABLE_POSTINSTALL=1
 ENV MONGOMS_SYSTEM_BINARY=/usr/bin/mongod
 
-# Install production dependencies only
+# Install production dependencies only (minimal for emergency fix)
+# Only install what minimal-index.ts actually needs
 RUN --mount=type=cache,id=pnpm-store,target=/root/.pnpm-store \
-    pnpm install --frozen-lockfile --prod && \
-    pnpm add ts-node tsconfig-paths
+    pnpm add express dotenv ts-node typescript @types/express @types/node
 
 # Copy source code (no dist directory needed)
 COPY --from=build /app/src ./src
@@ -106,6 +106,7 @@ ENV NODE_ENV=production
 ENV PORT=4000
 ENV API_VERSION=v1
 ENV HOST=0.0.0.0
+ENV NODE_OPTIONS="--max-old-space-size=512"
 
 # Switch to non-root user
 USER halobuzz
