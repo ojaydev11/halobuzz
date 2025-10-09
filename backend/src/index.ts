@@ -123,10 +123,10 @@ import viralGrowthRoutes from '@/routes/viral-growth';
 import trustCredibilityRoutes from '@/routes/trust-credibility';
 import revenueOptimizationRoutes from '@/routes/revenue-optimization';
 // AI/ML services - enabled for production
-import aiRecommendationRoutes from '@/routes/ai-recommendations';
+// import aiRecommendationRoutes from '@/routes/ai-recommendations'; // TEMPORARILY DISABLED (imports AnalyticsEvent)
 // import advancedAnalyticsRoutes from '@/routes/advanced-analytics'; // TEMPORARILY DISABLED - compilation errors
-import mlOptimizationRoutes from '@/routes/ml-optimization';
-import realTimePersonalizationRoutes from '@/routes/real-time-personalization';
+// import mlOptimizationRoutes from '@/routes/ml-optimization'; // TEMPORARILY DISABLED (imports AnalyticsEvent)
+// import realTimePersonalizationRoutes from '@/routes/real-time-personalization'; // TEMPORARILY DISABLED (imports AnalyticsEvent)
 import advancedFraudDetectionRoutes from '@/routes/advanced-fraud-detection';
 import agoraRoutes from '@/routes/agora';
 import aiContentStudioRoutes from '@/routes/aiContentStudio';
@@ -375,11 +375,11 @@ app.use(`/api/${apiVersion}/notifications`, authMiddleware, notificationRoutes);
 app.use(`/api/${apiVersion}/viral`, authMiddleware, viralGrowthRoutes);
 app.use(`/api/${apiVersion}/trust`, authMiddleware, trustCredibilityRoutes);
 app.use(`/api/${apiVersion}/revenue`, authMiddleware, revenueOptimizationRoutes);
-// AI/ML services routes - enabled for production
-app.use(`/api/${apiVersion}/ai-recommendations`, authMiddleware, aiRecommendationRoutes);
+// AI/ML services routes - TEMPORARILY DISABLED (all import analytics)
+// app.use(`/api/${apiVersion}/ai-recommendations`, authMiddleware, aiRecommendationRoutes); // TEMPORARILY DISABLED
 // app.use(`/api/${apiVersion}/advanced-analytics`, authMiddleware, advancedAnalyticsRoutes); // TEMPORARILY DISABLED
-app.use(`/api/${apiVersion}/ml-optimization`, authMiddleware, mlOptimizationRoutes);
-app.use(`/api/${apiVersion}/personalization`, authMiddleware, realTimePersonalizationRoutes);
+// app.use(`/api/${apiVersion}/ml-optimization`, authMiddleware, mlOptimizationRoutes); // TEMPORARILY DISABLED
+// app.use(`/api/${apiVersion}/personalization`, authMiddleware, realTimePersonalizationRoutes); // TEMPORARILY DISABLED
 app.use(`/api/${apiVersion}/fraud-detection`, authMiddleware, advancedFraudDetectionRoutes);
 app.use(`/api/${apiVersion}/agora`, authMiddleware, agoraRoutes);
 
@@ -395,9 +395,9 @@ app.use(`/api/${apiVersion}/ai-content-studio`, aiContentStudioRoutes);
 // AI Content Generation routes
 app.use(`/api/${apiVersion}/ai-content`, authMiddleware, aiContentRoutes);
 
-// AI Business Analytics routes
-import aiBusinessRoutes from '@/routes/ai-business';
-app.use(`/api/${apiVersion}/ai/business`, authMiddleware, aiBusinessRoutes);
+// AI Business Analytics routes - TEMPORARILY DISABLED (imports analytics KPIs)
+// import aiBusinessRoutes from '@/routes/ai-business'; // TEMPORARILY DISABLED
+// app.use(`/api/${apiVersion}/ai/business`, authMiddleware, aiBusinessRoutes);
 
 // New AI Services routes
 app.use(`/api/${apiVersion}/moderation`, authMiddleware, moderationRoutes);
@@ -416,9 +416,9 @@ app.use(`/api/${apiVersion}/advanced-gifts`, authMiddleware, advancedGiftsRoutes
 app.use(`/api/${apiVersion}/fortress-security`, authMiddleware, fortressSecurityRoutes);
 app.use(`/api/${apiVersion}/gamification`, authMiddleware, gamificationRoutes);
 
-// Empire Dashboard routes
-import empireRoutes from '@/routes/empire';
-app.use(`/api/${apiVersion}/empire`, empireRoutes);
+// Empire Dashboard routes - TEMPORARILY DISABLED (imports analytics models)
+// import empireRoutes from '@/routes/empire'; // TEMPORARILY DISABLED
+// app.use(`/api/${apiVersion}/empire`, empireRoutes);
 
 // Analytics Scheduler routes - TEMPORARILY DISABLED
 // import analyticsSchedulerRoutes from '@/routes/analytics-scheduler'; // TEMPORARILY DISABLED - compilation errors

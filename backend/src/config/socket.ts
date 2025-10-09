@@ -88,9 +88,7 @@ export const setupRedisAdapter = async (io: Server): Promise<void> => {
     const adapter = createAdapter(pubClient, subClient, {
       // Enhanced adapter options for massive scaling
       key: 'socket.io', // Namespace for Redis keys
-      requestsTimeout: 5000, // Timeout for requests
-      heartbeatInterval: 1000, // Heartbeat interval
-      heartbeatTimeout: 5000 // Heartbeat timeout
+      requestsTimeout: 5000 // Timeout for requests
     });
     
     io.adapter(adapter);
@@ -122,12 +120,11 @@ export const setupRedisAdapter = async (io: Server): Promise<void> => {
       try {
         logger.info('Attempting enhanced Redis adapter connection without SSL as fallback...');
         const fallbackUrl = redisUrl.replace('rediss://', 'redis://');
-        const pubClient = createClient({ 
+        const pubClient = createClient({
           url: fallbackUrl,
           socket: {
             connectTimeout: 5000,
-            lazyConnect: true,
-            keepAlive: true
+            keepAlive: 5000
           }
         });
         const subClient = pubClient.duplicate();
@@ -817,9 +814,9 @@ export const setupSocketIO = (io: Server): void => {
             socket.leave(room);
             
             // Update room metadata
-            const roomMetadata = await getCache(`room:${room}:metadata`);
+            const roomMetadata = await getCache(`room:${room}:metadata`) as any;
             if (roomMetadata) {
-              roomMetadata.memberCount = Math.max(0, (roomMetadata.memberCount || 1) - 1);
+              roomMetadata.memberCount = Math.max(0, (roomMetadata.memberCount ||  1) - 1);
               await setCache(`room:${room}:metadata`, roomMetadata, 3600);
             }
           }
