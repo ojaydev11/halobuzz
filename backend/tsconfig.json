@@ -40,11 +40,14 @@
     "dist",
     "**/*.test.ts",
     "**/*.spec.ts",
+    "src/__tests__/**/*",
     "src/gameserver.ts",
     "src/services/AIContentRecommendationService.ts",
     "src/services/IAPValidationService.ts",
     "src/services/MachineLearningOptimizationService.ts",
     "src/services/ViralGrowthService.ts",
-    "src/services/monitoringService.ts"
+    "src/services/monitoringService.ts",
+    "src/analytics/**/*",
+    "src/agents/**/*"
   ]
 }
