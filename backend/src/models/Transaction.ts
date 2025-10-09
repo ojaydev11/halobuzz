@@ -103,12 +103,8 @@ const transactionSchema = new Schema<ITransaction>({
 });
 
 // Indexes
-transactionSchema.index({ userId: 1, createdAt: -1 });
-transactionSchema.index({ type: 1, status: 1 });
-transactionSchema.index({ paymentMethod: 1 });
-transactionSchema.index({ transactionId: 1 }, { unique: true, sparse: true });
-transactionSchema.index({ referenceId: 1 });
-transactionSchema.index({ createdAt: -1 });
+// Note: Comprehensive indexes defined at the end of the schema (lines 159-179)
+// DO NOT ADD DUPLICATE INDEXES HERE - Mongoose will warn about duplicates
 
 // Pre-save middleware to calculate net amount and generate hash
 transactionSchema.pre('save', function(next) {

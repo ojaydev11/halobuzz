@@ -323,7 +323,7 @@ const tournamentSchema = new Schema<ITournament>({
 });
 
 // Indexes for efficient queries
-tournamentSchema.index({ code: 1 }, { unique: true });
+// Note: code already has unique index from schema definition (line 169)
 tournamentSchema.index({ status: 1, 'schedule.tournamentStart': 1 });
 tournamentSchema.index({ gameMode: 1, status: 1, featured: -1 });
 tournamentSchema.index({ type: 1, 'schedule.registrationStart': 1 });

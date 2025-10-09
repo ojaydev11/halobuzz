@@ -163,7 +163,7 @@ const gameSchema = new Schema<IGame>({
 // Performance-optimized indexes
 gameSchema.index({ isActive: 1, type: 1 }); // Active games by type
 gameSchema.index({ category: 1, isActive: 1 }); // Games by category
-gameSchema.index({ code: 1 }, { unique: true }); // Unique game codes
+// Note: code already has unique index from schema definition (line 52)
 gameSchema.index({ minStake: 1, maxStake: 1, isActive: 1 }); // Stake range queries
 gameSchema.index({ roundDuration: 1, isActive: 1 }); // Game duration queries
 

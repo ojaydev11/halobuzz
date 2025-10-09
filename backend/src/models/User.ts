@@ -427,13 +427,8 @@ const userSchema = new Schema<IUser>({
 
 // Indexes
 // Note: username, email, and phone already have unique indexes from schema definition
-userSchema.index({ country: 1 });
-userSchema.index({ ogLevel: -1, followers: -1 });
-userSchema.index({ lastActiveAt: -1 });
-userSchema.index({ isVerified: 1, isBanned: 1 });
-userSchema.index({ 'trust.score': -1 }); // For trust score ranking
-userSchema.index({ 'karma.total': -1 }); // For karma ranking
-userSchema.index({ 'karma.level': 1 }); // For karma level filtering
+// Comprehensive indexes defined at the end of the schema (lines 510-544)
+// DO NOT ADD DUPLICATE INDEXES HERE - Mongoose will warn about duplicates
 
 // Pre-save middleware to hash password
 userSchema.pre('save', async function(next) {

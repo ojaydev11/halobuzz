@@ -431,6 +431,7 @@ liveStreamSchema.index({ hostId: 1, status: 1, createdAt: -1 });
 liveStreamSchema.index({ moderationStatus: 1, createdAt: 1 });
 
 // Agora channel lookup
-liveStreamSchema.index({ agoraChannel: 1 }, { unique: true });
+// Note: agoraChannel already has unique index from schema definition (line 135)
+// Duplicate index removed to prevent Mongoose warning
 
 export const LiveStream = mongoose.model<ILiveStream>('LiveStream', liveStreamSchema);
