@@ -36,19 +36,14 @@ export const setupRedisAdapter = async (io: Server): Promise<void> => {
       password: password,
       socket: {
         connectTimeout: 5000, // Reduced timeout for faster failover
-        lazyConnect: true, // Lazy connection for better performance
+        lazyConnect: false, // Eager connection
         keepAlive: true,
         keepAliveInitialDelay: 0
       },
       // Connection pooling for high concurrency
-      maxRetriesPerRequest: 3,
-      retryDelayOnFailover: 100,
-      enableReadyCheck: true,
       maxRetriesPerRequest: null, // Disable retries for pub/sub
-      // Performance optimizations
-      lazyConnect: true,
-      // Memory optimization
-      maxmemoryPolicy: 'allkeys-lru'
+      retryDelayOnFailover: 100,
+      enableReadyCheck: true
     };
     
     // Handle SSL/TLS configuration for Redis adapter
@@ -95,11 +90,7 @@ export const setupRedisAdapter = async (io: Server): Promise<void> => {
       key: 'socket.io', // Namespace for Redis keys
       requestsTimeout: 5000, // Timeout for requests
       heartbeatInterval: 1000, // Heartbeat interval
-      heartbeatTimeout: 5000, // Heartbeat timeout
-      // Performance optimizations
-      requestsTimeout: 5000,
-      heartbeatInterval: 1000,
-      heartbeatTimeout: 5000
+      heartbeatTimeout: 5000 // Heartbeat timeout
     });
     
     io.adapter(adapter);
@@ -200,8 +191,8 @@ export const checkRateLimit = async (
   const socketId = socket.id;
   
   const key = action === 'global' ? `rate:${userId}:global` : `rate:${socketId}:${action}`;
-  const current = await getCache(key) || 0;
-  
+  const current = (await getCache(key) as number) || 0;
+
   if (current >= limit) {
     return {
       allowed: false,
@@ -209,9 +200,9 @@ export const checkRateLimit = async (
       resetTime: Date.now() + 60000 // 1 minute from now
     };
   }
-  
+
   // Increment counter
-  await setCache(key, current + 1, 60);
+  await setCache(key, (current as number) + 1, 60);
   
   return {
     allowed: true,
@@ -268,8 +259,8 @@ export const getRoomMemberCount = async (roomId: string): Promise<number> => {
   try {
     // This would typically use the Redis adapter to get room size
     // For now, return a cached value or estimate
-    const cached = await getCache(`room:${roomId}:count`);
-    return cached || 0;
+    const cached = (await getCache(`room:${roomId}:count`) as number) || 0;
+    return cached;
   } catch (error) {
     logger.error('Error getting room member count:', error);
     return 0;
@@ -332,14 +323,14 @@ export const setupSocketIO = (io: Server): void => {
       }
       
       // Check connection limits per user (max 5 concurrent connections)
-      const connectionCount = await getCache(`connections:${decoded.userId}`) || 0;
+      const connectionCount = (await getCache(`connections:${decoded.userId}`) as number) || 0;
       if (connectionCount >= 5) {
         logger.warn(`User ${decoded.userId} exceeded connection limit`);
         return next(new Error('Maximum concurrent connections exceeded'));
       }
-      
+
       // Increment connection count
-      await setCache(`connections:${decoded.userId}`, connectionCount + 1, 3600); // 1 hour TTL
+      await setCache(`connections:${decoded.userId}`, (connectionCount as number) + 1, 3600); // 1 hour TTL
       
       next();
     } catch (error) {
@@ -802,9 +793,9 @@ export const setupSocketIO = (io: Server): void => {
         logger.info(`User ${socket.userId} disconnected (reason: ${reason})`);
         
         // Decrement connection count
-        const connectionCount = await getCache(`connections:${socket.userId}`) || 0;
+        const connectionCount = (await getCache(`connections:${socket.userId}`) as number) || 0;
         if (connectionCount > 0) {
-          await setCache(`connections:${socket.userId}`, connectionCount - 1, 3600);
+          await setCache(`connections:${socket.userId}`, (connectionCount as number) - 1, 3600);
         }
         
         // Clean up socket metadata
