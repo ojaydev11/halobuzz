@@ -148,7 +148,9 @@ export class EnhancedAuthMiddleware {
    * Require super admin access
    */
   async requireSuperAdmin(req: AuthenticatedRequest, res: Response, next: NextFunction) {
-    if (!req.user || req.user.role !== 'super_admin') {
+    // Super admin check - would need to be validated against database role
+    const user = await User.findById(req.user?.id);
+    if (!req.user || !user || user.role !== 'super_admin') {
       return res.status(403).json({
         success: false,
         error: 'Super admin access required'
@@ -163,8 +165,8 @@ export class EnhancedAuthMiddleware {
   async verifyMFA(token: string): Promise<boolean> {
     try {
       const decoded = jwt.verify(token, this.mfaSecret) as any;
-      const cached = await getCache(`mfa_token:${token}`);
-      return cached && cached.verified;
+      const cached = await getCache(`mfa_token:${token}`) as MFAToken | null;
+      return !!(cached && cached.verified);
     } catch (error) {
       return false;
     }
@@ -194,7 +196,7 @@ export class EnhancedAuthMiddleware {
   async rateLimit(req: Request, res: Response, next: NextFunction) {
     try {
       const key = `rate_limit:${req.ip}:${req.path}`;
-      const current = await getCache(key) || 0;
+      const current = (await getCache(key) as number) || 0;
 
       if (current >= this.maxRequests) {
         return res.status(429).json({
@@ -203,7 +205,7 @@ export class EnhancedAuthMiddleware {
         });
       }
 
-      await setCache(key, current + 1, Math.ceil(this.windowMs / 1000));
+      await setCache(key, (current as number) + 1, Math.ceil(this.windowMs / 1000));
       next();
     } catch (error) {
       this.logger.error('Rate limiting error:', error);
@@ -382,7 +384,7 @@ export class EnhancedAuthMiddleware {
    */
   private async getUserRecentRequests(userId: string): Promise<number> {
     const key = `user_requests:${userId}`;
-    return await getCache(key) || 0;
+    return (await getCache(key) as number) || 0;
   }
 
   /**
@@ -406,7 +408,7 @@ export class EnhancedAuthMiddleware {
    */
   private async getUserFailedAttempts(userId: string): Promise<number> {
     const key = `failed_attempts:${userId}`;
-    return await getCache(key) || 0;
+    return (await getCache(key) as number) || 0;
   }
 
   /**
