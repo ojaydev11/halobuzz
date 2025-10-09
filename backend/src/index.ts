@@ -124,7 +124,7 @@ import trustCredibilityRoutes from '@/routes/trust-credibility';
 import revenueOptimizationRoutes from '@/routes/revenue-optimization';
 // AI/ML services - enabled for production
 import aiRecommendationRoutes from '@/routes/ai-recommendations';
-import advancedAnalyticsRoutes from '@/routes/advanced-analytics';
+// import advancedAnalyticsRoutes from '@/routes/advanced-analytics'; // TEMPORARILY DISABLED - compilation errors
 import mlOptimizationRoutes from '@/routes/ml-optimization';
 import realTimePersonalizationRoutes from '@/routes/real-time-personalization';
 import advancedFraudDetectionRoutes from '@/routes/advanced-fraud-detection';
@@ -150,7 +150,7 @@ import productionMonitoringRoutes from '@/routes/production-monitoring';
 // New creator economy routes
 import nftRoutes from '@/routes/nft';
 import subscriptionRoutes from '@/routes/subscription';
-import creatorAnalyticsRoutes from '@/routes/creator-analytics';
+// import creatorAnalyticsRoutes from '@/routes/creator-analytics'; // TEMPORARILY DISABLED - compilation errors
 import commerceRoutes from '@/routes/commerce';
 
 // Phase 4: Interactive Features routes
@@ -377,7 +377,7 @@ app.use(`/api/${apiVersion}/trust`, authMiddleware, trustCredibilityRoutes);
 app.use(`/api/${apiVersion}/revenue`, authMiddleware, revenueOptimizationRoutes);
 // AI/ML services routes - enabled for production
 app.use(`/api/${apiVersion}/ai-recommendations`, authMiddleware, aiRecommendationRoutes);
-app.use(`/api/${apiVersion}/advanced-analytics`, authMiddleware, advancedAnalyticsRoutes);
+// app.use(`/api/${apiVersion}/advanced-analytics`, authMiddleware, advancedAnalyticsRoutes); // TEMPORARILY DISABLED
 app.use(`/api/${apiVersion}/ml-optimization`, authMiddleware, mlOptimizationRoutes);
 app.use(`/api/${apiVersion}/personalization`, authMiddleware, realTimePersonalizationRoutes);
 app.use(`/api/${apiVersion}/fraud-detection`, authMiddleware, advancedFraudDetectionRoutes);
@@ -386,7 +386,7 @@ app.use(`/api/${apiVersion}/agora`, authMiddleware, agoraRoutes);
 // New creator economy routes
 app.use(`/api/${apiVersion}/nft`, nftRoutes);
 app.use(`/api/${apiVersion}/subscription`, subscriptionRoutes);
-app.use(`/api/${apiVersion}/analytics`, creatorAnalyticsRoutes);
+// app.use(`/api/${apiVersion}/analytics`, creatorAnalyticsRoutes); // TEMPORARILY DISABLED
 app.use(`/api/${apiVersion}/commerce`, commerceRoutes);
 
 // AI Content Studio routes
@@ -420,9 +420,9 @@ app.use(`/api/${apiVersion}/gamification`, authMiddleware, gamificationRoutes);
 import empireRoutes from '@/routes/empire';
 app.use(`/api/${apiVersion}/empire`, empireRoutes);
 
-// Analytics Scheduler routes
-import analyticsSchedulerRoutes from '@/routes/analytics-scheduler';
-app.use(`/api/${apiVersion}/analytics/scheduler`, authMiddleware, analyticsSchedulerRoutes);
+// Analytics Scheduler routes - TEMPORARILY DISABLED
+// import analyticsSchedulerRoutes from '@/routes/analytics-scheduler'; // TEMPORARILY DISABLED - compilation errors
+// app.use(`/api/${apiVersion}/analytics/scheduler`, authMiddleware, analyticsSchedulerRoutes);
 
 // Phase 4: Interactive Features routes
 // app.use(`/api/${process.env.API_VERSION || 'v1'}/collaboration`, collaborationRoutes);
