@@ -3,17 +3,6 @@ module.exports = function (api) {
   return {
     presets: ['babel-preset-expo'],
     plugins: [
-      // Tree shaking optimizations
-      ['babel-plugin-transform-imports', {
-        'lodash': {
-          'transform': 'lodash/${member}',
-          'preventFullImport': true
-        },
-        '@expo/vector-icons': {
-          'transform': '@expo/vector-icons/${member}',
-          'preventFullImport': true
-        }
-      }],
       [
         'module-resolver',
         {

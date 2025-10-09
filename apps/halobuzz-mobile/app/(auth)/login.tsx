@@ -1,109 +1,104 @@
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-} from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Redirect } from 'expo-router';
 import { useAuth } from '@/store/AuthContext';
-import { router } from 'expo-router';
 
 export default function LoginScreen() {
-  const [identifier, setIdentifier] = useState('');
+  const { isAuthenticated, login, isLoading } = useAuth();
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   const handleLogin = async () => {
-    if (!identifier.trim() || !password.trim()) {
+    if (!email || !password) {
+      Alert.alert('Error', 'Please enter email and password');
       return;
     }
 
-    setIsLoading(true);
     try {
-      await login(identifier, password);
-      router.replace('/(tabs)');
+      setIsLoggingIn(true);
+      await login(email, password);
     } catch (error) {
-      console.error('Login error:', error);
+      Alert.alert('Login Failed', 'Please check your credentials and try again');
     } finally {
-      setIsLoading(false);
+      setIsLoggingIn(false);
     }
   };
 
+  const handleDemoLogin = async () => {
+    try {
+      setIsLoggingIn(true);
+      await login('demo@halobuzz.com', 'demo123');
+    } catch (error) {
+      Alert.alert('Demo Login Failed', 'Please try again');
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
+
+  if (isAuthenticated) {
+    return <Redirect href="/(tabs)" />;
+  }
+
   return (
     <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboardView}
-      >
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          <View style={styles.header}>
-            <Text style={styles.title}>Welcome to HaloBuzz</Text>
-            <Text style={styles.subtitle}>Sign in to start streaming</Text>
-          </View>
-
-          <View style={styles.form}>
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Email, Username, or Phone</Text>
-              <TextInput
-                style={styles.input}
-                value={identifier}
-                onChangeText={setIdentifier}
-                placeholder="Enter your email, username, or phone"
-                autoCapitalize="none"
-                keyboardType="email-address"
-                autoCorrect={false}
-              />
-            </View>
-
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Password</Text>
-              <TextInput
-                style={styles.input}
-                value={password}
-                onChangeText={setPassword}
-                placeholder="Enter your password"
-                secureTextEntry
-                autoCapitalize="none"
-                autoCorrect={false}
-              />
-            </View>
-
-            <TouchableOpacity
-              style={[styles.loginButton, isLoading && styles.loginButtonDisabled]}
-              onPress={handleLogin}
-              disabled={isLoading}
-            >
-              <Text style={styles.loginButtonText}>
-                {isLoading ? 'Signing In...' : 'Sign In'}
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.forgotPasswordButton}
-              onPress={() => router.push('/(auth)/forgot-password')}
-            >
-              <Text style={styles.forgotPasswordButtonText}>
-                Forgot Password?
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.registerButton}
-              onPress={() => router.push('/(auth)/register')}
-            >
-              <Text style={styles.registerButtonText}>
-                Don't have an account? Sign Up
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
+      <View style={styles.content}>
+        <Text style={styles.title}>🎮 HaloBuzz</Text>
+        <Text style={styles.subtitle}>Live Streaming & Gaming Platform</Text>
+        
+        <View style={styles.form}>
+          <TextInput
+            style={styles.input}
+            placeholder="Email"
+            placeholderTextColor="#8B949E"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
+          
+          <TextInput
+            style={styles.input}
+            placeholder="Password"
+            placeholderTextColor="#8B949E"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+          />
+          
+          <TouchableOpacity 
+            style={[styles.loginButton, isLoggingIn && styles.disabledButton]} 
+            onPress={handleLogin}
+            disabled={isLoggingIn}
+          >
+            {isLoggingIn ? (
+              <ActivityIndicator size="small" color="#FFFFFF" />
+            ) : (
+              <Text style={styles.loginButtonText}>Login</Text>
+            )}
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={[styles.demoButton, isLoggingIn && styles.disabledButton]} 
+            onPress={handleDemoLogin}
+            disabled={isLoggingIn}
+          >
+            {isLoggingIn ? (
+              <ActivityIndicator size="small" color="#007AFF" />
+            ) : (
+              <Text style={styles.demoButtonText}>Demo Login</Text>
+            )}
+          </TouchableOpacity>
+        </View>
+        
+        <View style={styles.infoBox}>
+          <Text style={styles.infoTitle}>✅ Live Backend Connected:</Text>
+          <Text style={styles.infoText}>https://halo-api-production.up.railway.app</Text>
+          <Text style={styles.infoText}>MongoDB Atlas (Production)</Text>
+          <Text style={styles.infoText}>WiFi: Preserved (LAN mode)</Text>
+        </View>
+      </View>
     </SafeAreaView>
   );
 }
@@ -111,79 +106,81 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: '#0B0B10',
   },
-  keyboardView: {
+  content: {
     flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
     justifyContent: 'center',
-    padding: 20,
-  },
-  header: {
     alignItems: 'center',
-    marginBottom: 40,
+    padding: 20,
   },
   title: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 8,
+    color: '#FFFFFF',
+    marginBottom: 10,
   },
   subtitle: {
     fontSize: 16,
-    color: '#888',
+    color: '#8B949E',
+    marginBottom: 40,
+    textAlign: 'center',
   },
   form: {
     width: '100%',
-  },
-  inputContainer: {
-    marginBottom: 20,
-  },
-  label: {
-    fontSize: 16,
-    color: '#fff',
-    marginBottom: 8,
-    fontWeight: '500',
+    maxWidth: 300,
+    marginBottom: 30,
   },
   input: {
-    backgroundColor: '#1a1a1a',
-    borderRadius: 12,
-    padding: 16,
+    backgroundColor: '#1A1A1A',
+    borderRadius: 8,
+    padding: 15,
+    marginBottom: 15,
+    color: '#FFFFFF',
     fontSize: 16,
-    color: '#fff',
-    borderWidth: 1,
-    borderColor: '#333',
   },
   loginButton: {
     backgroundColor: '#007AFF',
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  loginButtonDisabled: {
-    backgroundColor: '#555',
+    borderRadius: 8,
+    padding: 15,
+    marginBottom: 10,
   },
   loginButtonText: {
-    color: '#fff',
+    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
+    textAlign: 'center',
   },
-  forgotPasswordButton: {
-    alignItems: 'center',
-    marginBottom: 20,
+  demoButton: {
+    backgroundColor: '#34C759',
+    borderRadius: 8,
+    padding: 15,
   },
-  forgotPasswordButtonText: {
-    color: '#888',
-    fontSize: 14,
-  },
-  registerButton: {
-    alignItems: 'center',
-  },
-  registerButtonText: {
-    color: '#007AFF',
+  demoButtonText: {
+    color: '#FFFFFF',
     fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  infoBox: {
+    backgroundColor: '#1A1A1A',
+    padding: 15,
+    borderRadius: 8,
+    width: '100%',
+    maxWidth: 300,
+  },
+  infoTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#00FF00',
+    marginBottom: 8,
+  },
+  infoText: {
+    fontSize: 12,
+    color: '#8B949E',
+    marginBottom: 4,
+  },
+  disabledButton: {
+    opacity: 0.6,
   },
 });

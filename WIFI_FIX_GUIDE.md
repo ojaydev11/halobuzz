@@ -103,3 +103,5 @@ The app now provides detailed logging in development mode:
 - ✅ **Easy setup** - One-click server startup scripts
 
 The app will now work smoothly without interfering with your WiFi connection!
+
+

@@ -34,9 +34,11 @@
     "health:check": "curl -f http://localhost:5010/api/v1/monitoring/health && curl -f http://localhost:5020/health && curl -f http://localhost:3000/api/health"
   },
   "devDependencies": {
+    "@types/react": "~19.1.10",
     "concurrently": "^8.2.2",
     "husky": "^8.0.3",
-    "lint-staged": "^15.2.0"
+    "lint-staged": "^15.2.0",
+    "typescript": "~5.9.2"
   },
   "engines": {
     "node": ">=20 <21",
@@ -56,5 +58,8 @@
     "monetization"
   ],
   "author": "HaloBuzz Team",
-  "license": "UNLICENSED"
+  "license": "UNLICENSED",
+  "dependencies": {
+    "expo-build-properties": "^1.0.9"
+  }
 }

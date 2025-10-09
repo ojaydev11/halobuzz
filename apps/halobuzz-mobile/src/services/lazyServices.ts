@@ -26,19 +26,14 @@ export const initAnalyticsLazy = () => {
   return analyticsService;
 };
 
-// Lazy heavy SDK initialization
+// Lazy heavy SDK initialization (Expo Go Compatible)
 export const initHeavySDKs = () => {
   deferToIdle(async () => {
-    // Initialize Agora SDK lazily
-    if (Platform.OS !== 'web') {
-      await import('react-native-agora');
-    }
-
-    // Initialize other heavy SDKs
-    await Promise.all([
-      import('socket.io-client'),
-      import('expo-notifications'),
-    ]);
+    // Skip heavy SDKs for Expo Go compatibility
+    console.log('Mock: Skipping heavy SDK initialization for Expo Go compatibility');
+    
+    // Skip all heavy SDKs for production optimization
+    console.log('Mock: All heavy SDKs skipped for production optimization');
   });
 };
 

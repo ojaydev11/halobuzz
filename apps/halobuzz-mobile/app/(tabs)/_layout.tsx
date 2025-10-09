@@ -1,29 +1,22 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { OptimizedNavigator, createPerformantScreenOptions } from '@/components/OptimizedNavigator';
+import { OptimizedNavigator } from '@/components/OptimizedNavigator';
 
 export default function TabLayout() {
   return (
     <OptimizedNavigator>
       <Tabs
         screenOptions={{
-          // Performance: Hide headers to reduce layout complexity
           headerShown: false,
-
-          // Tab bar optimization
           tabBarActiveTintColor: '#007AFF',
           tabBarInactiveTintColor: '#888',
           tabBarStyle: {
             backgroundColor: '#1a1a1a',
             borderTopColor: '#333',
-            elevation: 0, // Remove shadow on Android for better performance
-            shadowOpacity: 0, // Remove shadow on iOS
+            elevation: 0,
+            shadowOpacity: 0,
           },
-
-          // Performance: Enable lazy rendering
           lazy: true,
-
-          // Simplified animation configuration
           animationEnabled: true,
         }}
       >
@@ -60,15 +53,6 @@ export default function TabLayout() {
           title: 'Games',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="game-controller-outline" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="search"
-        options={{
-          title: 'Search',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="search-outline" size={size} color={color} />
           ),
         }}
       />

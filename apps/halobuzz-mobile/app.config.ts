@@ -48,30 +48,19 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   scheme: "halobuzz",
   extra: {
-    // Production backend on Northflank with MongoDB Atlas
-    apiBaseUrl: process.env.EXPO_PUBLIC_API_BASE_URL || "https://halo-api-production.up.railway.app",
-    apiPrefix: "/api/v1",
-    wsUrl: process.env.EXPO_PUBLIC_WS_URL || "wss://halo-api-production.up.railway.app",
+        // Production backend on Northflank with MongoDB Atlas
+        apiBaseUrl: process.env.EXPO_PUBLIC_API_BASE_URL || "https://p01--halo-api--6jbmvhzxwv4y.code.run",
+        apiPrefix: "/api/v1",
+        wsUrl: process.env.EXPO_PUBLIC_WS_URL || "wss://p01--halo-api--6jbmvhzxwv4y.code.run",
+    // Force production environment for live testing
+    environment: "production",
     eas: {
       projectId: "halobuzz-mobile-project"
     }
   },
   plugins: [
     "expo-router",
-    "expo-font",
-    [
-      "expo-build-properties",
-      {
-        ios: {
-          deploymentTarget: "15.1"
-        },
-        android: {
-          compileSdkVersion: 34,
-          targetSdkVersion: 34,
-          buildToolsVersion: "34.0.0"
-        }
-      }
-    ]
+    "expo-font"
   ],
   updates: {
     enabled: true,

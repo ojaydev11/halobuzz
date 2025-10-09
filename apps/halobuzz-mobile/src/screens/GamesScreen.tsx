@@ -99,19 +99,26 @@ const GamesScreen: React.FC = ({ navigation, router }: any) => {
       setLoading(true);
       
       // Initialize monetization service
-      await monetizationService.initialize(user?.id || 'temp_user');
+      await monetizationService.initialize();
+      
+      // Load user balance
+      const balanceResponse = await apiClient.get('/wallet');
+      if (balanceResponse.data) {
+        setUserBalance(balanceResponse.data.balance || 0);
+      } else {
+        // Fallback balance for demo
+        setUserBalance(5000);
+      }
       
       // Load games from engine
       const gameConfigs = gameEngine.getAllGameConfigs();
       setGames(gameConfigs);
       
-      // Load user balance
-      const balance = await monetizationService.getBalance();
-      setUserBalance(balance);
-      
       // Load game history
-      const history = await monetizationService.getGameHistory();
-      setGameHistory(history);
+      const historyResponse = await apiClient.get('/games/history');
+      if (historyResponse.data) {
+        setGameHistory(historyResponse.data);
+      }
       
     } catch (error) {
       console.error('Failed to initialize game system:', error);

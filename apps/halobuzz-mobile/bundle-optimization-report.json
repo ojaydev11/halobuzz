@@ -1,8 +1,8 @@
 {
-  "timestamp": "2025-10-02T06:09:25.085Z",
+  "timestamp": "2025-10-02T09:43:00.250Z",
   "summary": {
     "totalOptimizations": 6,
-    "estimatedSavings": 55296
+    "estimatedSavings": 240174
   },
   "results": {
     "deadCodeRemoval": {
@@ -14,9 +14,9 @@
         "D:\\halobuzz by cursor\\apps\\halobuzz-mobile\\src\\screens\\BigGamesLobbyScreen.tsx",
         "D:\\halobuzz by cursor\\apps\\halobuzz-mobile\\src\\screens\\EnhancedGamesScreen.tsx",
         "D:\\halobuzz by cursor\\apps\\halobuzz-mobile\\src\\screens\\HaloArenaGameScreen.tsx",
+        "D:\\halobuzz by cursor\\apps\\halobuzz-mobile\\src\\screens\\HomeScreen.tsx",
         "D:\\halobuzz by cursor\\apps\\halobuzz-mobile\\src\\services\\haloBuzzAPI.ts",
-        "D:\\halobuzz by cursor\\apps\\halobuzz-mobile\\src\\services\\NotificationService.ts",
-        "D:\\halobuzz by cursor\\apps\\halobuzz-mobile\\src\\services\\OptimizedSocket.ts"
+        "D:\\halobuzz by cursor\\apps\\halobuzz-mobile\\src\\services\\NotificationService.ts"
       ],
       "unusedExports": [],
       "savings": 55296
@@ -27,11 +27,15 @@
       "optimized": []
     },
     "dependencyAnalysis": {
-      "total": 53,
+      "total": 55,
       "unused": [
         {
           "name": "expo-font",
           "version": "~14.0.8"
+        },
+        {
+          "name": "expo-notifications",
+          "version": "~0.32.12"
         },
         {
           "name": "expo-splash-screen",
@@ -48,6 +52,10 @@
         {
           "name": "react-dom",
           "version": "19.1.0"
+        },
+        {
+          "name": "react-native-agora",
+          "version": "^4.5.3"
         },
         {
           "name": "react-native-screens",
@@ -126,6 +134,10 @@
           "version": "~54.0.12"
         },
         {
+          "name": "qrcode-terminal",
+          "version": "^0.12.0"
+        },
+        {
           "name": "typescript",
           "version": "~5.9.2"
         }
@@ -159,9 +171,9 @@
       ]
     },
     "localeOptimization": {
-      "removed": 0,
+      "removed": 132,
       "kept": 12,
-      "savings": 0
+      "savings": 184878
     }
   }
 }

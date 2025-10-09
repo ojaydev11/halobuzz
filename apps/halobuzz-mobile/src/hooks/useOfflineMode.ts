@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import NetInfo from '@react-native-community/netinfo';
+// import NetInfo from '@react-native-community/netinfo';
 
 export interface OfflineModeState {
   isOffline: boolean;
@@ -12,22 +12,14 @@ export function useOfflineMode(): OfflineModeState {
   const [connectionType, setConnectionType] = useState<string | null>(null);
 
   useEffect(() => {
-    const unsubscribe = NetInfo.addEventListener(state => {
-      const offline = !state.isConnected || !state.isInternetReachable;
-      setIsOffline(offline);
-      setConnectionType(state.type);
-      
-      if (__DEV__) {
-        console.log('🌐 Network status:', {
-          isConnected: state.isConnected,
-          isInternetReachable: state.isInternetReachable,
-          type: state.type,
-          isOffline: offline
-        });
-      }
-    });
-
-    return () => unsubscribe();
+    // Temporarily disabled NetInfo to fix bundling issue
+    // TODO: Re-enable when NetInfo is properly configured
+    setIsOffline(false);
+    setConnectionType('wifi');
+    
+    if (__DEV__) {
+      console.log('🌐 Network status: Online (NetInfo disabled)');
+    }
   }, []);
 
   return {

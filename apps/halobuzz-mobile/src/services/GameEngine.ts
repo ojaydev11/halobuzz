@@ -97,27 +97,106 @@ class GameEngine {
       options: ['Rock', 'Paper', 'Scissors'],
       description: 'Classic RPS game!'
     },
+    // Vendor Games - Moonshot Integration
     {
-      id: 'dice',
-      name: 'Dice Roll',
-      type: 'dice',
+      id: 'moonshot-slots',
+      name: 'Moonshot Slots',
+      type: 'number-guess',
       minStake: 20,
       maxStake: 2000,
-      multiplier: 5.7, // 95% RTP (5% house edge)
-      houseEdge: 0.05,
-      options: ['1', '2', '3', '4', '5', '6'],
-      description: 'Roll the dice!'
+      multiplier: 3.5,
+      houseEdge: 0.03,
+      options: ['Cherry', 'Lemon', 'Orange', 'Plum', 'Bell', 'Bar'],
+      description: 'Premium slot machine from Moonshot Games'
     },
     {
-      id: 'number-guess',
-      name: 'Number Guess',
+      id: 'moonshot-blackjack',
+      name: 'Moonshot Blackjack',
       type: 'number-guess',
       minStake: 25,
-      maxStake: 2500,
-      multiplier: 9.5, // 95% RTP (5% house edge)
+      maxStake: 5000,
+      multiplier: 2.0,
+      houseEdge: 0.02,
+      options: ['Hit', 'Stand', 'Double', 'Split'],
+      description: 'Professional blackjack from Moonshot Games'
+    },
+    {
+      id: 'moonshot-roulette',
+      name: 'Moonshot Roulette',
+      type: 'number-guess',
+      minStake: 10,
+      maxStake: 10000,
+      multiplier: 36.0,
+      houseEdge: 0.027,
+      options: ['0', '1-36', 'Red', 'Black', 'Even', 'Odd'],
+      description: 'European roulette from Moonshot Games'
+    },
+    // Additional Games
+    {
+      id: 'lucky-wheel',
+      name: 'Lucky Wheel',
+      type: 'number-guess',
+      minStake: 5,
+      maxStake: 1000,
+      multiplier: 5.0,
+      houseEdge: 0.08,
+      options: ['1x', '2x', '5x', '10x', '20x', '50x'],
+      description: 'Spin the wheel for big wins!'
+    },
+    {
+      id: 'crash-game',
+      name: 'Crash Game',
+      type: 'number-guess',
+      minStake: 10,
+      maxStake: 5000,
+      multiplier: 100.0,
+      houseEdge: 0.01,
+      options: ['1.00x', '1.50x', '2.00x', '5.00x', '10.00x', '100.00x'],
+      description: 'Watch the multiplier crash!'
+    },
+    {
+      id: 'plinko',
+      name: 'Plinko',
+      type: 'number-guess',
+      minStake: 5,
+      maxStake: 2000,
+      multiplier: 8.0,
+      houseEdge: 0.06,
+      options: ['0.2x', '0.5x', '1x', '2x', '5x', '8x'],
+      description: 'Drop the ball and win!'
+    },
+    {
+      id: 'dice-roll',
+      name: 'Dice Roll',
+      type: 'dice',
+      minStake: 10,
+      maxStake: 1000,
+      multiplier: 6.0,
       houseEdge: 0.05,
-      options: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'],
-      description: 'Guess the number!'
+      options: ['1', '2', '3', '4', '5', '6'],
+      description: 'Roll the dice and predict!'
+    },
+    {
+      id: 'mines',
+      name: 'Mines',
+      type: 'number-guess',
+      minStake: 15,
+      maxStake: 3000,
+      multiplier: 24.0,
+      houseEdge: 0.04,
+      options: ['1 Mine', '2 Mines', '3 Mines', '5 Mines', '10 Mines', '24 Mines'],
+      description: 'Find the gems, avoid the mines!'
+    },
+    {
+      id: 'tower',
+      name: 'Tower',
+      type: 'number-guess',
+      minStake: 20,
+      maxStake: 5000,
+      multiplier: 15.0,
+      houseEdge: 0.03,
+      options: ['Floor 1', 'Floor 2', 'Floor 3', 'Floor 5', 'Floor 10', 'Floor 15'],
+      description: 'Climb the tower for rewards!'
     }
   ];
 

@@ -284,17 +284,9 @@ class GameSecurityService {
     });
     this.suspiciousActivities.set(userId, activities);
 
-    // Log to backend
-    try {
-      await apiClient.post('/security/flag-activity', {
-        userId,
-        reason,
-        data,
-        timestamp: new Date().toISOString()
-      });
-    } catch (error) {
-      console.warn('Failed to log suspicious activity to backend');
-    }
+    // Log to backend (endpoint not available on current backend)
+    // TODO: Add /security/flag-activity endpoint to backend
+    console.log('Security activity flagged locally:', { userId, reason, data });
 
     // Auto-block if too many flags
     if (activities.length > 5) {

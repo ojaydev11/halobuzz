@@ -214,28 +214,20 @@ const ProfileScreen: React.FC = ({ navigation }: any) => {
   const renderStatsGrid = () => (
     <View style={styles.statsGrid}>
       <View style={styles.statItem}>
-        <Text style={styles.statValue}>{stats.totalGames}</Text>
-        <Text style={styles.statLabel}>Games</Text>
-      </View>
-      <View style={styles.statItem}>
-        <Text style={styles.statValue}>{stats.wins}</Text>
-        <Text style={styles.statLabel}>Wins</Text>
-      </View>
-      <View style={styles.statItem}>
-        <Text style={styles.statValue}>{(stats.winRate * 100).toFixed(0)}%</Text>
-        <Text style={styles.statLabel}>Win Rate</Text>
-      </View>
-      <View style={styles.statItem}>
-        <Text style={styles.statValue}>{stats.streak}</Text>
-        <Text style={styles.statLabel}>Streak</Text>
-      </View>
-      <View style={styles.statItem}>
         <Text style={styles.statValue}>{stats.totalEarnings.toLocaleString()}</Text>
-        <Text style={styles.statLabel}>Earnings</Text>
+        <Text style={styles.statLabel}>Total Earnings</Text>
+      </View>
+      <View style={styles.statItem}>
+        <Text style={styles.statValue}>{stats.level}</Text>
+        <Text style={styles.statLabel}>Level</Text>
       </View>
       <View style={styles.statItem}>
         <Text style={styles.statValue}>#{stats.ranking}</Text>
-        <Text style={styles.statLabel}>Rank</Text>
+        <Text style={styles.statLabel}>Global Rank</Text>
+      </View>
+      <View style={styles.statItem}>
+        <Text style={styles.statValue}>{stats.streak}</Text>
+        <Text style={styles.statLabel}>Current Streak</Text>
       </View>
     </View>
   );

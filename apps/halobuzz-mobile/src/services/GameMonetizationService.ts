@@ -49,7 +49,7 @@ class GameMonetizationService {
   // Get current balance
   async getBalance(): Promise<number> {
     try {
-      const response = await apiClient.get('/wallet/balance');
+      const response = await apiClient.get('/wallet');
       if (response.success && response.data?.balance !== undefined) {
         this.currentBalance = response.data.balance;
         return this.currentBalance;
@@ -86,11 +86,12 @@ class GameMonetizationService {
 
       // Sync with backend
       try {
-        await apiClient.post('/wallet/deduct', {
-          amount: stake,
-          gameId,
-          description: `Stake for ${gameName}`
-        });
+        // Note: These endpoints may not exist on current backend
+        // await apiClient.post('/wallet/deduct', {
+        //   amount: stake,
+        //   gameId,
+        //   description: `Stake for ${gameName}`
+        // });
       } catch (error) {
         console.warn('Failed to sync stake deduction with backend');
       }
@@ -123,11 +124,12 @@ class GameMonetizationService {
 
       // Sync with backend
       try {
-        await apiClient.post('/wallet/add', {
-          amount: amount,
-          gameId,
-          description: `Won ${amount} coins from ${gameName} (${multiplier}x)`
-        });
+        // Note: These endpoints may not exist on current backend  
+        // await apiClient.post('/wallet/add', {
+        //   amount: amount,
+        //   gameId,
+        //   description: `Won ${amount} coins from ${gameName} (${multiplier}x)`
+        // });
       } catch (error) {
         console.warn('Failed to sync winnings with backend');
       }

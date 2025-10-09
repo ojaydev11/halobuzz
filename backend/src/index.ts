@@ -90,6 +90,10 @@ import {
 import authRoutes from '@/routes/auth';
 import usersRoutes from '@/routes/users';
 import walletRoutes from '@/routes/wallet';
+import coinsRoutes from '@/routes/coins';
+import payoutsRoutes from '@/routes/payouts';
+import webhooksRoutes from '@/routes/webhooks';
+import stripeCheckoutRoutes from '@/routes/stripe-checkout';
 import streamsRoutes from '@/routes/streams';
 import streamsEnhancedRoutes from '@/routes/streams-enhanced';
 import giftsRoutes from '@/routes/gifts';
@@ -339,6 +343,10 @@ logger.info(`Mounting auth routes at /api/${apiVersion}/auth`);
 app.use(`/api/${apiVersion}/auth`, authLimiter, loginSlowDown, authRoutes);
 app.use(`/api/${apiVersion}/users`, authMiddleware, csrfProtection, usersRoutes);
 app.use(`/api/${apiVersion}/wallet`, authMiddleware, paymentLimiter, csrfProtection, walletRoutes);
+app.use(`/api/${apiVersion}/coins`, authMiddleware, coinsRoutes);
+app.use(`/api/${apiVersion}/payouts`, authMiddleware, payoutsRoutes);
+app.use(`/api/${apiVersion}/stripe`, stripeCheckoutRoutes);
+app.use(`/api/${apiVersion}/webhooks`, webhooksRoutes); // No auth - verified by signature
 app.use(`/api/${apiVersion}/streams`, authMiddleware, socialLimiter, csrfProtection, streamsRoutes);
 app.use(`/api/${apiVersion}/streams`, streamsEnhancedRoutes); // Enhanced streams with better functionality
 app.use(`/api/${apiVersion}/gifts`, authMiddleware, socialLimiter, csrfProtection, giftsRoutes);

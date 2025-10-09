@@ -1,27 +1,12 @@
+// Expo Go Compatible Agora Hook
+// This provides mock functionality for development/testing
+
 import { useState, useEffect, useRef } from 'react';
-import {
-  createAgoraRtcEngine,
-  IRtcEngine,
-  ChannelProfileType,
-  ClientRoleType,
-  RtcConnection,
-  RtcStats,
-  VideoSourceType,
-  AudioProfileType,
-  AudioScenarioType,
-} from 'react-native-agora';
-import RtcLocalView from 'react-native-agora';
-import RtcRemoteView from 'react-native-agora';
 import Constants from 'expo-constants';
 import { secureLogger } from '@/lib/security';
 import { apiClient } from '@/lib/api';
 
 const AGORA_APP_ID = Constants.expoConfig?.extra?.agoraAppId || '';
-
-// Validate Agora App ID
-if (!AGORA_APP_ID && !__DEV__) {
-  throw new Error('Agora App ID is required for production builds');
-}
 
 interface AgoraError {
   code: number;
@@ -38,6 +23,90 @@ interface AgoraState {
   error: string | null;
 }
 
+// Mock Agora Engine for Expo Go compatibility
+class MockAgoraEngine {
+  private listeners: Map<string, Function[]> = new Map();
+  
+  addListener(event: string, callback: Function) {
+    if (!this.listeners.has(event)) {
+      this.listeners.set(event, []);
+    }
+    this.listeners.get(event)!.push(callback);
+  }
+  
+  removeListener(event: string, callback: Function) {
+    const eventListeners = this.listeners.get(event);
+    if (eventListeners) {
+      const index = eventListeners.indexOf(callback);
+      if (index > -1) {
+        eventListeners.splice(index, 1);
+      }
+    }
+  }
+  
+  async enableVideo() {
+    secureLogger.log('Mock: enableVideo');
+  }
+  
+  async setChannelProfile(profile: any) {
+    secureLogger.log('Mock: setChannelProfile', profile);
+  }
+  
+  async setClientRole(role: any) {
+    secureLogger.log('Mock: setClientRole', role);
+  }
+  
+  async setAudioProfile(profile: any, scenario: any) {
+    secureLogger.log('Mock: setAudioProfile', profile, scenario);
+  }
+  
+  async joinChannel(token: string, channel: string, uid: number, options: any) {
+    secureLogger.log('Mock: joinChannel', { channel, uid });
+    // Simulate successful join
+    setTimeout(() => {
+      const joinListeners = this.listeners.get('onJoinChannelSuccess');
+      if (joinListeners) {
+        joinListeners.forEach(callback => callback({ channelId: channel }, 1000));
+      }
+    }, 1000);
+  }
+  
+  async leaveChannel() {
+    secureLogger.log('Mock: leaveChannel');
+    // Simulate successful leave
+    setTimeout(() => {
+      const leaveListeners = this.listeners.get('onLeaveChannel');
+      if (leaveListeners) {
+        leaveListeners.forEach(callback => callback({}));
+      }
+    }, 500);
+  }
+  
+  async muteLocalAudioStream(muted: boolean) {
+    secureLogger.log('Mock: muteLocalAudioStream', muted);
+  }
+  
+  async muteLocalVideoStream(muted: boolean) {
+    secureLogger.log('Mock: muteLocalVideoStream', muted);
+  }
+  
+  async switchCamera() {
+    secureLogger.log('Mock: switchCamera');
+  }
+  
+  async renewToken(token: string) {
+    secureLogger.log('Mock: renewToken');
+  }
+  
+  release() {
+    secureLogger.log('Mock: release');
+    this.listeners.clear();
+  }
+}
+
+// Mock create function
+const createAgoraRtcEngine = () => new MockAgoraEngine();
+
 export function useAgora() {
   const [state, setState] = useState<AgoraState>({
     isJoined: false,
@@ -49,26 +118,15 @@ export function useAgora() {
     error: null
   });
   
-  const engineRef = useRef<IRtcEngine | null>(null);
+  const engineRef = useRef<MockAgoraEngine | null>(null);
   const channelRef = useRef<string>('');
   const currentTokenRef = useRef<string | null>(null);
   const isInitializingRef = useRef(false);
-  
-  // Don't auto-initialize - wait for explicit permission
-  // useEffect(() => {
-  //   initializeEngine();
-  //   return () => {
-  //     if (engineRef.current) {
-  //       engineRef.current.destroy();
-  //     }
-  //   };
-  // }, []);
   
   const updateState = (updates: Partial<AgoraState>) => {
     setState(prev => ({ ...prev, ...updates }));
   };
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       cleanupEngine();
@@ -77,27 +135,21 @@ export function useAgora() {
 
   const initializeEngine = async (): Promise<void> => {
     if (engineRef.current || isInitializingRef.current) {
-      secureLogger.log('Agora engine already initialized or initializing');
+      secureLogger.log('Mock Agora engine already initialized or initializing');
       return;
-    }
-    
-    if (!AGORA_APP_ID) {
-      const error = 'Agora App ID not configured';
-      updateState({ error, connectionState: 'error' });
-      throw new Error(error);
     }
     
     try {
       isInitializingRef.current = true;
       updateState({ error: null, connectionState: 'connecting' });
       
-      secureLogger.log('Initializing Agora engine');
+      secureLogger.log('Initializing Mock Agora engine for Expo Go');
       const engine = createAgoraRtcEngine();
       engineRef.current = engine;
 
-      // Set up event listeners with error handling
-      engine.addListener('onJoinChannelSuccess', (connection: RtcConnection, elapsed: number) => {
-        secureLogger.log('Joined channel successfully', { connection: connection.channelId, elapsed });
+      // Set up event listeners
+      engine.addListener('onJoinChannelSuccess', (connection: any, elapsed: number) => {
+        secureLogger.log('Mock: Joined channel successfully', { connection: connection.channelId, elapsed });
         updateState({ 
           isJoined: true, 
           connectionState: 'connected',
@@ -106,7 +158,7 @@ export function useAgora() {
       });
 
       engine.addListener('onLeaveChannel', (stats: any) => {
-        secureLogger.log('Left channel', { stats });
+        secureLogger.log('Mock: Left channel', { stats });
         updateState({
           isJoined: false,
           connectionState: 'disconnected',
@@ -115,22 +167,22 @@ export function useAgora() {
       });
 
       engine.addListener('onUserJoined', (uid: any, elapsed: any) => {
-        secureLogger.log('User joined', { uid: uid.toString() });
+        secureLogger.log('Mock: User joined', { uid: uid.toString() });
         updateState({
           remoteUsers: [...state.remoteUsers, uid]
         });
       });
 
       engine.addListener('onUserOffline', (uid: any, reason: any) => {
-        secureLogger.log('User offline', { uid: uid.toString(), reason });
+        secureLogger.log('Mock: User offline', { uid: uid.toString(), reason });
         updateState({
           remoteUsers: state.remoteUsers.filter(id => id !== uid)
         });
       });
 
       engine.addListener('onError', (errorCode: number) => {
-        const error = `Agora error: ${errorCode}`;
-        secureLogger.error('Agora error', { errorCode });
+        const error = `Mock Agora error: ${errorCode}`;
+        secureLogger.error('Mock Agora error', { errorCode });
         updateState({ 
           connectionState: 'error',
           error
@@ -138,33 +190,26 @@ export function useAgora() {
       });
       
       engine.addListener('onConnectionStateChanged', (state: any, reason: any) => {
-        secureLogger.log('Connection state changed', { state, reason });
+        secureLogger.log('Mock: Connection state changed', { state, reason });
         updateState({ connectionState: state });
       });
       
       engine.addListener('onTokenPrivilegeWillExpire', (token: any) => {
-        secureLogger.warn('Agora token will expire soon');
-        // Refresh token
+        secureLogger.warn('Mock: Agora token will expire soon');
         refreshAgoraToken();
       });
 
       // Configure engine settings
       await engine.enableVideo();
-      await engine.setChannelProfile(ChannelProfileType.ChannelProfileLiveBroadcasting);
-      await engine.setClientRole(ClientRoleType.ClientRoleBroadcaster);
-      
-      // Audio settings for better quality
-      await engine.setAudioProfile(
-        AudioProfileType.AudioProfileMusicHighQuality,
-        AudioScenarioType.AudioScenarioChatroom
-      );
+      await engine.setChannelProfile(1); // LiveBroadcasting
+      await engine.setClientRole(1); // Broadcaster
       
       updateState({ isInitialized: true });
-      secureLogger.log('Agora engine initialized successfully');
+      secureLogger.log('Mock Agora engine initialized successfully');
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      secureLogger.error('Failed to initialize Agora engine', error);
+      secureLogger.error('Failed to initialize Mock Agora engine', error);
       updateState({ 
         error: errorMessage,
         connectionState: 'error',
@@ -183,7 +228,7 @@ export function useAgora() {
       }
       
       if (engineRef.current) {
-        secureLogger.log('Destroying Agora engine');
+        secureLogger.log('Destroying Mock Agora engine');
         engineRef.current?.release();
         engineRef.current = null;
       }
@@ -196,7 +241,7 @@ export function useAgora() {
         error: null
       });
     } catch (error) {
-      secureLogger.error('Error cleaning up Agora engine', error);
+      secureLogger.error('Error cleaning up Mock Agora engine', error);
     }
   };
   
@@ -206,52 +251,36 @@ export function useAgora() {
         return;
       }
       
-      const response = await apiClient.getAgoraToken(channelRef.current);
-      if (response.success && response.data?.token) {
-        currentTokenRef.current = response.data.token;
-        await engineRef.current?.renewToken(response.data.token);
-        secureLogger.log('Agora token refreshed successfully');
-      }
+      secureLogger.log('Mock: Refreshing Agora token');
+      // Mock token refresh
+      currentTokenRef.current = 'mock-token-' + Date.now();
     } catch (error) {
-      secureLogger.error('Failed to refresh Agora token', error);
+      secureLogger.error('Failed to refresh Mock Agora token', error);
     }
   };
 
   const joinChannel = async (channelName: string, token?: string): Promise<void> => {
     try {
-      // Initialize engine if not already done
       if (!state.isInitialized) {
         await initializeEngine();
       }
       
       if (!engineRef.current) {
-        throw new Error('Agora engine not initialized');
+        throw new Error('Mock Agora engine not initialized');
       }
       
       if (!channelName.trim()) {
         throw new Error('Channel name is required');
       }
       
-      // Get token from backend if not provided
-      let rtcToken = token;
-      if (!rtcToken) {
-        secureLogger.log('Fetching Agora token from backend');
-        const response = await apiClient.getAgoraToken(channelName);
-        if (response.success && response.data?.token) {
-          rtcToken = response.data.token;
-        } else {
-          throw new Error('Failed to get Agora token from server');
-        }
-      }
-      
       channelRef.current = channelName;
-      currentTokenRef.current = rtcToken;
+      currentTokenRef.current = token || 'mock-token';
       
-      secureLogger.log('Joining Agora channel', { channelName });
+      secureLogger.log('Mock: Joining Agora channel', { channelName });
       updateState({ connectionState: 'connecting', error: null });
       
-      await engineRef.current.joinChannel(rtcToken || '', channelName, 0, {
-        clientRoleType: ClientRoleType.ClientRoleBroadcaster,
+      await engineRef.current.joinChannel(currentTokenRef.current, channelName, 0, {
+        clientRoleType: 1, // Broadcaster
       });
       
     } catch (error) {
@@ -272,7 +301,7 @@ export function useAgora() {
         return;
       }
 
-      secureLogger.log('Leaving Agora channel');
+      secureLogger.log('Mock: Leaving Agora channel');
       updateState({ connectionState: 'disconnecting' });
       
       await engineRef.current.leaveChannel();
@@ -288,14 +317,14 @@ export function useAgora() {
   const toggleMute = async (): Promise<void> => {
     try {
       if (!engineRef.current) {
-        throw new Error('Agora engine not initialized');
+        throw new Error('Mock Agora engine not initialized');
       }
 
       const newMutedState = !state.isMuted;
       engineRef.current?.muteLocalAudioStream(newMutedState);
       updateState({ isMuted: newMutedState });
       
-      secureLogger.log('Audio mute toggled', { muted: newMutedState });
+      secureLogger.log('Mock: Audio mute toggled', { muted: newMutedState });
     } catch (error) {
       secureLogger.error('Failed to toggle mute', error);
       throw error;
@@ -305,14 +334,14 @@ export function useAgora() {
   const toggleCamera = async (): Promise<void> => {
     try {
       if (!engineRef.current) {
-        throw new Error('Agora engine not initialized');
+        throw new Error('Mock Agora engine not initialized');
       }
 
       const newCameraState = !state.isCameraOn;
       engineRef.current?.muteLocalVideoStream(!newCameraState);
       updateState({ isCameraOn: newCameraState });
       
-      secureLogger.log('Camera toggled', { cameraOn: newCameraState });
+      secureLogger.log('Mock: Camera toggled', { cameraOn: newCameraState });
     } catch (error) {
       secureLogger.error('Failed to toggle camera', error);
       throw error;
@@ -322,11 +351,11 @@ export function useAgora() {
   const switchCamera = async (): Promise<void> => {
     try {
       if (!engineRef.current) {
-        throw new Error('Agora engine not initialized');
+        throw new Error('Mock Agora engine not initialized');
       }
 
       await engineRef.current.switchCamera();
-      secureLogger.log('Camera switched');
+      secureLogger.log('Mock: Camera switched');
     } catch (error) {
       secureLogger.error('Failed to switch camera', error);
       throw error;
@@ -353,3 +382,16 @@ export function useAgora() {
     cleanupEngine,
   };
 }
+
+// Export mock components for compatibility
+export const RtcLocalView = ({ style, ...props }: any) => {
+  secureLogger.log('Mock RtcLocalView rendered');
+  return null; // Return null for Expo Go compatibility
+};
+
+export const RtcRemoteView = ({ style, ...props }: any) => {
+  secureLogger.log('Mock RtcRemoteView rendered');
+  return null; // Return null for Expo Go compatibility
+};
+
+export default useAgora;

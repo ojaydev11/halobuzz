@@ -55,7 +55,7 @@ const WalletScreen: React.FC = ({ navigation }: any) => {
   const fetchWalletData = async () => {
     try {
       const [balanceResponse, transactionsResponse] = await Promise.all([
-        apiClient.get('/wallet/balance'),
+        apiClient.get('/wallet'),
         apiClient.get('/wallet/transactions')
       ]);
 
