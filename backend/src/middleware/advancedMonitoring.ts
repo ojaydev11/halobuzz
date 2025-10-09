@@ -279,16 +279,17 @@ class AdvancedAPIMonitor {
     const hour = Math.floor(metric.timestamp / (1000 * 60 * 60));
     const key = `api_metrics_hourly:${hour}`;
 
-    const existing = await getCache(key) || {
+    const cached = await getCache(key);
+    const existing: any = cached || {
       totalRequests: 0,
       totalErrors: 0,
       totalResponseTime: 0,
       endpoints: {}
     };
 
-    existing.totalRequests++;
-    if (metric.statusCode >= 400) existing.totalErrors++;
-    existing.totalResponseTime += metric.responseTime;
+    existing.totalRequests = (existing.totalRequests as number) + 1;
+    if (metric.statusCode >= 400) existing.totalErrors = (existing.totalErrors as number) + 1;
+    existing.totalResponseTime = (existing.totalResponseTime as number) + metric.responseTime;
 
     if (!existing.endpoints[metric.endpoint]) {
       existing.endpoints[metric.endpoint] = {
@@ -298,9 +299,9 @@ class AdvancedAPIMonitor {
       };
     }
 
-    existing.endpoints[metric.endpoint].requests++;
-    if (metric.statusCode >= 400) existing.endpoints[metric.endpoint].errors++;
-    existing.endpoints[metric.endpoint].totalResponseTime += metric.responseTime;
+    existing.endpoints[metric.endpoint].requests = (existing.endpoints[metric.endpoint].requests as number) + 1;
+    if (metric.statusCode >= 400) existing.endpoints[metric.endpoint].errors = (existing.endpoints[metric.endpoint].errors as number) + 1;
+    existing.endpoints[metric.endpoint].totalResponseTime = (existing.endpoints[metric.endpoint].totalResponseTime as number) + metric.responseTime;
 
     await setCache(key, existing, 7 * 24 * 3600); // 7 days
   }
@@ -504,16 +505,17 @@ class AdvancedAPIMonitor {
 
   private async trackEndpointUsage(path: string, method: string): Promise<void> {
     const key = `endpoint_usage:${method}:${path}`;
-    const current = await getCache(key) || 0;
+    const current = (await getCache(key) as number) || 0;
     await setCache(key, current + 1, 3600); // 1 hour
   }
 
   private async trackUserActivity(userId: string, path: string): Promise<void> {
     const key = `user_activity:${userId}`;
-    const activity = await getCache(key) || { lastSeen: 0, endpoints: {} };
+    const cached = await getCache(key);
+    const activity: any = cached || { lastSeen: 0, endpoints: {} };
 
     activity.lastSeen = Date.now();
-    activity.endpoints[path] = (activity.endpoints[path] || 0) + 1;
+    activity.endpoints[path] = ((activity.endpoints[path] as number) || 0) + 1;
 
     await setCache(key, activity, 7 * 24 * 3600); // 7 days
   }
@@ -546,7 +548,7 @@ class AdvancedAPIMonitor {
 
   private async trackFailedLogin(ip: string, identifier: string): Promise<void> {
     const key = `failed_logins:${ip}`;
-    const current = await getCache(key) || 0;
+    const current = (await getCache(key) as number) || 0;
     await setCache(key, current + 1, 900); // 15 minutes
 
     if (current > 5) {
@@ -573,7 +575,8 @@ class AdvancedAPIMonitor {
 
     // Check for unusual request patterns
     const key = `request_pattern:${req.ip}`;
-    const pattern = await getCache(key) || { paths: [], timestamps: [] };
+    const cached = await getCache(key);
+    const pattern: any = cached || { paths: [], timestamps: [] };
 
     pattern.paths.push(req.path);
     pattern.timestamps.push(Date.now());
@@ -587,7 +590,7 @@ class AdvancedAPIMonitor {
     await setCache(key, pattern, 3600);
 
     // Check for rapid consecutive requests to same endpoint
-    const samePathRequests = pattern.paths.filter(p => p === req.path).length;
+    const samePathRequests = pattern.paths.filter((p: string) => p === req.path).length;
     if (samePathRequests > 10) {
       logger.warn('Potential abuse detected', {
         ip: req.ip,
@@ -598,8 +601,8 @@ class AdvancedAPIMonitor {
   }
 
   private async incrementRateLimitCounter(key: string): Promise<number> {
-    const current = await getCache(key) || 0;
-    const newCount = current + 1;
+    const current = (await getCache(key) as number) || 0;
+    const newCount = (current as number) + 1;
     await setCache(key, newCount, 900); // 15 minutes
     return newCount;
   }

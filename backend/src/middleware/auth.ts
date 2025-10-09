@@ -3,9 +3,10 @@ import { Request, Response, NextFunction } from 'express';
 import { User } from '../models/User';
 import { logger } from '../config/logger';
 import { getCache, setCache } from '../config/redis';
+import { AuthenticatedRequest } from './enhancedSecurity';
 
-// Use the AuthenticatedRequest interface from enhancedSecurity for consistency
-export { AuthenticatedRequest } from './enhancedSecurity';
+// Re-export AuthenticatedRequest for other modules
+export type { AuthenticatedRequest };
 
 interface SessionData {
   userId: string;
@@ -127,10 +128,11 @@ export const refreshTokenMiddleware = async (req: Request, res: Response, next: 
     }
 
     // Generate new access token
+    const expiresIn = process.env.JWT_ACCESS_EXPIRES_IN || '1h';
     const newAccessToken = jwt.sign(
       { userId: decoded.userId },
-      process.env.JWT_SECRET!,
-      { expiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '1h' }
+      process.env.JWT_SECRET as string,
+      { expiresIn }
     );
 
     res.set('X-New-Token', newAccessToken);
@@ -293,16 +295,16 @@ export const rateLimitMiddleware = (maxRequests: number = 100, windowMs: number 
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
       const key = `rate_limit:${req.ip}:${req.path}`;
-      const current = await getCache(key);
-      
+      const current = await getCache(key) as number | null;
+
       if (current && current >= maxRequests) {
-        return res.status(429).json({ 
-          success: false, 
-          error: 'Too many requests.' 
+        return res.status(429).json({
+          success: false,
+          error: 'Too many requests.'
         });
       }
 
-      const count = current ? current + 1 : 1;
+      const count = current ? (current as number) + 1 : 1;
       await setCache(key, count, Math.ceil(windowMs / 1000));
 
       next();
