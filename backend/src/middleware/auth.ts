@@ -139,7 +139,7 @@ export const refreshTokenMiddleware = async (req: Request, res: Response, next: 
     const newAccessToken = jwt.sign(
       { userId: decoded.userId },
       process.env.JWT_SECRET as string,
-      { expiresIn: (process.env.JWT_ACCESS_EXPIRES_IN || '1h') as string | number }
+      { expiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '1h' } as any
     );
 
     res.set('X-New-Token', newAccessToken);

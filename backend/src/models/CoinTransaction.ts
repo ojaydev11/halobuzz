@@ -32,6 +32,12 @@ export interface ICoinTransaction extends Document {
     premiumFeature?: string; // If premium feature purchase
     festivalId?: string; // If festival-related
     referenceId?: string; // General purpose reference ID
+    giftId?: string; // Gift ID for advanced gift economy
+    giftName?: string; // Gift name for advanced gift economy
+    quantity?: number; // Gift quantity
+    multiplier?: number; // Price multiplier
+    fromUserId?: string; // Original sender for gift received
+    earningsMultiplier?: number; // Earnings multiplier for recipient
   };
 
   // Additional properties for compatibility

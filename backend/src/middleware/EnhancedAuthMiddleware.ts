@@ -270,7 +270,7 @@ export class EnhancedAuthMiddleware {
   /**
    * Analyze security context
    */
-  private async analyzeSecurityContext(req: Request, user: any): Promise<SecurityContext> {
+  async analyzeSecurityContext(req: Request, user: any): Promise<SecurityContext> {
     const deviceId = req.headers['x-device-id'] as string || 'unknown';
     const ipAddress = req.ip || req.connection.remoteAddress || 'unknown';
     const userAgent = req.headers['user-agent'] || 'unknown';
@@ -323,7 +323,7 @@ export class EnhancedAuthMiddleware {
   /**
    * Handle suspicious activity
    */
-  private async handleSuspiciousActivity(req: Request, user: any, context: SecurityContext) {
+  async handleSuspiciousActivity(req: Request, user: any, context: SecurityContext) {
     await setCache(`suspicious_activity:${user.id}:${Date.now()}`, {
       context,
       request: {
@@ -349,7 +349,7 @@ export class EnhancedAuthMiddleware {
   /**
    * Update user activity
    */
-  private async updateUserActivity(userId: string, req: Request) {
+  async updateUserActivity(userId: string, req: Request) {
     await User.findByIdAndUpdate(userId, {
       lastActiveAt: new Date(),
       lastLoginIP: req.ip,
@@ -415,7 +415,7 @@ export class EnhancedAuthMiddleware {
   /**
    * Log failed MFA attempt
    */
-  private async logFailedMFAAttempt(userId: string, req: Request) {
+  async logFailedMFAAttempt(userId: string, req: Request) {
     await setCache(`mfa_failed:${userId}:${Date.now()}`, {
       userId,
       ip: req.ip,
@@ -427,7 +427,7 @@ export class EnhancedAuthMiddleware {
   /**
    * Mark MFA as verified
    */
-  private async markMFAVerified(token: string, userId: string) {
+  async markMFAVerified(token: string, userId: string) {
     await setCache(`mfa_token:${token}`, {
       userId,
       token,

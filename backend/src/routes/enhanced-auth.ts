@@ -4,18 +4,20 @@ import { logger } from '../config/logger';
 import { User } from '../models/User';
 import * as jwt from 'jsonwebtoken';
 
+interface AuthenticatedRequestUser {
+  id: string;
+  email: string;
+  username: string;
+  isVerified: boolean;
+  isAdmin: boolean;
+  ogLevel: number;
+  trustScore: number;
+  mfaEnabled: boolean;
+  lastLoginAt: Date;
+}
+
 interface AuthenticatedRequest extends express.Request {
-  user?: {
-    id: string;
-    email: string;
-    username: string;
-    isVerified: boolean;
-    isAdmin: boolean;
-    ogLevel: number;
-    trustScore: number;
-    mfaEnabled: boolean;
-    lastLoginAt: Date;
-  };
+  user?: AuthenticatedRequestUser;
 }
 
 const router = express.Router();

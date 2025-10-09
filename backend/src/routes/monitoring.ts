@@ -100,9 +100,9 @@ router.put('/alerts/config', async (req: Request, res: Response) => {
 // Get system performance summary
 router.get('/performance', async (req: Request, res: Response) => {
   try {
-    const metrics = monitoringService.getMetrics();
-    const latest = monitoringService.getLatestMetrics();
-    
+    const metrics = monitoringService.getMetrics() as any;
+    const latest = monitoringService.getLatestMetrics() as any;
+
     if (!latest || !Array.isArray(metrics) || metrics.length === 0) {
       return res.json({
         status: 'no_data',
@@ -111,9 +111,9 @@ router.get('/performance', async (req: Request, res: Response) => {
     }
 
     // Calculate averages
-    const avgMemory = Array.isArray(metrics) ? metrics.reduce((sum, m) => sum + m.memory.percentage, 0) / metrics.length : 0;
-    const avgCpu = Array.isArray(metrics) ? metrics.reduce((sum, m) => sum + m.cpu.usage, 0) / metrics.length : 0;
-    const avgResponseTime = Array.isArray(metrics) ? metrics.reduce((sum, m) => sum + m.api.averageResponseTime, 0) / metrics.length : 0;
+    const avgMemory = Array.isArray(metrics) ? metrics.reduce((sum: number, m: any) => sum + (m.memory?.percentage || 0), 0) / metrics.length : 0;
+    const avgCpu = Array.isArray(metrics) ? metrics.reduce((sum: number, m: any) => sum + (m.cpu?.usage || 0), 0) / metrics.length : 0;
+    const avgResponseTime = Array.isArray(metrics) ? metrics.reduce((sum: number, m: any) => sum + (m.api?.averageResponseTime || 0), 0) / metrics.length : 0;
 
     // Calculate trends (comparing first half vs second half)
     const metricsArray = Array.isArray(metrics) ? metrics : [];
@@ -121,8 +121,8 @@ router.get('/performance', async (req: Request, res: Response) => {
     const firstHalf = metricsArray.slice(0, midPoint);
     const secondHalf = metricsArray.slice(midPoint);
 
-    const firstHalfAvgMemory = firstHalf.length > 0 ? firstHalf.reduce((sum, m) => sum + m.memory.percentage, 0) / firstHalf.length : 0;
-    const secondHalfAvgMemory = secondHalf.length > 0 ? secondHalf.reduce((sum, m) => sum + m.memory.percentage, 0) / secondHalf.length : 0;
+    const firstHalfAvgMemory = firstHalf.length > 0 ? firstHalf.reduce((sum: number, m: any) => sum + (m.memory?.percentage || 0), 0) / firstHalf.length : 0;
+    const secondHalfAvgMemory = secondHalf.length > 0 ? secondHalf.reduce((sum: number, m: any) => sum + (m.memory?.percentage || 0), 0) / secondHalf.length : 0;
 
     const memoryTrend = secondHalfAvgMemory > firstHalfAvgMemory ? 'increasing' : 
                        secondHalfAvgMemory < firstHalfAvgMemory ? 'decreasing' : 'stable';
@@ -158,8 +158,8 @@ router.get('/performance', async (req: Request, res: Response) => {
 // Get system resource usage
 router.get('/resources', async (req: Request, res: Response) => {
   try {
-    const latest = monitoringService.getLatestMetrics();
-    
+    const latest = monitoringService.getLatestMetrics() as any;
+
     if (!latest) {
       return res.status(404).json({ error: 'No metrics data available' });
     }

@@ -493,7 +493,7 @@ router.post('/admin/:id/approve', [
     }
 
     // Update payout status
-    payout.status = 'approved';
+    payout.status = 'completed' as any;
     payout.metadata = {
       ...payout.metadata,
       approvedBy: admin.username,
@@ -602,7 +602,7 @@ router.post('/admin/:id/reject', [
       await user.save({ session });
 
       // Update payout status
-      payout.status = 'rejected';
+      payout.status = 'failed' as any;
       payout.metadata = {
         ...payout.metadata,
         rejectedBy: admin.username,
