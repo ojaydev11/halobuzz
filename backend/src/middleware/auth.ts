@@ -80,7 +80,7 @@ export const authMiddleware = async (req: AuthenticatedRequest, res: Response, n
       isVerified: user.isVerified,
       isBanned: user.isBanned,
       isAdmin: user.isAdmin || user.role === 'admin',
-      roles: user.roles || (user.role ? [user.role] : ['user']),
+      roles: user.role ? [user.role] : ['user'],
       mfaEnabled: user.mfaEnabled || false,
       mfaVerified: decoded.mfaVerified || false
     };
@@ -225,7 +225,7 @@ export const adminMiddleware = async (req: AuthenticatedRequest, res: Response, 
     }
 
     const user = await User.findById(req.user.userId);
-    if (!user || (!user.isAdmin && user.role !== 'admin' && !user.roles?.includes('admin'))) {
+    if (!user || (!user.isAdmin && user.role !== 'admin')) {
       return res.status(403).json({
         success: false,
         error: 'Admin access required.'

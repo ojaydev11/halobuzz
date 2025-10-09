@@ -4,19 +4,10 @@ import { Request, Response, NextFunction } from 'express';
 import { logger } from '../config/logger';
 import { User } from '../models/User';
 import { getCache, setCache } from '../config/redis';
+import { AuthUser } from '../types/express';
 
 interface AuthenticatedRequest extends Request {
-  user?: {
-    id: string;
-    email: string;
-    username: string;
-    isVerified: boolean;
-    isAdmin: boolean;
-    ogLevel: number;
-    trustScore: number;
-    mfaEnabled: boolean;
-    lastLoginAt: Date;
-  };
+  user?: AuthUser;
   deviceId?: string;
   ipAddress?: string;
   userAgent?: string;
@@ -113,14 +104,17 @@ export class EnhancedAuthMiddleware {
       await this.updateUserActivity(user.id, req);
 
       req.user = {
-        id: user.id,
+        userId: user._id.toString(),
+        id: user._id.toString(),
         email: user.email,
         username: user.username,
-        isVerified: user.isVerified,
-        isAdmin: user.role === 'admin' || user.role === 'super_admin',
         ogLevel: user.ogLevel || 0,
-        trustScore: user.trust?.score || 0,
+        isVerified: user.isVerified,
+        isBanned: user.isBanned,
+        isAdmin: user.role === 'admin' || user.role === 'super_admin',
         mfaEnabled: user.mfaEnabled || false,
+        mfaVerified: decoded.mfaVerified || false,
+        trustScore: user.trust?.score || 0,
         lastLoginAt: user.lastActiveAt
       };
 

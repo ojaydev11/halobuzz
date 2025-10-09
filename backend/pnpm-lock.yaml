@@ -44,6 +44,12 @@ importers:
       axios:
         specifier: ^1.6.2
         version: 1.11.0
+      base32-decode:
+        specifier: ^1.0.0
+        version: 1.0.0
+      base32-encode:
+        specifier: ^2.0.0
+        version: 2.0.0
       bcryptjs:
         specifier: ^2.4.3
         version: 2.4.3
@@ -2846,6 +2852,13 @@ packages:
 
   bare-events@2.7.0:
     resolution: {integrity: sha512-b3N5eTW1g7vXkw+0CXh/HazGTcO5KYuu/RCNaJbDMPI6LHDi+7qe8EmxKUVe1sUbY2KZOVZFyj62x0OEz9qyAA==}
+
+  base32-decode@1.0.0:
+    resolution: {integrity: sha512-KNWUX/R7wKenwE/G/qFMzGScOgVntOmbE27vvc6GrniDGYb6a5+qWcuoXl8WIOQL7q0TpK7nZDm1Y04Yi3Yn5g==}
+
+  base32-encode@2.0.0:
+    resolution: {integrity: sha512-mlmkfc2WqdDtMl/id4qm3A7RjW6jxcbAoMjdRmsPiwQP0ufD4oXItYMnPgVHe80lnAIy+1xwzhHE1s4FoIceSw==}
+    engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
 
   base32.js@0.0.1:
     resolution: {integrity: sha512-EGHIRiegFa62/SsA1J+Xs2tIzludPdzM064N9wjbiEgHnGnJ1V0WEpA4pEwCYT5nDvZk3ubf0shqaCS7k6xeUQ==}
@@ -5972,6 +5985,10 @@ packages:
 
   tmpl@1.0.5:
     resolution: {integrity: sha512-3f0uOEAQwIqGuWW2MVzYg8fV/QNnc/IpuJNG837rLuczAaLVHslWHZQj4IGiEl5Hs3kkbhwL9Ab7Hrsmuj+Smw==}
+
+  to-data-view@2.0.0:
+    resolution: {integrity: sha512-RGEM5KqlPHr+WVTPmGNAXNeFEmsBnlkxXaIfEpUYV0AST2Z5W1EGq9L/MENFrMMmL2WQr1wjkmZy/M92eKhjYA==}
+    engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
 
   to-regex-range@5.0.1:
     resolution: {integrity: sha512-65P7iz6X5yEr1cwcgvQxbbIw7Uk3gOy5dIdtZ4rDveLqhrdJP+Li/Hx6tyK0NEb+2GCyneCMJiGqrADCSNk8sQ==}
@@ -11114,6 +11131,12 @@ snapshots:
 
   bare-events@2.7.0: {}
 
+  base32-decode@1.0.0: {}
+
+  base32-encode@2.0.0:
+    dependencies:
+      to-data-view: 2.0.0
+
   base32.js@0.0.1: {}
 
   base64-js@1.5.1: {}
@@ -14713,6 +14736,8 @@ snapshots:
       tldts-core: 6.1.86
 
   tmpl@1.0.5: {}
+
+  to-data-view@2.0.0: {}
 
   to-regex-range@5.0.1:
     dependencies:

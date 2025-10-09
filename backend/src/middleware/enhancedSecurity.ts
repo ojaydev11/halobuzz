@@ -5,13 +5,16 @@ import bcrypt from 'bcryptjs';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import { body, validationResult } from 'express-validator';
+import base32Encode from 'base32-encode';
+import base32Decode from 'base32-decode';
 import { User } from '@/models/User';
 import { logger } from '@/config/logger';
 import { getCache, setCache } from '@/config/redis';
+import { AuthUser } from '../types/express';
 
 /**
  * Enhanced Security Middleware addressing OWASP Top 10 vulnerabilities
- * 
+ *
  * OWASP Top 10 (2021):
  * 1. Broken Access Control
  * 2. Cryptographic Failures
@@ -26,20 +29,7 @@ import { getCache, setCache } from '@/config/redis';
  */
 
 export interface AuthenticatedRequest extends Request {
-  user?: {
-    userId: string;
-    id: string;
-    username: string;
-    email: string;
-    ogLevel: number;
-    isVerified: boolean;
-    isBanned: boolean;
-    isAdmin?: boolean;
-    mfaEnabled?: boolean;
-    mfaVerified?: boolean;
-    deviceFingerprint?: string;
-    sessionId?: string;
-  };
+  user?: AuthUser;
 }
 
 /**
@@ -270,27 +260,28 @@ export class DependencySecurity {
  */
 export class MFAService {
   static generateTOTPSecret(): string {
-    return crypto.randomBytes(20).toString('base32');
+    const randomBytes = crypto.randomBytes(20);
+    return base32Encode(randomBytes, 'RFC4648', { padding: false }) as string;
   }
 
   static generateTOTPCode(secret: string): string {
     const epoch = Math.round(Date.now() / 1000.0);
     const time = Math.floor(epoch / 30);
-    
-    const key = Buffer.from(secret, 'base32');
+
+    const key = Buffer.from(base32Decode(secret, 'RFC4648'));
     const counter = Buffer.alloc(8);
     counter.writeUIntBE(time, 0, 8);
-    
+
     const hmac = crypto.createHmac('sha1', key);
     hmac.update(counter);
     const digest = hmac.digest();
-    
+
     const offset = digest[digest.length - 1] & 0xf;
     const code = ((digest[offset] & 0x7f) << 24) |
                  ((digest[offset + 1] & 0xff) << 16) |
                  ((digest[offset + 2] & 0xff) << 8) |
                  (digest[offset + 3] & 0xff);
-    
+
     return (code % 1000000).toString().padStart(6, '0');
   }
 
