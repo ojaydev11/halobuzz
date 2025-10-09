@@ -1,18 +1,12 @@
 # syntax=docker/dockerfile:1.7
+# Production Dockerfile - Compiled TypeScript for full backend with low memory
 
-# ---- Build stage ----
+# ---- Dependencies stage ----
 FROM node:20-alpine AS deps
 WORKDIR /app
 
-# Install build dependencies for Alpine Linux
-RUN apk add --no-cache \
-    python3 \
-    make \
-    g++ \
-    linux-headers \
-    libc6-compat \
-    curl \
-    && ln -sf python3 /usr/bin/python
+# Install build dependencies
+RUN apk add --no-cache python3 make g++ curl
 
 # Install pnpm
 RUN corepack enable && corepack prepare pnpm@9.1.0 --activate
@@ -20,27 +14,13 @@ RUN corepack enable && corepack prepare pnpm@9.1.0 --activate
 # Copy package files
 COPY package*.json pnpm-lock.yaml ./
 
-# Set mongodb-memory-server to use system binaries and skip download
-ENV MONGOMS_DOWNLOAD_DIR=/opt/mongodb-binaries
-ENV MONGOMS_VERSION=7.0.0
-ENV MONGOMS_DISABLE_POSTINSTALL=1
-ENV MONGOMS_SYSTEM_BINARY=/usr/bin/mongod
-
-# Install dependencies with cache mount (skip optional deps to save memory)
+# Install ALL dependencies (needed for TypeScript compilation)
 RUN --mount=type=cache,id=pnpm-store,target=/root/.pnpm-store \
-    pnpm install --frozen-lockfile --no-optional --ignore-scripts
+    pnpm install --frozen-lockfile
 
 # ---- Build stage ----
 FROM node:20-alpine AS build
 WORKDIR /app
-
-# Install build dependencies for Alpine Linux
-RUN apk add --no-cache \
-    python3 \
-    make \
-    g++ \
-    linux-headers \
-    libc6-compat
 
 # Install pnpm
 RUN corepack enable && corepack prepare pnpm@9.1.0 --activate
@@ -50,26 +30,24 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/package*.json ./
 COPY --from=deps /app/pnpm-lock.yaml ./
 
-# Copy source code and config files
+# Copy source code and TypeScript config
 COPY tsconfig*.json ./
-COPY scripts ./scripts
 COPY src ./src
 
-# Skip TypeScript compilation entirely - use ts-node at runtime
-RUN echo "Skipping TypeScript compilation - will use ts-node at runtime"
+# Compile TypeScript to JavaScript
+# tsc-alias resolves @ paths to relative paths
+RUN echo "Building TypeScript..." && \
+    pnpm run build && \
+    echo "Build complete!" && \
+    ls -la dist/ && \
+    echo "Dist contents:" && find dist -type f | head -20
 
 # ---- Runtime stage ----
 FROM node:20-alpine AS runtime
 WORKDIR /app
 
-# Install runtime dependencies for Alpine Linux
-RUN apk add --no-cache \
-    curl \
-    libc6-compat \
-    python3 \
-    make \
-    g++ \
-    && ln -sf python3 /usr/bin/python
+# Install runtime dependencies
+RUN apk add --no-cache curl libc6-compat
 
 # Create non-root user
 RUN addgroup --system --gid 1001 nodejs && \
@@ -81,32 +59,27 @@ RUN corepack enable && corepack prepare pnpm@9.1.0 --activate
 # Copy package files
 COPY package*.json pnpm-lock.yaml ./
 
-# Set mongodb-memory-server environment variables for production
-ENV MONGOMS_DOWNLOAD_DIR=/opt/mongodb-binaries
-ENV MONGOMS_VERSION=7.0.0
-ENV MONGOMS_DISABLE_POSTINSTALL=1
-ENV MONGOMS_SYSTEM_BINARY=/usr/bin/mongod
-
-# Install production dependencies only (minimal for emergency fix)
-# Only install what minimal-index.ts actually needs
+# Install ONLY production dependencies (no TypeScript, ts-node, etc.)
 RUN --mount=type=cache,id=pnpm-store,target=/root/.pnpm-store \
-    pnpm add express dotenv ts-node typescript @types/express @types/node
+    pnpm install --prod --frozen-lockfile --no-optional
 
-# Copy source code (no dist directory needed)
-COPY --from=build /app/src ./src
-COPY --from=build /app/package*.json ./
-COPY --from=build /app/pnpm-lock.yaml ./
-COPY --from=build /app/tsconfig*.json ./
+# Copy compiled JavaScript from build stage
+COPY --from=build /app/dist ./dist
 
-# Create logs directory
-RUN mkdir -p logs && chown -R halobuzz:nodejs logs
+# Verify dist was copied
+RUN ls -la dist/ && echo "Dist files copied successfully"
+
+# Create necessary directories
+RUN mkdir -p logs uploads && chown -R halobuzz:nodejs logs uploads
 
 # Set environment variables
 ENV NODE_ENV=production
 ENV PORT=4000
 ENV API_VERSION=v1
 ENV HOST=0.0.0.0
-ENV NODE_OPTIONS="--max-old-space-size=512"
+
+# Node.js memory limit for 1GB instances
+ENV NODE_OPTIONS="--max-old-space-size=768"
 
 # Switch to non-root user
 USER halobuzz
@@ -114,10 +87,9 @@ USER halobuzz
 # Expose port
 EXPOSE 4000
 
-# Health check - use simple /healthz endpoint
-HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
   CMD curl -f --max-time 2 --connect-timeout 2 http://127.0.0.1:${PORT}/healthz || exit 1
 
-# Start the application
-# Using minimal-index temporarily to debug path resolution issues
-CMD ["npx", "ts-node", "src/minimal-index.ts"]
+# Start with compiled JavaScript (NOT ts-node!)
+CMD ["node", "dist/index.js"]
