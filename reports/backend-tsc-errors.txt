@@ -1,0 +1,112 @@
+src/analytics/jobs/scheduler.ts(60,42): error TS2339: Property 'destroy' does not exist on type 'ScheduledTask'.
+src/analytics/jobs/scheduler.ts(168,44): error TS2339: Property 'generatePrediction' does not exist on type 'PredictiveAnalyticsService'.
+src/analytics/jobs/scheduler.ts(608,38): error TS2339: Property 'length' does not exist on type 'Map<string, ScheduledTask>'.
+src/analytics/models/AnalyticsForecast.ts(3,18): error TS2430: Interface 'IAnalyticsForecast' incorrectly extends interface 'Document<unknown, any, any, Record<string, any>, {}>'.
+  Types of property 'model' are incompatible.
+    Type '{ type: "ewma" | "prophet" | "arima" | "linear"; parameters: any; accuracy: number; lastTrained: Date; }' is not assignable to type '{ <ModelType = Model<unknown, {}, {}, {}, Document<unknown, {}, unknown, {}, {}> & Required<{ _id: unknown; }> & { __v: number; }, any>>(name: string): ModelType; <ModelType = Model<any, {}, {}, {}, any, any>>(): ModelType; }'.
+      Type '{ type: "ewma" | "prophet" | "arima" | "linear"; parameters: any; accuracy: number; lastTrained: Date; }' provides no match for the signature '<ModelType = Model<unknown, {}, {}, {}, Document<unknown, {}, unknown, {}, {}> & Required<{ _id: unknown; }> & { __v: number; }, any>>(name: string): ModelType'.
+src/analytics/queries/kpis.ts(160,49): error TS2769: No overload matches this call.
+  Overload 2 of 2, '(pipeline: PipelineStage[]): Aggregate<any[]>', gave the following error.
+    Object literal may only specify known properties, and 'esewa' does not exist in type 'AccumulatorOperator'.
+  Overload 2 of 2, '(pipeline: PipelineStage[]): Aggregate<any[]>', gave the following error.
+    Object literal may only specify known properties, and 'tier1' does not exist in type 'AccumulatorOperator'.
+src/analytics/services/simulations.ts(130,59): error TS2363: The right-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+src/analytics/services/simulations.ts(130,75): error TS2362: The left-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+src/analytics/services/simulations.ts(131,55): error TS2363: The right-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+src/analytics/services/simulations.ts(170,12): error TS2362: The left-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+src/analytics/services/simulations.ts(188,35): error TS2345: Argument of type 'string | number' is not assignable to parameter of type 'number'.
+  Type 'string' is not assignable to type 'number'.
+src/analytics/services/simulations.ts(188,50): error TS2363: The right-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+src/analytics/services/simulations.ts(189,56): error TS2365: Operator '+' cannot be applied to types 'number' and 'string | number'.
+src/analytics/services/simulations.ts(248,58): error TS2363: The right-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+src/analytics/services/simulations.ts(248,80): error TS2363: The right-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+src/analytics/services/simulations.ts(249,55): error TS2363: The right-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+src/analytics/services/simulations.ts(255,44): error TS2363: The right-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+src/analytics/services/simulations.ts(275,69): error TS2363: The right-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+src/analytics/services/simulations.ts(281,44): error TS2363: The right-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+src/analytics/services/simulations.ts(288,12): error TS2362: The left-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+src/analytics/services/simulations.ts(307,56): error TS2363: The right-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+src/analytics/services/simulations.ts(307,71): error TS2363: The right-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+src/analytics/services/simulations.ts(308,55): error TS2363: The right-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+src/analytics/services/simulations.ts(314,44): error TS2363: The right-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+src/analytics/services/simulations.ts(334,69): error TS2363: The right-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+src/analytics/services/simulations.ts(340,44): error TS2363: The right-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+src/analytics/services/simulations.ts(347,12): error TS2362: The left-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+src/middleware/auth.ts(73,7): error TS2353: Object literal may only specify known properties, and 'role' does not exist in type '{ userId: string; id: string; username: string; email: string; ogLevel: number; isVerified: boolean; isBanned: boolean; isAdmin?: boolean; mfaEnabled?: boolean; mfaVerified?: boolean; deviceFingerprint?: string; sessionId?: string; }'.
+src/middleware/auth.ts(132,32): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(payload: string | object | Buffer<ArrayBufferLike>, secretOrPrivateKey: null, options?: SignOptions & { algorithm: "none"; }): string', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'null'.
+  Overload 2 of 5, '(payload: string | object | Buffer<ArrayBufferLike>, secretOrPrivateKey: Buffer<ArrayBufferLike> | Secret | JsonWebKeyInput | PrivateKeyInput, options?: SignOptions): string', gave the following error.
+    Type 'string' is not assignable to type 'number | StringValue'.
+  Overload 3 of 5, '(payload: string | object | Buffer<ArrayBufferLike>, secretOrPrivateKey: Buffer<ArrayBufferLike> | Secret | JsonWebKeyInput | PrivateKeyInput, callback: SignCallback): void', gave the following error.
+    Object literal may only specify known properties, and 'expiresIn' does not exist in type 'SignCallback'.
+src/middleware/enhancedSecurity.ts(81,27): error TS2551: Property 'createCipherGCM' does not exist on type 'typeof import("crypto")'. Did you mean 'createCipher'?
+src/middleware/enhancedSecurity.ts(96,29): error TS2551: Property 'createDecipherGCM' does not exist on type 'typeof import("crypto")'. Did you mean 'createDecipher'?
+src/middleware/enhancedSecurity.ts(273,44): error TS2345: Argument of type '"base32"' is not assignable to parameter of type 'BufferEncoding'.
+src/middleware/enhancedSecurity.ts(280,24): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(arrayBuffer: WithImplicitCoercion<ArrayBufferLike>, byteOffset?: number, length?: number): Buffer<ArrayBufferLike>', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'WithImplicitCoercion<ArrayBufferLike>'.
+  Overload 2 of 4, '(string: WithImplicitCoercion<string>, encoding?: BufferEncoding): Buffer<ArrayBuffer>', gave the following error.
+    Argument of type '"base32"' is not assignable to parameter of type 'BufferEncoding'.
+src/middleware/enhancedSecurity.ts(526,21): error TS2339: Property 'deviceFingerprint' does not exist on type 'unknown'.
+src/middleware/enhancedSecurity.ts(542,32): error TS2339: Property 'mfaVerified' does not exist on type 'unknown'.
+src/middleware/enhancedSecurity.ts(603,14): error TS2451: Cannot redeclare block-scoped variable 'requireAdmin'.
+src/middleware/enhancedSecurity.ts(776,9): error TS2339: Property 'user' does not exist on type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+src/middleware/enhancedSecurity.ts(783,14): error TS2451: Cannot redeclare block-scoped variable 'requireAdmin'.
+src/middleware/enhancedSecurity.ts(785,14): error TS2339: Property 'user' does not exist on type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+src/middleware/enhancedSecurity.ts(789,13): error TS2339: Property 'user' does not exist on type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+src/middleware/security.ts(108,24): error TS2532: Object is possibly 'undefined'.
+src/models/AuditLog.ts(90,5): error TS2322: Type '{ gdprApplicable: boolean; dataRetentionChecked: boolean; piiSanitized: boolean; } | {}' is not assignable to type '{ gdprApplicable: boolean; dataRetentionChecked: boolean; piiSanitized: boolean; }'.
+  Type '{}' is missing the following properties from type '{ gdprApplicable: boolean; dataRetentionChecked: boolean; piiSanitized: boolean; }': gdprApplicable, dataRetentionChecked, piiSanitized
+src/models/BattlePass.ts(428,31): error TS2339: Property 'getTierForXP' does not exist on type 'IBattlePass'.
+src/models/CoinTransaction.ts(282,43): error TS2339: Property 'findOne' does not exist on type 'Function'.
+src/routes/admin.ts(56,7): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(options: GenerateSecretWithOtpAuthUrlOptions): GeneratedSecretWithOtpAuthUrl', gave the following error.
+    Object literal may only specify known properties, and 'account' does not exist in type 'GenerateSecretWithOtpAuthUrlOptions'.
+  Overload 2 of 2, '(options?: GenerateSecretOptions): GeneratedSecret', gave the following error.
+    Object literal may only specify known properties, and 'account' does not exist in type 'GenerateSecretOptions'.
+src/routes/admin.ts(106,7): error TS2322: Type 'unknown' is not assignable to type 'string'.
+src/routes/advanced-analytics.ts(137,7): error TS2554: Expected 0 arguments, but got 5.
+src/routes/advanced-analytics.ts(173,39): error TS2339: Property 'getDashboardData' does not exist on type 'AdvancedAnalyticsService'.
+src/routes/advanced-analytics.ts(201,38): error TS2339: Property 'getPredictiveInsights' does not exist on type 'AdvancedAnalyticsService'.
+src/routes/advanced-analytics.ts(231,38): error TS2339: Property 'getUserBehaviorAnalytics' does not exist on type 'AdvancedAnalyticsService'.
+src/routes/advanced-analytics.ts(263,41): error TS2339: Property 'getContentPerformanceAnalytics' does not exist on type 'AdvancedAnalyticsService'.
+src/routes/advanced-analytics.ts(295,37): error TS2339: Property 'getRevenueAnalytics' does not exist on type 'AdvancedAnalyticsService'.
+src/routes/advanced-analytics.ts(324,40): error TS2341: Property 'getEngagementMetrics' is private and only accessible within class 'AdvancedAnalyticsService'.
+src/routes/advanced-analytics.ts(324,61): error TS2345: Argument of type 'string' is not assignable to parameter of type 'AnalyticsFilter'.
+src/routes/advanced-analytics.ts(353,39): error TS2339: Property 'getTechnicalMetrics' does not exist on type 'AdvancedAnalyticsService'.
+src/routes/advanced-analytics.ts(383,36): error TS2339: Property 'generateCustomReport' does not exist on type 'AdvancedAnalyticsService'.
+src/routes/advanced-analytics.ts(440,40): error TS2551: Property 'exportAnalyticsData' does not exist on type 'AdvancedAnalyticsService'. Did you mean 'exportAnalytics'?
+src/routes/advanced-fraud-detection.ts(46,7): error TS2554: Expected 0 arguments, but got 3.
+src/routes/advanced-fraud-detection.ts(108,38): error TS2339: Property 'getAllFraudPatterns' does not exist on type 'AdvancedFraudDetectionService'.
+src/routes/advanced-fraud-detection.ts(139,37): error TS2551: Property 'updateFraudPattern' does not exist on type 'AdvancedFraudDetectionService'. Did you mean 'createFraudPattern'?
+src/routes/advanced-fraud-detection.ts(168,21): error TS2551: Property 'deleteFraudPattern' does not exist on type 'AdvancedFraudDetectionService'. Did you mean 'createFraudPattern'?
+src/routes/advanced-fraud-detection.ts(197,36): error TS2339: Property 'getFraudAlerts' does not exist on type 'AdvancedFraudDetectionService'.
+src/routes/advanced-fraud-detection.ts(232,21): error TS2554: Expected 3 arguments, but got 2.
+src/routes/advanced-fraud-detection.ts(262,38): error TS2551: Property 'analyzeUserFraud' does not exist on type 'AdvancedFraudDetectionService'. Did you mean 'analyzeUserForFraud'?
+src/routes/advanced-fraud-detection.ts(289,39): error TS2339: Property 'getFraudAnalytics' does not exist on type 'AdvancedFraudDetectionService'.
+src/routes/advanced-fraud-detection.ts(318,66): error TS2554: Expected 1 arguments, but got 2.
+src/routes/advanced-fraud-detection.ts(348,40): error TS2551: Property 'testFraudPattern' does not exist on type 'AdvancedFraudDetectionService'. Did you mean 'createFraudPattern'?
+src/routes/advanced-fraud-detection.ts(378,21): error TS2339: Property 'addToWhitelist' does not exist on type 'AdvancedFraudDetectionService'.
+src/routes/advanced-fraud-detection.ts(407,21): error TS2339: Property 'removeFromWhitelist' does not exist on type 'AdvancedFraudDetectionService'.
+src/routes/advanced-games.ts(115,24): error TS2339: Property 'user' does not exist on type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+src/routes/advanced-games.ts(134,21): error TS2339: Property 'user' does not exist on type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+src/routes/advanced-games.ts(248,24): error TS2339: Property 'user' does not exist on type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+src/routes/advanced-games.ts(376,24): error TS2339: Property 'user' does not exist on type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+src/routes/advanced-gifts.ts(12,48): error TS2339: Property 'getAvailableGiftPackages' does not exist on type 'AdvancedGiftEconomyService'.
+src/routes/advanced-gifts.ts(60,47): error TS2339: Property 'getGiftHistory' does not exist on type 'AdvancedGiftEconomyService'.
+src/routes/advanced-gifts.ts(83,49): error TS2339: Property 'getGiftAnalytics' does not exist on type 'AdvancedGiftEconomyService'.
+src/routes/advanced-gifts.ts(101,48): error TS2339: Property 'getTrendingGifts' does not exist on type 'AdvancedGiftEconomyService'.
+src/routes/advanced-gifts.ts(121,51): error TS2339: Property 'calculateGiftValue' does not exist on type 'AdvancedGiftEconomyService'.
+src/routes/advanced-gifts.ts(145,51): error TS2339: Property 'getGiftLeaderboard' does not exist on type 'AdvancedGiftEconomyService'.
+src/routes/advanced-gifts.ts(169,46): error TS2339: Property 'processGiftCombo' does not exist on type 'AdvancedGiftEconomyService'.
+src/routes/advanced-gifts.ts(194,55): error TS2339: Property 'getGiftRecommendations' does not exist on type 'AdvancedGiftEconomyService'.
+src/routes/ai-business.ts(18,29): error TS2339: Property 'role' does not exist on type '{ userId: string; id: string; username: string; email: string; ogLevel: number; isVerified: boolean; isBanned: boolean; isAdmin?: boolean; mfaEnabled?: boolean; mfaVerified?: boolean; deviceFingerprint?: string; sessionId?: string; }'.
+src/routes/ai-business.ts(70,43): error TS2345: Argument of type '{ from: Date; to: Date; country: string; granularity: string; }' is not assignable to parameter of type 'KPIFilter'.
+  Types of property 'granularity' are incompatible.
+    Type 'string' is not assignable to type '"monthly" | "daily" | "weekly"'.
+src/routes/ai-business.ts(180,48): error TS2339: Property 'generatePrediction' does not exist on type 'PredictiveAnalyticsService'.
+src/routes/ai-business.ts(248,55): error TS2345: Argument of type '{ period: string; format: string; country: string; includeCharts: boolean; userId: string; }' is not assignable to parameter of type 'ReportOptions'.
+  Types of property 'period' are incompatible.
+    Type 'string' is not assignable to type '"custom" | "monthly" | "daily" | "weekly"'.
+src/routes/ai-personalization.ts(31,48): error TS2339: Property 'getPersonalizedExperience' does not exist on type 'AIHyperPersonaliza
