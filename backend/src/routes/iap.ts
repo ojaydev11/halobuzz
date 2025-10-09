@@ -1,8 +1,8 @@
 import express from 'express';
 import { authMiddleware } from '@/middleware/auth';
 import IAPValidationService from '@/services/IAPValidationService';
-import User from '@/models/User';
-import Transaction from '@/models/Transaction';
+import { User } from '@/models/User';
+import { Transaction } from '@/models/Transaction';
 
 const router = express.Router();
 

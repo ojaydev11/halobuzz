@@ -1,5 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { aiModerationService } from '../../../../backend/src/services/AIModerationService';
+import axios from 'axios';
+
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:3001/api/v1';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
@@ -13,20 +15,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    // TODO: Verify admin token with your auth service
-
     const { timeframe = 'day' } = req.query;
 
-    // Get moderation stats
-    const stats = await aiModerationService.getModerationStats(timeframe as 'day' | 'week' | 'month');
-
-    res.status(200).json({
-      success: true,
-      stats
+    // Forward request to backend API
+    const response = await axios.get(`${API_BASE}/admin/moderation/stats`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      },
+      params: {
+        timeframe
+      }
     });
-  } catch (error) {
+
+    res.status(200).json(response.data);
+  } catch (error: any) {
     console.error('Error fetching moderation stats:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(error.response?.status || 500).json({
+      error: error.response?.data?.message || 'Internal server error'
+    });
   }
 }
 

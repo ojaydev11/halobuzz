@@ -6,8 +6,8 @@ import {
   UserGroupIcon,
   CurrencyDollarIcon,
   ExclamationTriangleIcon,
-  TrendingUpIcon,
-  TrendingDownIcon,
+  ArrowTrendingUpIcon,
+  ArrowTrendingDownIcon,
   EyeIcon,
   ChatBubbleLeftEllipsisIcon,
   CpuChipIcon
@@ -243,7 +243,7 @@ function MetricCard({ title, value, change, icon: Icon, color }: {
           <Icon className="h-6 w-6" />
         </div>
         <div className={`flex items-center text-sm ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
-          {isPositive ? <TrendingUpIcon className="h-4 w-4 mr-1" /> : <TrendingDownIcon className="h-4 w-4 mr-1" />}
+          {isPositive ? <ArrowTrendingUpIcon className="h-4 w-4 mr-1" /> : <ArrowTrendingDownIcon className="h-4 w-4 mr-1" />}
           {Math.abs(change)}%
         </div>
       </div>

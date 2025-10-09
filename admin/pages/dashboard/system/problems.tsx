@@ -14,7 +14,7 @@ import {
   BellSlashIcon,
   ChartBarIcon,
   CpuChipIcon,
-  DatabaseIcon,
+  CircleStackIcon,
   SignalIcon,
   FireIcon,
   EyeIcon,

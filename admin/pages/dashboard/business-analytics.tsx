@@ -100,11 +100,11 @@ const BusinessAnalyticsPage: NextPage = () => {
   const periods = ['daily', 'weekly', 'monthly'];
 
   useEffect(() => {
-    if (!user || user.role !== 'admin') {
+    if (!user || !user.roles.includes('admin')) {
       router.push('/login');
       return;
     }
-    
+
     fetchData();
   }, [user, selectedCountry, selectedPeriod]);
 

@@ -20,6 +20,17 @@ export interface IModerationFlag extends Document {
   resolution?: string;
   createdAt: Date;
   updatedAt: Date;
+
+  // Instance methods
+  resolve(adminId: string, resolution: string): Promise<this>;
+  flag(): Promise<this>;
+}
+
+// Model interface for static methods
+export interface IModerationFlagModel extends mongoose.Model<IModerationFlag> {
+  findByUser(userId: string, limit?: number): Promise<IModerationFlag[]>;
+  findPending(limit?: number): Promise<IModerationFlag[]>;
+  findByAction(action: string, limit?: number): Promise<IModerationFlag[]>;
 }
 
 const moderationFlagSchema = new Schema<IModerationFlag>({
@@ -163,4 +174,4 @@ moderationFlagSchema.methods.resolve = function(adminId: string, resolution: str
   return this.save();
 };
 
-export const ModerationFlag = mongoose.model<IModerationFlag>('ModerationFlag', moderationFlagSchema);
+export const ModerationFlag = mongoose.model<IModerationFlag, IModerationFlagModel>('ModerationFlag', moderationFlagSchema);

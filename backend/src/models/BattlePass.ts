@@ -13,6 +13,10 @@ export interface IBattlePass extends Document {
     durationDays: number;
   };
 
+  // Methods
+  calculateMatchXP(result: 'win' | 'loss', performanceScore: number, isFirstWin: boolean, isInParty: boolean): number;
+  getTierForXP(totalXP: number): number;
+
   // Pass Tiers
   tiers: {
     level: number;         // 1-100 typically
@@ -304,6 +308,11 @@ export interface IPlayerBattlePass extends Document {
   currentLevel: number;
   totalXP: number;
   xpToNextLevel: number;
+
+  // Methods
+  addXP(xpAmount: number, battlePass: IBattlePass): Promise<number>;
+  claimReward(level: number, rewardType: 'free' | 'premium'): boolean;
+  purchasePremium(tier: 'premium' | 'premium-plus', cost: number): void;
 
   // Premium Status
   hasPremium: boolean;

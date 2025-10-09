@@ -66,11 +66,11 @@ const EmpirePage: NextPage = () => {
   const countries = ['ALL', 'NP', 'US', 'IN', 'BD', 'LK'];
 
   useEffect(() => {
-    if (!user || user.role !== 'admin') {
+    if (!user || !user.roles.includes('admin')) {
       router.push('/login');
       return;
     }
-    
+
     fetchEmpireData();
   }, [user, fromDate, toDate, selectedCountry]);
 

@@ -11,8 +11,7 @@ import {
   FunnelIcon,
   ArrowPathIcon,
   ChartBarIcon,
-  FireIcon,
-  SnowflakeIcon
+  FireIcon
 } from '@heroicons/react/24/outline';
 
 interface HeatmapData {
@@ -269,7 +268,6 @@ export default function HeatmapsPage() {
                 <span>Hot</span>
                 <div className="w-20 h-2 bg-gradient-to-r from-blue-500 via-yellow-500 to-red-500 rounded"></div>
                 <span>Cold</span>
-                <SnowflakeIcon className="h-4 w-4 text-blue-500" />
               </div>
             </div>
           </div>

@@ -125,12 +125,11 @@ router.get('/streaks', authMiddleware, async (req: any, res) => {
 router.post('/activity', authMiddleware, async (req: any, res) => {
   try {
     const userId = req.user.userId;
-    const { activityType, metadata } = req.body;
+    const { activityType } = req.body;
 
     const result = await gamificationEngine.updateUserActivity(
       userId,
-      activityType,
-      metadata
+      activityType
     );
 
     res.json({

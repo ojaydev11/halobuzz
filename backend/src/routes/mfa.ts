@@ -19,12 +19,14 @@ router.use(socialLimiter);
  * Implements TOTP-based MFA with backup codes
  */
 
+interface MFARequestUser {
+  userId: string;
+  email: string;
+  mfaEnabled?: boolean;
+}
+
 interface MFARequest extends Request {
-  user?: {
-    userId: string;
-    email: string;
-    mfaEnabled?: boolean;
-  };
+  user?: MFARequestUser;
 }
 
 // Enable MFA for user
@@ -102,7 +104,7 @@ router.post('/verify-setup', async (req: MFARequest, res: Response) => {
       });
     }
 
-    const secret = await getCache(`mfa_setup:${userId}`);
+    const secret = await getCache(`mfa_setup:${userId}`) as string | null;
     if (!secret) {
       return res.status(400).json({
         success: false,
@@ -112,7 +114,7 @@ router.post('/verify-setup', async (req: MFARequest, res: Response) => {
 
     let isValid = false;
     if (token) {
-      isValid = MFAService.verifyToken(secret, token);
+      isValid = MFAService.verifyToken(secret as string, token);
     } else if (backupCode) {
       isValid = MFAService.verifyBackupCode(backupCode);
     }

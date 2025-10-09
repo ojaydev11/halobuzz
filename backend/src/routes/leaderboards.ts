@@ -72,7 +72,7 @@ router.get('/weekly/:gameCode', leaderboardLimit, async (req: Request, res: Resp
       total: leaderboard.length,
       limit: Number(limit),
       offset: Number(offset),
-      resetTime: this.getNextWeeklyReset()
+      resetTime: getNextWeeklyReset()
     });
   } catch (error) {
     logger.error('Error fetching weekly leaderboard:', error);
@@ -106,7 +106,7 @@ router.get('/monthly/:gameCode', leaderboardLimit, async (req: Request, res: Res
       total: leaderboard.length,
       limit: Number(limit),
       offset: Number(offset),
-      resetTime: this.getNextMonthlyReset()
+      resetTime: getNextMonthlyReset()
     });
   } catch (error) {
     logger.error('Error fetching monthly leaderboard:', error);

@@ -62,11 +62,11 @@ const SimulationsPage: NextPage = () => {
   const ogTiers = ['', 'tier1', 'tier2', 'tier3'];
 
   useEffect(() => {
-    if (!user || user.role !== 'admin') {
+    if (!user || !user.roles.includes('admin')) {
       router.push('/login');
       return;
     }
-    
+
     fetchHistoricalSimulations();
   }, [user]);
 

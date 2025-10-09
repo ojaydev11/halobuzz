@@ -279,7 +279,7 @@ CoinTransactionSchema.pre('save', async function(next) {
     this.hash = crypto.createHash('sha256').update(dataToHash).digest('hex');
 
     // Get previous transaction hash for chain integrity
-    const lastTx = await this.constructor.findOne(
+    const lastTx = await (this.constructor as any).findOne(
       { userId: this.userId },
       {},
       { sort: { createdAt: -1 } }

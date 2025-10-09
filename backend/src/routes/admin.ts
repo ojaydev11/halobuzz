@@ -53,7 +53,6 @@ router.post('/2fa/setup', async (req, res) => {
     // Generate TOTP secret
     const secret = speakeasy.generateSecret({
       name: `Halobuzz Admin (${user.email})`,
-      account: user.email,
       length: 32
     });
 
@@ -96,14 +95,14 @@ router.post('/2fa/verify', [
     }
 
     // Get temporary secret from cache
-    const tempSecret = await getCache(`2fa-setup:${userId}`);
+    const tempSecret = await getCache(`2fa-setup:${userId}`) as string | null;
     if (!tempSecret) {
       return res.status(400).json({ success: false, error: '2FA setup session expired' });
     }
 
     // Verify token
     const verified = speakeasy.totp.verify({
-      secret: tempSecret,
+      secret: tempSecret as string,
       encoding: 'base32',
       token: token,
       window: 2

@@ -62,7 +62,7 @@ export default function UsersPage() {
       id: '1',
       username: 'PriyaKhatri',
       email: 'priya@example.com',
-      avatar: null,
+      avatar: undefined,
       country: 'Nepal',
       isVerified: true,
       kycStatus: 'approved',
@@ -80,7 +80,7 @@ export default function UsersPage() {
       id: '2',
       username: 'ModeratorRam',
       email: 'ram@halobuzz.com',
-      avatar: null,
+      avatar: undefined,
       country: 'Nepal',
       isVerified: true,
       kycStatus: 'approved',
@@ -98,7 +98,7 @@ export default function UsersPage() {
       id: '3',
       username: 'SuspiciousUser',
       email: 'suspicious@example.com',
-      avatar: null,
+      avatar: undefined,
       country: 'India',
       isVerified: false,
       kycStatus: 'pending',
@@ -326,7 +326,7 @@ export default function UsersPage() {
                     type="checkbox"
                     onChange={(e) => {
                       if (e.target.checked) {
-                        setSelectedUsers(filteredUsers.map(u => u.id));
+                        setSelectedUsers(filteredUsers.map((u: User) => u.id));
                       } else {
                         setSelectedUsers([]);
                       }
@@ -356,7 +356,7 @@ export default function UsersPage() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {filteredUsers.map((user) => (
+              {filteredUsers.map((user: User) => (
                 <tr key={user.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <input

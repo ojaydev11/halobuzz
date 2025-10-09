@@ -1386,6 +1386,542 @@ export class AdvancedGiftEconomyService extends EventEmitter {
       totalBonus
     });
   }
+
+  /**
+   * Get available gift packages for a user
+   */
+  async getAvailableGiftPackages(userId: string): Promise<Array<{
+    gift: DynamicGift;
+    pricing: any;
+    isAvailable: boolean;
+    reason?: string;
+  }>> {
+    try {
+      const senderProfile = await aiPersonalization.getUserProfile(userId);
+      const packages = [];
+
+      for (const gift of this.dynamicGifts.values()) {
+        // Check availability
+        const isAvailable = this.isGiftAvailable(gift, userId, '');
+
+        // Calculate pricing for default recipient (empty string = general pricing)
+        let pricing = null;
+        let reason = undefined;
+
+        if (isAvailable) {
+          try {
+            pricing = await this.calculateDynamicGiftPrice(gift.id, userId, userId, {
+              timing: new Date(),
+              quantity: 1
+            });
+          } catch (error) {
+            reason = 'Pricing unavailable';
+          }
+        } else {
+          reason = this.getUnavailableReason(gift, userId);
+        }
+
+        packages.push({
+          gift,
+          pricing,
+          isAvailable,
+          reason
+        });
+      }
+
+      // Sort by category and price
+      packages.sort((a, b) => {
+        const categoryOrder = { basic: 1, premium: 2, luxury: 3, legendary: 4, mythical: 5 };
+        return categoryOrder[a.gift.category] - categoryOrder[b.gift.category];
+      });
+
+      return packages;
+    } catch (error) {
+      logger.error('Error getting available gift packages:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Get gift history for a user
+   */
+  async getGiftHistory(
+    userId: string,
+    filters: {
+      type?: 'sent' | 'received';
+      startDate?: Date;
+      endDate?: Date;
+      limit?: number;
+      offset?: number;
+    }
+  ): Promise<{
+    gifts: any[];
+    total: number;
+    totalValue: number;
+  }> {
+    try {
+      const query: any = {
+        $or: [
+          { userId, type: 'gift_sent' },
+          { targetUserId: userId, type: 'gift_received' }
+        ]
+      };
+
+      if (filters.type === 'sent') {
+        query.$or = [{ userId, type: 'gift_sent' }];
+      } else if (filters.type === 'received') {
+        query.$or = [{ targetUserId: userId, type: 'gift_received' }];
+      }
+
+      if (filters.startDate || filters.endDate) {
+        query.createdAt = {};
+        if (filters.startDate) query.createdAt.$gte = filters.startDate;
+        if (filters.endDate) query.createdAt.$lte = filters.endDate;
+      }
+
+      const total = await CoinTransaction.countDocuments(query);
+
+      const transactions = await CoinTransaction
+        .find(query)
+        .sort({ createdAt: -1 })
+        .limit(filters.limit || 50)
+        .skip(filters.offset || 0);
+
+      const totalValue = transactions.reduce((sum, tx) => sum + tx.amount, 0);
+
+      const gifts = transactions.map(tx => ({
+        transactionId: tx._id,
+        giftId: tx.context?.giftId,
+        giftName: tx.context?.giftName,
+        amount: tx.amount,
+        senderId: tx.type === 'gift_sent' ? tx.userId : tx.targetUserId,
+        recipientId: tx.type === 'gift_sent' ? tx.targetUserId : tx.userId,
+        quantity: tx.context?.quantity || 1,
+        multiplier: tx.context?.multiplier || 1,
+        timestamp: tx.createdAt,
+        type: tx.type
+      }));
+
+      return { gifts, total, totalValue };
+    } catch (error) {
+      logger.error('Error getting gift history:', error);
+      return { gifts: [], total: 0, totalValue: 0 };
+    }
+  }
+
+  /**
+   * Get gift analytics for a user
+   */
+  async getGiftAnalytics(userId: string): Promise<{
+    totalSent: number;
+    totalReceived: number;
+    totalValueSent: number;
+    totalValueReceived: number;
+    favoriteGifts: any[];
+    topRecipients: any[];
+    topSenders: any[];
+    giftingStreak: number;
+  }> {
+    try {
+      // Get all gift transactions
+      const sent = await CoinTransaction.find({
+        userId,
+        type: 'gift_sent'
+      });
+
+      const received = await CoinTransaction.find({
+        targetUserId: userId,
+        type: 'gift_received'
+      });
+
+      const totalSent = sent.length;
+      const totalReceived = received.length;
+      const totalValueSent = sent.reduce((sum, tx) => sum + tx.amount, 0);
+      const totalValueReceived = received.reduce((sum, tx) => sum + tx.amount, 0);
+
+      // Calculate favorite gifts
+      const giftCounts: { [key: string]: number } = {};
+      sent.forEach(tx => {
+        const giftId = tx.context?.giftId;
+        if (giftId) giftCounts[giftId] = (giftCounts[giftId] || 0) + 1;
+      });
+
+      const favoriteGifts = Object.entries(giftCounts)
+        .map(([giftId, count]) => ({ giftId, count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 5);
+
+      // Calculate top recipients
+      const recipientCounts: { [key: string]: number } = {};
+      sent.forEach(tx => {
+        const recipientId = tx.targetUserId;
+        if (recipientId) recipientCounts[recipientId] = (recipientCounts[recipientId] || 0) + 1;
+      });
+
+      const topRecipients = Object.entries(recipientCounts)
+        .map(([recipientId, count]) => ({ recipientId, count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 5);
+
+      // Calculate top senders
+      const senderCounts: { [key: string]: number } = {};
+      received.forEach(tx => {
+        const senderId = tx.userId;
+        if (senderId) senderCounts[senderId] = (senderCounts[senderId] || 0) + 1;
+      });
+
+      const topSenders = Object.entries(senderCounts)
+        .map(([senderId, count]) => ({ senderId, count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 5);
+
+      // Calculate gifting streak
+      const giftingStreak = await this.calculateGiftingStreak(userId);
+
+      return {
+        totalSent,
+        totalReceived,
+        totalValueSent,
+        totalValueReceived,
+        favoriteGifts,
+        topRecipients,
+        topSenders,
+        giftingStreak
+      };
+    } catch (error) {
+      logger.error('Error getting gift analytics:', error);
+      return {
+        totalSent: 0,
+        totalReceived: 0,
+        totalValueSent: 0,
+        totalValueReceived: 0,
+        favoriteGifts: [],
+        topRecipients: [],
+        topSenders: [],
+        giftingStreak: 0
+      };
+    }
+  }
+
+  /**
+   * Get trending gifts
+   */
+  async getTrendingGifts(): Promise<Array<{
+    gift: DynamicGift;
+    trendScore: number;
+    recentCount: number;
+    popularityChange: number;
+  }>> {
+    try {
+      const now = Date.now();
+      const last24h = new Date(now - 24 * 60 * 60 * 1000);
+      const previous24h = new Date(now - 48 * 60 * 60 * 1000);
+
+      const trending = [];
+
+      for (const gift of this.dynamicGifts.values()) {
+        // Count recent usage
+        const recentCount = await CoinTransaction.countDocuments({
+          'context.giftId': gift.id,
+          type: 'gift_sent',
+          createdAt: { $gte: last24h }
+        });
+
+        const previousCount = await CoinTransaction.countDocuments({
+          'context.giftId': gift.id,
+          type: 'gift_sent',
+          createdAt: { $gte: previous24h, $lt: last24h }
+        });
+
+        // Calculate popularity change
+        const popularityChange = previousCount > 0
+          ? ((recentCount - previousCount) / previousCount) * 100
+          : recentCount > 0 ? 100 : 0;
+
+        // Calculate trend score
+        const trendScore = recentCount * (1 + Math.max(0, popularityChange / 100));
+
+        trending.push({
+          gift,
+          trendScore,
+          recentCount,
+          popularityChange
+        });
+      }
+
+      // Sort by trend score
+      trending.sort((a, b) => b.trendScore - a.trendScore);
+
+      return trending.slice(0, 10);
+    } catch (error) {
+      logger.error('Error getting trending gifts:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Calculate gift value with all multipliers
+   */
+  async calculateGiftValue(
+    giftId: string,
+    senderId: string,
+    recipientId: string,
+    quantity: number = 1
+  ): Promise<{
+    baseValue: number;
+    finalValue: number;
+    multipliers: any;
+    earnings: number;
+  }> {
+    try {
+      const gift = this.dynamicGifts.get(giftId);
+      if (!gift) {
+        throw new Error('Gift not found');
+      }
+
+      // Calculate pricing
+      const pricing = await this.calculateDynamicGiftPrice(giftId, senderId, recipientId, {
+        timing: new Date(),
+        quantity
+      });
+
+      // Calculate recipient earnings
+      const baseEarnings = pricing.finalPrice * (gift.earnings.basePercentage / 100);
+      const loyaltyBonus = await this.calculateLoyaltyBonus(senderId, recipientId);
+      const streakBonus = await this.calculateStreakBonus(senderId, recipientId);
+
+      const totalEarningsMultiplier = (1 + loyaltyBonus) * (1 + streakBonus);
+      const earnings = Math.round(baseEarnings * totalEarningsMultiplier);
+
+      return {
+        baseValue: gift.pricing.baseCost,
+        finalValue: pricing.finalPrice,
+        multipliers: pricing.breakdown,
+        earnings
+      };
+    } catch (error) {
+      logger.error('Error calculating gift value:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get gift leaderboard
+   */
+  async getGiftLeaderboard(
+    timeframe: 'daily' | 'weekly' | 'monthly' | 'alltime' = 'weekly',
+    category?: 'sent' | 'received'
+  ): Promise<Array<{
+    userId: string;
+    totalGifts: number;
+    totalValue: number;
+    rank: number;
+  }>> {
+    try {
+      const timeframes = {
+        daily: 24 * 60 * 60 * 1000,
+        weekly: 7 * 24 * 60 * 60 * 1000,
+        monthly: 30 * 24 * 60 * 60 * 1000,
+        alltime: 0
+      };
+
+      const timeLimit = timeframes[timeframe];
+      const query: any = {};
+
+      if (timeLimit > 0) {
+        query.createdAt = { $gte: new Date(Date.now() - timeLimit) };
+      }
+
+      if (category === 'sent') {
+        query.type = 'gift_sent';
+      } else if (category === 'received') {
+        query.type = 'gift_received';
+      } else {
+        query.type = { $in: ['gift_sent', 'gift_received'] };
+      }
+
+      // Aggregate by user
+      const results = await CoinTransaction.aggregate([
+        { $match: query },
+        {
+          $group: {
+            _id: category === 'received' ? '$targetUserId' : '$userId',
+            totalGifts: { $sum: 1 },
+            totalValue: { $sum: '$amount' }
+          }
+        },
+        { $sort: { totalValue: -1 } },
+        { $limit: 100 }
+      ]);
+
+      return results.map((result, index) => ({
+        userId: result._id,
+        totalGifts: result.totalGifts,
+        totalValue: result.totalValue,
+        rank: index + 1
+      }));
+    } catch (error) {
+      logger.error('Error getting gift leaderboard:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Process gift combo
+   */
+  async processGiftCombo(
+    senderId: string,
+    recipientId: string,
+    giftIds: string[]
+  ): Promise<{
+    success: boolean;
+    combo?: GiftCombo;
+    bonusMultiplier: number;
+    totalCost: number;
+    effects: any[];
+  }> {
+    try {
+      // Find matching combo
+      const combo = this.findMatchingCombo(giftIds);
+
+      if (!combo) {
+        return {
+          success: false,
+          bonusMultiplier: 1.0,
+          totalCost: 0,
+          effects: []
+        };
+      }
+
+      // Process each gift in the combo
+      let totalCost = 0;
+      const effects = [];
+
+      for (const giftId of combo.gifts) {
+        const result = await this.sendAdvancedGift(senderId, recipientId, giftId, 1, {
+          isCombo: true,
+          comboGifts: giftIds
+        });
+
+        totalCost += result.totalCost;
+        effects.push(...result.effects);
+      }
+
+      return {
+        success: true,
+        combo,
+        bonusMultiplier: combo.bonusMultiplier,
+        totalCost,
+        effects
+      };
+    } catch (error) {
+      logger.error('Error processing gift combo:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get gift recommendations (wrapper for personalized recommendations)
+   */
+  async getGiftRecommendations(
+    userId: string,
+    context: { recipientId?: string; budget?: number; occasion?: string }
+  ): Promise<Array<{
+    gift: DynamicGift;
+    pricing: any;
+    confidence: number;
+    reason: string;
+  }>> {
+    try {
+      if (context.recipientId) {
+        // Specific recipient recommendations
+        const recommendations = await this.getPersonalizedGiftRecommendations(
+          userId,
+          context.recipientId,
+          { budget: context.budget }
+        );
+
+        return recommendations.map(rec => ({
+          gift: rec.gift,
+          pricing: rec.pricing,
+          confidence: rec.confidence,
+          reason: rec.reason
+        }));
+      } else {
+        // General recommendations
+        const packages = await this.getAvailableGiftPackages(userId);
+
+        return packages
+          .filter(pkg => pkg.isAvailable && pkg.pricing)
+          .slice(0, 10)
+          .map(pkg => ({
+            gift: pkg.gift,
+            pricing: pkg.pricing,
+            confidence: 0.5,
+            reason: 'Popular gift option'
+          }));
+      }
+    } catch (error) {
+      logger.error('Error getting gift recommendations:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Calculate gifting streak for a user
+   */
+  private async calculateGiftingStreak(userId: string): Promise<number> {
+    const gifts = await CoinTransaction.find({
+      userId,
+      type: 'gift_sent'
+    }).sort({ createdAt: -1 });
+
+    if (gifts.length === 0) return 0;
+
+    let streak = 1;
+    let lastDate = new Date(gifts[0].createdAt).toDateString();
+
+    for (let i = 1; i < gifts.length; i++) {
+      const currentDate = new Date(gifts[i].createdAt).toDateString();
+      const dayDiff = Math.floor(
+        (new Date(lastDate).getTime() - new Date(currentDate).getTime()) / (24 * 60 * 60 * 1000)
+      );
+
+      if (dayDiff === 1) {
+        streak++;
+        lastDate = currentDate;
+      } else if (dayDiff > 1) {
+        break;
+      }
+    }
+
+    return streak;
+  }
+
+  /**
+   * Get reason why gift is unavailable
+   */
+  private getUnavailableReason(gift: DynamicGift, userId: string): string {
+    if (gift.availability.isLimited) {
+      if (gift.availability.expiryDate && gift.availability.expiryDate < new Date()) {
+        return 'Gift has expired';
+      }
+      if (gift.availability.dailyLimit) {
+        return 'Daily limit reached';
+      }
+      if (gift.availability.userLimit) {
+        return 'User limit reached';
+      }
+    }
+
+    if (gift.mechanics.requirement) {
+      if (gift.mechanics.requirement.senderLevel) {
+        return `Requires level ${gift.mechanics.requirement.senderLevel}`;
+      }
+    }
+
+    return 'Currently unavailable';
+  }
 }
 
 export const advancedGiftEconomy = AdvancedGiftEconomyService.getInstance();

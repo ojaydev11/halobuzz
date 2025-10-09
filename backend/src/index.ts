@@ -146,7 +146,7 @@ import subtitlesRoutes from '@/routes/subtitles';
 import fortressSecurityRoutes from '@/routes/fortress-security';
 import gamificationRoutes from '@/routes/gamification';
 import enhancedAuthRoutes from '@/routes/enhanced-auth';
-import productionMonitoringRoutes from '@/routes/production-monitoring';
+// import productionMonitoringRoutes from '@/routes/production-monitoring'; // TEMPORARILY DISABLED - type errors
 
 // New creator economy routes
 import nftRoutes from '@/routes/nft';
@@ -410,7 +410,7 @@ app.use(`/api/${apiVersion}/subtitles`, authMiddleware, subtitlesRoutes);
 // New Security and Monitoring routes
 // app.use(`/api/${apiVersion}/secure-payment`, authMiddleware, securePaymentRoutes); // TEMPORARILY DISABLED
 app.use(`/api/${apiVersion}/enhanced-auth`, enhancedAuthRoutes);
-app.use(`/api/${apiVersion}/production-monitoring`, authMiddleware, productionMonitoringRoutes);
+// app.use(`/api/${apiVersion}/production-monitoring`, authMiddleware, productionMonitoringRoutes); // TEMPORARILY DISABLED
 
 // Advanced Engine routes - TODO PR#6: Re-enable after implementing methods
 // app.use(`/api/${apiVersion}/ai-personalization`, authMiddleware, aiPersonalizationRoutes);

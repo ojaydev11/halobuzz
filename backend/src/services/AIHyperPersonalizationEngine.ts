@@ -1246,6 +1246,503 @@ export class AIHyperPersonalizationEngine extends EventEmitter {
       this.userProfiles.set(profile.userId, profile);
     }
   }
+
+  /**
+   * Get personalized experience for user
+   */
+  async getPersonalizedExperience(userId: string): Promise<{
+    profile: UserBehaviorProfile;
+    recommendations: PersonalizationRecommendation[];
+    predictions: {
+      churnRisk: number;
+      spendProbability: number;
+      nextBestAction: string;
+    };
+    personalizedContent: any[];
+  }> {
+    try {
+      const profile = await this.getUserProfile(userId);
+      const recommendations = await this.getPersonalizedRecommendations(userId, 'homepage', 10);
+
+      // Get predictions
+      const churnRisk = await this.predictChurnRisk(userId);
+      const spendingPrediction = await this.predictSpendingProbability(userId);
+
+      // Generate personalized content
+      const personalizedContent = await this.generatePersonalizedContent(userId);
+
+      return {
+        profile,
+        recommendations,
+        predictions: {
+          churnRisk,
+          spendProbability: spendingPrediction.probability,
+          nextBestAction: profile.predictions.nextBestAction
+        },
+        personalizedContent
+      };
+    } catch (error) {
+      logger.error('Error getting personalized experience:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update user preferences
+   */
+  async updateUserPreferences(
+    userId: string,
+    preferences: Partial<UserBehaviorProfile['preferences']>
+  ): Promise<{
+    success: boolean;
+    updatedProfile: UserBehaviorProfile;
+  }> {
+    try {
+      const profile = await this.getUserProfile(userId);
+
+      // Update preferences
+      const updatedProfile = await this.updateUserProfile(userId, {
+        preferences: {
+          ...profile.preferences,
+          ...preferences
+        }
+      });
+
+      // Regenerate recommendations based on new preferences
+      const freshRecommendations = await this.generatePersonalizedRecommendations(userId);
+      this.recommendations.set(userId, freshRecommendations);
+
+      return {
+        success: true,
+        updatedProfile
+      };
+    } catch (error) {
+      logger.error('Error updating user preferences:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get user behavior insights
+   */
+  async getUserBehaviorInsights(userId: string): Promise<{
+    behaviorPatterns: any;
+    emotionalState: any;
+    spendingPsychology: any;
+    predictions: any;
+    trends: any[];
+    insights: string[];
+  }> {
+    try {
+      const profile = await this.getUserProfile(userId);
+
+      // Generate insights based on behavior patterns
+      const insights = this.generateBehaviorInsights(profile);
+
+      // Calculate behavior trends
+      const trends = await this.calculateBehaviorTrends(userId);
+
+      return {
+        behaviorPatterns: profile.behaviorPatterns,
+        emotionalState: profile.emotionalState,
+        spendingPsychology: profile.spendingPsychology,
+        predictions: profile.predictions,
+        trends,
+        insights
+      };
+    } catch (error) {
+      logger.error('Error getting user behavior insights:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Record user interaction
+   */
+  async recordUserInteraction(
+    userId: string,
+    interaction: {
+      type: string;
+      data: any;
+      context?: string;
+    }
+  ): Promise<{
+    success: boolean;
+    updatedProfile?: UserBehaviorProfile;
+  }> {
+    try {
+      // Create behavior event
+      const event: BehaviorEvent = {
+        userId,
+        eventType: interaction.type,
+        eventData: interaction.data,
+        timestamp: new Date(),
+        sessionId: `session_${Date.now()}`,
+        context: {
+          page: interaction.context || 'unknown',
+          feature: interaction.type,
+          deviceInfo: {}
+        }
+      };
+
+      // Track behavior
+      await this.trackBehavior(event);
+
+      // Get updated profile if it was a high-impact event
+      let updatedProfile = undefined;
+      if (this.isHighImpactEvent(event)) {
+        updatedProfile = await this.getUserProfile(userId);
+      }
+
+      return {
+        success: true,
+        updatedProfile
+      };
+    } catch (error) {
+      logger.error('Error recording user interaction:', error);
+      return { success: false };
+    }
+  }
+
+  /**
+   * Get personalized challenges
+   */
+  async getPersonalizedChallenges(userId: string): Promise<Array<{
+    id: string;
+    type: string;
+    title: string;
+    description: string;
+    difficulty: 'easy' | 'medium' | 'hard';
+    reward: number;
+    progress: number;
+    target: number;
+    expiresAt: Date;
+    personalizedReason: string;
+  }>> {
+    try {
+      const profile = await this.getUserProfile(userId);
+      const challenges = [];
+
+      // Generate challenges based on user behavior and preferences
+
+      // 1. Gaming challenge based on competitive drive
+      if (profile.behaviorPatterns.competitiveDrive > 0.6) {
+        challenges.push({
+          id: `challenge_competitive_${Date.now()}`,
+          type: 'gaming',
+          title: 'Win Streak Master',
+          description: 'Win 5 games in a row',
+          difficulty: 'hard' as const,
+          reward: 500,
+          progress: 0,
+          target: 5,
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+          personalizedReason: 'Your competitive spirit makes you perfect for this challenge!'
+        });
+      }
+
+      // 2. Social challenge based on social connectedness
+      if (profile.behaviorPatterns.socialConnectedness > 0.5) {
+        challenges.push({
+          id: `challenge_social_${Date.now()}`,
+          type: 'social',
+          title: 'Social Butterfly',
+          description: 'Send gifts to 3 different friends',
+          difficulty: 'medium' as const,
+          reward: 200,
+          progress: 0,
+          target: 3,
+          expiresAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+          personalizedReason: 'Share the love with your friends!'
+        });
+      }
+
+      // 3. Spending challenge based on spending tier
+      if (profile.spendingPsychology.spendingTier !== 'minnow') {
+        challenges.push({
+          id: `challenge_vip_${Date.now()}`,
+          type: 'spending',
+          title: 'VIP Spender',
+          description: 'Spend 1000 coins this week',
+          difficulty: 'easy' as const,
+          reward: 100,
+          progress: 0,
+          target: 1000,
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+          personalizedReason: 'Unlock exclusive rewards with your purchasing power!'
+        });
+      }
+
+      // 4. Engagement challenge
+      if (profile.emotionalState.engagementLevel < 0.5) {
+        challenges.push({
+          id: `challenge_engagement_${Date.now()}`,
+          type: 'engagement',
+          title: 'Daily Explorer',
+          description: 'Play 10 different games',
+          difficulty: 'medium' as const,
+          reward: 150,
+          progress: 0,
+          target: 10,
+          expiresAt: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
+          personalizedReason: 'Discover new favorites and boost your engagement!'
+        });
+      }
+
+      // 5. Loyalty challenge
+      if (profile.spendingPsychology.loyaltyProgramEngagement > 0.7) {
+        challenges.push({
+          id: `challenge_loyalty_${Date.now()}`,
+          type: 'loyalty',
+          title: 'Loyalty Legend',
+          description: 'Log in for 7 consecutive days',
+          difficulty: 'easy' as const,
+          reward: 300,
+          progress: 0,
+          target: 7,
+          expiresAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+          personalizedReason: 'Your dedication deserves recognition!'
+        });
+      }
+
+      return challenges.slice(0, 5); // Return top 5 personalized challenges
+    } catch (error) {
+      logger.error('Error getting personalized challenges:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Get engagement optimization recommendations
+   */
+  async getEngagementOptimization(userId: string): Promise<{
+    currentEngagement: number;
+    targetEngagement: number;
+    recommendations: Array<{
+      action: string;
+      impact: number;
+      priority: number;
+      description: string;
+    }>;
+    optimizationScore: number;
+    insights: string[];
+  }> {
+    try {
+      const profile = await this.getUserProfile(userId);
+
+      const currentEngagement = profile.emotionalState.engagementLevel;
+      const targetEngagement = 0.8; // Target 80% engagement
+
+      const recommendations = [];
+
+      // Analyze engagement factors and provide recommendations
+
+      // 1. Session duration optimization
+      if (profile.behaviorPatterns.sessionDuration < 20) {
+        recommendations.push({
+          action: 'increase_session_duration',
+          impact: 0.15,
+          priority: 90,
+          description: 'Introduce engaging mini-games to extend session time'
+        });
+      }
+
+      // 2. Social engagement
+      if (profile.behaviorPatterns.socialConnectedness < 0.5) {
+        recommendations.push({
+          action: 'boost_social_connections',
+          impact: 0.2,
+          priority: 85,
+          description: 'Recommend friend invites and social features'
+        });
+      }
+
+      // 3. Content variety
+      if (Object.keys(profile.preferences.gameCategories).length < 3) {
+        recommendations.push({
+          action: 'diversify_content',
+          impact: 0.12,
+          priority: 75,
+          description: 'Suggest exploring new game categories'
+        });
+      }
+
+      // 4. Reward optimization
+      if (profile.emotionalState.satisfactionScore < 0.6) {
+        recommendations.push({
+          action: 'increase_rewards',
+          impact: 0.18,
+          priority: 80,
+          description: 'Offer bonus rewards and achievements'
+        });
+      }
+
+      // 5. Timing optimization
+      const currentHour = new Date().getHours();
+      if (!profile.behaviorPatterns.dailyActiveHours.includes(currentHour)) {
+        recommendations.push({
+          action: 'optimize_notification_timing',
+          impact: 0.1,
+          priority: 70,
+          description: 'Send notifications during user\'s active hours'
+        });
+      }
+
+      // 6. Churn prevention
+      const churnRisk = await this.predictChurnRisk(userId);
+      if (churnRisk > 0.5) {
+        recommendations.push({
+          action: 'prevent_churn',
+          impact: 0.25,
+          priority: 95,
+          description: 'Offer exclusive comeback rewards and personalized content'
+        });
+      }
+
+      // Sort by priority
+      recommendations.sort((a, b) => b.priority - a.priority);
+
+      // Calculate optimization score
+      const potentialImpact = recommendations.reduce((sum, rec) => sum + rec.impact, 0);
+      const optimizationScore = Math.min(1, currentEngagement + potentialImpact);
+
+      // Generate insights
+      const insights = this.generateEngagementInsights(profile, recommendations);
+
+      return {
+        currentEngagement,
+        targetEngagement,
+        recommendations: recommendations.slice(0, 5),
+        optimizationScore,
+        insights
+      };
+    } catch (error) {
+      logger.error('Error getting engagement optimization:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Generate personalized content
+   */
+  private async generatePersonalizedContent(userId: string): Promise<any[]> {
+    const profile = await this.getUserProfile(userId);
+    const content = [];
+
+    // Generate content based on preferences
+    Object.entries(profile.preferences.contentTypes).forEach(([type, weight]) => {
+      if (weight > 0.6) {
+        content.push({
+          type,
+          weight,
+          title: `Personalized ${type} content`,
+          reason: `You show high interest in ${type}`
+        });
+      }
+    });
+
+    return content;
+  }
+
+  /**
+   * Generate behavior insights
+   */
+  private generateBehaviorInsights(profile: UserBehaviorProfile): string[] {
+    const insights = [];
+
+    // Session patterns
+    if (profile.behaviorPatterns.sessionDuration > 30) {
+      insights.push('You have excellent engagement with long session durations');
+    } else if (profile.behaviorPatterns.sessionDuration < 10) {
+      insights.push('Consider extending your sessions to discover more features');
+    }
+
+    // Spending behavior
+    if (profile.spendingPsychology.spendingTier === 'whale' || profile.spendingPsychology.spendingTier === 'mega_whale') {
+      insights.push('You are a valued VIP member with exclusive benefits');
+    }
+
+    // Competitive drive
+    if (profile.behaviorPatterns.competitiveDrive > 0.7) {
+      insights.push('Your competitive nature makes you perfect for tournaments');
+    }
+
+    // Social behavior
+    if (profile.behaviorPatterns.socialConnectedness > 0.7) {
+      insights.push('You have a strong social presence - keep connecting!');
+    } else if (profile.behaviorPatterns.socialConnectedness < 0.3) {
+      insights.push('Try connecting with friends to enhance your experience');
+    }
+
+    // Emotional state
+    if (profile.emotionalState.currentMood === 'excited') {
+      insights.push('You are in a great mood - perfect time for challenges!');
+    } else if (profile.emotionalState.currentMood === 'frustrated') {
+      insights.push('Take a break or try a different activity');
+    }
+
+    return insights;
+  }
+
+  /**
+   * Calculate behavior trends
+   */
+  private async calculateBehaviorTrends(userId: string): Promise<any[]> {
+    const trends = [];
+
+    // Get user events over the past 7 days
+    const dayTrends = [];
+    for (let i = 0; i < 7; i++) {
+      const dayStart = new Date(Date.now() - (i + 1) * 24 * 60 * 60 * 1000);
+      const dayEnd = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
+
+      const dayEvents = this.behaviorEvents.filter(e =>
+        e.userId === userId &&
+        e.timestamp >= dayStart &&
+        e.timestamp < dayEnd
+      );
+
+      dayTrends.unshift({
+        date: dayStart.toISOString().split('T')[0],
+        eventCount: dayEvents.length,
+        engagementScore: dayEvents.length > 0 ? Math.min(1, dayEvents.length / 50) : 0
+      });
+    }
+
+    trends.push({
+      type: 'daily_activity',
+      data: dayTrends
+    });
+
+    return trends;
+  }
+
+  /**
+   * Generate engagement insights
+   */
+  private generateEngagementInsights(
+    profile: UserBehaviorProfile,
+    recommendations: any[]
+  ): string[] {
+    const insights = [];
+
+    if (profile.emotionalState.engagementLevel < 0.5) {
+      insights.push('Engagement is below average - implementing recommended actions can significantly improve it');
+    } else if (profile.emotionalState.engagementLevel > 0.8) {
+      insights.push('Excellent engagement level - maintain current strategies');
+    }
+
+    if (recommendations.length > 3) {
+      insights.push('Multiple optimization opportunities identified for maximum impact');
+    }
+
+    const highPriorityRecs = recommendations.filter(r => r.priority > 85);
+    if (highPriorityRecs.length > 0) {
+      insights.push(`${highPriorityRecs.length} high-priority actions recommended for immediate impact`);
+    }
+
+    return insights;
+  }
 }
 
 export const aiPersonalization = AIHyperPersonalizationEngine.getInstance();

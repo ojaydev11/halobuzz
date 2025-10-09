@@ -102,10 +102,10 @@ export const piiSanitizer = {
     }
 
     const sanitized = { ...analyticsData };
-    
+
     // Remove user-specific PII
     if (sanitized.user) {
-      sanitized.user = this.sanitizeUserData(sanitized.user);
+      sanitized.user = piiSanitizer.sanitizeUserData(sanitized.user);
     }
     
     // Remove location data

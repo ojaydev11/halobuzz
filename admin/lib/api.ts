@@ -52,4 +52,11 @@ export async function serverGet<T>(path: string, reqHeaders?: Headers | Record<s
   return res.data;
 }
 
+// Default client API instance for client-side usage
+export const api = createClientApi(() => {
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem('adminToken');
+  }
+  return null;
+});
 
