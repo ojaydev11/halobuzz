@@ -39,14 +39,7 @@ let fraudDetectionService: AdvancedFraudDetectionService;
 
 const initializeService = async () => {
   if (!fraudDetectionService) {
-    const db = await getMongoDB();
-    const redis = await getRedisClient();
-    
-    fraudDetectionService = new AdvancedFraudDetectionService(
-      db.collection('analytics_events'),
-      db.collection('users'),
-      redis,
-    );
+    fraudDetectionService = new AdvancedFraudDetectionService();
   }
   return fraudDetectionService;
 };
@@ -195,8 +188,8 @@ router.get('/fraud-detection/alerts',
 
       const service = await initializeService();
       const alerts = await service.getFraudAlerts({
-        status: status as string,
-        severity: severity as string,
+        status: status as 'new' | 'resolved' | 'investigating' | 'false_positive' | undefined,
+        severity: severity as 'low' | 'medium' | 'high' | 'critical' | undefined,
         limit: parseInt(limit as string)
       });
 
@@ -227,9 +220,10 @@ router.post('/fraud-detection/alerts/:alertId/resolve',
     try {
       const { alertId } = req.params;
       const { resolution } = req.body as FraudAlertResolutionRequest;
+      const resolvedBy = req.user?.id || 'admin';
 
       const service = await initializeService();
-      await service.resolveFraudAlert(alertId, resolution);
+      await service.resolveFraudAlert(alertId, resolvedBy, resolution);
 
       return res.json({
         success: true,
@@ -312,10 +306,10 @@ router.post('/fraud-detection/risk-score',
   validateInput,
   async (req: AuthenticatedRequest, res: Response) => {
     try {
-      const { userId, transactionData } = req.body;
+      const { userId } = req.body;
 
       const service = await initializeService();
-      const riskScore = await service.calculateRiskScore(userId, transactionData);
+      const riskScore = await service.calculateRiskScore(userId);
 
       return res.json({
           success: true,

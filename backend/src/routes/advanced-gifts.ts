@@ -55,12 +55,15 @@ router.post('/send', authMiddleware, async (req: any, res) => {
 router.get('/history', authMiddleware, async (req: any, res) => {
   try {
     const userId = req.user.userId;
-    const { limit = 50, offset = 0 } = req.query;
+    const { type, limit = 50, offset = 0 } = req.query;
 
     const history = await advancedGiftEconomy.getGiftHistory(
       userId,
-      Number(limit),
-      Number(offset)
+      {
+        type: type as 'sent' | 'received' | undefined,
+        limit: Number(limit),
+        offset: Number(offset)
+      }
     );
 
     res.json({
@@ -141,10 +144,10 @@ router.post('/calculate', authMiddleware, async (req: any, res) => {
 // Get leaderboard
 router.get('/leaderboard', authMiddleware, async (req: any, res) => {
   try {
-    const { type = 'sent', period = 'weekly' } = req.query;
+    const { category, timeframe = 'weekly' } = req.query;
     const leaderboard = await advancedGiftEconomy.getGiftLeaderboard(
-      type as string,
-      period as string
+      timeframe as 'daily' | 'weekly' | 'monthly' | 'alltime',
+      category as 'sent' | 'received' | undefined
     );
 
     res.json({
@@ -189,11 +192,15 @@ router.post('/combo', authMiddleware, async (req: any, res) => {
 router.get('/recommendations', authMiddleware, async (req: any, res) => {
   try {
     const userId = req.user.userId;
-    const { recipientId } = req.query;
+    const { recipientId, budget, occasion } = req.query;
 
     const recommendations = await advancedGiftEconomy.getGiftRecommendations(
       userId,
-      recipientId as string
+      {
+        recipientId: recipientId as string | undefined,
+        budget: budget ? Number(budget) : undefined,
+        occasion: occasion as string | undefined
+      }
     );
 
     res.json({

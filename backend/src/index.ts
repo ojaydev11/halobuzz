@@ -127,8 +127,7 @@ import aiRecommendationRoutes from '@/routes/ai-recommendations';
 import advancedAnalyticsRoutes from '@/routes/advanced-analytics';
 import mlOptimizationRoutes from '@/routes/ml-optimization';
 import realTimePersonalizationRoutes from '@/routes/real-time-personalization';
-// TODO PR#4-6: Re-enable these routes after implementing missing service methods
-// import advancedFraudDetectionRoutes from '@/routes/advanced-fraud-detection';
+import advancedFraudDetectionRoutes from '@/routes/advanced-fraud-detection';
 import agoraRoutes from '@/routes/agora';
 import aiContentStudioRoutes from '@/routes/aiContentStudio';
 
@@ -140,9 +139,9 @@ import webrtcRoutes from '@/routes/webrtc';
 import subtitlesRoutes from '@/routes/subtitles';
 // import securePaymentRoutes from '@/routes/secure-payment'; // TEMPORARILY DISABLED - type errors
 
-// Advanced Engine routes - TODO PR#6: Re-enable after implementing methods
-// import aiPersonalizationRoutes from '@/routes/ai-personalization';
-// import advancedGiftsRoutes from '@/routes/advanced-gifts';
+// Advanced Engine routes
+import aiPersonalizationRoutes from '@/routes/ai-personalization';
+import advancedGiftsRoutes from '@/routes/advanced-gifts';
 import fortressSecurityRoutes from '@/routes/fortress-security';
 import gamificationRoutes from '@/routes/gamification';
 // import enhancedAuthRoutes from '@/routes/enhanced-auth'; // TEMPORARILY DISABLED - type errors
@@ -381,8 +380,7 @@ app.use(`/api/${apiVersion}/ai-recommendations`, authMiddleware, aiRecommendatio
 app.use(`/api/${apiVersion}/advanced-analytics`, authMiddleware, advancedAnalyticsRoutes);
 app.use(`/api/${apiVersion}/ml-optimization`, authMiddleware, mlOptimizationRoutes);
 app.use(`/api/${apiVersion}/personalization`, authMiddleware, realTimePersonalizationRoutes);
-// TODO PR#4: Re-enable after implementing missing service methods
-// app.use(`/api/${apiVersion}/fraud-detection`, authMiddleware, advancedFraudDetectionRoutes);
+app.use(`/api/${apiVersion}/fraud-detection`, authMiddleware, advancedFraudDetectionRoutes);
 app.use(`/api/${apiVersion}/agora`, authMiddleware, agoraRoutes);
 
 // New creator economy routes
@@ -412,9 +410,9 @@ app.use(`/api/${apiVersion}/subtitles`, authMiddleware, subtitlesRoutes);
 // app.use(`/api/${apiVersion}/enhanced-auth`, enhancedAuthRoutes); // TEMPORARILY DISABLED - type errors
 // app.use(`/api/${apiVersion}/production-monitoring`, authMiddleware, productionMonitoringRoutes); // TEMPORARILY DISABLED
 
-// Advanced Engine routes - TODO PR#6: Re-enable after implementing methods
-// app.use(`/api/${apiVersion}/ai-personalization`, authMiddleware, aiPersonalizationRoutes);
-// app.use(`/api/${apiVersion}/advanced-gifts`, authMiddleware, advancedGiftsRoutes);
+// Advanced Engine routes
+app.use(`/api/${apiVersion}/ai-personalization`, authMiddleware, aiPersonalizationRoutes);
+app.use(`/api/${apiVersion}/advanced-gifts`, authMiddleware, advancedGiftsRoutes);
 app.use(`/api/${apiVersion}/fortress-security`, authMiddleware, fortressSecurityRoutes);
 app.use(`/api/${apiVersion}/gamification`, authMiddleware, gamificationRoutes);
 

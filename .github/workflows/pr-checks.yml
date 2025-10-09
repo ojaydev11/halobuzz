@@ -1,0 +1,128 @@
+name: Pull Request Checks
+
+on:
+  pull_request:
+    branches: [master, develop]
+  workflow_dispatch:
+
+jobs:
+  pr-validation:
+    name: PR Validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check PR title
+        uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: |
+            feat
+            fix
+            docs
+            style
+            refactor
+            perf
+            test
+            chore
+            revert
+          requireScope: false
+
+      - name: Check for merge conflicts
+        run: |
+          if git diff --name-only origin/${{ github.base_ref }}...${{ github.head_ref }} | grep -q '\.orig$'; then
+            echo "Merge conflict markers detected"
+            exit 1
+          fi
+
+      - name: Check file sizes
+        run: |
+          large_files=$(find . -type f -size +5M -not -path "./node_modules/*" -not -path "./.git/*")
+          if [ ! -z "$large_files" ]; then
+            echo "Large files detected (>5MB):"
+            echo "$large_files"
+            exit 1
+          fi
+
+      - name: Check for secrets
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+          head: HEAD
+
+  changed-files:
+    name: Detect Changed Files
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      admin: ${{ steps.filter.outputs.admin }}
+      mobile: ${{ steps.filter.outputs.mobile }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Detect changed files
+        uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+            admin:
+              - 'admin/**'
+            mobile:
+              - 'apps-halobuzz-mobile/**'
+
+  backend-pr-checks:
+    name: Backend PR Checks
+    needs: [changed-files]
+    if: needs.changed-files.outputs.backend == 'true'
+    uses: ./.github/workflows/backend-ci.yml
+
+  admin-pr-checks:
+    name: Admin PR Checks
+    needs: [changed-files]
+    if: needs.changed-files.outputs.admin == 'true'
+    uses: ./.github/workflows/admin-ci.yml
+
+  mobile-pr-checks:
+    name: Mobile PR Checks
+    needs: [changed-files]
+    if: needs.changed-files.outputs.mobile == 'true'
+    uses: ./.github/workflows/mobile-ci.yml
+
+  pr-summary:
+    name: PR Summary
+    runs-on: ubuntu-latest
+    needs: [pr-validation, changed-files]
+    if: always()
+
+    steps:
+      - name: Comment PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const backendChanged = '${{ needs.changed-files.outputs.backend }}' === 'true';
+            const adminChanged = '${{ needs.changed-files.outputs.admin }}' === 'true';
+            const mobileChanged = '${{ needs.changed-files.outputs.mobile }}' === 'true';
+
+            let summary = '## PR Check Summary\n\n';
+            summary += '### Changed Components:\n';
+            summary += backendChanged ? '✅ Backend\n' : '⬜ Backend\n';
+            summary += adminChanged ? '✅ Admin Dashboard\n' : '⬜ Admin Dashboard\n';
+            summary += mobileChanged ? '✅ Mobile App\n' : '⬜ Mobile App\n';
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: summary
+            });
