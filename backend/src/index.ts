@@ -580,7 +580,8 @@ const startServer = async () => {
     // Initialize gaming services
     try {
       const { advancedGamesService } = await import('@/services/AdvancedGamesService');
-      const { leaderboardService } = await import('@/services/LeaderboardService');
+      // TEMPORARILY DISABLED: LeaderboardService causes infinite loop on startup
+      // const { leaderboardService } = await import('@/services/LeaderboardService');
       const { aiOpponentService } = await import('@/services/AIOpponentService');
       const { socialService } = await import('@/services/SocialService');
       const { monetizationService } = await import('@/services/MonetizationService');
@@ -588,7 +589,7 @@ const startServer = async () => {
       logger.info('Gaming services initialized successfully');
       logger.info(`- Advanced Games: ${advancedGamesService.getAvailableGames().length} games available`);
       logger.info(`- AI Opponents: ${aiOpponentService.getAIPersonalities().length} personalities loaded`);
-      logger.info(`- Tournaments: ${leaderboardService.getUpcomingTournaments().length} upcoming tournaments`);
+      // logger.info(`- Tournaments: ${leaderboardService.getUpcomingTournaments().length} upcoming tournaments`);
       logger.info(`- IAP Products: ${monetizationService.getIAPProducts().length} products available`);
     } catch (error) {
       logger.warn('Gaming services initialization failed:', error instanceof Error ? error.message : String(error));
