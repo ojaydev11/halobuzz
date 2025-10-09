@@ -5,17 +5,12 @@ import QRCode from 'qrcode';
 import { setupLogger } from '@/config/logger';
 import { User } from '@/models/User';
 import { adminAuditService } from '@/services/AdminAuditService';
+import { AuthUser } from '../types/express';
 
 const logger = setupLogger();
 
 interface AuthenticatedRequest extends Request {
-  user?: {
-    userId: string;
-    username: string;
-    email: string;
-    isAdmin?: boolean;
-    totpVerified?: boolean;
-  };
+  user?: AuthUser;
   session?: {
     csrfToken?: string;
     [key: string]: any;

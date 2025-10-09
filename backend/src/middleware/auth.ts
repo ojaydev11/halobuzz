@@ -3,10 +3,15 @@ import { Request, Response, NextFunction } from 'express';
 import { User } from '../models/User';
 import { logger } from '../config/logger';
 import { getCache, setCache } from '../config/redis';
-import { AuthenticatedRequest } from './enhancedSecurity';
+import { AuthUser } from '../types/express';
 
-// Re-export AuthenticatedRequest for other modules
-export type { AuthenticatedRequest };
+// Authenticated Request type
+export interface AuthenticatedRequest extends Request {
+  user?: AuthUser;
+}
+
+// Re-export for backward compatibility
+export type { AuthUser };
 
 interface SessionData {
   userId: string;
@@ -68,13 +73,16 @@ export const authMiddleware = async (req: AuthenticatedRequest, res: Response, n
 
     req.user = {
       userId: user._id.toString(),
-      id: user._id.toString(), // Add id field for compatibility
+      id: user._id.toString(),
       email: user.email,
-      role: user.role || 'user',
+      username: user.username,
+      ogLevel: user.ogLevel || 0,
       isVerified: user.isVerified,
       isBanned: user.isBanned,
-      isAdmin: user.isAdmin || false,
-      username: user.username
+      isAdmin: user.isAdmin || user.role === 'admin',
+      roles: user.roles || (user.role ? [user.role] : ['user']),
+      mfaEnabled: user.mfaEnabled || false,
+      mfaVerified: decoded.mfaVerified || false
     };
 
     next();
@@ -128,11 +136,10 @@ export const refreshTokenMiddleware = async (req: Request, res: Response, next: 
     }
 
     // Generate new access token
-    const expiresIn = process.env.JWT_ACCESS_EXPIRES_IN || '1h';
     const newAccessToken = jwt.sign(
       { userId: decoded.userId },
       process.env.JWT_SECRET as string,
-      { expiresIn }
+      { expiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '1h' }
     );
 
     res.set('X-New-Token', newAccessToken);
@@ -211,26 +218,26 @@ export const mfaMiddleware = async (req: AuthenticatedRequest, res: Response, ne
 export const adminMiddleware = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     if (!req.user) {
-      return res.status(401).json({ 
-        success: false, 
-        error: 'Authentication required.' 
+      return res.status(401).json({
+        success: false,
+        error: 'Authentication required.'
       });
     }
 
     const user = await User.findById(req.user.userId);
-    if (!user || user.role !== 'admin') {
-      return res.status(403).json({ 
-        success: false, 
-        error: 'Admin access required.' 
+    if (!user || (!user.isAdmin && user.role !== 'admin' && !user.roles?.includes('admin'))) {
+      return res.status(403).json({
+        success: false,
+        error: 'Admin access required.'
       });
     }
 
     next();
   } catch (error) {
     logger.error('Admin middleware error:', error);
-    return res.status(500).json({ 
-      success: false, 
-      error: 'Authorization failed.' 
+    return res.status(500).json({
+      success: false,
+      error: 'Authorization failed.'
     });
   }
 };
