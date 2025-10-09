@@ -113,9 +113,10 @@ USER halobuzz
 # Expose port
 EXPOSE 4000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=20s --retries=3 \
-  CMD curl -f --max-time 2 --connect-timeout 2 http://127.0.0.1:${PORT}/api/v1/monitoring/health || exit 1
+# Health check - use simple /healthz endpoint
+HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
+  CMD curl -f --max-time 2 --connect-timeout 2 http://127.0.0.1:${PORT}/healthz || exit 1
 
 # Start the application
-CMD ["npx", "ts-node", "-r", "tsconfig-paths/register", "src/index.ts"]
+# Using minimal-index temporarily to debug path resolution issues
+CMD ["npx", "ts-node", "src/minimal-index.ts"]
