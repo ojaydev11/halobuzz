@@ -361,6 +361,11 @@ export const trustProxy = (req: Request, res: Response, next: NextFunction) => {
 
 export const httpsOnly = (req: Request, res: Response, next: NextFunction) => {
   // HTTPS only middleware
+  // Exclude health check endpoints from HTTPS requirement (they come from internal probe)
+  if (req.path === '/healthz' || req.path.startsWith('/api/v1/monitoring/health')) {
+    return next();
+  }
+
   if (req.header('x-forwarded-proto') !== 'https' && process.env.NODE_ENV === 'production') {
     return res.status(403).json({ error: 'HTTPS required' });
   }
