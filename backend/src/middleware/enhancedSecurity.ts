@@ -78,7 +78,7 @@ export class CryptographicSecurity {
 
   static encrypt(text: string): { encrypted: string; iv: string; tag: string } {
     const iv = crypto.randomBytes(16);
-    const cipher = crypto.createCipherGCM(this.ALGORITHM, this.ENCRYPTION_KEY);
+    const cipher = crypto.createCipheriv(this.ALGORITHM, this.ENCRYPTION_KEY, iv);
 
     let encrypted = cipher.update(text, 'utf8', 'hex');
     encrypted += cipher.final('hex');
@@ -93,7 +93,7 @@ export class CryptographicSecurity {
   }
 
   static decrypt(encryptedData: { encrypted: string; iv: string; tag: string }): string {
-    const decipher = crypto.createDecipherGCM(this.ALGORITHM, this.ENCRYPTION_KEY, Buffer.from(encryptedData.iv, 'hex'));
+    const decipher = crypto.createDecipheriv(this.ALGORITHM, this.ENCRYPTION_KEY, Buffer.from(encryptedData.iv, 'hex'));
     decipher.setAuthTag(Buffer.from(encryptedData.tag, 'hex'));
 
     let decrypted = decipher.update(encryptedData.encrypted, 'hex', 'utf8');
@@ -757,41 +757,5 @@ export const securityMonitoring = (req: Request, res: Response, next: NextFuncti
   next();
 };
 
-// Export commonly used middleware functions
-export const requireAuth = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const token = req.headers.authorization?.replace('Bearer ', '');
-    
-    if (!token) {
-      return res.status(401).json({ error: 'Authentication required' });
-    }
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
-    const user = await User.findById(decoded.userId);
-    
-    if (!user) {
-      return res.status(401).json({ error: 'Invalid token' });
-    }
-
-    req.user = user;
-    next();
-  } catch (error) {
-    return res.status(401).json({ error: 'Invalid token' });
-  }
-};
-
-export const requireAdmin = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    if (!req.user) {
-      return res.status(401).json({ error: 'Authentication required' });
-    }
-
-    if (req.user.role !== 'admin') {
-      return res.status(403).json({ error: 'Admin access required' });
-    }
-
-    next();
-  } catch (error) {
-    return res.status(403).json({ error: 'Access denied' });
-  }
-};
+// Note: requireAuth and requireAdmin are already defined above
+// Removed duplicate exports to fix TS2451 error
