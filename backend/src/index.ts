@@ -109,7 +109,8 @@ import gamesRoutes from '@/routes/games';
 import gamesRoutesV2 from '@/routes/games-v2';
 import gamesEnhancedRoutes from '@/routes/games-enhanced';
 import advancedGamesRoutes from '@/routes/advanced-games';
-import leaderboardRoutes from '@/routes/leaderboards';
+// TEMPORARILY DISABLED: LeaderboardService causes infinite loop
+// import leaderboardRoutes from '@/routes/leaderboards';
 import socialRoutes from '@/routes/social';
 import monetizationRoutes from '@/routes/monetization';
 import adminRoutes from '@/routes/admin';
@@ -362,7 +363,8 @@ app.use(`/api/${apiVersion}/games`, authMiddleware, gamesRoutes);
 app.use(`/api/${apiVersion}/games/v2`, gamesRoutesV2); // New enhanced games with staking
 app.use(`/api/${apiVersion}/games-enhanced`, gamesEnhancedRoutes); // Enhanced games with coins system
 app.use(`/api/${apiVersion}/advanced-games`, advancedGamesRoutes); // Advanced multiplayer games
-app.use(`/api/${apiVersion}/leaderboards`, leaderboardRoutes); // Global leaderboards and tournaments
+// TEMPORARILY DISABLED: LeaderboardService causes infinite loop
+// app.use(`/api/${apiVersion}/leaderboards`, leaderboardRoutes); // Global leaderboards and tournaments
 app.use(`/api/${apiVersion}/social`, socialRoutes); // Social features - friends, guilds, chat
 app.use(`/api/${apiVersion}/monetization`, monetizationRoutes); // Monetization - IAP, battle pass, rewards
 app.use(`/api/${apiVersion}/config`, authMiddleware, configRoutes);
