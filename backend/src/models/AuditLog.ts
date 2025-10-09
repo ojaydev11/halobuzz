@@ -87,10 +87,11 @@ auditLogSchema.pre('save', function(next) {
   if (isBusinessAIRoute) {
     // Check if GDPR applies (EU countries or users)
     const euCountries = ['AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'DE', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'LU', 'MT', 'NL', 'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'SE'];
-    this.complianceFlags = this.complianceFlags || {};
-    this.complianceFlags.gdprApplicable = euCountries.includes(this.country || '');
-    this.complianceFlags.dataRetentionChecked = true;
-    this.complianceFlags.piiSanitized = true;
+    this.complianceFlags = {
+      gdprApplicable: euCountries.includes(this.country || ''),
+      dataRetentionChecked: true,
+      piiSanitized: true
+    };
 
     // Set data accessed based on route
     this.dataAccessed = this.dataAccessed || [];

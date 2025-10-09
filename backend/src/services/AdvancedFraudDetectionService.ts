@@ -885,4 +885,349 @@ export class AdvancedFraudDetectionService {
         return 24 * 60 * 60 * 1000;
     }
   }
+
+  /**
+   * Get all fraud patterns
+   */
+  async getAllFraudPatterns(): Promise<FraudPattern[]> {
+    try {
+      // Return active fraud patterns
+      return await this.getActiveFraudPatterns();
+    } catch (error) {
+      this.logger.error('Error getting all fraud patterns:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Update fraud pattern
+   */
+  async updateFraudPattern(patternId: string, updates: Partial<FraudPattern>): Promise<FraudPattern> {
+    try {
+      // Get existing pattern
+      const patterns = await this.getActiveFraudPatterns();
+      const existingPattern = patterns.find(p => p.patternId === patternId);
+
+      if (!existingPattern) {
+        throw new Error(`Pattern ${patternId} not found`);
+      }
+
+      // Update pattern
+      const updatedPattern: FraudPattern = {
+        ...existingPattern,
+        ...updates,
+        patternId, // Ensure ID doesn't change
+        updatedAt: new Date(),
+      };
+
+      // Store updated pattern
+      await this.redisService.hset(`fraud_pattern:${patternId}`, {
+        config: JSON.stringify(updatedPattern),
+        isActive: updatedPattern.isActive.toString(),
+      });
+
+      this.logger.info(`Updated fraud pattern: ${patternId}`);
+
+      return updatedPattern;
+    } catch (error) {
+      this.logger.error('Error updating fraud pattern:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Delete fraud pattern
+   */
+  async deleteFraudPattern(patternId: string): Promise<boolean> {
+    try {
+      // Delete pattern from storage
+      await this.redisService.del(`fraud_pattern:${patternId}`);
+
+      this.logger.info(`Deleted fraud pattern: ${patternId}`);
+
+      return true;
+    } catch (error) {
+      this.logger.error('Error deleting fraud pattern:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Get fraud alerts with filters
+   */
+  async getFraudAlerts(filters: {
+    status?: 'new' | 'investigating' | 'resolved' | 'false_positive';
+    severity?: 'low' | 'medium' | 'high' | 'critical';
+    userId?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<{ alerts: FraudAlert[]; total: number }> {
+    try {
+      const query: any = { eventType: 'fraud_alert' };
+
+      if (filters.status) {
+        query['metadata.status'] = filters.status;
+      }
+      if (filters.severity) {
+        query['metadata.severity'] = filters.severity;
+      }
+      if (filters.userId) {
+        query.userId = filters.userId;
+      }
+
+      const total = await this.analyticsEventModel.countDocuments(query);
+
+      const alertDocs = await this.analyticsEventModel
+        .find(query)
+        .sort({ timestamp: -1 })
+        .limit(filters.limit || 50)
+        .skip(filters.offset || 0);
+
+      const alerts: FraudAlert[] = alertDocs.map(doc => ({
+        alertId: doc.metadata.alertId,
+        userId: doc.userId,
+        patternId: doc.metadata.patternId,
+        patternName: doc.metadata.patternName,
+        severity: doc.metadata.severity,
+        score: doc.metadata.score,
+        description: doc.metadata.description,
+        evidence: doc.metadata.evidence,
+        status: doc.metadata.status,
+        createdAt: new Date(doc.metadata.createdAt),
+        updatedAt: new Date(doc.timestamp),
+        resolvedAt: doc.metadata.resolvedAt ? new Date(doc.metadata.resolvedAt) : undefined,
+        resolvedBy: doc.metadata.resolvedBy,
+        resolution: doc.metadata.resolution,
+      }));
+
+      return { alerts, total };
+    } catch (error) {
+      this.logger.error('Error getting fraud alerts:', error);
+      return { alerts: [], total: 0 };
+    }
+  }
+
+  /**
+   * Analyze user for fraud (renamed from analyzeUserForFraud)
+   */
+  async analyzeUserFraud(userId: string): Promise<{
+    alerts: FraudAlert[];
+    riskScore: RiskScore;
+    anomalies: AnomalyDetection;
+    recommendations: string[];
+  }> {
+    try {
+      // Run comprehensive fraud analysis
+      const [alerts, riskScore, anomalies] = await Promise.all([
+        this.analyzeUserForFraud(userId),
+        this.calculateRiskScore(userId),
+        this.detectAnomalies(userId),
+      ]);
+
+      // Generate recommendations based on analysis
+      const recommendations = this.generateFraudRecommendations(alerts, riskScore, anomalies);
+
+      return {
+        alerts,
+        riskScore,
+        anomalies,
+        recommendations,
+      };
+    } catch (error) {
+      this.logger.error('Error analyzing user fraud:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get fraud analytics
+   */
+  async getFraudAnalytics(): Promise<{
+    metrics: FraudMetrics;
+    trends: any[];
+    topPatterns: any[];
+    recentAlerts: FraudAlert[];
+  }> {
+    try {
+      // Get comprehensive fraud analytics
+      const metrics = await this.getFraudMetrics('day');
+
+      // Get recent alerts
+      const { alerts: recentAlerts } = await this.getFraudAlerts({
+        limit: 10,
+        offset: 0,
+      });
+
+      // Calculate trends
+      const trends = await this.calculateFraudTrends();
+
+      return {
+        metrics,
+        trends,
+        topPatterns: metrics.topFraudPatterns,
+        recentAlerts,
+      };
+    } catch (error) {
+      this.logger.error('Error getting fraud analytics:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Test fraud pattern against sample data
+   */
+  async testFraudPattern(patternId: string, testData: {
+    userId: string;
+    mockData?: any;
+  }): Promise<{
+    matched: boolean;
+    score: number;
+    evidence: any[];
+    alert?: FraudAlert;
+  }> {
+    try {
+      const patterns = await this.getActiveFraudPatterns();
+      const pattern = patterns.find(p => p.patternId === patternId);
+
+      if (!pattern) {
+        throw new Error(`Pattern ${patternId} not found`);
+      }
+
+      // Get or create test data
+      const userData = testData.mockData || await this.getUserDataForAnalysis(testData.userId);
+
+      // Analyze pattern
+      const alert = await this.analyzePattern(testData.userId, pattern, userData);
+
+      return {
+        matched: alert !== null,
+        score: alert?.score || 0,
+        evidence: alert?.evidence || [],
+        alert: alert || undefined,
+      };
+    } catch (error) {
+      this.logger.error('Error testing fraud pattern:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Add user to whitelist
+   */
+  async addToWhitelist(userId: string, reason: string): Promise<boolean> {
+    try {
+      // Add user to whitelist in Redis
+      await this.redisService.hset(`fraud_whitelist:${userId}`, {
+        userId,
+        reason,
+        addedAt: new Date().toISOString(),
+      });
+
+      // Log the whitelisting
+      await this.analyticsEventModel.create({
+        userId,
+        eventType: 'fraud_whitelist_added',
+        metadata: { reason },
+        timestamp: new Date(),
+        appId: 'halobuzz',
+      });
+
+      this.logger.info(`Added user ${userId} to fraud whitelist: ${reason}`);
+
+      return true;
+    } catch (error) {
+      this.logger.error('Error adding to whitelist:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Remove user from whitelist
+   */
+  async removeFromWhitelist(userId: string): Promise<boolean> {
+    try {
+      // Remove user from whitelist
+      await this.redisService.del(`fraud_whitelist:${userId}`);
+
+      // Log the removal
+      await this.analyticsEventModel.create({
+        userId,
+        eventType: 'fraud_whitelist_removed',
+        metadata: {},
+        timestamp: new Date(),
+        appId: 'halobuzz',
+      });
+
+      this.logger.info(`Removed user ${userId} from fraud whitelist`);
+
+      return true;
+    } catch (error) {
+      this.logger.error('Error removing from whitelist:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Generate fraud recommendations based on analysis
+   */
+  private generateFraudRecommendations(
+    alerts: FraudAlert[],
+    riskScore: RiskScore,
+    anomalies: AnomalyDetection
+  ): string[] {
+    const recommendations: string[] = [];
+
+    if (riskScore.overallScore > 0.7) {
+      recommendations.push('High risk user - recommend immediate review');
+    }
+
+    if (alerts.length > 3) {
+      recommendations.push('Multiple fraud alerts - consider account suspension');
+    }
+
+    if (anomalies.overallAnomalyScore > 0.6) {
+      recommendations.push('Unusual behavior detected - monitor closely');
+    }
+
+    if (riskScore.trend === 'increasing') {
+      recommendations.push('Risk score increasing - escalate monitoring');
+    }
+
+    if (recommendations.length === 0) {
+      recommendations.push('No immediate action required - continue normal monitoring');
+    }
+
+    return recommendations;
+  }
+
+  /**
+   * Calculate fraud trends
+   */
+  private async calculateFraudTrends(): Promise<any[]> {
+    try {
+      const now = Date.now();
+      const trends = [];
+
+      // Calculate daily trends for the past week
+      for (let i = 0; i < 7; i++) {
+        const dayStart = new Date(now - (i + 1) * 24 * 60 * 60 * 1000);
+        const dayEnd = new Date(now - i * 24 * 60 * 60 * 1000);
+
+        const alertCount = await this.analyticsEventModel.countDocuments({
+          eventType: 'fraud_alert',
+          timestamp: { $gte: dayStart, $lt: dayEnd },
+        });
+
+        trends.unshift({
+          date: dayStart.toISOString().split('T')[0],
+          alertCount,
+        });
+      }
+
+      return trends;
+    } catch (error) {
+      this.logger.error('Error calculating fraud trends:', error);
+      return [];
+    }
+  }
 }

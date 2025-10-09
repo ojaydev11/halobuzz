@@ -477,7 +477,7 @@ export const enhancedAuthMiddleware = async (
     }
 
     // Validate session
-    const sessionData = await getCache(`session:${decoded.sessionId}`);
+    const sessionData = await getCache(`session:${decoded.sessionId}`) as any;
     if (!sessionData) {
       SecurityLogging.logAuthenticationAttempt(req, false, 'Session expired');
       res.status(401).json({
@@ -748,5 +748,5 @@ export const securityMonitoring = (req: Request, res: Response, next: NextFuncti
   next();
 };
 
-// Note: requireAuth and requireAdmin are already defined above
-// Removed duplicate exports to fix TS2451 error
+// Export requireAuth as an alias for enhancedAuthMiddleware
+export const requireAuth = enhancedAuthMiddleware;

@@ -115,11 +115,11 @@ import monetizationRoutes from '@/routes/monetization';
 import adminRoutes from '@/routes/admin';
 import configRoutes from '@/routes/config';
 import kycRoutes from '@/routes/kyc';
-import monitoringRoutes from '@/routes/monitoring';
+// import monitoringRoutes from '@/routes/monitoring'; // TEMPORARILY DISABLED - imports monitoringService
 import securityRoutes from '@/routes/security';
 import mfaRoutes from '@/routes/mfa';
 import notificationRoutes from '@/routes/notifications';
-import viralGrowthRoutes from '@/routes/viral-growth';
+// import viralGrowthRoutes from '@/routes/viral-growth'; // TEMPORARILY DISABLED - imports ViralGrowthService
 import trustCredibilityRoutes from '@/routes/trust-credibility';
 import revenueOptimizationRoutes from '@/routes/revenue-optimization';
 // AI/ML services - stubbed for production deployment
@@ -369,11 +369,11 @@ app.use(`/api/${apiVersion}/monetization`, monetizationRoutes); // Monetization 
 app.use(`/api/${apiVersion}/config`, authMiddleware, configRoutes);
 app.use(`/api/${apiVersion}/kyc`, authMiddleware, kycRoutes);
 app.use(`/api/${apiVersion}/admin`, authMiddleware, requireAdmin, adminRoutes);
-app.use(`/api/${apiVersion}/monitoring`, monitoringRoutes);
+// app.use(`/api/${apiVersion}/monitoring`, monitoringRoutes); // TEMPORARILY DISABLED
 app.use(`/api/${apiVersion}/security`, securityRoutes);
 app.use(`/api/${apiVersion}/mfa`, mfaRoutes);
 app.use(`/api/${apiVersion}/notifications`, authMiddleware, notificationRoutes);
-app.use(`/api/${apiVersion}/viral`, authMiddleware, viralGrowthRoutes);
+// app.use(`/api/${apiVersion}/viral`, authMiddleware, viralGrowthRoutes); // TEMPORARILY DISABLED
 app.use(`/api/${apiVersion}/trust`, authMiddleware, trustCredibilityRoutes);
 app.use(`/api/${apiVersion}/revenue`, authMiddleware, revenueOptimizationRoutes);
 // AI/ML services routes - stubbed (return 501 Not Implemented)
@@ -381,7 +381,8 @@ app.use(`/api/${apiVersion}/ai-recommendations`, authMiddleware, aiRecommendatio
 app.use(`/api/${apiVersion}/advanced-analytics`, authMiddleware, advancedAnalyticsRoutes);
 app.use(`/api/${apiVersion}/ml-optimization`, authMiddleware, mlOptimizationRoutes);
 app.use(`/api/${apiVersion}/personalization`, authMiddleware, realTimePersonalizationRoutes);
-app.use(`/api/${apiVersion}/fraud-detection`, authMiddleware, advancedFraudDetectionRoutes);
+// TODO PR#4: Re-enable after implementing missing service methods
+// app.use(`/api/${apiVersion}/fraud-detection`, authMiddleware, advancedFraudDetectionRoutes);
 app.use(`/api/${apiVersion}/agora`, authMiddleware, agoraRoutes);
 
 // New creator economy routes
@@ -411,9 +412,9 @@ app.use(`/api/${apiVersion}/subtitles`, authMiddleware, subtitlesRoutes);
 app.use(`/api/${apiVersion}/enhanced-auth`, enhancedAuthRoutes);
 app.use(`/api/${apiVersion}/production-monitoring`, authMiddleware, productionMonitoringRoutes);
 
-// Advanced Engine routes
-app.use(`/api/${apiVersion}/ai-personalization`, authMiddleware, aiPersonalizationRoutes);
-app.use(`/api/${apiVersion}/advanced-gifts`, authMiddleware, advancedGiftsRoutes);
+// Advanced Engine routes - TODO PR#6: Re-enable after implementing methods
+// app.use(`/api/${apiVersion}/ai-personalization`, authMiddleware, aiPersonalizationRoutes);
+// app.use(`/api/${apiVersion}/advanced-gifts`, authMiddleware, advancedGiftsRoutes);
 app.use(`/api/${apiVersion}/fortress-security`, authMiddleware, fortressSecurityRoutes);
 app.use(`/api/${apiVersion}/gamification`, authMiddleware, gamificationRoutes);
 
