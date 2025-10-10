@@ -274,10 +274,87 @@ jobs:
   # MOBILE APP BUILD
   # ===========================================
 
+  # ===========================================
+  # MOBILE E2E TESTS
+  # ===========================================
+
+  mobile-e2e-android:
+    name: Mobile E2E Tests (Android)
+    runs-on: macos-latest
+    needs: [test]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install pnpm
+        run: npm install -g pnpm@${{ env.PNPM_VERSION }}
+
+      - name: Install dependencies
+        run: cd apps/halobuzz-mobile && pnpm install
+
+      - name: Install Detox CLI
+        run: npm install -g detox-cli
+
+      - name: Build app for testing
+        run: cd apps/halobuzz-mobile && detox build --configuration android.emu.debug
+
+      - name: Run Detox tests
+        run: cd apps/halobuzz-mobile && detox test --configuration android.emu.debug --record-logs all
+
+      - name: Upload test artifacts
+        uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: detox-artifacts-android
+          path: apps/halobuzz-mobile/e2e/artifacts
+
+  mobile-e2e-ios:
+    name: Mobile E2E Tests (iOS)
+    runs-on: macos-latest
+    needs: [test]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install pnpm
+        run: npm install -g pnpm@${{ env.PNPM_VERSION }}
+
+      - name: Install dependencies
+        run: cd apps/halobuzz-mobile && pnpm install
+
+      - name: Install Detox CLI
+        run: npm install -g detox-cli
+
+      - name: Install applesimutils
+        run: brew tap wix/brew && brew install applesimutils
+
+      - name: Build app for testing
+        run: cd apps/halobuzz-mobile && detox build --configuration ios.sim.debug
+
+      - name: Run Detox tests
+        run: cd apps/halobuzz-mobile && detox test --configuration ios.sim.debug --record-logs all
+
+      - name: Upload test artifacts
+        uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: detox-artifacts-ios
+          path: apps/halobuzz-mobile/e2e/artifacts
+
   mobile-build:
     name: Build Mobile App
     runs-on: ubuntu-latest
-    needs: [test]
+    needs: [mobile-e2e-android, mobile-e2e-ios]
     if: github.ref == 'refs/heads/main'
     steps:
       - name: Checkout code
@@ -300,13 +377,23 @@ jobs:
           expo-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
 
-      - name: Build Android
-        run: cd apps/halobuzz-mobile && npx eas build -p android --profile preview --non-interactive
+      - name: Build Android Production
+        run: cd apps/halobuzz-mobile && npx eas build -p android --profile production --non-interactive
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
-      - name: Build iOS
-        run: cd apps/halobuzz-mobile && npx eas build -p ios --profile preview --non-interactive
+      - name: Build iOS Production
+        run: cd apps/halobuzz-mobile && npx eas build -p ios --profile production --non-interactive
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Submit to Google Play (Internal Track)
+        run: cd apps/halobuzz-mobile && npx eas submit -p android --latest --non-interactive
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Submit to TestFlight
+        run: cd apps/halobuzz-mobile && npx eas submit -p ios --latest --non-interactive
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
