@@ -48,10 +48,14 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   scheme: "halobuzz",
   extra: {
-        // Production backend on Northflank with MongoDB Atlas
-        apiBaseUrl: process.env.EXPO_PUBLIC_API_BASE_URL || "https://p01--halo-api--6jbmvhzxwv4y.code.run",
-        apiPrefix: "/api/v1",
-        wsUrl: process.env.EXPO_PUBLIC_WS_URL || "wss://p01--halo-api--6jbmvhzxwv4y.code.run",
+    // EAS Project Configuration
+    eas: {
+      projectId: "5c8d3620-68bb-4fd8-94c3-6575c9c218bb"
+    },
+    // Production backend on Northflank with MongoDB Atlas
+    apiBaseUrl: process.env.EXPO_PUBLIC_API_BASE_URL || "https://p01--halo-api--6jbmvhzxwv4y.code.run",
+    apiPrefix: "/api/v1",
+    wsUrl: process.env.EXPO_PUBLIC_WS_URL || "wss://p01--halo-api--6jbmvhzxwv4y.code.run",
     // Force production environment for live testing
     environment: "production"
   },
