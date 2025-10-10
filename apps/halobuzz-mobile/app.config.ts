@@ -53,10 +53,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         apiPrefix: "/api/v1",
         wsUrl: process.env.EXPO_PUBLIC_WS_URL || "wss://p01--halo-api--6jbmvhzxwv4y.code.run",
     // Force production environment for live testing
-    environment: "production",
-    eas: {
-      projectId: "halobuzz-mobile-project"
-    }
+    environment: "production"
   },
   plugins: [
     "expo-router",
