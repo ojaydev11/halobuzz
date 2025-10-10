@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { useAuth } from '../store/AuthContext';
 import { apiClient } from '../lib/api';
 
@@ -39,7 +40,8 @@ interface Achievement {
   reward: number;
 }
 
-const ProfileScreen: React.FC = ({ navigation }: any) => {
+const ProfileScreen: React.FC = () => {
+  const router = useRouter();
   const { user, logout } = useAuth();
   const [stats, setStats] = useState<ProfileStats>({
     totalGames: 0,
@@ -271,7 +273,14 @@ const ProfileScreen: React.FC = ({ navigation }: any) => {
 
   const renderMenuItems = () => (
     <View style={styles.menuSection}>
-      <Text style={styles.sectionTitle}>Account</Text>
+      <Text style={styles.sectionTitle}>Features</Text>
+      <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/(tabs)/games')}>
+        <Ionicons name="game-controller-outline" size={24} color="#8B949E" />
+        <Text style={styles.menuText}>Games</Text>
+        <Ionicons name="chevron-forward" size={20} color="#8B949E" />
+      </TouchableOpacity>
+
+      <Text style={[styles.sectionTitle, { marginTop: 20 }]}>Account</Text>
       <TouchableOpacity style={styles.menuItem}>
         <Ionicons name="settings-outline" size={24} color="#8B949E" />
         <Text style={styles.menuText}>Settings</Text>
@@ -292,7 +301,20 @@ const ProfileScreen: React.FC = ({ navigation }: any) => {
         <Text style={styles.menuText}>Help & Support</Text>
         <Ionicons name="chevron-forward" size={20} color="#8B949E" />
       </TouchableOpacity>
-      <TouchableOpacity style={styles.menuItem} onPress={handleLogout}>
+
+      <Text style={[styles.sectionTitle, { marginTop: 20 }]}>Legal</Text>
+      <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/(tabs)/terms')}>
+        <Ionicons name="document-text-outline" size={24} color="#8B949E" />
+        <Text style={styles.menuText}>Terms & Conditions</Text>
+        <Ionicons name="chevron-forward" size={20} color="#8B949E" />
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/(tabs)/privacy')}>
+        <Ionicons name="shield-checkmark-outline" size={24} color="#8B949E" />
+        <Text style={styles.menuText}>Privacy Policy</Text>
+        <Ionicons name="chevron-forward" size={20} color="#8B949E" />
+      </TouchableOpacity>
+
+      <TouchableOpacity style={[styles.menuItem, { marginTop: 10 }]} onPress={handleLogout}>
         <Ionicons name="log-out-outline" size={24} color="#F44336" />
         <Text style={[styles.menuText, { color: '#F44336' }]}>Logout</Text>
         <Ionicons name="chevron-forward" size={20} color="#F44336" />

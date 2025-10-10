@@ -21,24 +21,6 @@ export default function TabLayout() {
         }}
       >
       <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Discover',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="compass-outline" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="reels"
-        options={{
-          title: 'Reels',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="play-circle-outline" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
         name="live"
         options={{
           title: 'Live',
@@ -48,11 +30,11 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="games"
+        name="reels"
         options={{
-          title: 'Games',
+          title: 'Reels',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="game-controller-outline" size={size} color={color} />
+            <Ionicons name="play-circle-outline" size={size} color={color} />
           ),
         }}
       />
@@ -72,6 +54,36 @@ export default function TabLayout() {
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="person-outline" size={size} color={color} />
           ),
+        }}
+      />
+
+      {/* Hidden tabs - accessible via navigation but not shown in tab bar */}
+      <Tabs.Screen
+        name="index"
+        options={{
+          href: null, // Hide from tab bar
+          title: 'Discover',
+        }}
+      />
+      <Tabs.Screen
+        name="games"
+        options={{
+          href: null, // Hide from tab bar
+          title: 'Games',
+        }}
+      />
+      <Tabs.Screen
+        name="privacy"
+        options={{
+          href: null, // Hide from tab bar
+          title: 'Privacy Policy',
+        }}
+      />
+      <Tabs.Screen
+        name="terms"
+        options={{
+          href: null, // Hide from tab bar
+          title: 'Terms & Conditions',
         }}
       />
       </Tabs>

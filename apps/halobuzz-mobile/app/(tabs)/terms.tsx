@@ -1,12 +1,25 @@
 import React from 'react';
-import { ScrollView, View, Text, StyleSheet } from 'react-native';
+import { ScrollView, View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 
 export default function TermsOfServiceScreen() {
+  const router = useRouter();
+
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.content}>
-        <Text style={styles.title}>Terms of Service</Text>
-        <Text style={styles.lastUpdated}>Last Updated: October 9, 2025</Text>
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+          <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Terms of Service</Text>
+        <View style={styles.placeholder} />
+      </View>
+      <ScrollView style={styles.scrollContainer}>
+        <View style={styles.content}>
+          <Text style={styles.title}>Terms of Service</Text>
+          <Text style={styles.lastUpdated}>Last Updated: October 9, 2025</Text>
 
         <Text style={styles.sectionTitle}>1. Acceptance of Terms</Text>
         <Text style={styles.paragraph}>
@@ -122,7 +135,8 @@ export default function TermsOfServiceScreen() {
           <Text style={styles.footerText}>By using HaloBuzz, you agree to these Terms.</Text>
         </View>
       </View>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
@@ -130,6 +144,33 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#0B0B10',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#0B0B10',
+    borderBottomWidth: 1,
+    borderBottomColor: '#1F1F1F',
+  },
+  backButton: {
+    padding: 8,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    flex: 1,
+    textAlign: 'center',
+    marginHorizontal: -32, // Offset for centering
+  },
+  placeholder: {
+    width: 40, // Match back button width for centering
+  },
+  scrollContainer: {
+    flex: 1,
   },
   content: {
     padding: 20,
