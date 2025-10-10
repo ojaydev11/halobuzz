@@ -85,16 +85,8 @@ jobs:
       uses: github/codeql-action/analyze@v3
       with:
         category: "/language:${{ matrix.language }}/${{ matrix.path }}"
-        upload: true
         output: sarif-results
         checkout_path: ${{ github.workspace }}
-        
-    - name: Upload CodeQL results to security tab
-      uses: github/codeql-action/upload-sarif@v3
-      if: always()
-      with:
-        sarif_file: sarif-results/${{ matrix.language }}.sarif
-        category: ${{ matrix.name }}
 
     - name: Archive CodeQL results
       if: always()
