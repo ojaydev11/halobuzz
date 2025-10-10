@@ -149,7 +149,7 @@ import gamificationRoutes from '@/routes/gamification';
 // E-sports routes
 import gamesEsportsRoutes from '@/routes/games-esports';
 import mmrRoutes from '@/routes/mmr';
-import tournamentsRoutes from '@/routes/tournaments';
+// import tournamentsRoutes from '@/routes/tournaments'; // TEMPORARILY DISABLED - not implemented yet
 // import enhancedAuthRoutes from '@/routes/enhanced-auth'; // TEMPORARILY DISABLED - type errors
 // import productionMonitoringRoutes from '@/routes/production-monitoring'; // TEMPORARILY DISABLED - type errors
 
@@ -426,7 +426,7 @@ app.use(`/api/${apiVersion}/gamification`, authMiddleware, gamificationRoutes);
 // E-sports routes
 app.use(`/api/${apiVersion}/games-esports`, gamesEsportsRoutes); // Public leaderboards + auth for sessions
 app.use(`/api/${apiVersion}/mmr`, mmrRoutes); // Public MMR queries + auth for updates
-app.use(`/api/${apiVersion}/tournaments`, tournamentsRoutes); // Tournament management
+// app.use(`/api/${apiVersion}/tournaments`, tournamentsRoutes); // TEMPORARILY DISABLED - not implemented yet
 
 // Empire Dashboard routes - stubbed
 import empireRoutes from '@/routes/empire';
@@ -579,19 +579,19 @@ const startServer = async () => {
       logger.warn('Continuing without live realtime features');
     }
 
-    // Setup game matchmaking and rooms real-time layer
-    try {
-      const { setupGameMatchmaking } = await import('@/realtime/game-matchmaking');
-      const { setupGameRooms } = await import('@/realtime/game-rooms');
+    // Setup game matchmaking and rooms real-time layer - TEMPORARILY DISABLED
+    // try {
+    //   const { setupGameMatchmaking } = await import('@/realtime/game-matchmaking');
+    //   const { setupGameRooms } = await import('@/realtime/game-rooms');
 
-      setupGameMatchmaking(io);
-      setupGameRooms(io);
+    //   setupGameMatchmaking(io);
+    //   setupGameRooms(io);
 
-      logger.info('Game matchmaking and rooms Socket.IO configured successfully');
-    } catch (error) {
-      logger.warn('Game Socket.IO setup failed:', error instanceof Error ? error.message : String(error));
-      logger.warn('Continuing without real-time game features');
-    }
+    //   logger.info('Game matchmaking and rooms Socket.IO configured successfully');
+    // } catch (error) {
+    //   logger.warn('Game Socket.IO setup failed:', error instanceof Error ? error.message : String(error));
+    //   logger.warn('Continuing without real-time game features');
+    // }
 
     // Initialize multiplayer socket service
     try {
