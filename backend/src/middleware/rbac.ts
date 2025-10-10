@@ -1,25 +1,15 @@
 import { Request, Response, NextFunction } from 'express';
 import { setupLogger } from '@/config/logger';
+import { AuthUser } from '@/types/express';
 
 const logger = setupLogger();
-
-interface AuthenticatedRequest extends Request {
-  user?: {
-    userId: string;
-    email?: string;
-    role?: string;
-    scopes?: string[];
-    isAdmin?: boolean;
-    [key: string]: any;
-  };
-}
 
 /**
  * RBAC Middleware - Require specific scopes for access
  * @param requiredScopes - Array of scopes required (user must have at least one)
  */
 export const requireScope = (requiredScopes: string[]) => {
-  return async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
+  return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       if (!req.user) {
         res.status(401).json({ error: 'Authentication required' });
@@ -27,13 +17,13 @@ export const requireScope = (requiredScopes: string[]) => {
       }
 
       // Super admin has all scopes
-      if (req.user.role === 'super_admin') {
+      if (req.user.roles?.includes('super_admin')) {
         next();
         return;
       }
 
       // Admin with admin:read and admin:write scopes
-      if (req.user.role === 'admin') {
+      if (req.user.roles?.includes('admin')) {
         // Check if user has any of the required scopes
         const hasScope = requiredScopes.some(scope => {
           if (scope === 'admin:read') return true;
@@ -47,13 +37,13 @@ export const requireScope = (requiredScopes: string[]) => {
         }
       }
 
-      // If user has scopes array, check if they have any of the required scopes
-      if (req.user.scopes && Array.isArray(req.user.scopes)) {
-        const hasScope = requiredScopes.some(scope =>
-          req.user!.scopes!.includes(scope)
+      // Check if user has any of the required roles
+      if (req.user.roles && Array.isArray(req.user.roles)) {
+        const hasRole = requiredScopes.some(scope =>
+          req.user!.roles!.includes(scope)
         );
 
-        if (hasScope) {
+        if (hasRole) {
           next();
           return;
         }
@@ -75,14 +65,15 @@ export const requireScope = (requiredScopes: string[]) => {
 /**
  * Check if user has admin role
  */
-export const requireAdmin = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
+export const requireAdmin = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     if (!req.user) {
       res.status(401).json({ error: 'Authentication required' });
       return;
     }
 
-    if (req.user.role !== 'admin' && req.user.role !== 'super_admin') {
+    const isAdmin = req.user.roles?.includes('admin') || req.user.roles?.includes('super_admin') || req.user.isAdmin;
+    if (!isAdmin) {
       logger.warn(`Admin access denied for user ${req.user.userId} (${req.user.email})`);
       res.status(403).json({ error: 'Admin access required' });
       return;
@@ -98,14 +89,14 @@ export const requireAdmin = async (req: AuthenticatedRequest, res: Response, nex
 /**
  * Check if user has super admin role
  */
-export const requireSuperAdmin = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
+export const requireSuperAdmin = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     if (!req.user) {
       res.status(401).json({ error: 'Authentication required' });
       return;
     }
 
-    if (req.user.role !== 'super_admin') {
+    if (!req.user.roles?.includes('super_admin')) {
       logger.warn(`Super admin access denied for user ${req.user.userId} (${req.user.email})`);
       res.status(403).json({ error: 'Super admin access required' });
       return;

@@ -112,7 +112,7 @@ router.get('/dashboard', requireAuth, requireScope(['admin:read']), async (req, 
 
     // INFRASTRUCTURE METRICS (Super Admin only)
     let infrastructure = undefined;
-    if (req.user?.role === 'super_admin') {
+    if (req.user?.roles?.includes('super_admin')) {
       // Simulated metrics - replace with actual monitoring data
       infrastructure = {
         apiResponseTimeP95: 245, // ms

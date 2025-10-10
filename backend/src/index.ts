@@ -90,7 +90,7 @@ import {
 import authRoutes from '@/routes/auth';
 import usersRoutes from '@/routes/users';
 import walletRoutes from '@/routes/wallet';
-import coinsRoutes from '@/routes/coins';
+// import coinsRoutes from '@/routes/coins'; // TEMPORARILY DISABLED - not implemented yet
 // import payoutsRoutes from '@/routes/payouts'; // TEMPORARILY DISABLED - type errors
 import webhooksRoutes from '@/routes/webhooks';
 import stripeCheckoutRoutes from '@/routes/stripe-checkout';
@@ -349,7 +349,7 @@ logger.info(`Mounting auth routes at /api/${apiVersion}/auth`);
 app.use(`/api/${apiVersion}/auth`, authLimiter, loginSlowDown, authRoutes);
 app.use(`/api/${apiVersion}/users`, authMiddleware, csrfProtection, usersRoutes);
 app.use(`/api/${apiVersion}/wallet`, authMiddleware, paymentLimiter, csrfProtection, walletRoutes);
-app.use(`/api/${apiVersion}/coins`, authMiddleware, coinsRoutes);
+// app.use(`/api/${apiVersion}/coins`, authMiddleware, coinsRoutes); // TEMPORARILY DISABLED - not implemented yet
 // app.use(`/api/${apiVersion}/payouts`, authMiddleware, payoutsRoutes); // TEMPORARILY DISABLED - type errors
 app.use(`/api/${apiVersion}/stripe`, stripeCheckoutRoutes);
 app.use(`/api/${apiVersion}/webhooks`, webhooksRoutes); // No auth - verified by signature

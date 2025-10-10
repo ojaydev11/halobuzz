@@ -111,16 +111,16 @@ router.post('/payouts/:id/approve', requireAuth, requireScope(['admin:write']), 
       return res.status(400).json({ error: 'Payout is not pending' });
     }
 
-    payout.status = 'approved';
+    payout.status = 'completed';
     await payout.save();
 
     // Log action
     await AuditLog.create({
-      admin: req.user!._id,
+      admin: req.user!.userId,
       action: 'payout.approve',
       resource: 'transaction',
       resourceId: payout._id,
-      details: { amount: payout.amount, user: payout.user },
+      details: { amount: payout.amount, userId: payout.userId },
       ip: req.ip,
       userAgent: req.get('user-agent'),
     });
@@ -160,17 +160,17 @@ router.post('/payouts/:id/reject', requireAuth, requireScope(['admin:write']), a
       return res.status(400).json({ error: 'Payout is not pending' });
     }
 
-    payout.status = 'rejected';
+    payout.status = 'failed';
     payout.metadata = { ...payout.metadata, rejectionReason: reason };
     await payout.save();
 
     // Log action
     await AuditLog.create({
-      admin: req.user!._id,
+      admin: req.user!.userId,
       action: 'payout.reject',
       resource: 'transaction',
       resourceId: payout._id,
-      details: { amount: payout.amount, user: payout.user, reason },
+      details: { amount: payout.amount, userId: payout.userId, reason },
       ip: req.ip,
       userAgent: req.get('user-agent'),
     });

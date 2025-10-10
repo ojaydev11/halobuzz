@@ -2,8 +2,8 @@ import type { Server as HttpServer } from "http";
 import { Server } from "socket.io";
 import jwt from "jsonwebtoken";
 import { setupLogger } from "@/config/logger";
-import { setupGameMatchmaking } from "./game-matchmaking";
-import { setupGameRooms } from "./game-rooms";
+// import { setupGameMatchmaking } from "./game-matchmaking"; // TEMPORARILY DISABLED - not implemented
+// import { setupGameRooms } from "./game-rooms"; // TEMPORARILY DISABLED - not implemented
 // Metrics temporarily disabled
 // import { 
 //   recordConnection, 
@@ -53,9 +53,9 @@ export function createRealtime(httpServer: HttpServer) {
     }
   });
 
-  // Initialize game matchmaking and room handlers
-  setupGameMatchmaking(io);
-  setupGameRooms(io);
+  // Initialize game matchmaking and room handlers - TEMPORARILY DISABLED
+  // setupGameMatchmaking(io);
+  // setupGameRooms(io);
 
   // Rate limiting helper
   const checkRateLimit = (userId: string, type: 'messages' | 'gifts'): boolean => {

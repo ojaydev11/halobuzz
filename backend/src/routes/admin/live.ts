@@ -78,11 +78,11 @@ router.post('/sessions/:id/force-end', requireAuth, requireScope(['admin:write']
 
     // Log action
     await AuditLog.create({
-      admin: req.user!._id,
+      admin: req.user!.userId,
       action: 'live.force_end',
       resource: 'livestream',
       resourceId: session._id,
-      details: { reason, host: session.host },
+      details: { reason, hostId: session.hostId },
       ip: req.ip,
       userAgent: req.get('user-agent'),
     });
@@ -161,17 +161,17 @@ router.post('/:id/takedown', requireAuth, requireScope(['admin:write']), async (
       return res.status(404).json({ error: 'Reel not found' });
     }
 
-    reel.isFlagged = true;
-    reel.isDeleted = true;
+    reel.status = 'deleted';
+    reel.moderation.flags = [...(reel.moderation.flags || []), 'admin_takedown'];
     await reel.save();
 
     // Log action
     await AuditLog.create({
-      admin: req.user!._id,
+      admin: req.user!.userId,
       action: 'reel.takedown',
       resource: 'reel',
       resourceId: reel._id,
-      details: { reason, creator: reel.creator },
+      details: { reason, creatorId: reel.userId },
       ip: req.ip,
       userAgent: req.get('user-agent'),
     });

@@ -75,22 +75,19 @@ router.post('/flags/:id/resolve', requireAuth, requireScope(['admin:write']), as
     }
 
     flag.status = 'resolved';
-    flag.resolvedBy = req.user!._id;
-    flag.resolvedAt = new Date();
-    flag.resolution = {
-      action,
-      reason,
-    };
+    flag.reviewedBy = req.user!.userId as any;
+    flag.reviewedAt = new Date();
+    flag.resolution = `${action}: ${reason}`;
 
     await flag.save();
 
     // Log action
     await AuditLog.create({
-      admin: req.user!._id,
+      admin: req.user!.userId,
       action: 'moderation.resolve',
       resource: 'flag',
       resourceId: flag._id,
-      details: { action, reason, flagType: flag.type },
+      details: { action, reason, flagType: flag.contentType },
       ip: req.ip,
       userAgent: req.get('user-agent'),
     });

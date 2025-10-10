@@ -126,7 +126,7 @@ router.post('/:id/ban', requireAuth, requireScope(['admin:write']), async (req, 
 
     // Log action
     await AuditLog.create({
-      admin: req.user!._id,
+      admin: req.user!.userId,
       action: 'user.ban',
       resource: 'user',
       resourceId: user._id,
@@ -178,7 +178,7 @@ router.post('/:id/unban', requireAuth, requireScope(['admin:write']), async (req
 
     // Log action
     await AuditLog.create({
-      admin: req.user!._id,
+      admin: req.user!.userId,
       action: 'user.unban',
       resource: 'user',
       resourceId: user._id,
@@ -235,7 +235,7 @@ router.post('/:id/kyc/approve', requireAuth, requireScope(['admin:write']), asyn
 
     // Log action
     await AuditLog.create({
-      admin: req.user!._id,
+      admin: req.user!.userId,
       action: 'kyc.approve',
       resource: 'user',
       resourceId: user._id,
@@ -285,7 +285,7 @@ router.post('/:id/kyc/reject', requireAuth, requireScope(['admin:write']), async
 
     // Log action
     await AuditLog.create({
-      admin: req.user!._id,
+      admin: req.user!.userId,
       action: 'kyc.reject',
       resource: 'user',
       resourceId: user._id,
@@ -319,7 +319,7 @@ router.post('/:id/kyc/reject', requireAuth, requireScope(['admin:write']), async
 router.put('/:id/role', requireAuth, requireScope(['admin:write']), async (req, res) => {
   try {
     // Only super admins can change roles
-    if (req.user?.role !== 'super_admin') {
+    if (!req.user?.roles?.includes('super_admin')) {
       return res.status(403).json({ error: 'Only super admins can change user roles' });
     }
 
@@ -341,7 +341,7 @@ router.put('/:id/role', requireAuth, requireScope(['admin:write']), async (req, 
 
     // Log action
     await AuditLog.create({
-      admin: req.user!._id,
+      admin: req.user!.userId,
       action: 'user.role.update',
       resource: 'user',
       resourceId: user._id,
