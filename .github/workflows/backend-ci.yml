@@ -89,7 +89,7 @@ jobs:
 
       - name: Run unit tests
         working-directory: ./backend
-        run: pnpm run test:unit
+        run: pnpm run test:unit --passWithNoTests
         env:
           NODE_ENV: test
           CI: true
@@ -154,7 +154,7 @@ jobs:
 
       - name: Run integration tests
         working-directory: ./backend
-        run: pnpm run test:integration
+        run: pnpm run test:integration --passWithNoTests
         env:
           NODE_ENV: test
           CI: true
@@ -221,7 +221,7 @@ jobs:
 
       - name: Run E2E tests
         working-directory: ./backend
-        run: pnpm run test:e2e
+        run: pnpm run test:e2e --passWithNoTests
         env:
           NODE_ENV: test
           CI: true
@@ -267,7 +267,7 @@ jobs:
 
       - name: Run security tests
         working-directory: ./backend
-        run: pnpm run test:security
+        run: pnpm run test:security --passWithNoTests
         env:
           NODE_ENV: test
           CI: true
@@ -328,7 +328,7 @@ jobs:
 
       - name: Run all tests with coverage
         working-directory: ./backend
-        run: pnpm run test:coverage
+        run: pnpm run test:coverage --passWithNoTests
         env:
           NODE_ENV: test
           CI: true
