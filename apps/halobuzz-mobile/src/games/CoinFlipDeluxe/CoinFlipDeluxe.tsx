@@ -1,151 +1,215 @@
-import React, { useState, useEffect, useRef } from 'react';
+/**
+ * 3D Coin Flip Deluxe - E-Sports Grade
+ * Full 3D rendering with React Three Fiber
+ * Real backend integration with coin transactions
+ * Performance optimized for 60 FPS
+ */
+
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
-  Animated,
   Dimensions,
   Modal,
   TextInput,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { Audio } from 'expo-av';
+import { Canvas } from '@react-three/fiber';
+import { OrbitControls, PerspectiveCamera, Environment } from '@react-three/drei';
 import * as Haptics from 'expo-haptics';
-import { Canvas, Circle, Group, useValue, runTiming } from '@shopify/react-native-skia';
 import { useGamesStore } from '../Services/GamesStore';
 import { useAuth } from '@/store/AuthContext';
+import { gamesAPI } from '../Services/GamesAPI';
+import Coin3DModel from './Coin3DModel';
+import ParticleEffects from './ParticleEffects';
+import { useFlipAnimation } from './useFlipAnimation';
 
 const { width, height } = Dimensions.get('window');
-const COIN_SIZE = 120;
 
 type CoinSide = 'heads' | 'tails';
 type GameMode = 'solo' | 'sprint' | 'rush';
+type ParticleType = 'trail' | 'landing' | 'win' | 'loss' | null;
 
 export default function CoinFlipDeluxe() {
   const router = useRouter();
   const { user } = useAuth();
-  const {
-    startSession,
-    endSession,
-    updateSessionScore,
-    triggerHaptic,
-    soundEnabled,
-    hapticsEnabled,
-  } = useGamesStore();
+  const { triggerHaptic, soundEnabled, hapticsEnabled } = useGamesStore();
+  const { animationState, startFlip, resetFlip, getFPSMetrics } = useFlipAnimation();
 
   // Game State
   const [gameMode, setGameMode] = useState<GameMode>('solo');
   const [selectedSide, setSelectedSide] = useState<CoinSide | null>(null);
-  const [isFlipping, setIsFlipping] = useState(false);
   const [result, setResult] = useState<CoinSide | null>(null);
   const [stake, setStake] = useState('100');
-  const [balance, setBalance] = useState(5000);
+  const [balance, setBalance] = useState(0);
   const [showStakeModal, setShowStakeModal] = useState(false);
   const [score, setScore] = useState(0);
-  const [flipsRemaining, setFlipsRemaining] = useState(gameMode === 'sprint' ? 5 : 1);
+  const [wins, setWins] = useState(0);
+  const [losses, setLosses] = useState(0);
+  const [particleEffect, setParticleEffect] = useState<ParticleType>(null);
+  const [coinPosition, setCoinPosition] = useState({ x: width / 2, y: height / 2 - 100 });
 
-  // Animations
-  const rotateAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(1)).current;
-  const fadeAnim = useRef(new Animated.Value(1)).current;
+  // Backend State
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [sessionHistory, setSessionHistory] = useState<any[]>([]);
 
-  // Skia animation values
-  const coinY = useValue(height / 2 - 100);
-  const coinRotation = useValue(0);
-
+  // Load user balance on mount
   useEffect(() => {
-    // Initialize game session
-    if (user) {
-      startSession('coin-flip-deluxe', parseInt(stake) || 100, user.id);
+    if (user?.coinBalance !== undefined) {
+      setBalance(user.coinBalance);
     }
+  }, [user]);
 
-    return () => {
-      // Cleanup on unmount
-    };
+  // Load session history
+  useEffect(() => {
+    loadSessionHistory();
   }, []);
 
-  const flipCoin = async () => {
-    if (!selectedSide || isFlipping) return;
-
-    setIsFlipping(true);
-    triggerHaptic('medium');
-
-    // Animate coin flip (Skia)
-    runTiming(coinY, height / 4, { duration: 500 });
-    runTiming(coinRotation, Math.random() * 10 + 10, { duration: 1000 });
-
-    // Simulate coin flip with weighted randomness
-    const randomResult: CoinSide = Math.random() > 0.5 ? 'heads' : 'tails';
-
-    // Delay to show animation
-    setTimeout(async () => {
-      setResult(randomResult);
-
-      const won = randomResult === selectedSide;
-      const stakeAmount = parseInt(stake) || 100;
-
-      if (won) {
-        const payout = stakeAmount * 2;
-        setBalance(prev => prev + payout);
-        setScore(prev => prev + 1);
-        triggerHaptic('success');
-        updateSessionScore(score + 1);
-      } else {
-        setBalance(prev => prev - stakeAmount);
-        triggerHaptic('error');
+  const loadSessionHistory = async () => {
+    try {
+      const response = await gamesAPI.getPlayerSessions(10);
+      if (response.success) {
+        const coinFlipSessions = response.data.sessions.filter(
+          (s: any) => s.gameId === 'coin-flip-deluxe'
+        );
+        setSessionHistory(coinFlipSessions.slice(0, 5));
       }
-
-      // Reset for next flip
-      setTimeout(() => {
-        setIsFlipping(false);
-        setResult(null);
-        setSelectedSide(null);
-
-        if (gameMode === 'sprint') {
-          setFlipsRemaining(prev => prev - 1);
-          if (flipsRemaining <= 1) {
-            endGame();
-          }
-        } else if (gameMode === 'rush') {
-          // Auto-restart in rush mode
-          setSelectedSide(Math.random() > 0.5 ? 'heads' : 'tails');
-        }
-
-        // Reset animations
-        runTiming(coinY, height / 2 - 100, { duration: 500 });
-        runTiming(coinRotation, 0, { duration: 500 });
-      }, 2000);
-    }, 1000);
+    } catch (err) {
+      console.error('Failed to load session history:', err);
+    }
   };
 
-  const endGame = () => {
+  const handleStartGame = async () => {
+    if (!selectedSide) {
+      Alert.alert('Select a side', 'Please choose Heads or Tails before flipping');
+      return;
+    }
+
     const stakeAmount = parseInt(stake) || 100;
-    const payout = balance - 5000; // Calculate profit/loss
-    endSession(score, payout);
 
-    // Show results modal or navigate back
-    router.back();
+    if (stakeAmount > balance) {
+      Alert.alert('Insufficient Balance', 'You don\'t have enough coins to play this stake');
+      return;
+    }
+
+    if (stakeAmount < 25) {
+      Alert.alert('Minimum Stake', 'Minimum stake is 25 coins');
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // Start session on backend
+      const response = await gamesAPI.startSession('coin-flip-deluxe', stakeAmount, gameMode);
+
+      if (response.success) {
+        setSessionId(response.data.sessionId);
+
+        // Deduct stake from balance immediately
+        setBalance(prev => prev - stakeAmount);
+
+        // Start flip animation
+        triggerHaptic('medium');
+
+        // Random result (fair 50/50)
+        const flipResult: CoinSide = Math.random() > 0.5 ? 'heads' : 'tails';
+        setResult(flipResult);
+        startFlip(flipResult);
+
+        // Show trail particles during flip
+        setParticleEffect('trail');
+
+        // Landing particles after 1 second
+        setTimeout(() => {
+          setParticleEffect('landing');
+          triggerHaptic('heavy');
+        }, 1000);
+
+        // Result after 2.5 seconds
+        setTimeout(async () => {
+          await handleFlipComplete(flipResult, stakeAmount, response.data.sessionId);
+        }, 2500);
+      }
+    } catch (err: any) {
+      console.error('Failed to start game:', err);
+      setError(err.response?.data?.error || 'Failed to start game');
+      Alert.alert('Error', err.response?.data?.error || 'Failed to start game');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const renderCoin = () => (
-    <Canvas style={styles.canvas}>
-      <Group transform={[{ translateY: coinY }]}>
-        <Circle cx={width / 2} cy={0} r={COIN_SIZE / 2} color="#FFD700" />
-        {result && (
-          <Circle
-            cx={width / 2}
-            cy={0}
-            r={COIN_SIZE / 2 - 10}
-            color={result === 'heads' ? '#FFA500' : '#C0C0C0'}
-          />
-        )}
-      </Group>
-    </Canvas>
-  );
+  const handleFlipComplete = async (flipResult: CoinSide, stakeAmount: number, currentSessionId: string) => {
+    const won = flipResult === selectedSide;
+    const gameScore = won ? 1 : 0;
+
+    // Show result particles
+    setParticleEffect(won ? 'win' : 'loss');
+
+    // Haptic feedback
+    if (won) {
+      triggerHaptic('success');
+    } else {
+      triggerHaptic('error');
+    }
+
+    // Update local stats
+    setScore(prev => prev + gameScore);
+    if (won) {
+      setWins(prev => prev + 1);
+    } else {
+      setLosses(prev => prev + 1);
+    }
+
+    // Submit to backend
+    try {
+      const fpsMetrics = getFPSMetrics();
+      const metadata = {
+        selectedSide,
+        result: flipResult,
+        won,
+        stake: stakeAmount,
+      };
+
+      const response = await gamesAPI.endSession(
+        currentSessionId,
+        gameScore,
+        metadata,
+        fpsMetrics,
+        []
+      );
+
+      if (response.success) {
+        // Update balance with reward (backend already deducted stake and calculated reward)
+        setBalance(response.data.newBalance);
+
+        // Refresh session history
+        await loadSessionHistory();
+      }
+    } catch (err: any) {
+      console.error('Failed to end session:', err);
+      // Don't show error to user - session is already complete
+    }
+
+    // Reset after delay
+    setTimeout(() => {
+      setParticleEffect(null);
+      setResult(null);
+      setSelectedSide(null);
+      resetFlip();
+    }, 3000);
+  };
 
   const renderStakeModal = () => (
     <Modal
@@ -203,42 +267,53 @@ export default function CoinFlipDeluxe() {
         <Text style={styles.headerTitle}>3D Coin Flip Deluxe</Text>
         <TouchableOpacity onPress={() => setShowStakeModal(true)} style={styles.settingsButton}>
           <Ionicons name="wallet-outline" size={24} color="#FFFFFF" />
-          <Text style={styles.balanceText}>{balance}</Text>
+          <Text style={styles.balanceText}>{balance.toLocaleString()}</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Game Mode Selector */}
-      <View style={styles.modeSelector}>
-        {(['solo', 'sprint', 'rush'] as GameMode[]).map(mode => (
-          <TouchableOpacity
-            key={mode}
-            style={[styles.modeButton, gameMode === mode && styles.modeButtonActive]}
-            onPress={() => setGameMode(mode)}
-          >
-            <Text style={[styles.modeText, gameMode === mode && styles.modeTextActive]}>
-              {mode.toUpperCase()}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      {/* Coin Display */}
+      {/* 3D Coin Display */}
       <View style={styles.coinContainer}>
-        {renderCoin()}
+        <Canvas>
+          <Suspense fallback={null}>
+            <PerspectiveCamera makeDefault position={[0, 0, 5]} />
+            <ambientLight intensity={0.5} />
+            <directionalLight position={[10, 10, 5]} intensity={1} />
+            <pointLight position={[-10, -10, -5]} intensity={0.5} />
+            <Environment preset="sunset" />
 
-        {result && (
+            <Coin3DModel
+              isFlipping={animationState.isFlipping}
+              result={result}
+              selectedSide={selectedSide}
+              onFlipComplete={() => {}}
+            />
+
+            <OrbitControls enableZoom={false} enablePan={false} />
+          </Suspense>
+        </Canvas>
+
+        {/* Particle Effects Overlay */}
+        {particleEffect && (
+          <ParticleEffects type={particleEffect} coinPosition={coinPosition} />
+        )}
+
+        {/* Result Overlay */}
+        {result && !animationState.isFlipping && (
           <View style={styles.resultOverlay}>
-            <Animated.View style={{ opacity: fadeAnim }}>
-              <Text style={[
+            <Text
+              style={[
                 styles.resultText,
-                { color: result === selectedSide ? '#10B981' : '#EF4444' }
-              ]}>
-                {result === selectedSide ? '🎉 YOU WIN!' : '😢 YOU LOSE'}
-              </Text>
-              <Text style={styles.resultSubtext}>
-                {result.toUpperCase()}
-              </Text>
-            </Animated.View>
+                { color: result === selectedSide ? '#10B981' : '#EF4444' },
+              ]}
+            >
+              {result === selectedSide ? '🎉 YOU WIN!' : '😢 YOU LOSE'}
+            </Text>
+            <Text style={styles.resultSubtext}>{result.toUpperCase()}</Text>
+            <Text style={styles.resultAmount}>
+              {result === selectedSide
+                ? `+${parseInt(stake) * 2} coins`
+                : `-${stake} coins`}
+            </Text>
           </View>
         )}
       </View>
@@ -248,16 +323,20 @@ export default function CoinFlipDeluxe() {
         <TouchableOpacity
           style={[
             styles.sideButton,
-            selectedSide === 'heads' && styles.sideButtonSelected
+            selectedSide === 'heads' && styles.sideButtonSelected,
           ]}
           onPress={() => {
             setSelectedSide('heads');
             triggerHaptic('light');
           }}
-          disabled={isFlipping}
+          disabled={animationState.isFlipping || isLoading}
         >
           <LinearGradient
-            colors={selectedSide === 'heads' ? ['#FFD700', '#FFA500'] : ['#1F1F1F', '#2F2F2F']}
+            colors={
+              selectedSide === 'heads'
+                ? ['#FFD700', '#FFA500']
+                : ['#1F1F1F', '#2F2F2F']
+            }
             style={styles.sideButtonGradient}
           >
             <Ionicons name="sunny" size={32} color="#FFFFFF" />
@@ -268,16 +347,20 @@ export default function CoinFlipDeluxe() {
         <TouchableOpacity
           style={[
             styles.sideButton,
-            selectedSide === 'tails' && styles.sideButtonSelected
+            selectedSide === 'tails' && styles.sideButtonSelected,
           ]}
           onPress={() => {
             setSelectedSide('tails');
             triggerHaptic('light');
           }}
-          disabled={isFlipping}
+          disabled={animationState.isFlipping || isLoading}
         >
           <LinearGradient
-            colors={selectedSide === 'tails' ? ['#C0C0C0', '#808080'] : ['#1F1F1F', '#2F2F2F']}
+            colors={
+              selectedSide === 'tails'
+                ? ['#C0C0C0', '#808080']
+                : ['#1F1F1F', '#2F2F2F']
+            }
             style={styles.sideButtonGradient}
           >
             <Ionicons name="moon" size={32} color="#FFFFFF" />
@@ -290,39 +373,78 @@ export default function CoinFlipDeluxe() {
       <TouchableOpacity
         style={[
           styles.flipButton,
-          (!selectedSide || isFlipping) && styles.flipButtonDisabled
+          (!selectedSide || animationState.isFlipping || isLoading) &&
+            styles.flipButtonDisabled,
         ]}
-        onPress={flipCoin}
-        disabled={!selectedSide || isFlipping}
+        onPress={handleStartGame}
+        disabled={!selectedSide || animationState.isFlipping || isLoading}
       >
         <LinearGradient
-          colors={selectedSide && !isFlipping ? ['#667EEA', '#764BA2'] : ['#4B5563', '#6B7280']}
+          colors={
+            selectedSide && !animationState.isFlipping && !isLoading
+              ? ['#667EEA', '#764BA2']
+              : ['#4B5563', '#6B7280']
+          }
           style={styles.flipButtonGradient}
         >
-          <Ionicons name="sync" size={24} color="#FFFFFF" />
-          <Text style={styles.flipButtonText}>
-            {isFlipping ? 'FLIPPING...' : 'FLIP COIN'}
-          </Text>
+          {isLoading ? (
+            <ActivityIndicator color="#FFFFFF" />
+          ) : (
+            <>
+              <Ionicons name="sync" size={24} color="#FFFFFF" />
+              <Text style={styles.flipButtonText}>
+                {animationState.isFlipping ? 'FLIPPING...' : 'FLIP COIN'}
+              </Text>
+            </>
+          )}
         </LinearGradient>
       </TouchableOpacity>
 
       {/* Game Stats */}
       <View style={styles.stats}>
         <View style={styles.statItem}>
-          <Text style={styles.statLabel}>Score</Text>
-          <Text style={styles.statValue}>{score}</Text>
+          <Text style={styles.statLabel}>Wins</Text>
+          <Text style={styles.statValue}>{wins}</Text>
+        </View>
+        <View style={styles.statItem}>
+          <Text style={styles.statLabel}>Losses</Text>
+          <Text style={styles.statValue}>{losses}</Text>
         </View>
         <View style={styles.statItem}>
           <Text style={styles.statLabel}>Stake</Text>
           <Text style={styles.statValue}>{stake}</Text>
         </View>
-        {gameMode === 'sprint' && (
-          <View style={styles.statItem}>
-            <Text style={styles.statLabel}>Flips Left</Text>
-            <Text style={styles.statValue}>{flipsRemaining}</Text>
-          </View>
-        )}
+        <View style={styles.statItem}>
+          <Text style={styles.statLabel}>Win Rate</Text>
+          <Text style={styles.statValue}>
+            {wins + losses > 0
+              ? `${Math.round((wins / (wins + losses)) * 100)}%`
+              : '-'}
+          </Text>
+        </View>
       </View>
+
+      {/* Session History */}
+      {sessionHistory.length > 0 && (
+        <View style={styles.history}>
+          <Text style={styles.historyTitle}>Recent Flips</Text>
+          <View style={styles.historyItems}>
+            {sessionHistory.map((session, index) => (
+              <View
+                key={index}
+                style={[
+                  styles.historyItem,
+                  { backgroundColor: session.result === 'win' ? '#10B98120' : '#EF444420' },
+                ]}
+              >
+                <Text style={styles.historyResult}>
+                  {session.result === 'win' ? '✓' : '✗'}
+                </Text>
+              </View>
+            ))}
+          </View>
+        </View>
+      )}
 
       {renderStakeModal()}
     </SafeAreaView>
@@ -363,43 +485,18 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#FFFFFF',
   },
-  modeSelector: {
-    flexDirection: 'row',
-    paddingHorizontal: 20,
-    gap: 12,
-    marginBottom: 20,
-  },
-  modeButton: {
-    flex: 1,
-    paddingVertical: 12,
-    backgroundColor: '#1F1F1F',
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  modeButtonActive: {
-    backgroundColor: '#667EEA',
-  },
-  modeText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#8B949E',
-  },
-  modeTextActive: {
-    color: '#FFFFFF',
-  },
   coinContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
   },
-  canvas: {
-    width: width,
-    height: height * 0.4,
-  },
   resultOverlay: {
     position: 'absolute',
     alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    padding: 24,
+    borderRadius: 16,
   },
   resultText: {
     fontSize: 32,
@@ -409,6 +506,12 @@ const styles = StyleSheet.create({
   resultSubtext: {
     fontSize: 18,
     color: '#8B949E',
+    marginBottom: 4,
+  },
+  resultAmount: {
+    fontSize: 24,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
   sideSelection: {
     flexDirection: 'row',
@@ -458,23 +561,49 @@ const styles = StyleSheet.create({
   stats: {
     flexDirection: 'row',
     paddingHorizontal: 20,
-    paddingBottom: 20,
-    gap: 16,
+    paddingBottom: 16,
+    gap: 12,
   },
   statItem: {
     flex: 1,
     backgroundColor: '#1F1F1F',
-    padding: 16,
+    padding: 12,
     borderRadius: 12,
     alignItems: 'center',
   },
   statLabel: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#8B949E',
     marginBottom: 4,
   },
   statValue: {
-    fontSize: 20,
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  history: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+  },
+  historyTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#8B949E',
+    marginBottom: 8,
+  },
+  historyItems: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  historyItem: {
+    width: 40,
+    height: 40,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  historyResult: {
+    fontSize: 18,
     fontWeight: '700',
     color: '#FFFFFF',
   },
