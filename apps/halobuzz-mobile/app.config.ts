@@ -69,7 +69,5 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     fallbackToCacheTimeout: 0,
     url: "https://u.expo.dev/5c8d3620-68bb-4fd8-94c3-6575c9c218bb"
   },
-  runtimeVersion: {
-    policy: "appVersion"
-  }
+  runtimeVersion: "1.0.0"
 });
