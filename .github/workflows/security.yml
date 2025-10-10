@@ -111,7 +111,6 @@ jobs:
     - name: Build Docker image
       run: |
         docker build -f ${{ matrix.dockerfile }} -t security-test:latest .
-      working-directory: ${{ dirname(matrix.dockerfile) }}
 
     - name: Run Trivy vulnerability scanner
       uses: aquasecurity/trivy-action@master
