@@ -1,6 +1,6 @@
 import React from 'react';
-import GamesScreen from '@/screens/GamesScreen';
+import GamesHubScreen from '@/games/Hub/GamesHubScreen';
 
 export default function GamesTab() {
-  return <GamesScreen />;
+  return <GamesHubScreen />;
 }
