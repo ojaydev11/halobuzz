@@ -1,5 +1,6 @@
 'use client';
 
+import { useQuery } from '@tanstack/react-query';
 import { KPICard } from '@/components/admin/overview/KPICard';
 import {
   Users,
@@ -12,25 +13,19 @@ import {
   Server,
 } from 'lucide-react';
 import { RBACGate } from '@/components/admin/shared/RBACGate';
+import { analyticsAPI } from '@/lib/api/services';
 
 /**
  * Overview Dashboard Page
  * Shows key metrics and KPIs for the platform
- *
- * TODO: Connect to real API endpoints (currently using mock data for development)
+ * Now connected to real backend API!
  */
 export default function OverviewPage() {
-  // TODO: Replace with actual API calls using React Query
-  const mockData = {
-    totalUsers: 124583,
-    activeUsers: 45892,
-    revenue: '$234,567',
-    liveSessions: 1243,
-    gamesSessions: 8756,
-    flaggedContent: 34,
-    apiResponseTime: '245ms',
-    uptime: '99.97%',
-  };
+  const { data: stats, isLoading } = useQuery({
+    queryKey: ['dashboard-stats'],
+    queryFn: () => analyticsAPI.getDashboardStats().then(res => res.data),
+    refetchInterval: 30000, // Refetch every 30 seconds
+  });
 
   return (
     <div className="space-y-8">
@@ -47,28 +42,29 @@ export default function OverviewPage() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <KPICard
             title="Total Users"
-            value={mockData.totalUsers.toLocaleString()}
-            change={12.5}
+            value={stats?.users.total.toLocaleString() ?? '--'}
+            change={stats?.users.growth7d}
             icon={Users}
+            loading={isLoading}
           />
           <KPICard
             title="Active Users (7d)"
-            value={mockData.activeUsers.toLocaleString()}
-            change={8.2}
+            value={stats?.users.active7d.toLocaleString() ?? '--'}
             icon={Activity}
+            loading={isLoading}
           />
           <KPICard
             title="Revenue (30d)"
-            value={mockData.revenue}
-            change={15.3}
+            value={`$${(stats?.economy.revenue30d ?? 0).toLocaleString()}`}
+            change={stats?.economy.growth30d}
             icon={DollarSign}
+            loading={isLoading}
           />
           <KPICard
-            title="Growth Rate"
-            value="+18.4%"
-            change={3.1}
-            changeLabel="30d"
+            title="Verified Users"
+            value={stats?.users.verified.toLocaleString() ?? '--'}
             icon={TrendingUp}
+            loading={isLoading}
           />
         </div>
       </div>
@@ -79,28 +75,28 @@ export default function OverviewPage() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <KPICard
             title="Live Sessions"
-            value={mockData.liveSessions.toLocaleString()}
-            change={-2.3}
+            value={stats?.platform.liveSessions.toLocaleString() ?? '--'}
             icon={Video}
+            loading={isLoading}
           />
           <KPICard
             title="Game Sessions (24h)"
-            value={mockData.gamesSessions.toLocaleString()}
-            change={22.1}
+            value={stats?.platform.gameSessions24h.toLocaleString() ?? '--'}
             icon={Gamepad2}
+            loading={isLoading}
           />
           <KPICard
             title="Flagged Content"
-            value={mockData.flaggedContent}
-            change={-15.4}
+            value={stats?.platform.flagsPending ?? '--'}
             icon={Shield}
-            description="Down is good"
+            description="Pending review"
+            loading={isLoading}
           />
           <KPICard
-            title="Content Takedowns (7d)"
-            value="12"
-            change={-8.3}
-            icon={Shield}
+            title="Reels Created (24h)"
+            value={stats?.platform.reelsCreated24h.toLocaleString() ?? '--'}
+            icon={Video}
+            loading={isLoading}
           />
         </div>
       </div>
@@ -117,28 +113,29 @@ export default function OverviewPage() {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <KPICard
               title="API Response Time (p95)"
-              value={mockData.apiResponseTime}
-              change={-5.2}
+              value={`${stats?.infrastructure?.apiResponseTimeP95 ?? '--'}ms`}
               icon={Activity}
               description="Lower is better"
+              loading={isLoading}
             />
             <KPICard
               title="System Uptime (30d)"
-              value={mockData.uptime}
+              value={`${stats?.infrastructure?.uptime30d ?? '--'}%`}
               icon={Server}
               description="Target: 99.9%"
+              loading={isLoading}
             />
             <KPICard
               title="Database Load"
-              value="42%"
-              change={2.1}
+              value={`${stats?.infrastructure?.dbLoad ?? '--'}%`}
               icon={Server}
+              loading={isLoading}
             />
             <KPICard
               title="Redis Hit Rate"
-              value="94.2%"
-              change={1.3}
+              value={`${stats?.infrastructure?.redisHitRate ?? '--'}%`}
               icon={Server}
+              loading={isLoading}
             />
           </div>
         </div>
@@ -146,11 +143,13 @@ export default function OverviewPage() {
 
       {/* Recent Activity / Charts Section */}
       <div className="mt-8">
-        <h2 className="mb-4 text-lg font-semibold">Recent Activity</h2>
-        <div className="rounded-lg border bg-card p-8 text-center text-muted-foreground">
-          <p>Revenue charts, activity graphs, and trend analysis coming soon...</p>
-          <p className="mt-2 text-sm">
-            Will use Recharts for data visualization
+        <h2 className="mb-4 text-lg font-semibold">Real-Time Data</h2>
+        <div className="rounded-lg border bg-card p-8 text-center">
+          <p className="text-sm text-muted-foreground">
+            Connected to backend API at {process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1'}
+          </p>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Data refreshes every 30 seconds
           </p>
         </div>
       </div>

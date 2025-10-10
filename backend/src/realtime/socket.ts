@@ -2,6 +2,8 @@ import type { Server as HttpServer } from "http";
 import { Server } from "socket.io";
 import jwt from "jsonwebtoken";
 import { setupLogger } from "@/config/logger";
+import { setupGameMatchmaking } from "./game-matchmaking";
+import { setupGameRooms } from "./game-rooms";
 // Metrics temporarily disabled
 // import { 
 //   recordConnection, 
@@ -31,7 +33,29 @@ export function createRealtime(httpServer: HttpServer) {
     transports: ["websocket", "polling"],
   });
 
+  // Setup /live namespace for streaming
   const nsp = io.of("/live");
+
+  // Setup /games namespace for multiplayer games
+  const gamesNsp = io.of("/games");
+  
+  // Add JWT authentication middleware for games namespace
+  gamesNsp.use((socket, next) => {
+    try {
+      const token = (socket.handshake.auth?.token || socket.handshake.headers.authorization?.replace("Bearer ", "")) as string;
+      if (!token) return next(new Error("unauthorized"));
+      const payload = jwt.verify(token, process.env.JWT_SECRET!) as LiveAuthPayload;
+      (socket.data as any).user = payload;
+      return next();
+    } catch (e) { 
+      logger.error('Socket authentication error:', e);
+      return next(new Error("unauthorized")); 
+    }
+  });
+
+  // Initialize game matchmaking and room handlers
+  setupGameMatchmaking(io);
+  setupGameRooms(io);
 
   // Rate limiting helper
   const checkRateLimit = (userId: string, type: 'messages' | 'gifts'): boolean => {

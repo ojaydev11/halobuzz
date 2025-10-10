@@ -11,7 +11,8 @@ import {
   TouchableOpacity,
   Animated,
   ActivityIndicator,
-  Alert,
+  Modal,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -21,6 +22,13 @@ import { useGamesStore } from '../Services/GamesStore';
 import { useAuth } from '@/store/AuthContext';
 import { socketManager } from '../Services/SocketManager';
 import { gamesAPI } from '../Services/GamesAPI';
+import { audioManager } from '../Services/AudioManager';
+import { hapticFeedback } from '../Components/HapticFeedback';
+import { economyClient } from '../Services/EconomyClient';
+import { ConfettiParticles, ExplosionParticles } from '../Components/ParticleSystem';
+import { prefetchGameAssets } from '../Services/assetsMap';
+
+const { width, height } = Dimensions.get('window');
 
 type GameMode = 'solo' | 'multiplayer';
 type GameState = 'idle' | 'finding_match' | 'match_found' | 'in_game' | 'results';
@@ -48,7 +56,6 @@ interface RoundResult {
 export default function TapDuel() {
   const router = useRouter();
   const { user } = useAuth();
-  const { triggerHaptic } = useGamesStore();
 
   // Game Mode
   const [gameMode, setGameMode] = useState<GameMode>('solo');
@@ -75,10 +82,60 @@ export default function TapDuel() {
   // Session
   const [sessionId, setSessionId] = useState<string | null>(null);
 
+  // Modal state (replaces Alert.alert)
+  const [modalState, setModalState] = useState<{
+    visible: boolean;
+    type: 'error' | 'info' | 'success';
+    title: string;
+    message: string;
+  }>({ visible: false, type: 'info', title: '', message: '' });
+
+  // Particle state
+  const [particleState, setParticleState] = useState<{
+    show: boolean;
+    type: 'confetti' | 'explosion';
+    x: number;
+    y: number;
+  } | null>(null);
+
+  // FPS tracking
+  const [fps, setFps] = useState(60);
+  const frameCount = useRef(0);
+  const lastTime = useRef(Date.now());
+
   // Refs
   const startTimeRef = useRef<number>(0);
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
+
+  const showModal = (type: 'error' | 'info' | 'success', title: string, message: string) => {
+    setModalState({ visible: true, type, title, message });
+  };
+
+  // Preload assets and audio
+  useEffect(() => {
+    prefetchGameAssets('tap-duel');
+    audioManager.preloadGameSounds('tap-duel');
+    return () => audioManager.unloadGameSounds('tap-duel');
+  }, []);
+
+  // FPS monitoring
+  useEffect(() => {
+    const measureFPS = () => {
+      frameCount.current++;
+      const now = Date.now();
+      const elapsed = now - lastTime.current;
+      if (elapsed >= 1000) {
+        const currentFPS = Math.round((frameCount.current * 1000) / elapsed);
+        setFps(currentFPS);
+        frameCount.current = 0;
+        lastTime.current = now;
+      }
+      requestAnimationFrame(measureFPS);
+    };
+    const rafId = requestAnimationFrame(measureFPS);
+    return () => cancelAnimationFrame(rafId);
+  }, []);
 
   // Initialize socket connection
   useEffect(() => {
@@ -133,7 +190,7 @@ export default function TapDuel() {
     setMatchData(data);
     setOpponent(data.opponent);
     setGameState('match_found');
-    triggerHaptic('success');
+    hapticFeedback.trigger('success');
 
     // Auto-join game room
     setTimeout(() => {
@@ -191,13 +248,16 @@ export default function TapDuel() {
     const isDraw = data.results.isDraw;
 
     if (isDraw) {
-      Alert.alert('Draw!', 'Both players had equal reaction times!');
+      showModal('info', 'Draw!', 'Both players had equal reaction times!');
     } else if (winnerId === user?.id) {
-      Alert.alert('Victory!', 'You win! Faster reflexes!');
-      triggerHaptic('success');
+      showModal('success', 'Victory!', 'You win! Faster reflexes!');
+      hapticFeedback.gameVictory();
+      audioManager.playSound('tap-duel', 'win');
+      setParticleState({ show: true, type: 'confetti', x: width / 2, y: height / 2 });
     } else {
-      Alert.alert('Defeat', 'Opponent was faster this time!');
-      triggerHaptic('error');
+      showModal('error', 'Defeat', 'Opponent was faster this time!');
+      hapticFeedback.gameDefeat();
+      audioManager.playSound('tap-duel', 'lose');
     }
 
     // Reset after delay
@@ -208,7 +268,7 @@ export default function TapDuel() {
 
   const handleGameError = (data: any) => {
     console.error('Game error:', data);
-    Alert.alert('Error', data.error || 'An error occurred');
+    showModal('error', 'Error', data.error || 'An error occurred');
     setIsSearching(false);
     setGameState('idle');
   };
@@ -216,7 +276,7 @@ export default function TapDuel() {
   // Start matchmaking
   const startMatchmaking = async () => {
     if (!socketManager.isSocketConnected()) {
-      Alert.alert('Connection Error', 'Not connected to game server');
+      showModal('error', 'Connection Error', 'Not connected to game server');
       await socketManager.connect();
       return;
     }
@@ -235,10 +295,10 @@ export default function TapDuel() {
         mode: 'casual',
       });
 
-      triggerHaptic('light');
+      hapticFeedback.trigger('light');
     } catch (error: any) {
       console.error('Failed to start matchmaking:', error);
-      Alert.alert('Error', error.response?.data?.error || 'Failed to start matchmaking');
+      showModal('error', 'Error', error.response?.data?.error || 'Failed to start matchmaking');
       setIsSearching(false);
       setGameState('idle');
     }
@@ -249,7 +309,7 @@ export default function TapDuel() {
     socketManager.leaveMatchmaking({ gameId: 'tap-duel' });
     setIsSearching(false);
     setGameState('idle');
-    triggerHaptic('light');
+    hapticFeedback.trigger('light');
   };
 
   // Start multiplayer round
@@ -266,11 +326,11 @@ export default function TapDuel() {
           setTimeout(() => {
             setRoundState('ready');
             startTimeRef.current = Date.now();
-            triggerHaptic('success');
+            hapticFeedback.trigger('success');
           }, delay);
           return 0;
         }
-        triggerHaptic('light');
+        hapticFeedback.trigger('light');
         return prev - 1;
       });
     }, 1000);
@@ -282,7 +342,7 @@ export default function TapDuel() {
       // Early tap
       setReactionTime(-1);
       setRoundState('tapped');
-      triggerHaptic('error');
+      hapticFeedback.trigger('error');
 
       // Send action to server
       socketManager.sendPlayerAction({
@@ -303,7 +363,7 @@ export default function TapDuel() {
     const time = Date.now() - startTimeRef.current;
     setReactionTime(time);
     setRoundState('tapped');
-    triggerHaptic('success');
+    hapticFeedback.trigger('success');
 
     // Send action to server
     const myResult: RoundResult = {
@@ -423,11 +483,11 @@ export default function TapDuel() {
           setTimeout(() => {
             setShowGo(true);
             startTimeRef.current = Date.now();
-            triggerHaptic('success');
+            hapticFeedback.trigger('success');
           }, Math.random() * 2000 + 1000);
           return 0;
         }
-        triggerHaptic('light');
+        hapticFeedback.trigger('light');
         return prev - 1;
       });
     }, 1000);
@@ -437,13 +497,13 @@ export default function TapDuel() {
     if (!showGo) {
       // Early tap - penalty
       setReactionTime(-1);
-      triggerHaptic('error');
+      hapticFeedback.trigger('error');
       return;
     }
 
     const time = Date.now() - startTimeRef.current;
     setReactionTime(time);
-    triggerHaptic('success');
+    hapticFeedback.trigger('success');
 
     // Update personal best
     if (!personalBest || time < personalBest) {
@@ -671,6 +731,46 @@ export default function TapDuel() {
           </>
         )}
       </View>
+
+      {/* Custom Modal (replaces Alert.alert) */}
+      <Modal visible={modalState.visible} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Ionicons 
+              name={modalState.type === 'error' ? 'alert-circle' : modalState.type === 'success' ? 'checkmark-circle' : 'information-circle'} 
+              size={48} 
+              color={modalState.type === 'error' ? '#FF6B6B' : modalState.type === 'success' ? '#4ECDC4' : '#667EEA'} 
+              style={{ alignSelf: 'center', marginBottom: 16 }}
+            />
+            <Text style={styles.modalTitle}>{modalState.title}</Text>
+            <Text style={[styles.resultSubtext, { textAlign: 'center', marginBottom: 24 }]}>{modalState.message}</Text>
+            <TouchableOpacity 
+              onPress={() => setModalState(prev => ({ ...prev, visible: false }))} 
+              style={styles.confirmButton}
+            >
+              <Text style={styles.confirmButtonText}>OK</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Particle Effects */}
+      {particleState?.show && particleState.type === 'confetti' && (
+        <ConfettiParticles 
+          x={particleState.x} 
+          y={particleState.y} 
+          onComplete={() => setParticleState(null)} 
+        />
+      )}
+
+      {/* FPS Counter (dev only) */}
+      {__DEV__ && (
+        <View style={{ position: 'absolute', top: 100, right: 20, backgroundColor: 'rgba(0,0,0,0.7)', padding: 8, borderRadius: 8 }}>
+          <Text style={{ color: fps >= 55 ? '#10B981' : fps >= 30 ? '#F59E0B' : '#EF4444', fontSize: 14, fontWeight: '600' }}>
+            FPS: {fps}
+          </Text>
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -886,5 +986,35 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#FFD700',
     marginTop: 12,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: '#1F1F1F',
+    borderRadius: 24,
+    padding: 24,
+    width: width * 0.85,
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  confirmButton: {
+    backgroundColor: '#667EEA',
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  confirmButtonText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
 });

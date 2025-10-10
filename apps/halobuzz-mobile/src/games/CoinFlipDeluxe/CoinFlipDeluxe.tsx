@@ -14,7 +14,6 @@ import {
   Dimensions,
   Modal,
   TextInput,
-  Alert,
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -23,13 +22,17 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera, Environment } from '@react-three/drei';
-import * as Haptics from 'expo-haptics';
 import { useGamesStore } from '../Services/GamesStore';
 import { useAuth } from '@/store/AuthContext';
 import { gamesAPI } from '../Services/GamesAPI';
 import Coin3DModel from './Coin3DModel';
 import ParticleEffects from './ParticleEffects';
 import { useFlipAnimation } from './useFlipAnimation';
+import { audioManager } from '../Services/AudioManager';
+import { hapticFeedback } from '../Components/HapticFeedback';
+import { economyClient } from '../Services/EconomyClient';
+import { ConfettiParticles, LandingParticles, TrailParticles } from '../Components/ParticleSystem';
+import { prefetchGameAssets } from '../Services/assetsMap';
 
 const { width, height } = Dimensions.get('window');
 
@@ -62,6 +65,27 @@ export default function CoinFlipDeluxe() {
   const [error, setError] = useState<string | null>(null);
   const [sessionHistory, setSessionHistory] = useState<any[]>([]);
 
+  // Modal state for replacing Alert.alert
+  const [modalState, setModalState] = useState<{
+    visible: boolean;
+    type: 'error' | 'info' | 'success';
+    title: string;
+    message: string;
+  }>({ visible: false, type: 'info', title: '', message: '' });
+
+  // Particle effect state
+  const [particleState, setParticleState] = useState<{
+    show: boolean;
+    type: 'trail' | 'landing' | 'confetti';
+    x: number;
+    y: number;
+  } | null>(null);
+
+  // FPS tracking
+  const [fps, setFps] = useState(60);
+  const frameCount = useRef(0);
+  const lastTime = useRef(Date.now());
+
   // Load user balance on mount
   useEffect(() => {
     if (user?.coinBalance !== undefined) {
@@ -73,6 +97,41 @@ export default function CoinFlipDeluxe() {
   useEffect(() => {
     loadSessionHistory();
   }, []);
+
+  // Preload game assets and audio
+  useEffect(() => {
+    prefetchGameAssets('coin-flip-deluxe');
+    audioManager.preloadGameSounds('coin-flip-deluxe');
+    
+    return () => {
+      audioManager.unloadGameSounds('coin-flip-deluxe');
+    };
+  }, []);
+
+  // FPS monitoring
+  useEffect(() => {
+    const measureFPS = () => {
+      frameCount.current++;
+      const now = Date.now();
+      const elapsed = now - lastTime.current;
+      
+      if (elapsed >= 1000) {
+        const currentFPS = Math.round((frameCount.current * 1000) / elapsed);
+        setFps(currentFPS);
+        frameCount.current = 0;
+        lastTime.current = now;
+      }
+      
+      requestAnimationFrame(measureFPS);
+    };
+    
+    const rafId = requestAnimationFrame(measureFPS);
+    return () => cancelAnimationFrame(rafId);
+  }, []);
+
+  const showModal = (type: 'error' | 'info' | 'success', title: string, message: string) => {
+    setModalState({ visible: true, type, title, message });
+  };
 
   const loadSessionHistory = async () => {
     try {
@@ -90,19 +149,19 @@ export default function CoinFlipDeluxe() {
 
   const handleStartGame = async () => {
     if (!selectedSide) {
-      Alert.alert('Select a side', 'Please choose Heads or Tails before flipping');
+      showModal('info', 'Select a side', 'Please choose Heads or Tails before flipping');
       return;
     }
 
     const stakeAmount = parseInt(stake) || 100;
 
     if (stakeAmount > balance) {
-      Alert.alert('Insufficient Balance', 'You don\'t have enough coins to play this stake');
+      showModal('error', 'Insufficient Balance', 'You don\'t have enough coins to play this stake');
       return;
     }
 
     if (stakeAmount < 25) {
-      Alert.alert('Minimum Stake', 'Minimum stake is 25 coins');
+      showModal('error', 'Minimum Stake', 'Minimum stake is 25 coins');
       return;
     }
 
@@ -110,17 +169,21 @@ export default function CoinFlipDeluxe() {
     setError(null);
 
     try {
+      // Stake coins via economy client
+      const stakeResponse = await economyClient.stakeCoins(stakeAmount, 'coin-flip-deluxe');
+      setBalance(stakeResponse.newBalance);
+
       // Start session on backend
       const response = await gamesAPI.startSession('coin-flip-deluxe', stakeAmount, gameMode);
 
       if (response.success) {
         setSessionId(response.data.sessionId);
 
-        // Deduct stake from balance immediately
-        setBalance(prev => prev - stakeAmount);
-
-        // Start flip animation
-        triggerHaptic('medium');
+        // Start flip animation with haptic
+        hapticFeedback.coinFlip();
+        
+        // Play flip sound
+        audioManager.playSound('coin-flip-deluxe', 'flip');
 
         // Random result (fair 50/50)
         const flipResult: CoinSide = Math.random() > 0.5 ? 'heads' : 'tails';
@@ -128,12 +191,23 @@ export default function CoinFlipDeluxe() {
         startFlip(flipResult);
 
         // Show trail particles during flip
-        setParticleEffect('trail');
+        setParticleState({
+          show: true,
+          type: 'trail',
+          x: coinPosition.x,
+          y: coinPosition.y
+        });
 
         // Landing particles after 1 second
         setTimeout(() => {
-          setParticleEffect('landing');
-          triggerHaptic('heavy');
+          setParticleState({
+            show: true,
+            type: 'landing',
+            x: coinPosition.x,
+            y: coinPosition.y
+          });
+          hapticFeedback.coinLanding();
+          audioManager.playSound('coin-flip-deluxe', 'landing');
         }, 1000);
 
         // Result after 2.5 seconds
@@ -144,7 +218,7 @@ export default function CoinFlipDeluxe() {
     } catch (err: any) {
       console.error('Failed to start game:', err);
       setError(err.response?.data?.error || 'Failed to start game');
-      Alert.alert('Error', err.response?.data?.error || 'Failed to start game');
+      showModal('error', 'Error', err.response?.data?.error || 'Failed to start game');
     } finally {
       setIsLoading(false);
     }
@@ -154,14 +228,19 @@ export default function CoinFlipDeluxe() {
     const won = flipResult === selectedSide;
     const gameScore = won ? 1 : 0;
 
-    // Show result particles
-    setParticleEffect(won ? 'win' : 'loss');
-
-    // Haptic feedback
+    // Show result particles (confetti for win)
     if (won) {
-      triggerHaptic('success');
+      setParticleState({
+        show: true,
+        type: 'confetti',
+        x: width / 2,
+        y: height / 2
+      });
+      hapticFeedback.gameVictory();
+      audioManager.playSound('coin-flip-deluxe', 'win');
     } else {
-      triggerHaptic('error');
+      hapticFeedback.gameDefeat();
+      audioManager.playSound('coin-flip-deluxe', 'lose');
     }
 
     // Update local stats
@@ -172,7 +251,7 @@ export default function CoinFlipDeluxe() {
       setLosses(prev => prev + 1);
     }
 
-    // Submit to backend
+    // Submit to backend and get reward
     try {
       const fpsMetrics = getFPSMetrics();
       const metadata = {
@@ -180,7 +259,20 @@ export default function CoinFlipDeluxe() {
         result: flipResult,
         won,
         stake: stakeAmount,
+        fps: fps,
       };
+
+      // Award coins if won
+      if (won) {
+        const rewardAmount = stakeAmount * 2; // 2x multiplier for win
+        const rewardResponse = await economyClient.rewardCoins(
+          rewardAmount,
+          'coin-flip-deluxe',
+          currentSessionId,
+          metadata
+        );
+        setBalance(rewardResponse.newBalance);
+      }
 
       const response = await gamesAPI.endSession(
         currentSessionId,
@@ -191,9 +283,6 @@ export default function CoinFlipDeluxe() {
       );
 
       if (response.success) {
-        // Update balance with reward (backend already deducted stake and calculated reward)
-        setBalance(response.data.newBalance);
-
         // Refresh session history
         await loadSessionHistory();
       }
@@ -327,7 +416,7 @@ export default function CoinFlipDeluxe() {
           ]}
           onPress={() => {
             setSelectedSide('heads');
-            triggerHaptic('light');
+            hapticFeedback.trigger('selection');
           }}
           disabled={animationState.isFlipping || isLoading}
         >
@@ -351,7 +440,7 @@ export default function CoinFlipDeluxe() {
           ]}
           onPress={() => {
             setSelectedSide('tails');
-            triggerHaptic('light');
+            hapticFeedback.trigger('selection');
           }}
           disabled={animationState.isFlipping || isLoading}
         >
@@ -447,6 +536,62 @@ export default function CoinFlipDeluxe() {
       )}
 
       {renderStakeModal()}
+
+      {/* Custom Modal (replaces Alert.alert) */}
+      <Modal visible={modalState.visible} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Ionicons 
+              name={modalState.type === 'error' ? 'alert-circle' : modalState.type === 'success' ? 'checkmark-circle' : 'information-circle'} 
+              size={48} 
+              color={modalState.type === 'error' ? '#FF6B6B' : modalState.type === 'success' ? '#4ECDC4' : '#667EEA'} 
+              style={{ alignSelf: 'center', marginBottom: 16 }}
+            />
+            <Text style={styles.modalTitle}>{modalState.title}</Text>
+            <Text style={[styles.resultSubtext, { textAlign: 'center', marginBottom: 24 }]}>{modalState.message}</Text>
+            <TouchableOpacity 
+              onPress={() => setModalState(prev => ({ ...prev, visible: false }))} 
+              style={styles.confirmButton}
+            >
+              <Text style={styles.confirmButtonText}>OK</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Particle Effects */}
+      {particleState?.show && particleState.type === 'confetti' && (
+        <ConfettiParticles 
+          x={particleState.x} 
+          y={particleState.y} 
+          onComplete={() => setParticleState(null)} 
+        />
+      )}
+      {particleState?.show && particleState.type === 'landing' && (
+        <LandingParticles 
+          x={particleState.x} 
+          y={particleState.y} 
+          color="#FFD700"
+          onComplete={() => setParticleState(null)} 
+        />
+      )}
+      {particleState?.show && particleState.type === 'trail' && (
+        <TrailParticles 
+          x={particleState.x} 
+          y={particleState.y} 
+          color="#FFD700"
+          active={true}
+        />
+      )}
+
+      {/* FPS Counter (dev only) */}
+      {__DEV__ && (
+        <View style={{ position: 'absolute', top: 100, right: 20, backgroundColor: 'rgba(0,0,0,0.7)', padding: 8, borderRadius: 8 }}>
+          <Text style={{ color: fps >= 55 ? '#10B981' : fps >= 30 ? '#F59E0B' : '#EF4444', fontSize: 14, fontWeight: '600' }}>
+            FPS: {fps}
+          </Text>
+        </View>
+      )}
     </SafeAreaView>
   );
 }

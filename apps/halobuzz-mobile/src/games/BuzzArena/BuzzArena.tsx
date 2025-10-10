@@ -19,18 +19,22 @@ import {
   StyleSheet,
   TouchableOpacity,
   Dimensions,
-  Alert,
+  Modal,
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import * as Haptics from 'expo-haptics';
 import { Canvas, Group, Circle, Rect, Line, vec } from '@shopify/react-native-skia';
 import { gamesAPI } from '../Services/GamesAPI';
 import { socketManager } from '../Services/SocketManager';
 import { useUserStore } from '@/src/stores/userStore';
+import { audioManager } from '../Services/AudioManager';
+import { hapticFeedback } from '../Components/HapticFeedback';
+import { economyClient } from '../Services/EconomyClient';
+import { ConfettiParticles, ExplosionParticles } from '../Components/ParticleSystem';
+import { prefetchGameAssets } from '../Services/assetsMap';
 
 const { width, height } = Dimensions.get('window');
 
@@ -96,9 +100,59 @@ export default function BuzzArena() {
   const [projectiles, setProjectiles] = useState<Projectile[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
+  // Modal state (replaces Alert.alert)
+  const [modalState, setModalState] = useState<{
+    visible: boolean;
+    type: 'error' | 'info' | 'success';
+    title: string;
+    message: string;
+  }>({ visible: false, type: 'info', title: '', message: '' });
+
+  // Particle state
+  const [particleState, setParticleState] = useState<{
+    show: boolean;
+    type: 'confetti' | 'explosion';
+    x: number;
+    y: number;
+  } | null>(null);
+
+  // FPS tracking
+  const [fps, setFps] = useState(60);
+  const fpsFrameCount = useRef(0);
+  const fpsLastTime = useRef(Date.now());
+
   // Refs
   const gameLoopRef = useRef<NodeJS.Timeout | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const showModal = (type: 'error' | 'info' | 'success', title: string, message: string) => {
+    setModalState({ visible: true, type, title, message });
+  };
+
+  // Preload assets and audio
+  useEffect(() => {
+    prefetchGameAssets('buzz-arena');
+    audioManager.preloadGameSounds('buzz-arena');
+    return () => audioManager.unloadGameSounds('buzz-arena');
+  }, []);
+
+  // FPS monitoring
+  useEffect(() => {
+    const measureFPS = () => {
+      fpsFrameCount.current++;
+      const now = Date.now();
+      const elapsed = now - fpsLastTime.current;
+      if (elapsed >= 1000) {
+        const currentFPS = Math.round((fpsFrameCount.current * 1000) / elapsed);
+        setFps(currentFPS);
+        fpsFrameCount.current = 0;
+        fpsLastTime.current = now;
+      }
+      requestAnimationFrame(measureFPS);
+    };
+    const rafId = requestAnimationFrame(measureFPS);
+    return () => cancelAnimationFrame(rafId);
+  }, []);
 
   // Entry fee options
   const entryFees = [500, 1000, 2500, 5000];
@@ -148,7 +202,7 @@ export default function BuzzArena() {
               // Hit player
               if (Math.abs(proj.lane - playerData.lane) < 0.5) {
                 setPlayerData((prev) => ({ ...prev, health: Math.max(0, prev.health - 1) }));
-                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+                hapticFeedback.trigger('error');
               }
             } else if (proj.playerId === user?.id && proj.x > GAME_WIDTH - 80) {
               // Hit opponent
@@ -157,7 +211,7 @@ export default function BuzzArena() {
                   prev ? { ...prev, health: Math.max(0, prev.health - 1) } : null
                 );
                 setPlayerData((prev) => ({ ...prev, score: prev.score + 10 }));
-                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                hapticFeedback.trigger('success');
               }
             }
           });
@@ -213,14 +267,14 @@ export default function BuzzArena() {
         mmr: data.opponent.mmr || 1000,
       });
     }
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    hapticFeedback.trigger('success');
   };
 
   const handleGameStart = (data: any) => {
     console.log('Arena battle starting:', data);
     setGameState('playing');
     setTimeRemaining(ROUND_DURATION);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    hapticFeedback.trigger('heavy');
   };
 
   const handleOpponentAction = (data: any) => {
@@ -251,10 +305,10 @@ export default function BuzzArena() {
     const playerWon = playerData.score > (opponent?.score || 0);
     if (playerWon) {
       setRoundsWon((prev) => ({ ...prev, player: prev.player + 1 }));
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      hapticFeedback.trigger('success');
     } else {
       setRoundsWon((prev) => ({ ...prev, opponent: prev.opponent + 1 }));
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+      hapticFeedback.trigger('error'); // Using error for warning
     }
 
     // Check if match is over (best of 3)
@@ -285,20 +339,20 @@ export default function BuzzArena() {
 
   const handleGameError = (data: any) => {
     console.error('Game error:', data);
-    Alert.alert('Error', data.message || 'An error occurred');
+    showModal('error', 'Error', data.message || 'An error occurred');
     setGameState('menu');
   };
 
   const handleStartMatchmaking = async () => {
     if (!socketManager.isSocketConnected()) {
-      Alert.alert('Connection Error', 'Connecting to server...');
+      showModal('error', 'Connection Error', 'Connecting to server...');
       await socketManager.connect();
       setTimeout(handleStartMatchmaking, 1000);
       return;
     }
 
     setIsLoading(true);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    hapticFeedback.trigger('medium');
 
     try {
       const response = await gamesAPI.startSession('buzz-arena', entryFee, 'multiplayer');
@@ -313,7 +367,7 @@ export default function BuzzArena() {
       setIsLoading(false);
     } catch (error: any) {
       console.error('Failed to start matchmaking:', error);
-      Alert.alert('Error', error.response?.data?.error || 'Failed to start matchmaking');
+      showModal('error', 'Error', error.response?.data?.error || 'Failed to start matchmaking');
       setIsLoading(false);
     }
   };
@@ -324,14 +378,14 @@ export default function BuzzArena() {
       socketManager.leaveGameRoom({ roomId });
     }
     setGameState('menu');
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    hapticFeedback.trigger('light');
   };
 
   const handleMoveLane = (newLane: number) => {
     if (gameState !== 'playing' || !roomId) return;
 
     setPlayerData((prev) => ({ ...prev, lane: newLane }));
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    hapticFeedback.trigger('light');
 
     // Broadcast move
     socketManager.sendPlayerAction({
@@ -348,7 +402,7 @@ export default function BuzzArena() {
   const handleShoot = () => {
     if (gameState !== 'playing' || !roomId) return;
 
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    hapticFeedback.trigger('medium');
 
     // Add projectile
     setProjectiles((prev) => [
@@ -438,7 +492,7 @@ export default function BuzzArena() {
               style={[styles.feeButton, entryFee === fee && styles.feeButtonSelected]}
               onPress={() => {
                 setEntryFee(fee);
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                hapticFeedback.trigger('light');
               }}
             >
               <Text style={[styles.feeText, entryFee === fee && styles.feeTextSelected]}>
@@ -693,6 +747,46 @@ export default function BuzzArena() {
             )}
           </LinearGradient>
         </TouchableOpacity>
+      )}
+
+      {/* Custom Modal (replaces Alert.alert) */}
+      <Modal visible={modalState.visible} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Ionicons 
+              name={modalState.type === 'error' ? 'alert-circle' : modalState.type === 'success' ? 'checkmark-circle' : 'information-circle'} 
+              size={48} 
+              color={modalState.type === 'error' ? '#FF6B6B' : modalState.type === 'success' ? '#4ECDC4' : '#667EEA'} 
+              style={{ alignSelf: 'center', marginBottom: 16 }}
+            />
+            <Text style={styles.modalTitle}>{modalState.title}</Text>
+            <Text style={[styles.modalMessage, { textAlign: 'center', marginBottom: 24 }]}>{modalState.message}</Text>
+            <TouchableOpacity 
+              onPress={() => setModalState(prev => ({ ...prev, visible: false }))} 
+              style={styles.confirmButton}
+            >
+              <Text style={styles.confirmButtonText}>OK</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Particle Effects */}
+      {particleState?.show && particleState.type === 'confetti' && (
+        <ConfettiParticles 
+          x={particleState.x} 
+          y={particleState.y} 
+          onComplete={() => setParticleState(null)} 
+        />
+      )}
+
+      {/* FPS Counter (dev only) */}
+      {__DEV__ && (
+        <View style={{ position: 'absolute', top: 100, right: 20, backgroundColor: 'rgba(0,0,0,0.7)', padding: 8, borderRadius: 8 }}>
+          <Text style={{ color: fps >= 55 ? '#10B981' : fps >= 30 ? '#F59E0B' : '#EF4444', fontSize: 14, fontWeight: '600' }}>
+            FPS: {fps}
+          </Text>
+        </View>
       )}
     </SafeAreaView>
   );
@@ -1043,6 +1137,40 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   startText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: '#1F1F1F',
+    borderRadius: 24,
+    padding: 24,
+    width: width * 0.85,
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  modalMessage: {
+    fontSize: 16,
+    color: '#8B949E',
+  },
+  confirmButton: {
+    backgroundColor: '#667EEA',
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  confirmButtonText: {
     fontSize: 16,
     fontWeight: '700',
     color: '#FFFFFF',

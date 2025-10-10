@@ -10,8 +10,8 @@ import {
   StyleSheet,
   TouchableOpacity,
   Dimensions,
-  Alert,
   Animated,
+  Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -22,6 +22,11 @@ import Matter from 'matter-js';
 import { useGamesStore } from '../Services/GamesStore';
 import { useAuth } from '@/store/AuthContext';
 import { gamesAPI } from '../Services/GamesAPI';
+import { audioManager } from '../Services/AudioManager';
+import { hapticFeedback } from '../Components/HapticFeedback';
+import { economyClient } from '../Services/EconomyClient';
+import { ConfettiParticles, SparkleParticles, ExplosionParticles } from '../Components/ParticleSystem';
+import { prefetchGameAssets } from '../Services/assetsMap';
 
 const { width, height } = Dimensions.get('window');
 const GROUND_HEIGHT = 100;
@@ -47,7 +52,6 @@ interface GameObject {
 export default function BuzzRunner() {
   const router = useRouter();
   const { user } = useAuth();
-  const { triggerHaptic } = useGamesStore();
 
   // Game State
   const [gameState, setGameState] = useState<GameState>('idle');
@@ -75,6 +79,31 @@ export default function BuzzRunner() {
   // Session
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [stake, setStake] = useState(50);
+
+  // Modal state (replaces Alert.alert)
+  const [modalState, setModalState] = useState<{
+    visible: boolean;
+    type: 'error' | 'info' | 'success';
+    title: string;
+    message: string;
+  }>({ visible: false, type: 'info', title: '', message: '' });
+
+  // Particle state
+  const [particleState, setParticleState] = useState<{
+    show: boolean;
+    type: 'confetti' | 'sparkle' | 'explosion';
+    x: number;
+    y: number;
+  } | null>(null);
+
+  // FPS tracking
+  const [fps, setFps] = useState(60);
+  const fpsFrameCount = useRef(0);
+  const fpsLastTime = useRef(Date.now());
+
+  const showModal = (type: 'error' | 'info' | 'success', title: string, message: string) => {
+    setModalState({ visible: true, type, title, message });
+  };
 
   // Refs
   const gameLoop = useRef<number | null>(null);
@@ -111,18 +140,44 @@ export default function BuzzRunner() {
       frameCount.current = 0;
       lastSpawnTime.current = Date.now();
 
-      triggerHaptic('light');
+      hapticFeedback.trigger('light');
+      audioManager.playSound('buzz-runner', 'start');
     } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.error || 'Failed to start game');
+      showModal('error', 'Error', error.response?.data?.error || 'Failed to start game');
     }
   };
+
+  // Preload assets and audio
+  useEffect(() => {
+    prefetchGameAssets('buzz-runner');
+    audioManager.preloadGameSounds('buzz-runner');
+    return () => audioManager.unloadGameSounds('buzz-runner');
+  }, []);
+
+  // FPS monitoring
+  useEffect(() => {
+    const measureFPS = () => {
+      fpsFrameCount.current++;
+      const now = Date.now();
+      const elapsed = now - fpsLastTime.current;
+      if (elapsed >= 1000) {
+        const currentFPS = Math.round((fpsFrameCount.current * 1000) / elapsed);
+        setFps(currentFPS);
+        fpsFrameCount.current = 0;
+        fpsLastTime.current = now;
+      }
+      requestAnimationFrame(measureFPS);
+    };
+    const rafId = requestAnimationFrame(measureFPS);
+    return () => cancelAnimationFrame(rafId);
+  }, []);
 
   // Jump
   const handleJump = () => {
     if (gameState !== 'playing' || isJumping) return;
     setIsJumping(true);
     setVelocity(JUMP_FORCE);
-    triggerHaptic('light');
+    hapticFeedback.trigger('light');
   };
 
   // Game Loop
@@ -272,12 +327,12 @@ export default function BuzzRunner() {
           if (obj.type === 'coin') {
             setCoins(c => c + 1);
             setScore(s => s + 10 * (multiplierActive ? 2 : 1));
-            triggerHaptic('light');
+            hapticFeedback.trigger('light');
             collected = true;
             return; // Don't add to remaining
           } else if (obj.type === 'powerup') {
             activatePowerup(obj.powerupType!);
-            triggerHaptic('success');
+            hapticFeedback.trigger('success');
             collected = true;
             return;
           } else if (obj.type === 'obstacle') {
@@ -289,9 +344,9 @@ export default function BuzzRunner() {
                 }
                 return newLives;
               });
-              triggerHaptic('error');
+              hapticFeedback.trigger('error');
             } else {
-              triggerHaptic('light');
+              hapticFeedback.trigger('light');
             }
             return; // Remove obstacle
           }
@@ -360,7 +415,7 @@ export default function BuzzRunner() {
       }
     }
 
-    triggerHaptic('error');
+    hapticFeedback.trigger('error');
   };
 
   // Pause game
@@ -589,6 +644,60 @@ export default function BuzzRunner() {
           </TouchableOpacity>
         </View>
       )}
+
+      {/* Custom Modal (replaces Alert.alert) */}
+      <Modal visible={modalState.visible} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Ionicons 
+              name={modalState.type === 'error' ? 'alert-circle' : modalState.type === 'success' ? 'checkmark-circle' : 'information-circle'} 
+              size={48} 
+              color={modalState.type === 'error' ? '#FF6B6B' : modalState.type === 'success' ? '#4ECDC4' : '#667EEA'} 
+              style={{ alignSelf: 'center', marginBottom: 16 }}
+            />
+            <Text style={styles.modalTitle}>{modalState.title}</Text>
+            <Text style={[styles.modalMessage, { textAlign: 'center', marginBottom: 24 }]}>{modalState.message}</Text>
+            <TouchableOpacity 
+              onPress={() => setModalState(prev => ({ ...prev, visible: false }))} 
+              style={styles.confirmButton}
+            >
+              <Text style={styles.confirmButtonText}>OK</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Particle Effects */}
+      {particleState?.show && particleState.type === 'confetti' && (
+        <ConfettiParticles 
+          x={particleState.x} 
+          y={particleState.y} 
+          onComplete={() => setParticleState(null)} 
+        />
+      )}
+      {particleState?.show && particleState.type === 'sparkle' && (
+        <SparkleParticles 
+          x={particleState.x} 
+          y={particleState.y} 
+          onComplete={() => setParticleState(null)} 
+        />
+      )}
+      {particleState?.show && particleState.type === 'explosion' && (
+        <ExplosionParticles 
+          x={particleState.x} 
+          y={particleState.y} 
+          onComplete={() => setParticleState(null)} 
+        />
+      )}
+
+      {/* FPS Counter (dev only) */}
+      {__DEV__ && (
+        <View style={{ position: 'absolute', top: 100, right: 20, backgroundColor: 'rgba(0,0,0,0.7)', padding: 8, borderRadius: 8 }}>
+          <Text style={{ color: fps >= 55 ? '#10B981' : fps >= 30 ? '#F59E0B' : '#EF4444', fontSize: 14, fontWeight: '600' }}>
+            FPS: {fps}
+          </Text>
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -803,6 +912,40 @@ const styles = StyleSheet.create({
   },
   playAgainText: {
     fontSize: 20,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: '#1F1F1F',
+    borderRadius: 24,
+    padding: 24,
+    width: width * 0.85,
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  modalMessage: {
+    fontSize: 16,
+    color: '#8B949E',
+  },
+  confirmButton: {
+    backgroundColor: '#667EEA',
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  confirmButtonText: {
+    fontSize: 16,
     fontWeight: '700',
     color: '#FFFFFF',
   },

@@ -20,7 +20,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  Alert,
+  Modal,
   Dimensions,
   ActivityIndicator,
   FlatList,
@@ -29,10 +29,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import * as Haptics from 'expo-haptics';
 import { gamesAPI } from '../Services/GamesAPI';
 import { socketManager } from '../Services/SocketManager';
 import { useUserStore } from '@/src/stores/userStore';
+import { audioManager } from '../Services/AudioManager';
+import { hapticFeedback } from '../Components/HapticFeedback';
+import { economyClient } from '../Services/EconomyClient';
+import { ConfettiParticles } from '../Components/ParticleSystem';
+import { prefetchGameAssets } from '../Services/assetsMap';
 
 const { width, height } = Dimensions.get('window');
 
@@ -99,9 +103,59 @@ export default function TriviaRoyale() {
   // Loading & errors
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
+  // Modal state (replaces Alert.alert)
+  const [modalState, setModalState] = useState<{
+    visible: boolean;
+    type: 'error' | 'info' | 'success';
+    title: string;
+    message: string;
+  }>({ visible: false, type: 'info', title: '', message: '' });
+
+  // Particle state
+  const [particleState, setParticleState] = useState<{
+    show: boolean;
+    type: 'confetti';
+    x: number;
+    y: number;
+  } | null>(null);
+
+  // FPS tracking
+  const [fps, setFps] = useState(60);
+  const fpsFrameCount = useRef(0);
+  const fpsLastTime = useRef(Date.now());
+
   // Refs
   const questionStartTime = useRef<number>(0);
   const timerInterval = useRef<NodeJS.Timeout | null>(null);
+
+  const showModal = (type: 'error' | 'info' | 'success', title: string, message: string) => {
+    setModalState({ visible: true, type, title, message });
+  };
+
+  // Preload assets and audio
+  useEffect(() => {
+    prefetchGameAssets('trivia-royale');
+    audioManager.preloadGameSounds('trivia-royale');
+    return () => audioManager.unloadGameSounds('trivia-royale');
+  }, []);
+
+  // FPS monitoring
+  useEffect(() => {
+    const measureFPS = () => {
+      fpsFrameCount.current++;
+      const now = Date.now();
+      const elapsed = now - fpsLastTime.current;
+      if (elapsed >= 1000) {
+        const currentFPS = Math.round((fpsFrameCount.current * 1000) / elapsed);
+        setFps(currentFPS);
+        fpsFrameCount.current = 0;
+        fpsLastTime.current = now;
+      }
+      requestAnimationFrame(measureFPS);
+    };
+    const rafId = requestAnimationFrame(measureFPS);
+    return () => cancelAnimationFrame(rafId);
+  }, []);
 
   // Categories
   const categories = [
@@ -174,14 +228,14 @@ export default function TriviaRoyale() {
     console.log('Joined trivia room:', data);
     setGameState('waiting_room');
     setTotalPlayers(data.playerCount || 1);
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    hapticFeedback.trigger('success');
   };
 
   const handleGameStart = (data: any) => {
     console.log('Trivia game starting:', data);
     setGameState('playing');
     setTotalPlayers(data.totalPlayers || 1);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    hapticFeedback.trigger('heavy');
   };
 
   const handleNewQuestion = (data: { question: Question; questionNumber: number }) => {
@@ -203,10 +257,10 @@ export default function TriviaRoyale() {
     if (data.correct) {
       setStreak((prev) => prev + 1);
       setPlayerScore((prev) => prev + data.points);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      hapticFeedback.trigger('success');
     } else {
       setStreak(0);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      hapticFeedback.trigger('error');
     }
   };
 
@@ -222,7 +276,7 @@ export default function TriviaRoyale() {
   const handleRoundSummary = (data: any) => {
     console.log('Round summary:', data);
     setGameState('round_summary');
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    hapticFeedback.trigger('medium');
 
     // Wait 5 seconds then continue
     setTimeout(() => {
@@ -257,20 +311,23 @@ export default function TriviaRoyale() {
     }
 
     if (myResult && myResult.reward > 0) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      Alert.alert(
+      hapticFeedback.gameVictory();
+      audioManager.playSound('trivia-royale', 'win');
+      setParticleState({ show: true, type: 'confetti', x: width / 2, y: height / 2 });
+      showModal(
+        'success',
         '🎉 Victory!',
         `Rank #${myResult.rank}\nReward: ${myResult.reward} coins`,
         [{ text: 'Awesome!', onPress: () => router.back() }]
       );
     } else {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+      hapticFeedback.trigger('error'); // Using error for warning
     }
   };
 
   const handleGameError = (data: any) => {
     console.error('Game error:', data);
-    Alert.alert('Error', data.message || 'An error occurred');
+    showModal('error', 'Error', data.message || 'An error occurred');
     setGameState('lobby');
   };
 
@@ -293,14 +350,14 @@ export default function TriviaRoyale() {
 
   const handleStartGame = async () => {
     if (!socketManager.isSocketConnected()) {
-      Alert.alert('Connection Error', 'Connecting to server...');
+      showModal('error', 'Connection Error', 'Connecting to server...');
       await socketManager.connect();
       setTimeout(handleStartGame, 1000);
       return;
     }
 
     setIsLoading(true);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    hapticFeedback.trigger('medium');
 
     try {
       // Start session
@@ -317,7 +374,7 @@ export default function TriviaRoyale() {
       setIsLoading(false);
     } catch (error: any) {
       console.error('Failed to start game:', error);
-      Alert.alert('Error', error.response?.data?.error || 'Failed to start game');
+      showModal('error', 'Error', error.response?.data?.error || 'Failed to start game');
       setIsLoading(false);
     }
   };
@@ -327,7 +384,7 @@ export default function TriviaRoyale() {
 
     const reactionTime = (Date.now() - questionStartTime.current) / 1000;
     setSelectedAnswer(answerIndex);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    hapticFeedback.trigger('light');
 
     // Submit answer via Socket.IO
     socketManager.sendPlayerAction({
@@ -350,7 +407,7 @@ export default function TriviaRoyale() {
     }
     setGameState('lobby');
     setRoomId(null);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    hapticFeedback.trigger('light');
   };
 
   // Render functions
@@ -374,7 +431,7 @@ export default function TriviaRoyale() {
               ]}
               onPress={() => {
                 setSelectedCategory(cat.id);
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                hapticFeedback.trigger('light');
               }}
             >
               <Ionicons
@@ -404,7 +461,7 @@ export default function TriviaRoyale() {
               style={[styles.feeButton, entryFee === fee && styles.feeButtonSelected]}
               onPress={() => {
                 setEntryFee(fee);
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                hapticFeedback.trigger('light');
               }}
             >
               <Text style={[styles.feeText, entryFee === fee && styles.feeTextSelected]}>
@@ -668,6 +725,46 @@ export default function TriviaRoyale() {
             )}
           </LinearGradient>
         </TouchableOpacity>
+      )}
+
+      {/* Custom Modal (replaces Alert.alert) */}
+      <Modal visible={modalState.visible} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Ionicons 
+              name={modalState.type === 'error' ? 'alert-circle' : modalState.type === 'success' ? 'checkmark-circle' : 'information-circle'} 
+              size={48} 
+              color={modalState.type === 'error' ? '#FF6B6B' : modalState.type === 'success' ? '#4ECDC4' : '#667EEA'} 
+              style={{ alignSelf: 'center', marginBottom: 16 }}
+            />
+            <Text style={styles.modalTitle}>{modalState.title}</Text>
+            <Text style={[styles.modalMessage, { textAlign: 'center', marginBottom: 24 }]}>{modalState.message}</Text>
+            <TouchableOpacity 
+              onPress={() => setModalState(prev => ({ ...prev, visible: false }))} 
+              style={styles.confirmButton}
+            >
+              <Text style={styles.confirmButtonText}>OK</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Particle Effects */}
+      {particleState?.show && particleState.type === 'confetti' && (
+        <ConfettiParticles 
+          x={particleState.x} 
+          y={particleState.y} 
+          onComplete={() => setParticleState(null)} 
+        />
+      )}
+
+      {/* FPS Counter (dev only) */}
+      {__DEV__ && (
+        <View style={{ position: 'absolute', top: 100, right: 20, backgroundColor: 'rgba(0,0,0,0.7)', padding: 8, borderRadius: 8 }}>
+          <Text style={{ color: fps >= 55 ? '#10B981' : fps >= 30 ? '#F59E0B' : '#EF4444', fontSize: 14, fontWeight: '600' }}>
+            FPS: {fps}
+          </Text>
+        </View>
       )}
     </SafeAreaView>
   );
@@ -1109,6 +1206,40 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   startText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: '#1F1F1F',
+    borderRadius: 24,
+    padding: 24,
+    width: width * 0.85,
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  modalMessage: {
+    fontSize: 16,
+    color: '#8B949E',
+  },
+  confirmButton: {
+    backgroundColor: '#667EEA',
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  confirmButtonText: {
     fontSize: 16,
     fontWeight: '700',
     color: '#FFFFFF',

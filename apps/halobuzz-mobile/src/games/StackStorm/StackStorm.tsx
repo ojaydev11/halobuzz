@@ -18,18 +18,22 @@ import {
   StyleSheet,
   TouchableOpacity,
   Dimensions,
-  Alert,
+  Modal,
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import * as Haptics from 'expo-haptics';
 import { Canvas, Group, Rect, vec, RoundedRect } from '@shopify/react-native-skia';
 import Matter from 'matter-js';
 import { gamesAPI } from '../Services/GamesAPI';
 import { useUserStore } from '@/src/stores/userStore';
+import { audioManager } from '../Services/AudioManager';
+import { hapticFeedback } from '../Components/HapticFeedback';
+import { economyClient } from '../Services/EconomyClient';
+import { ConfettiParticles, SparkleParticles, ExplosionParticles } from '../Components/ParticleSystem';
+import { prefetchGameAssets } from '../Services/assetsMap';
 
 const { width, height } = Dimensions.get('window');
 
@@ -81,6 +85,27 @@ export default function StackStorm() {
   // Loading
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
+  // Modal state (replaces Alert.alert)
+  const [modalState, setModalState] = useState<{
+    visible: boolean;
+    type: 'error' | 'info' | 'success';
+    title: string;
+    message: string;
+  }>({ visible: false, type: 'info', title: '', message: '' });
+
+  // Particle state
+  const [particleState, setParticleState] = useState<{
+    show: boolean;
+    type: 'confetti' | 'sparkle' | 'explosion';
+    x: number;
+    y: number;
+  } | null>(null);
+
+  // FPS tracking
+  const [fps, setFps] = useState(60);
+  const fpsFrameCount = useRef(0);
+  const fpsLastTime = useRef(Date.now());
+
   // Refs
   const engineRef = useRef<Matter.Engine | null>(null);
   const worldRef = useRef<Matter.World | null>(null);
@@ -88,6 +113,35 @@ export default function StackStorm() {
   const directionRef = useRef<number>(1); // 1 = right, -1 = left
   const stackedBlocksRef = useRef<Block[]>([]);
   const lastPlacedYRef = useRef<number>(GAME_HEIGHT - GROUND_HEIGHT);
+
+  const showModal = (type: 'error' | 'info' | 'success', title: string, message: string) => {
+    setModalState({ visible: true, type, title, message });
+  };
+
+  // Preload assets and audio
+  useEffect(() => {
+    prefetchGameAssets('stack-storm');
+    audioManager.preloadGameSounds('stack-storm');
+    return () => audioManager.unloadGameSounds('stack-storm');
+  }, []);
+
+  // FPS monitoring
+  useEffect(() => {
+    const measureFPS = () => {
+      fpsFrameCount.current++;
+      const now = Date.now();
+      const elapsed = now - fpsLastTime.current;
+      if (elapsed >= 1000) {
+        const currentFPS = Math.round((fpsFrameCount.current * 1000) / elapsed);
+        setFps(currentFPS);
+        fpsFrameCount.current = 0;
+        fpsLastTime.current = now;
+      }
+      requestAnimationFrame(measureFPS);
+    };
+    const rafId = requestAnimationFrame(measureFPS);
+    return () => cancelAnimationFrame(rafId);
+  }, []);
 
   // Entry fee options
   const entryFees = [100, 250, 500, 1000];
@@ -243,7 +297,7 @@ export default function StackStorm() {
   const handleDrop = () => {
     if (!currentBlock || !worldRef.current) return;
 
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    hapticFeedback.trigger('medium');
 
     // Create physics body for dropped block
     const body = Matter.Bodies.rectangle(
@@ -281,7 +335,7 @@ export default function StackStorm() {
         setPerfectStacks((prev) => prev + 1);
         setCombo((prev) => prev + 1);
         setScore((prev) => prev + 100 * (combo + 1));
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        hapticFeedback.trigger('success');
       } else {
         setCombo(0);
         setScore((prev) => prev + 50);
@@ -317,7 +371,7 @@ export default function StackStorm() {
     if (gameState !== 'playing') return;
 
     setGameState('game_over');
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+    hapticFeedback.trigger('error'); // Using error for warning
 
     if (gameLoopRef.current) clearInterval(gameLoopRef.current);
 
@@ -338,7 +392,7 @@ export default function StackStorm() {
 
   const handleStartGame = async () => {
     setIsLoading(true);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    hapticFeedback.trigger('medium');
 
     try {
       const response = await gamesAPI.startSession('stack-storm', entryFee, 'solo');
@@ -361,7 +415,7 @@ export default function StackStorm() {
       setIsLoading(false);
     } catch (error: any) {
       console.error('Failed to start game:', error);
-      Alert.alert('Error', error.response?.data?.error || 'Failed to start game');
+      showModal('error', 'Error', error.response?.data?.error || 'Failed to start game');
       setIsLoading(false);
     }
   };
@@ -391,7 +445,7 @@ export default function StackStorm() {
               style={[styles.feeButton, entryFee === fee && styles.feeButtonSelected]}
               onPress={() => {
                 setEntryFee(fee);
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                hapticFeedback.trigger('light');
               }}
             >
               <Text style={[styles.feeText, entryFee === fee && styles.feeTextSelected]}>
@@ -581,6 +635,53 @@ export default function StackStorm() {
             )}
           </LinearGradient>
         </TouchableOpacity>
+      )}
+
+      {/* Custom Modal (replaces Alert.alert) */}
+      <Modal visible={modalState.visible} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Ionicons 
+              name={modalState.type === 'error' ? 'alert-circle' : modalState.type === 'success' ? 'checkmark-circle' : 'information-circle'} 
+              size={48} 
+              color={modalState.type === 'error' ? '#FF6B6B' : modalState.type === 'success' ? '#4ECDC4' : '#667EEA'} 
+              style={{ alignSelf: 'center', marginBottom: 16 }}
+            />
+            <Text style={styles.modalTitle}>{modalState.title}</Text>
+            <Text style={[styles.modalMessage, { textAlign: 'center', marginBottom: 24 }]}>{modalState.message}</Text>
+            <TouchableOpacity 
+              onPress={() => setModalState(prev => ({ ...prev, visible: false }))} 
+              style={styles.confirmButton}
+            >
+              <Text style={styles.confirmButtonText}>OK</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Particle Effects */}
+      {particleState?.show && particleState.type === 'confetti' && (
+        <ConfettiParticles 
+          x={particleState.x} 
+          y={particleState.y} 
+          onComplete={() => setParticleState(null)} 
+        />
+      )}
+      {particleState?.show && particleState.type === 'sparkle' && (
+        <SparkleParticles 
+          x={particleState.x} 
+          y={particleState.y} 
+          onComplete={() => setParticleState(null)} 
+        />
+      )}
+
+      {/* FPS Counter (dev only) */}
+      {__DEV__ && (
+        <View style={{ position: 'absolute', top: 100, right: 20, backgroundColor: 'rgba(0,0,0,0.7)', padding: 8, borderRadius: 8 }}>
+          <Text style={{ color: fps >= 55 ? '#10B981' : fps >= 30 ? '#F59E0B' : '#EF4444', fontSize: 14, fontWeight: '600' }}>
+            FPS: {fps}
+          </Text>
+        </View>
       )}
     </SafeAreaView>
   );
@@ -810,6 +911,40 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   startText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: '#1F1F1F',
+    borderRadius: 24,
+    padding: 24,
+    width: width * 0.85,
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  modalMessage: {
+    fontSize: 16,
+    color: '#8B949E',
+  },
+  confirmButton: {
+    backgroundColor: '#667EEA',
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  confirmButtonText: {
     fontSize: 16,
     fontWeight: '700',
     color: '#FFFFFF',

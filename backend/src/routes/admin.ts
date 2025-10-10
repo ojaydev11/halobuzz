@@ -18,6 +18,13 @@ import { socketSecurityService } from '@/services/SocketSecurityService';
 import { cronSecurityService } from '@/services/CronSecurityService';
 import { adminAuditService } from '@/services/AdminAuditService';
 import flagsRouter from './admin/flags';
+// New modular admin routes
+import analyticsRouter from './admin/analytics';
+import usersRouter from './admin/users';
+import economyRouter from './admin/economy';
+import liveRouter from './admin/live';
+import gamesRouter from './admin/games';
+import moderationRouter from './admin/moderation';
 
 const logger = setupLogger();
 const router: express.Router = express.Router();
@@ -25,6 +32,18 @@ const router: express.Router = express.Router();
 // Apply admin rate limiting to all admin routes
 router.use(adminLimiter);
 
+// === NEW MODULAR ADMIN ROUTES ===
+// Mount all new admin routes
+router.use('/analytics', analyticsRouter);
+router.use('/users', usersRouter);
+router.use('/economy', economyRouter);
+router.use('/live', liveRouter);
+router.use('/reels', liveRouter); // Reels routes are in live router
+router.use('/tournaments', gamesRouter);
+router.use('/games', gamesRouter);
+router.use('/moderation', moderationRouter);
+
+// === LEGACY ADMIN ROUTES ===
 // Feature flags management
 router.use('/flags', flagsRouter);
 
@@ -310,49 +329,9 @@ router.put('/pricing', [
   }
 });
 
-// ----- Users -----
-router.get('/users', [
-  query('q').optional().isString(),
-], async (req, res) => {
-  try {
-    const q = (req.query.q as string) || '';
-    const filter = q
-      ? {
-          $or: [
-            { email: { $regex: q, $options: 'i' } },
-            { username: { $regex: q, $options: 'i' } },
-            { phone: { $regex: q, $options: 'i' } }
-          ]
-        }
-      : {};
-    const users = await User.find(filter).limit(50).sort({ createdAt: -1 });
-    res.json({ success: true, data: users });
-  } catch (error) {
-    logger.error('Search users error:', error);
-    res.status(500).json({ success: false, error: 'Failed to search users' });
-  }
-});
-
-router.post('/users/:id/ban', [
-  requireCSRF,
-  body('ban').isBoolean(),
-  body('reason').optional().isString(),
-], async (req, res) => {
-  try {
-    const { ban, reason } = req.body;
-    const user = await User.findByIdAndUpdate(
-      req.params.id,
-      { isBanned: ban, banReason: ban ? (reason || 'Banned by admin') : null },
-      { new: true }
-    );
-    if (!user) return res.status(404).json({ success: false, error: 'User not found' });
-    res.json({ success: true, data: user });
-  } catch (error) {
-    logger.error('Ban user error:', error);
-    res.status(500).json({ success: false, error: 'Failed to update user' });
-  }
-});
-
+// ----- Users (Legacy Routes - Trust/Reputation Management) -----
+// Note: Core user management is now in /admin/users router
+// Keeping trust/reputation management here as it uses reputationService
 router.post('/users/:id/trust', [
   requireCSRF,
   body('delta').isInt(),
