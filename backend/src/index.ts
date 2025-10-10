@@ -145,6 +145,10 @@ import aiPersonalizationRoutes from '@/routes/ai-personalization';
 import advancedGiftsRoutes from '@/routes/advanced-gifts';
 import fortressSecurityRoutes from '@/routes/fortress-security';
 import gamificationRoutes from '@/routes/gamification';
+
+// E-sports routes
+import gamesEsportsRoutes from '@/routes/games-esports';
+import mmrRoutes from '@/routes/mmr';
 // import enhancedAuthRoutes from '@/routes/enhanced-auth'; // TEMPORARILY DISABLED - type errors
 // import productionMonitoringRoutes from '@/routes/production-monitoring'; // TEMPORARILY DISABLED - type errors
 
@@ -417,6 +421,10 @@ app.use(`/api/${apiVersion}/ai-personalization`, authMiddleware, aiPersonalizati
 app.use(`/api/${apiVersion}/advanced-gifts`, authMiddleware, advancedGiftsRoutes);
 app.use(`/api/${apiVersion}/fortress-security`, authMiddleware, fortressSecurityRoutes);
 app.use(`/api/${apiVersion}/gamification`, authMiddleware, gamificationRoutes);
+
+// E-sports routes
+app.use(`/api/${apiVersion}/games-esports`, gamesEsportsRoutes); // Public leaderboards + auth for sessions
+app.use(`/api/${apiVersion}/mmr`, mmrRoutes); // Public MMR queries + auth for updates
 
 // Empire Dashboard routes - stubbed
 import empireRoutes from '@/routes/empire';
