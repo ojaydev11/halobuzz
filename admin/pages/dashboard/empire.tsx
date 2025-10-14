@@ -3,7 +3,7 @@ import { NextPage } from 'next';
 import { useRouter } from 'next/router';
 import Layout from '../../components/Layout';
 import { useAuth } from '../../context/AuthContext';
-import { api } from '../../lib/api';
+import api from '../../lib/api';
 import { Bar, Doughnut } from 'react-chartjs-2';
 
 interface EmpireSummary {
