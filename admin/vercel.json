@@ -1,31 +1,14 @@
 {
-  "version": 2,
-  "outputDirectory": ".next",
+  "buildCommand": "npm install && npm run build",
+  "installCommand": "npm install",
   "framework": "nextjs",
-  "name": "halobuzz-admin",
   "functions": {
-    "pages/api/**/*.js": {
-      "maxDuration": 30
+    "admin/pages/api/**/*.ts": {
+      "runtime": "nodejs20.x"
     }
   },
-  "redirects": [
-    {
-      "source": "/",
-      "destination": "/login",
-      "permanent": false
-    }
-  ],
-  "headers": [
-    {
-      "source": "/(.*)",
-      "headers": [
-        { "key": "Strict-Transport-Security", "value": "max-age=63072000; includeSubDomains; preload" },
-        { "key": "X-Frame-Options", "value": "DENY" },
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "Referrer-Policy", "value": "no-referrer" },
-        { "key": "Permissions-Policy", "value": "accelerometer=(), camera=(), geolocation=(), microphone=()" },
-        { "key": "Content-Security-Policy", "value": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https:;" }
-      ]
-    }
-  ]
+  "env": {
+    "NEXT_PUBLIC_API_URL": "https://p01--halo-api--6jbmvhzxwv4y.code.run",
+    "NEXT_PUBLIC_AI_ENGINE_URL": "https://haloai--halobuzz-ai--6jbmvhzxwv4y.code.run"
+  }
 }
