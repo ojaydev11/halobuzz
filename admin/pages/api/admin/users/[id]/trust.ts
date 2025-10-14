@@ -1,11 +1,11 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { createServerApi } from '../../../../../lib/api';
+import adminAPI from '../../../../../lib/api';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { id } = req.query;
   if (typeof id !== 'string') return res.status(400).json({ success: false, error: 'Invalid id' });
   try {
-    const api = createServerApi(req.headers as any);
+    const api = adminAPI;
     if (req.method === 'POST') {
       const resp = await api.post(`/admin/users/${id}/trust`, req.body);
       return res.status(200).json(resp.data);
