@@ -2,11 +2,6 @@
   "buildCommand": "npm install && npm run build",
   "installCommand": "npm install",
   "framework": "nextjs",
-  "functions": {
-    "admin/pages/api/**/*.ts": {
-      "runtime": "nodejs20.x"
-    }
-  },
   "env": {
     "NEXT_PUBLIC_API_URL": "https://p01--halo-api--6jbmvhzxwv4y.code.run",
     "NEXT_PUBLIC_AI_ENGINE_URL": "https://haloai--halobuzz-ai--6jbmvhzxwv4y.code.run"
