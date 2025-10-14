@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
-import { wsConfig, realtimeEvents } from '../lib/api-config';
+import { wsConfig, realtimeEvents } from '../api-config';
 
 interface RealtimeData {
   users: {
