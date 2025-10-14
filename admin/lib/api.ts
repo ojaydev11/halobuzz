@@ -232,10 +232,12 @@ class AdminAPIClient {
 // Create singleton instance
 const adminAPI = new AdminAPIClient();
 
-// Initialize token from localStorage
-const savedToken = localStorage.getItem('admin_token');
-if (savedToken) {
-  adminAPI.setToken(savedToken);
+// Initialize token from localStorage (only in browser)
+if (typeof window !== 'undefined') {
+  const savedToken = localStorage.getItem('admin_token');
+  if (savedToken) {
+    adminAPI.setToken(savedToken);
+  }
 }
 
 export default adminAPI;
