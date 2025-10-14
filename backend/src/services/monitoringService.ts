@@ -509,13 +509,37 @@ export class MonitoringService {
     }
   }
 
-  async collectMetrics(): Promise<void> {
+  async collectBusinessMetrics(): Promise<void> {
     try {
-      await this.collectSystemMetrics();
-      await this.getApplicationMetrics();
-      await this.collectBusinessMetrics();
+      // Collect business-specific metrics
+      const userCount = await User.countDocuments();
+      const activeUsers = await User.countDocuments({ lastActive: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } });
+      
+      await setCache('business_metrics', {
+        totalUsers: userCount,
+        activeUsers: activeUsers,
+        timestamp: new Date()
+      }, 300); // Cache for 5 minutes
     } catch (error) {
-      logger.error('Error collecting metrics:', error);
+      logger.error('Error collecting business metrics:', error);
+    }
+  }
+
+  async getCachedMetrics(timeRange: string): Promise<any> {
+    try {
+      const cacheKey = `metrics_${timeRange}`;
+      const cached = await getCache(cacheKey);
+      
+      if (cached) {
+        return cached;
+      }
+      
+      // If not cached, collect fresh metrics
+      await this.collectMetrics();
+      return await getCache(cacheKey) || {};
+    } catch (error) {
+      logger.error('Error getting cached metrics:', error);
+      return {};
     }
   }
 

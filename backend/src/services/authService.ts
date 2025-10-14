@@ -108,7 +108,7 @@ export class AuthService {
       logger.info(`New user registered: ${user.username} (${user.email})`);
 
       return {
-        user: user.toJSON(),
+        user: user.toJSON() as Partial<IUser>,
         ...tokens
       };
     } catch (error) {
@@ -167,7 +167,7 @@ export class AuthService {
       logger.info(`User logged in: ${user.username} (${user.email})`);
 
       return {
-        user: user.toJSON(),
+        user: user.toJSON() as Partial<IUser>,
         ...tokens
       };
     } catch (error) {
@@ -297,7 +297,7 @@ export class AuthService {
       logger.info(`Token refreshed for user: ${user.username}`);
 
       return {
-        user: user.toJSON(),
+        user: user.toJSON() as Partial<IUser>,
         ...tokens
       };
     } catch (error) {

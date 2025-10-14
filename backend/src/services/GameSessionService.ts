@@ -311,7 +311,7 @@ export class GameSessionService {
         .limit(limit)
         .lean();
 
-      return sessions;
+      return sessions as IGameSession[];
     } catch (error) {
       logger.error('Failed to get player sessions:', error);
       return [];
