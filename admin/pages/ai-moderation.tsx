@@ -71,14 +71,27 @@ export default function AIModerationPage() {
     fetchModerationData();
   }, [timeframe]);
 
+  const getAuthToken = () => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('adminToken');
+    }
+    return null;
+  };
+
   const fetchModerationData = async () => {
     try {
       setLoading(true);
       
+      const token = getAuthToken();
+      if (!token) {
+        console.error('No auth token available');
+        return;
+      }
+      
       // Fetch moderation flags
       const flagsResponse = await fetch('/api/admin/moderation/flags', {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+          'Authorization': `Bearer ${token}`
         }
       });
       const flagsData = await flagsResponse.json();
@@ -87,7 +100,7 @@ export default function AIModerationPage() {
       // Fetch moderation stats
       const statsResponse = await fetch(`/api/admin/moderation/stats?timeframe=${timeframe}`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+          'Authorization': `Bearer ${token}`
         }
       });
       const statsData = await statsResponse.json();
@@ -101,11 +114,17 @@ export default function AIModerationPage() {
 
   const handleResolveFlag = async (flagId: string, resolution: string) => {
     try {
+      const token = getAuthToken();
+      if (!token) {
+        console.error('No auth token available');
+        return;
+      }
+
       const response = await fetch(`/api/admin/moderation/flags/${flagId}/resolve`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ resolution })
       });
@@ -120,11 +139,17 @@ export default function AIModerationPage() {
 
   const handleBulkAction = async (action: string) => {
     try {
+      const token = getAuthToken();
+      if (!token) {
+        console.error('No auth token available');
+        return;
+      }
+
       const response = await fetch('/api/admin/moderation/bulk-action', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           flagIds: selectedFlags,

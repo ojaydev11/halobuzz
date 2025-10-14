@@ -1,0 +1,144 @@
+config:
+  target: 'https://api.halobuzz.com'
+  phases:
+    - duration: 60
+      arrivalRate: 5
+      name: "Warm up"
+    - duration: 120
+      arrivalRate: 10
+      name: "Ramp up load"
+    - duration: 300
+      arrivalRate: 20
+      name: "Sustained load"
+    - duration: 60
+      arrivalRate: 50
+      name: "Peak load"
+    - duration: 120
+      arrivalRate: 10
+      name: "Ramp down"
+  defaults:
+    headers:
+      Content-Type: 'application/json'
+      User-Agent: 'Artillery Load Test'
+
+scenarios:
+  - name: "User Registration Flow"
+    weight: 20
+    flow:
+      - post:
+          url: "/api/v1/auth/register"
+          json:
+            username: "testuser{{ $randomString() }}"
+            email: "test{{ $randomString() }}@example.com"
+            password: "TestPassword123!"
+            country: "US"
+            language: "en"
+          capture:
+            - json: "$.data.token"
+              as: "authToken"
+          expect:
+            - statusCode: 201
+
+  - name: "User Login Flow"
+    weight: 30
+    flow:
+      - post:
+          url: "/api/v1/auth/login"
+          json:
+            identifier: "testuser{{ $randomInt(1, 1000) }}"
+            password: "TestPassword123!"
+          capture:
+            - json: "$.data.token"
+              as: "authToken"
+          expect:
+            - statusCode: 200
+      - get:
+          url: "/api/v1/auth/me"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          expect:
+            - statusCode: 200
+
+  - name: "Stream Creation and Viewing"
+    weight: 25
+    flow:
+      - post:
+          url: "/api/v1/auth/login"
+          json:
+            identifier: "testuser{{ $randomInt(1, 1000) }}"
+            password: "TestPassword123!"
+          capture:
+            - json: "$.data.token"
+              as: "authToken"
+      - post:
+          url: "/api/v1/streams"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          json:
+            title: "Test Stream {{ $randomString() }}"
+            description: "Load test stream"
+            category: "gaming"
+          expect:
+            - statusCode: 201
+      - get:
+          url: "/api/v1/streams"
+          expect:
+            - statusCode: 200
+
+  - name: "Gaming Flow"
+    weight: 15
+    flow:
+      - post:
+          url: "/api/v1/auth/login"
+          json:
+            identifier: "testuser{{ $randomInt(1, 1000) }}"
+            password: "TestPassword123!"
+          capture:
+            - json: "$.data.token"
+              as: "authToken"
+      - get:
+          url: "/api/v1/games"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          expect:
+            - statusCode: 200
+      - post:
+          url: "/api/v1/games/{{ $randomInt(1, 10) }}/play"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          json:
+            players:
+              - userId: "{{ $randomString() }}"
+                betAmount: 100
+          expect:
+            - statusCode: 200
+
+  - name: "Coins and Wallet Operations"
+    weight: 10
+    flow:
+      - post:
+          url: "/api/v1/auth/login"
+          json:
+            identifier: "testuser{{ $randomInt(1, 1000) }}"
+            password: "TestPassword123!"
+          capture:
+            - json: "$.data.token"
+              as: "authToken"
+      - get:
+          url: "/api/v1/coins/balance"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          expect:
+            - statusCode: 200
+      - get:
+          url: "/api/v1/wallet/balance"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          expect:
+            - statusCode: 200
+      - post:
+          url: "/api/v1/coins/daily-reward"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          expect:
+            - statusCode: 200

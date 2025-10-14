@@ -90,8 +90,8 @@ import {
 import authRoutes from '@/routes/auth';
 import usersRoutes from '@/routes/users';
 import walletRoutes from '@/routes/wallet';
-// import coinsRoutes from '@/routes/coins'; // TEMPORARILY DISABLED - not implemented yet
-// import payoutsRoutes from '@/routes/payouts'; // TEMPORARILY DISABLED - type errors
+import coinsRoutes from '@/routes/coins';
+import payoutsRoutes from '@/routes/payouts';
 import webhooksRoutes from '@/routes/webhooks';
 import stripeCheckoutRoutes from '@/routes/stripe-checkout';
 import streamsRoutes from '@/routes/streams';
@@ -109,16 +109,15 @@ import gamesRoutes from '@/routes/games';
 import gamesRoutesV2 from '@/routes/games-v2';
 import gamesEnhancedRoutes from '@/routes/games-enhanced';
 import advancedGamesRoutes from '@/routes/advanced-games';
-// TEMPORARILY DISABLED: LeaderboardService causes infinite loop
-// import leaderboardRoutes from '@/routes/leaderboards';
+import leaderboardRoutes from '@/routes/leaderboards';
 import socialRoutes from '@/routes/social';
 import monetizationRoutes from '@/routes/monetization';
 import adminRoutes from '@/routes/admin';
 import configRoutes from '@/routes/config';
 import kycRoutes from '@/routes/kyc';
-// import monitoringRoutes from '@/routes/monitoring'; // TEMPORARILY DISABLED - imports monitoringService
+import monitoringRoutes from '@/routes/monitoring';
 import securityRoutes from '@/routes/security';
-// import mfaRoutes from '@/routes/mfa'; // TEMPORARILY DISABLED - type errors
+import mfaRoutes from '@/routes/mfa';
 import notificationRoutes from '@/routes/notifications';
 // import viralGrowthRoutes from '@/routes/viral-growth'; // TEMPORARILY DISABLED - imports ViralGrowthService
 import trustCredibilityRoutes from '@/routes/trust-credibility';
@@ -349,8 +348,8 @@ logger.info(`Mounting auth routes at /api/${apiVersion}/auth`);
 app.use(`/api/${apiVersion}/auth`, authLimiter, loginSlowDown, authRoutes);
 app.use(`/api/${apiVersion}/users`, authMiddleware, csrfProtection, usersRoutes);
 app.use(`/api/${apiVersion}/wallet`, authMiddleware, paymentLimiter, csrfProtection, walletRoutes);
-// app.use(`/api/${apiVersion}/coins`, authMiddleware, coinsRoutes); // TEMPORARILY DISABLED - not implemented yet
-// app.use(`/api/${apiVersion}/payouts`, authMiddleware, payoutsRoutes); // TEMPORARILY DISABLED - type errors
+app.use(`/api/${apiVersion}/coins`, authMiddleware, coinsRoutes);
+app.use(`/api/${apiVersion}/payouts`, authMiddleware, payoutsRoutes);
 app.use(`/api/${apiVersion}/stripe`, stripeCheckoutRoutes);
 app.use(`/api/${apiVersion}/webhooks`, webhooksRoutes); // No auth - verified by signature
 app.use(`/api/${apiVersion}/streams`, authMiddleware, socialLimiter, csrfProtection, streamsRoutes);
@@ -368,16 +367,15 @@ app.use(`/api/${apiVersion}/games`, authMiddleware, gamesRoutes);
 app.use(`/api/${apiVersion}/games/v2`, gamesRoutesV2); // New enhanced games with staking
 app.use(`/api/${apiVersion}/games-enhanced`, gamesEnhancedRoutes); // Enhanced games with coins system
 app.use(`/api/${apiVersion}/advanced-games`, advancedGamesRoutes); // Advanced multiplayer games
-// TEMPORARILY DISABLED: LeaderboardService causes infinite loop
-// app.use(`/api/${apiVersion}/leaderboards`, leaderboardRoutes); // Global leaderboards and tournaments
+app.use(`/api/${apiVersion}/leaderboards`, leaderboardRoutes); // Global leaderboards and tournaments
 app.use(`/api/${apiVersion}/social`, socialRoutes); // Social features - friends, guilds, chat
 app.use(`/api/${apiVersion}/monetization`, monetizationRoutes); // Monetization - IAP, battle pass, rewards
 app.use(`/api/${apiVersion}/config`, authMiddleware, configRoutes);
 app.use(`/api/${apiVersion}/kyc`, authMiddleware, kycRoutes);
 app.use(`/api/${apiVersion}/admin`, authMiddleware, requireAdmin, adminRoutes);
-// app.use(`/api/${apiVersion}/monitoring`, monitoringRoutes); // TEMPORARILY DISABLED
+app.use(`/api/${apiVersion}/monitoring`, monitoringRoutes);
 app.use(`/api/${apiVersion}/security`, securityRoutes);
-// app.use(`/api/${apiVersion}/mfa`, mfaRoutes); // TEMPORARILY DISABLED - type errors
+app.use(`/api/${apiVersion}/mfa`, mfaRoutes);
 app.use(`/api/${apiVersion}/notifications`, authMiddleware, notificationRoutes);
 // app.use(`/api/${apiVersion}/viral`, authMiddleware, viralGrowthRoutes); // TEMPORARILY DISABLED
 app.use(`/api/${apiVersion}/trust`, authMiddleware, trustCredibilityRoutes);
@@ -606,8 +604,7 @@ const startServer = async () => {
     // Initialize gaming services
     try {
       const { advancedGamesService } = await import('@/services/AdvancedGamesService');
-      // TEMPORARILY DISABLED: LeaderboardService causes infinite loop on startup
-      // const { leaderboardService } = await import('@/services/LeaderboardService');
+             const { leaderboardService } = await import('@/services/LeaderboardService');
       const { aiOpponentService } = await import('@/services/AIOpponentService');
       const { socialService } = await import('@/services/SocialService');
       const { monetizationService } = await import('@/services/MonetizationService');
