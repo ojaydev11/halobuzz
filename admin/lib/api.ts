@@ -45,7 +45,9 @@ class AdminAPIClient {
     
     if (response.data.success) {
       this.token = response.data.data.token;
-      localStorage.setItem('admin_token', this.token);
+      if (this.token) {
+        localStorage.setItem('admin_token', this.token);
+      }
     }
     
     return response.data;
