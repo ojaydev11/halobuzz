@@ -1,0 +1,111 @@
+name: HaloBuzz CI/CD Pipeline
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+
+jobs:
+  backend-test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: backend/package-lock.json
+    
+    - name: Install dependencies
+      working-directory: ./backend
+      run: npm ci
+    
+    - name: Run tests
+      working-directory: ./backend
+      run: npm test
+    
+    - name: Run linting
+      working-directory: ./backend
+      run: npm run lint
+
+  admin-test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: admin/package-lock.json
+    
+    - name: Install dependencies
+      working-directory: ./admin
+      run: npm ci
+    
+    - name: Run linting
+      working-directory: ./admin
+      run: npm run lint
+    
+    - name: Build admin dashboard
+      working-directory: ./admin
+      run: npm run build
+
+  mobile-test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: mobile/package-lock.json
+    
+    - name: Install dependencies
+      working-directory: ./mobile
+      run: npm ci
+    
+    - name: Run linting
+      working-directory: ./mobile
+      run: npm run lint
+
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Run security audit
+      run: |
+        cd backend && npm audit --audit-level moderate
+        cd ../admin && npm audit --audit-level moderate
+        cd ../mobile && npm audit --audit-level moderate
+
+  deploy-backend:
+    needs: [backend-test, security-scan]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Deploy to Northflank
+      run: |
+        echo "Backend deployment would be triggered here"
+        echo "This would typically involve pushing to Northflank or triggering a webhook"
+
+  deploy-admin:
+    needs: [admin-test, security-scan]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Deploy to Vercel
+      run: |
+        echo "Admin dashboard deployment would be triggered here"
+        echo "This would typically involve pushing to Vercel or triggering a webhook"
