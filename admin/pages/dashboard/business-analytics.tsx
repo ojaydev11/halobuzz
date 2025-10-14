@@ -163,7 +163,9 @@ const BusinessAnalyticsPage: NextPage = () => {
       });
       
       // Open download URL in new tab
-      window.open(response.data.downloadUrl, '_blank');
+      if (typeof window !== 'undefined') {
+        window.open(response.data.downloadUrl, '_blank');
+      }
     } catch (err: any) {
       alert('Failed to generate report: ' + (err.response?.data?.message || err.message));
     }
