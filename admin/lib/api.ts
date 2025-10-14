@@ -42,14 +42,14 @@ class AdminAPIClient {
       identifier,
       password,
     });
-    
+
     if (response.data.success) {
       this.token = response.data.data.token;
-      if (this.token) {
+      if (this.token && typeof window !== 'undefined') {
         localStorage.setItem('admin_token', this.token);
       }
     }
-    
+
     return response.data;
   }
 
@@ -60,17 +60,24 @@ class AdminAPIClient {
       console.error('Logout error:', error);
     } finally {
       this.token = null;
-      localStorage.removeItem('admin_token');
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('admin_token');
+      }
     }
   }
 
   setToken(token: string): void {
     this.token = token;
-    localStorage.setItem('admin_token', token);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('admin_token', token);
+    }
   }
 
   getToken(): string | null {
-    return this.token || localStorage.getItem('admin_token');
+    if (typeof window !== 'undefined') {
+      return this.token || localStorage.getItem('admin_token');
+    }
+    return this.token;
   }
 
   // Admin dashboard data methods
