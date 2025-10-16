@@ -17,15 +17,12 @@ RUN apk add --no-cache \
     curl \
     && ln -sf python3 /usr/bin/python
 
-# Install pnpm
-RUN corepack enable && corepack prepare pnpm@9.1.0 --activate
-
 # Copy package files
-COPY package*.json pnpm-lock.yaml ./
+COPY package*.json ./
 
 # Install dependencies with cache mount
-RUN --mount=type=cache,id=pnpm-store,target=/root/.pnpm-store \
-    pnpm install --frozen-lockfile
+RUN --mount=type=cache,id=npm-cache,target=/root/.npm \
+    npm ci --only=production
 
 # ---- Build stage ----
 FROM node:20-alpine AS build
@@ -39,13 +36,9 @@ RUN apk add --no-cache \
     linux-headers \
     libc6-compat
 
-# Install pnpm
-RUN corepack enable && corepack prepare pnpm@9.1.0 --activate
-
 # Copy dependencies from deps stage
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/package*.json ./
-COPY --from=deps /app/pnpm-lock.yaml ./
 
 # Copy source code and config files
 COPY tsconfig*.json ./
@@ -59,7 +52,7 @@ COPY styles ./styles
 COPY middleware.ts ./
 
 # Build Next.js application
-RUN pnpm run build
+RUN npm run build
 
 # ---- Runtime stage ----
 FROM node:20-alpine AS runtime
@@ -74,15 +67,12 @@ RUN apk add --no-cache \
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 --ingroup nodejs admin
 
-# Install pnpm
-RUN corepack enable && corepack prepare pnpm@9.1.0 --activate
-
 # Copy package files
-COPY package*.json pnpm-lock.yaml ./
+COPY package*.json ./
 
 # Install production dependencies only
-RUN --mount=type=cache,id=pnpm-store,target=/root/.pnpm-store \
-    pnpm install --frozen-lockfile --prod
+RUN --mount=type=cache,id=npm-cache,target=/root/.npm \
+    npm ci --only=production
 
 # Copy built application
 COPY --from=build /app/.next ./.next
@@ -108,4 +98,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=20s --retries=3 \
   CMD curl -f --max-time 5 --connect-timeout 5 http://127.0.0.1:${PORT}/api/health || exit 1
 
 # Start the application
-CMD ["pnpm", "start"]
+CMD ["npm", "start"]

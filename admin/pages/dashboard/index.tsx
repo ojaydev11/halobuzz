@@ -1,6 +1,7 @@
 import Head from 'next/head';
 import useSWR from 'swr';
 import Layout from '../../components/Layout';
+import RealtimeDashboard from '../../components/RealtimeDashboard';
 import {
   ChartBarIcon,
   UserGroupIcon,
@@ -35,6 +36,11 @@ export default function DashboardHome() {
       <Head>
         <title>Dashboard - HaloBuzz Admin</title>
       </Head>
+
+      {/* Real-time Dashboard */}
+      <div className="mb-8">
+        <RealtimeDashboard />
+      </div>
 
       {/* Real-time status bar */}
       <div className="mb-6 bg-white rounded-lg shadow p-4">

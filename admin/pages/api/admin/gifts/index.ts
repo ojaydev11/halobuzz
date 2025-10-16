@@ -1,9 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { createServerApi } from '../../../../lib/api';
+import adminAPI from '../../../../lib/api';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
-    const api = createServerApi(req.headers as any);
+    const api = adminAPI;
     if (req.method === 'GET') {
       const resp = await api.get('/admin/gifts');
       return res.status(200).json(resp.data);

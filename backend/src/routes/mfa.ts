@@ -20,8 +20,12 @@ router.use(socialLimiter);
  */
 
 interface MFARequestUser {
-  userId: string;
+  id: string;
+  username: string;
   email: string;
+  ogLevel: number;
+  isVerified: boolean;
+  roles: string[];
   mfaEnabled?: boolean;
 }
 

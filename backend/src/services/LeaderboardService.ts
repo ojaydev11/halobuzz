@@ -45,6 +45,7 @@ export interface TournamentEntry {
  */
 export class LeaderboardService {
   private static instance: LeaderboardService;
+  private static isInitialized = false;
   private globalLeaderboards = new Map<string, LeaderboardEntry[]>();
   private weeklyLeaderboards = new Map<string, LeaderboardEntry[]>();
   private monthlyLeaderboards = new Map<string, LeaderboardEntry[]>();
@@ -52,13 +53,18 @@ export class LeaderboardService {
   private seasonalEvents: any[] = [];
 
   private constructor() {
-    this.initializeMockData();
-    this.startPeriodicUpdates();
+    try {
+      this.initializeMockData();
+      this.startPeriodicUpdates();
+    } catch (error) {
+      logger.error('Error initializing LeaderboardService:', error);
+    }
   }
 
   static getInstance(): LeaderboardService {
     if (!LeaderboardService.instance) {
       LeaderboardService.instance = new LeaderboardService();
+      LeaderboardService.isInitialized = true;
     }
     return LeaderboardService.instance;
   }

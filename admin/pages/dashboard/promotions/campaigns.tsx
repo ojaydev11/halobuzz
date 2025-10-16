@@ -392,14 +392,22 @@ export default function CampaignsPage() {
                 {/* Actions */}
                 <div className="flex items-center space-x-2 ml-4">
                   <button
-                    onClick={() => window.open(`/dashboard/promotions/campaigns/${campaign.id}`, '_blank')}
+                    onClick={() => {
+                      if (typeof window !== 'undefined') {
+                        window.open(`/dashboard/promotions/campaigns/${campaign.id}`, '_blank');
+                      }
+                    }}
                     className="p-2 text-gray-400 hover:text-gray-600"
                     title="View Details"
                   >
                     <EyeIcon className="h-5 w-5" />
                   </button>
                   <button
-                    onClick={() => window.open(`/dashboard/promotions/campaigns/${campaign.id}/edit`, '_blank')}
+                    onClick={() => {
+                      if (typeof window !== 'undefined') {
+                        window.open(`/dashboard/promotions/campaigns/${campaign.id}/edit`, '_blank');
+                      }
+                    }}
                     className="p-2 text-gray-400 hover:text-gray-600"
                     title="Edit Campaign"
                   >

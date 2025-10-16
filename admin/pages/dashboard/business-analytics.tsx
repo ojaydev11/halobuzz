@@ -3,7 +3,7 @@ import { NextPage } from 'next';
 import { useRouter } from 'next/router';
 import Layout from '../../components/Layout';
 import { useAuth } from '../../context/AuthContext';
-import { api } from '../../lib/api';
+import api from '../../lib/api';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -163,7 +163,9 @@ const BusinessAnalyticsPage: NextPage = () => {
       });
       
       // Open download URL in new tab
-      window.open(response.data.downloadUrl, '_blank');
+      if (typeof window !== 'undefined') {
+        window.open(response.data.downloadUrl, '_blank');
+      }
     } catch (err: any) {
       alert('Failed to generate report: ' + (err.response?.data?.message || err.message));
     }

@@ -3,7 +3,7 @@ import { NextPage } from 'next';
 import { useRouter } from 'next/router';
 import Layout from '../../components/Layout';
 import { useAuth } from '../../context/AuthContext';
-import { api } from '../../lib/api';
+import api from '../../lib/api';
 import { Bar, Doughnut } from 'react-chartjs-2';
 
 interface EmpireSummary {
@@ -107,7 +107,9 @@ const EmpirePage: NextPage = () => {
         empire: true // Special flag for empire reports
       });
       
-      window.open(response.data.downloadUrl, '_blank');
+      if (typeof window !== 'undefined') {
+        window.open(response.data.downloadUrl, '_blank');
+      }
     } catch (err: any) {
       alert('Failed to generate empire report: ' + (err.response?.data?.message || err.message));
     }

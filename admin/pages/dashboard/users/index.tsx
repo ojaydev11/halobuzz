@@ -440,14 +440,22 @@ export default function UsersPage() {
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex items-center space-x-2">
                       <button
-                        onClick={() => window.open(`/dashboard/users/${user.id}`, '_blank')}
+                        onClick={() => {
+                          if (typeof window !== 'undefined') {
+                            window.open(`/dashboard/users/${user.id}`, '_blank');
+                          }
+                        }}
                         className="text-blue-600 hover:text-blue-900"
                         title="View Details"
                       >
                         <EyeIcon className="h-4 w-4" />
                       </button>
                       <button
-                        onClick={() => window.open(`/dashboard/users/${user.id}/edit`, '_blank')}
+                        onClick={() => {
+                          if (typeof window !== 'undefined') {
+                            window.open(`/dashboard/users/${user.id}/edit`, '_blank');
+                          }
+                        }}
                         className="text-green-600 hover:text-green-900"
                         title="Edit User"
                       >
