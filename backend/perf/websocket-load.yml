@@ -32,7 +32,7 @@ scenarios:
           url: "/api/v1/auth-enhanced/login"
           json:
             identifier: "testuser@example.com"
-            password: "TestPassword123!"
+            password: "${TEST_PASSWORD}"
           capture:
             - json: "$.data.token"
               as: "accessToken"
@@ -78,7 +78,7 @@ scenarios:
           url: "/api/v1/auth-enhanced/login"
           json:
             identifier: "testuser@example.com"
-            password: "TestPassword123!"
+            password: "${TEST_PASSWORD}"
           capture:
             - json: "$.data.token"
               as: "accessToken"
@@ -123,7 +123,7 @@ scenarios:
           url: "/api/v1/auth-enhanced/login"
           json:
             identifier: "testuser@example.com"
-            password: "TestPassword123!"
+            password: "${TEST_PASSWORD}"
           capture:
             - json: "$.data.token"
               as: "accessToken"

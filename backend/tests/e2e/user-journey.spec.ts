@@ -13,7 +13,7 @@ const API_BASE_URL = process.env.E2E_API_BASE_URL || 'http://localhost:3000/api/
 const testUser = {
   username: `testuser_${Date.now()}`,
   email: `test_${Date.now()}@example.com`,
-  password: 'TestPassword123!',
+  password: process.env.TEST_PASSWORD || 'TestPassword123!',
   country: 'NP',
   language: 'en'
 };

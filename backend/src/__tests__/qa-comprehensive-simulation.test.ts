@@ -97,7 +97,7 @@ class QASimulationRunner {
       const user = new User({
         username: `qa_test_user_${i}_${Date.now()}`,
         email: `qa_test_${i}_${Date.now()}@halobuzz.test`,
-        password: 'TestPassword123!',
+        password: process.env.TEST_PASSWORD || 'TestPassword123!',
         coins: {
           balance: 10000, // Start with 10k coins for testing
           bonusBalance: 0,

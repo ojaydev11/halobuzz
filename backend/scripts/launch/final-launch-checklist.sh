@@ -128,7 +128,7 @@ check_p1_priority() {
     local xss_payload="<script>alert('xss')</script>"
     local xss_response=$(curl -s -X POST "$BASE_URL/api/v1/auth-enhanced/register" \
         -H "Content-Type: application/json" \
-        -d "{\"username\":\"$xss_payload\",\"email\":\"test@example.com\",\"password\":\"TestPassword123!\"}" 2>/dev/null)
+        -d "{\"username\":\"$xss_payload\",\"email\":\"test@example.com\",\"password\":\"${TEST_PASSWORD:-TestPassword123!}\"}" 2>/dev/null)
     
     if echo "$xss_response" | grep -q "error\|invalid\|validation"; then
         p1_results+="✅ XSS protection working\n"

@@ -396,7 +396,6 @@ app.use(`/api/${apiVersion}/global-expansion`, globalExpansionRoutes);
 app.use(`/api/${apiVersion}/creator-economy`, authMiddleware, creatorEconomyRoutes);
 app.use(`/api/${apiVersion}/games`, authMiddleware, gamingLimiter, gamesRoutes);
 app.use(`/api/${apiVersion}/games/v2`, gamesRoutesV2); // New enhanced games with staking
-<<<<<<< HEAD
 app.use(`/api/${apiVersion}/games-enhanced`, gamingLimiter, gamesEnhancedRoutes); // Enhanced games with coins system
 app.use(`/api/${apiVersion}/advanced-games`, gamingLimiter, advancedGamesRoutes); // Advanced multiplayer games
 app.use(`/api/${apiVersion}/leaderboards`, leaderboardRoutes); // Global leaderboards and tournaments

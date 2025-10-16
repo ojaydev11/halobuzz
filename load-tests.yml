@@ -30,7 +30,7 @@ scenarios:
           json:
             username: "testuser{{ $randomString() }}"
             email: "test{{ $randomString() }}@example.com"
-            password: "TestPassword123!"
+            password: "${TEST_PASSWORD}"
             country: "US"
             language: "en"
           capture:
@@ -46,7 +46,7 @@ scenarios:
           url: "/api/v1/auth/login"
           json:
             identifier: "testuser{{ $randomInt(1, 1000) }}"
-            password: "TestPassword123!"
+            password: "${TEST_PASSWORD}"
           capture:
             - json: "$.data.token"
               as: "authToken"
@@ -66,7 +66,7 @@ scenarios:
           url: "/api/v1/auth/login"
           json:
             identifier: "testuser{{ $randomInt(1, 1000) }}"
-            password: "TestPassword123!"
+            password: "${TEST_PASSWORD}"
           capture:
             - json: "$.data.token"
               as: "authToken"
@@ -92,7 +92,7 @@ scenarios:
           url: "/api/v1/auth/login"
           json:
             identifier: "testuser{{ $randomInt(1, 1000) }}"
-            password: "TestPassword123!"
+            password: "${TEST_PASSWORD}"
           capture:
             - json: "$.data.token"
               as: "authToken"
@@ -120,7 +120,7 @@ scenarios:
           url: "/api/v1/auth/login"
           json:
             identifier: "testuser{{ $randomInt(1, 1000) }}"
-            password: "TestPassword123!"
+            password: "${TEST_PASSWORD}"
           capture:
             - json: "$.data.token"
               as: "authToken"

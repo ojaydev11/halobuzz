@@ -45,7 +45,7 @@ scenarios:
           json:
             username: "loadtest{{ $randomString() }}"
             email: "loadtest{{ $randomString() }}@example.com"
-            password: "LoadTest123!"
+            password: "${TEST_PASSWORD}"
             country: "US"
             language: "en"
 EOF
@@ -69,7 +69,7 @@ scenarios:
           json:
             username: "mixedtest{{ $randomString() }}"
             email: "mixedtest{{ $randomString() }}@example.com"
-            password: "MixedTest123!"
+            password: "${TEST_PASSWORD}"
             country: "US"
             language: "en"
       - get:

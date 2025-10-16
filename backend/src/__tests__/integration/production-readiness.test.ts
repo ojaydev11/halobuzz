@@ -42,7 +42,7 @@ describe('Production Readiness Tests', () => {
     it('should register a new user', async () => {
       const userData = {
         email: 'test@example.com',
-        password: 'TestPassword123!',
+        password: process.env.TEST_PASSWORD || 'TestPassword123!',
         username: 'testuser',
         country: 'Nepal'
       };
@@ -61,7 +61,7 @@ describe('Production Readiness Tests', () => {
     it('should login with valid credentials', async () => {
       const loginData = {
         email: 'test@example.com',
-        password: 'TestPassword123!'
+        password: process.env.TEST_PASSWORD || 'TestPassword123!'
       };
 
       const response = await request(app)
@@ -100,7 +100,7 @@ describe('Production Readiness Tests', () => {
         .post('/api/v1/auth/login')
         .send({
           email: 'test@example.com',
-          password: 'TestPassword123!'
+          password: process.env.TEST_PASSWORD || 'TestPassword123!'
         });
 
       authToken = loginResponse.body.token;
@@ -155,7 +155,7 @@ describe('Production Readiness Tests', () => {
         .post('/api/v1/auth/login')
         .send({
           email: 'test@example.com',
-          password: 'TestPassword123!'
+          password: process.env.TEST_PASSWORD || 'TestPassword123!'
         });
 
       authToken = loginResponse.body.token;
@@ -210,7 +210,7 @@ describe('Production Readiness Tests', () => {
         .post('/api/v1/auth/login')
         .send({
           email: 'test@example.com',
-          password: 'TestPassword123!'
+          password: process.env.TEST_PASSWORD || 'TestPassword123!'
         });
 
       authToken = loginResponse.body.token;
@@ -284,7 +284,7 @@ describe('Production Readiness Tests', () => {
     it('should sanitize input data', async () => {
       const maliciousData = {
         email: 'test@example.com',
-        password: 'TestPassword123!',
+        password: process.env.TEST_PASSWORD || 'TestPassword123!',
         username: '<script>alert("xss")</script>',
         country: 'Nepal'
       };

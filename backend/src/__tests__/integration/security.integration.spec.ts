@@ -16,7 +16,7 @@ describe('Security Integration Tests', () => {
     testUser = await User.create({
       username: 'testuser',
       email: 'test@example.com',
-      password: 'TestPassword123!',
+      password: process.env.TEST_PASSWORD || 'TestPassword123!',
       country: 'US',
       language: 'en',
       coins: { balance: 1000, bonusBalance: 0, totalEarned: 0, totalSpent: 0 }
@@ -27,7 +27,7 @@ describe('Security Integration Tests', () => {
       .post('/api/v1/auth/login')
       .send({
         identifier: 'test@example.com',
-        password: 'TestPassword123!'
+        password: process.env.TEST_PASSWORD || 'TestPassword123!'
       });
 
     authToken = loginResponse.body.data.token;
@@ -153,7 +153,7 @@ describe('Security Integration Tests', () => {
 
     it('should hash passwords properly', async () => {
       const user = await User.findById(testUser._id);
-      expect(user?.password).not.toBe('TestPassword123!');
+      expect(user?.password).not.toBe(process.env.TEST_PASSWORD || 'TestPassword123!');
       expect(user?.password).toMatch(/^\$2[aby]?\$/); // bcrypt hash format
     });
   });

@@ -11,7 +11,7 @@ const config = {
   testUser: {
     email: 'test@halobuzz.com',
     username: 'testuser',
-    password: 'TestPassword123!'
+    password: process.env.TEST_PASSWORD || 'TestPassword123!'
   },
   adminUser: {
     email: 'admin@halobuzz.com',
@@ -147,8 +147,8 @@ class ProductionReadinessTester {
       const response = await axios.post(`${config.baseUrl}/api/${config.apiVersion}/auth/register`, {
         email: testEmail,
         username: `testuser_${Date.now()}`,
-        password: 'TestPassword123!',
-        confirmPassword: 'TestPassword123!'
+        password: process.env.TEST_PASSWORD || 'TestPassword123!',
+        confirmPassword: process.env.TEST_PASSWORD || 'TestPassword123!'
       });
 
       if (!response.data.success) {
