@@ -1,0 +1,1535 @@
+26ce01d1bd67092645689dbd5e992fd8
+"use strict";
+
+/* istanbul ignore next */
+function cov_e0mddrxvt() {
+  var path = "D:\\halobuzz by cursor\\backend\\src\\routes\\paypal.ts";
+  var hash = "7c19d0e8a61901a62065badf6587366bf31e5b18";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "D:\\halobuzz by cursor\\backend\\src\\routes\\paypal.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 2,
+          column: 22
+        },
+        end: {
+          line: 4,
+          column: 1
+        }
+      },
+      "1": {
+        start: {
+          line: 3,
+          column: 4
+        },
+        end: {
+          line: 3,
+          column: 62
+        }
+      },
+      "2": {
+        start: {
+          line: 5,
+          column: 0
+        },
+        end: {
+          line: 5,
+          column: 62
+        }
+      },
+      "3": {
+        start: {
+          line: 6,
+          column: 18
+        },
+        end: {
+          line: 6,
+          column: 53
+        }
+      },
+      "4": {
+        start: {
+          line: 7,
+          column: 25
+        },
+        end: {
+          line: 7,
+          column: 62
+        }
+      },
+      "5": {
+        start: {
+          line: 8,
+          column: 17
+        },
+        end: {
+          line: 8,
+          column: 44
+        }
+      },
+      "6": {
+        start: {
+          line: 9,
+          column: 15
+        },
+        end: {
+          line: 9,
+          column: 41
+        }
+      },
+      "7": {
+        start: {
+          line: 11,
+          column: 0
+        },
+        end: {
+          line: 37,
+          column: 3
+        }
+      },
+      "8": {
+        start: {
+          line: 12,
+          column: 4
+        },
+        end: {
+          line: 36,
+          column: 5
+        }
+      },
+      "9": {
+        start: {
+          line: 13,
+          column: 41
+        },
+        end: {
+          line: 13,
+          column: 49
+        }
+      },
+      "10": {
+        start: {
+          line: 14,
+          column: 8
+        },
+        end: {
+          line: 14,
+          column: 99
+        }
+      },
+      "11": {
+        start: {
+          line: 15,
+          column: 8
+        },
+        end: {
+          line: 30,
+          column: 9
+        }
+      },
+      "12": {
+        start: {
+          line: 18,
+          column: 16
+        },
+        end: {
+          line: 18,
+          column: 88
+        }
+      },
+      "13": {
+        start: {
+          line: 19,
+          column: 16
+        },
+        end: {
+          line: 19,
+          column: 22
+        }
+      },
+      "14": {
+        start: {
+          line: 22,
+          column: 16
+        },
+        end: {
+          line: 22,
+          column: 53
+        }
+      },
+      "15": {
+        start: {
+          line: 23,
+          column: 16
+        },
+        end: {
+          line: 23,
+          column: 22
+        }
+      },
+      "16": {
+        start: {
+          line: 26,
+          column: 16
+        },
+        end: {
+          line: 26,
+          column: 52
+        }
+      },
+      "17": {
+        start: {
+          line: 27,
+          column: 16
+        },
+        end: {
+          line: 27,
+          column: 22
+        }
+      },
+      "18": {
+        start: {
+          line: 29,
+          column: 16
+        },
+        end: {
+          line: 29,
+          column: 87
+        }
+      },
+      "19": {
+        start: {
+          line: 31,
+          column: 8
+        },
+        end: {
+          line: 31,
+          column: 48
+        }
+      },
+      "20": {
+        start: {
+          line: 34,
+          column: 8
+        },
+        end: {
+          line: 34,
+          column: 62
+        }
+      },
+      "21": {
+        start: {
+          line: 35,
+          column: 8
+        },
+        end: {
+          line: 35,
+          column: 85
+        }
+      },
+      "22": {
+        start: {
+          line: 39,
+          column: 0
+        },
+        end: {
+          line: 61,
+          column: 3
+        }
+      },
+      "23": {
+        start: {
+          line: 40,
+          column: 4
+        },
+        end: {
+          line: 60,
+          column: 5
+        }
+      },
+      "24": {
+        start: {
+          line: 41,
+          column: 35
+        },
+        end: {
+          line: 41,
+          column: 44
+        }
+      },
+      "25": {
+        start: {
+          line: 42,
+          column: 8
+        },
+        end: {
+          line: 47,
+          column: 9
+        }
+      },
+      "26": {
+        start: {
+          line: 43,
+          column: 12
+        },
+        end: {
+          line: 46,
+          column: 15
+        }
+      },
+      "27": {
+        start: {
+          line: 49,
+          column: 30
+        },
+        end: {
+          line: 49,
+          column: 93
+        }
+      },
+      "28": {
+        start: {
+          line: 50,
+          column: 8
+        },
+        end: {
+          line: 55,
+          column: 9
+        }
+      },
+      "29": {
+        start: {
+          line: 51,
+          column: 12
+        },
+        end: {
+          line: 51,
+          column: 117
+        }
+      },
+      "30": {
+        start: {
+          line: 54,
+          column: 12
+        },
+        end: {
+          line: 54,
+          column: 119
+        }
+      },
+      "31": {
+        start: {
+          line: 58,
+          column: 8
+        },
+        end: {
+          line: 58,
+          column: 71
+        }
+      },
+      "32": {
+        start: {
+          line: 59,
+          column: 8
+        },
+        end: {
+          line: 59,
+          column: 98
+        }
+      },
+      "33": {
+        start: {
+          line: 63,
+          column: 0
+        },
+        end: {
+          line: 72,
+          column: 3
+        }
+      },
+      "34": {
+        start: {
+          line: 64,
+          column: 4
+        },
+        end: {
+          line: 71,
+          column: 5
+        }
+      },
+      "35": {
+        start: {
+          line: 65,
+          column: 8
+        },
+        end: {
+          line: 65,
+          column: 65
+        }
+      },
+      "36": {
+        start: {
+          line: 66,
+          column: 8
+        },
+        end: {
+          line: 66,
+          column: 67
+        }
+      },
+      "37": {
+        start: {
+          line: 69,
+          column: 8
+        },
+        end: {
+          line: 69,
+          column: 70
+        }
+      },
+      "38": {
+        start: {
+          line: 70,
+          column: 8
+        },
+        end: {
+          line: 70,
+          column: 90
+        }
+      },
+      "39": {
+        start: {
+          line: 74,
+          column: 4
+        },
+        end: {
+          line: 96,
+          column: 5
+        }
+      },
+      "40": {
+        start: {
+          line: 75,
+          column: 26
+        },
+        end: {
+          line: 75,
+          column: 37
+        }
+      },
+      "41": {
+        start: {
+          line: 76,
+          column: 24
+        },
+        end: {
+          line: 76,
+          column: 74
+        }
+      },
+      "42": {
+        start: {
+          line: 77,
+          column: 8
+        },
+        end: {
+          line: 92,
+          column: 9
+        }
+      },
+      "43": {
+        start: {
+          line: 79,
+          column: 32
+        },
+        end: {
+          line: 79,
+          column: 102
+        }
+      },
+      "44": {
+        start: {
+          line: 80,
+          column: 12
+        },
+        end: {
+          line: 91,
+          column: 13
+        }
+      },
+      "45": {
+        start: {
+          line: 81,
+          column: 16
+        },
+        end: {
+          line: 81,
+          column: 49
+        }
+      },
+      "46": {
+        start: {
+          line: 82,
+          column: 16
+        },
+        end: {
+          line: 82,
+          column: 52
+        }
+      },
+      "47": {
+        start: {
+          line: 83,
+          column: 16
+        },
+        end: {
+          line: 83,
+          column: 41
+        }
+      },
+      "48": {
+        start: {
+          line: 85,
+          column: 16
+        },
+        end: {
+          line: 85,
+          column: 121
+        }
+      },
+      "49": {
+        start: {
+          line: 86,
+          column: 16
+        },
+        end: {
+          line: 90,
+          column: 19
+        }
+      },
+      "50": {
+        start: {
+          line: 95,
+          column: 8
+        },
+        end: {
+          line: 95,
+          column: 79
+        }
+      },
+      "51": {
+        start: {
+          line: 99,
+          column: 4
+        },
+        end: {
+          line: 117,
+          column: 5
+        }
+      },
+      "52": {
+        start: {
+          line: 100,
+          column: 24
+        },
+        end: {
+          line: 100,
+          column: 74
+        }
+      },
+      "53": {
+        start: {
+          line: 101,
+          column: 8
+        },
+        end: {
+          line: 113,
+          column: 9
+        }
+      },
+      "54": {
+        start: {
+          line: 103,
+          column: 32
+        },
+        end: {
+          line: 103,
+          column: 102
+        }
+      },
+      "55": {
+        start: {
+          line: 104,
+          column: 12
+        },
+        end: {
+          line: 112,
+          column: 13
+        }
+      },
+      "56": {
+        start: {
+          line: 105,
+          column: 16
+        },
+        end: {
+          line: 105,
+          column: 46
+        }
+      },
+      "57": {
+        start: {
+          line: 106,
+          column: 16
+        },
+        end: {
+          line: 106,
+          column: 41
+        }
+      },
+      "58": {
+        start: {
+          line: 107,
+          column: 16
+        },
+        end: {
+          line: 111,
+          column: 19
+        }
+      },
+      "59": {
+        start: {
+          line: 116,
+          column: 8
+        },
+        end: {
+          line: 116,
+          column: 78
+        }
+      },
+      "60": {
+        start: {
+          line: 119,
+          column: 0
+        },
+        end: {
+          line: 119,
+          column: 25
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "(anonymous_0)",
+        decl: {
+          start: {
+            line: 2,
+            column: 56
+          },
+          end: {
+            line: 2,
+            column: 57
+          }
+        },
+        loc: {
+          start: {
+            line: 2,
+            column: 71
+          },
+          end: {
+            line: 4,
+            column: 1
+          }
+        },
+        line: 2
+      },
+      "1": {
+        name: "(anonymous_1)",
+        decl: {
+          start: {
+            line: 11,
+            column: 24
+          },
+          end: {
+            line: 11,
+            column: 25
+          }
+        },
+        loc: {
+          start: {
+            line: 11,
+            column: 44
+          },
+          end: {
+            line: 37,
+            column: 1
+          }
+        },
+        line: 11
+      },
+      "2": {
+        name: "(anonymous_2)",
+        decl: {
+          start: {
+            line: 39,
+            column: 23
+          },
+          end: {
+            line: 39,
+            column: 24
+          }
+        },
+        loc: {
+          start: {
+            line: 39,
+            column: 43
+          },
+          end: {
+            line: 61,
+            column: 1
+          }
+        },
+        line: 39
+      },
+      "3": {
+        name: "(anonymous_3)",
+        decl: {
+          start: {
+            line: 63,
+            column: 22
+          },
+          end: {
+            line: 63,
+            column: 23
+          }
+        },
+        loc: {
+          start: {
+            line: 63,
+            column: 42
+          },
+          end: {
+            line: 72,
+            column: 1
+          }
+        },
+        line: 63
+      },
+      "4": {
+        name: "handlePaymentCapture",
+        decl: {
+          start: {
+            line: 73,
+            column: 15
+          },
+          end: {
+            line: 73,
+            column: 35
+          }
+        },
+        loc: {
+          start: {
+            line: 73,
+            column: 46
+          },
+          end: {
+            line: 97,
+            column: 1
+          }
+        },
+        line: 73
+      },
+      "5": {
+        name: "handlePaymentDenied",
+        decl: {
+          start: {
+            line: 98,
+            column: 15
+          },
+          end: {
+            line: 98,
+            column: 34
+          }
+        },
+        loc: {
+          start: {
+            line: 98,
+            column: 45
+          },
+          end: {
+            line: 118,
+            column: 1
+          }
+        },
+        line: 98
+      }
+    },
+    branchMap: {
+      "0": {
+        loc: {
+          start: {
+            line: 2,
+            column: 22
+          },
+          end: {
+            line: 4,
+            column: 1
+          }
+        },
+        type: "binary-expr",
+        locations: [{
+          start: {
+            line: 2,
+            column: 23
+          },
+          end: {
+            line: 2,
+            column: 27
+          }
+        }, {
+          start: {
+            line: 2,
+            column: 31
+          },
+          end: {
+            line: 2,
+            column: 51
+          }
+        }, {
+          start: {
+            line: 2,
+            column: 56
+          },
+          end: {
+            line: 4,
+            column: 1
+          }
+        }],
+        line: 2
+      },
+      "1": {
+        loc: {
+          start: {
+            line: 3,
+            column: 11
+          },
+          end: {
+            line: 3,
+            column: 61
+          }
+        },
+        type: "cond-expr",
+        locations: [{
+          start: {
+            line: 3,
+            column: 37
+          },
+          end: {
+            line: 3,
+            column: 40
+          }
+        }, {
+          start: {
+            line: 3,
+            column: 43
+          },
+          end: {
+            line: 3,
+            column: 61
+          }
+        }],
+        line: 3
+      },
+      "2": {
+        loc: {
+          start: {
+            line: 3,
+            column: 12
+          },
+          end: {
+            line: 3,
+            column: 33
+          }
+        },
+        type: "binary-expr",
+        locations: [{
+          start: {
+            line: 3,
+            column: 12
+          },
+          end: {
+            line: 3,
+            column: 15
+          }
+        }, {
+          start: {
+            line: 3,
+            column: 19
+          },
+          end: {
+            line: 3,
+            column: 33
+          }
+        }],
+        line: 3
+      },
+      "3": {
+        loc: {
+          start: {
+            line: 15,
+            column: 8
+          },
+          end: {
+            line: 30,
+            column: 9
+          }
+        },
+        type: "switch",
+        locations: [{
+          start: {
+            line: 16,
+            column: 12
+          },
+          end: {
+            line: 19,
+            column: 22
+          }
+        }, {
+          start: {
+            line: 20,
+            column: 12
+          },
+          end: {
+            line: 23,
+            column: 22
+          }
+        }, {
+          start: {
+            line: 24,
+            column: 12
+          },
+          end: {
+            line: 27,
+            column: 22
+          }
+        }, {
+          start: {
+            line: 28,
+            column: 12
+          },
+          end: {
+            line: 29,
+            column: 87
+          }
+        }],
+        line: 15
+      },
+      "4": {
+        loc: {
+          start: {
+            line: 42,
+            column: 8
+          },
+          end: {
+            line: 47,
+            column: 9
+          }
+        },
+        type: "if",
+        locations: [{
+          start: {
+            line: 42,
+            column: 8
+          },
+          end: {
+            line: 47,
+            column: 9
+          }
+        }, {
+          start: {
+            line: undefined,
+            column: undefined
+          },
+          end: {
+            line: undefined,
+            column: undefined
+          }
+        }],
+        line: 42
+      },
+      "5": {
+        loc: {
+          start: {
+            line: 50,
+            column: 8
+          },
+          end: {
+            line: 55,
+            column: 9
+          }
+        },
+        type: "if",
+        locations: [{
+          start: {
+            line: 50,
+            column: 8
+          },
+          end: {
+            line: 55,
+            column: 9
+          }
+        }, {
+          start: {
+            line: 53,
+            column: 13
+          },
+          end: {
+            line: 55,
+            column: 9
+          }
+        }],
+        line: 50
+      },
+      "6": {
+        loc: {
+          start: {
+            line: 77,
+            column: 8
+          },
+          end: {
+            line: 92,
+            column: 9
+          }
+        },
+        type: "if",
+        locations: [{
+          start: {
+            line: 77,
+            column: 8
+          },
+          end: {
+            line: 92,
+            column: 9
+          }
+        }, {
+          start: {
+            line: undefined,
+            column: undefined
+          },
+          end: {
+            line: undefined,
+            column: undefined
+          }
+        }],
+        line: 77
+      },
+      "7": {
+        loc: {
+          start: {
+            line: 80,
+            column: 12
+          },
+          end: {
+            line: 91,
+            column: 13
+          }
+        },
+        type: "if",
+        locations: [{
+          start: {
+            line: 80,
+            column: 12
+          },
+          end: {
+            line: 91,
+            column: 13
+          }
+        }, {
+          start: {
+            line: undefined,
+            column: undefined
+          },
+          end: {
+            line: undefined,
+            column: undefined
+          }
+        }],
+        line: 80
+      },
+      "8": {
+        loc: {
+          start: {
+            line: 101,
+            column: 8
+          },
+          end: {
+            line: 113,
+            column: 9
+          }
+        },
+        type: "if",
+        locations: [{
+          start: {
+            line: 101,
+            column: 8
+          },
+          end: {
+            line: 113,
+            column: 9
+          }
+        }, {
+          start: {
+            line: undefined,
+            column: undefined
+          },
+          end: {
+            line: undefined,
+            column: undefined
+          }
+        }],
+        line: 101
+      },
+      "9": {
+        loc: {
+          start: {
+            line: 104,
+            column: 12
+          },
+          end: {
+            line: 112,
+            column: 13
+          }
+        },
+        type: "if",
+        locations: [{
+          start: {
+            line: 104,
+            column: 12
+          },
+          end: {
+            line: 112,
+            column: 13
+          }
+        }, {
+          start: {
+            line: undefined,
+            column: undefined
+          },
+          end: {
+            line: undefined,
+            column: undefined
+          }
+        }],
+        line: 104
+      }
+    },
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0,
+      "9": 0,
+      "10": 0,
+      "11": 0,
+      "12": 0,
+      "13": 0,
+      "14": 0,
+      "15": 0,
+      "16": 0,
+      "17": 0,
+      "18": 0,
+      "19": 0,
+      "20": 0,
+      "21": 0,
+      "22": 0,
+      "23": 0,
+      "24": 0,
+      "25": 0,
+      "26": 0,
+      "27": 0,
+      "28": 0,
+      "29": 0,
+      "30": 0,
+      "31": 0,
+      "32": 0,
+      "33": 0,
+      "34": 0,
+      "35": 0,
+      "36": 0,
+      "37": 0,
+      "38": 0,
+      "39": 0,
+      "40": 0,
+      "41": 0,
+      "42": 0,
+      "43": 0,
+      "44": 0,
+      "45": 0,
+      "46": 0,
+      "47": 0,
+      "48": 0,
+      "49": 0,
+      "50": 0,
+      "51": 0,
+      "52": 0,
+      "53": 0,
+      "54": 0,
+      "55": 0,
+      "56": 0,
+      "57": 0,
+      "58": 0,
+      "59": 0,
+      "60": 0
+    },
+    f: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0
+    },
+    b: {
+      "0": [0, 0, 0],
+      "1": [0, 0],
+      "2": [0, 0],
+      "3": [0, 0, 0, 0],
+      "4": [0, 0],
+      "5": [0, 0],
+      "6": [0, 0],
+      "7": [0, 0],
+      "8": [0, 0],
+      "9": [0, 0]
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "7c19d0e8a61901a62065badf6587366bf31e5b18"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_e0mddrxvt = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_e0mddrxvt();
+var __importDefault =
+/* istanbul ignore next */
+(cov_e0mddrxvt().s[0]++,
+/* istanbul ignore next */
+(cov_e0mddrxvt().b[0][0]++, this) &&
+/* istanbul ignore next */
+(cov_e0mddrxvt().b[0][1]++, this.__importDefault) ||
+/* istanbul ignore next */
+(cov_e0mddrxvt().b[0][2]++, function (mod) {
+  /* istanbul ignore next */
+  cov_e0mddrxvt().f[0]++;
+  cov_e0mddrxvt().s[1]++;
+  return /* istanbul ignore next */(cov_e0mddrxvt().b[2][0]++, mod) &&
+  /* istanbul ignore next */
+  (cov_e0mddrxvt().b[2][1]++, mod.__esModule) ?
+  /* istanbul ignore next */
+  (cov_e0mddrxvt().b[1][0]++, mod) :
+  /* istanbul ignore next */
+  (cov_e0mddrxvt().b[1][1]++, {
+    "default": mod
+  });
+}));
+/* istanbul ignore next */
+cov_e0mddrxvt().s[2]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+const express_1 =
+/* istanbul ignore next */
+(cov_e0mddrxvt().s[3]++, __importDefault(require("express")));
+const PaymentService_1 =
+/* istanbul ignore next */
+(cov_e0mddrxvt().s[4]++, require("../services/PaymentService"));
+const logger_1 =
+/* istanbul ignore next */
+(cov_e0mddrxvt().s[5]++, require("../config/logger"));
+const router =
+/* istanbul ignore next */
+(cov_e0mddrxvt().s[6]++, express_1.default.Router());
+// PayPal webhook handler
+/* istanbul ignore next */
+cov_e0mddrxvt().s[7]++;
+router.post('/webhook', async (req, res) => {
+  /* istanbul ignore next */
+  cov_e0mddrxvt().f[1]++;
+  cov_e0mddrxvt().s[8]++;
+  try {
+    const {
+      event_type,
+      resource
+    } =
+    /* istanbul ignore next */
+    (cov_e0mddrxvt().s[9]++, req.body);
+    /* istanbul ignore next */
+    cov_e0mddrxvt().s[10]++;
+    logger_1.logger.info('PayPal webhook received', {
+      event_type,
+      resource_id: resource?.id
+    });
+    /* istanbul ignore next */
+    cov_e0mddrxvt().s[11]++;
+    switch (event_type) {
+      case 'CHECKOUT.ORDER.APPROVED':
+        /* istanbul ignore next */
+        cov_e0mddrxvt().b[3][0]++;
+        cov_e0mddrxvt().s[12]++;
+        // Order approved, ready for capture
+        logger_1.logger.info('PayPal order approved', {
+          orderId: resource.id
+        });
+        /* istanbul ignore next */
+        cov_e0mddrxvt().s[13]++;
+        break;
+      case 'PAYMENT.CAPTURE.COMPLETED':
+        /* istanbul ignore next */
+        cov_e0mddrxvt().b[3][1]++;
+        cov_e0mddrxvt().s[14]++;
+        // Payment captured successfully
+        await handlePaymentCapture(resource);
+        /* istanbul ignore next */
+        cov_e0mddrxvt().s[15]++;
+        break;
+      case 'PAYMENT.CAPTURE.DENIED':
+        /* istanbul ignore next */
+        cov_e0mddrxvt().b[3][2]++;
+        cov_e0mddrxvt().s[16]++;
+        // Payment capture denied
+        await handlePaymentDenied(resource);
+        /* istanbul ignore next */
+        cov_e0mddrxvt().s[17]++;
+        break;
+      default:
+        /* istanbul ignore next */
+        cov_e0mddrxvt().b[3][3]++;
+        cov_e0mddrxvt().s[18]++;
+        logger_1.logger.info('Unhandled PayPal webhook event', {
+          event_type
+        });
+    }
+    /* istanbul ignore next */
+    cov_e0mddrxvt().s[19]++;
+    res.status(200).json({
+      success: true
+    });
+  } catch (error) {
+    /* istanbul ignore next */
+    cov_e0mddrxvt().s[20]++;
+    logger_1.logger.error('PayPal webhook error:', error);
+    /* istanbul ignore next */
+    cov_e0mddrxvt().s[21]++;
+    res.status(500).json({
+      success: false,
+      error: 'Webhook processing failed'
+    });
+  }
+});
+// PayPal payment success callback
+/* istanbul ignore next */
+cov_e0mddrxvt().s[22]++;
+router.get('/success', async (req, res) => {
+  /* istanbul ignore next */
+  cov_e0mddrxvt().f[2]++;
+  cov_e0mddrxvt().s[23]++;
+  try {
+    const {
+      token,
+      PayerID
+    } =
+    /* istanbul ignore next */
+    (cov_e0mddrxvt().s[24]++, req.query);
+    /* istanbul ignore next */
+    cov_e0mddrxvt().s[25]++;
+    if (!token) {
+      /* istanbul ignore next */
+      cov_e0mddrxvt().b[4][0]++;
+      cov_e0mddrxvt().s[26]++;
+      return res.status(400).json({
+        success: false,
+        error: 'Missing payment token'
+      });
+    } else
+    /* istanbul ignore next */
+    {
+      cov_e0mddrxvt().b[4][1]++;
+    }
+    // Capture the PayPal order
+    const captureResult =
+    /* istanbul ignore next */
+    (cov_e0mddrxvt().s[27]++, await PaymentService_1.paymentService.capturePayPalOrder(token));
+    /* istanbul ignore next */
+    cov_e0mddrxvt().s[28]++;
+    if (captureResult.success) {
+      /* istanbul ignore next */
+      cov_e0mddrxvt().b[5][0]++;
+      cov_e0mddrxvt().s[29]++;
+      res.redirect(`${process.env.FRONTEND_URL}/payment/success?transactionId=${captureResult.transactionId}`);
+    } else {
+      /* istanbul ignore next */
+      cov_e0mddrxvt().b[5][1]++;
+      cov_e0mddrxvt().s[30]++;
+      res.redirect(`${process.env.FRONTEND_URL}/payment/error?error=${encodeURIComponent(captureResult.error)}`);
+    }
+  } catch (error) {
+    /* istanbul ignore next */
+    cov_e0mddrxvt().s[31]++;
+    logger_1.logger.error('PayPal success callback error:', error);
+    /* istanbul ignore next */
+    cov_e0mddrxvt().s[32]++;
+    res.redirect(`${process.env.FRONTEND_URL}/payment/error?error=Payment processing failed`);
+  }
+});
+// PayPal payment cancel callback
+/* istanbul ignore next */
+cov_e0mddrxvt().s[33]++;
+router.get('/cancel', async (req, res) => {
+  /* istanbul ignore next */
+  cov_e0mddrxvt().f[3]++;
+  cov_e0mddrxvt().s[34]++;
+  try {
+    /* istanbul ignore next */
+    cov_e0mddrxvt().s[35]++;
+    logger_1.logger.info('PayPal payment cancelled by user');
+    /* istanbul ignore next */
+    cov_e0mddrxvt().s[36]++;
+    res.redirect(`${process.env.FRONTEND_URL}/payment/cancel`);
+  } catch (error) {
+    /* istanbul ignore next */
+    cov_e0mddrxvt().s[37]++;
+    logger_1.logger.error('PayPal cancel callback error:', error);
+    /* istanbul ignore next */
+    cov_e0mddrxvt().s[38]++;
+    res.redirect(`${process.env.FRONTEND_URL}/payment/error?error=Payment cancelled`);
+  }
+});
+async function handlePaymentCapture(resource) {
+  /* istanbul ignore next */
+  cov_e0mddrxvt().f[4]++;
+  cov_e0mddrxvt().s[39]++;
+  try {
+    const captureId =
+    /* istanbul ignore next */
+    (cov_e0mddrxvt().s[40]++, resource.id);
+    const orderId =
+    /* istanbul ignore next */
+    (cov_e0mddrxvt().s[41]++, resource.supplementary_data?.related_ids?.order_id);
+    /* istanbul ignore next */
+    cov_e0mddrxvt().s[42]++;
+    if (orderId) {
+      /* istanbul ignore next */
+      cov_e0mddrxvt().b[6][0]++;
+      // Find and update transaction
+      const transaction =
+      /* istanbul ignore next */
+      (cov_e0mddrxvt().s[43]++, await PaymentService_1.paymentService.getTransactionByOrderId(orderId));
+      /* istanbul ignore next */
+      cov_e0mddrxvt().s[44]++;
+      if (transaction) {
+        /* istanbul ignore next */
+        cov_e0mddrxvt().b[7][0]++;
+        cov_e0mddrxvt().s[45]++;
+        transaction.status = 'completed';
+        /* istanbul ignore next */
+        cov_e0mddrxvt().s[46]++;
+        transaction.referenceId = captureId;
+        /* istanbul ignore next */
+        cov_e0mddrxvt().s[47]++;
+        await transaction.save();
+        // Update user coins
+        /* istanbul ignore next */
+        cov_e0mddrxvt().s[48]++;
+        await PaymentService_1.paymentService.updateUserCoins(transaction.userId.toString(), transaction.amount);
+        /* istanbul ignore next */
+        cov_e0mddrxvt().s[49]++;
+        logger_1.logger.info('PayPal payment processed successfully', {
+          userId: transaction.userId,
+          amount: transaction.amount,
+          captureId
+        });
+      } else
+      /* istanbul ignore next */
+      {
+        cov_e0mddrxvt().b[7][1]++;
+      }
+    } else
+    /* istanbul ignore next */
+    {
+      cov_e0mddrxvt().b[6][1]++;
+    }
+  } catch (error) {
+    /* istanbul ignore next */
+    cov_e0mddrxvt().s[50]++;
+    logger_1.logger.error('Error handling PayPal payment capture:', error);
+  }
+}
+async function handlePaymentDenied(resource) {
+  /* istanbul ignore next */
+  cov_e0mddrxvt().f[5]++;
+  cov_e0mddrxvt().s[51]++;
+  try {
+    const orderId =
+    /* istanbul ignore next */
+    (cov_e0mddrxvt().s[52]++, resource.supplementary_data?.related_ids?.order_id);
+    /* istanbul ignore next */
+    cov_e0mddrxvt().s[53]++;
+    if (orderId) {
+      /* istanbul ignore next */
+      cov_e0mddrxvt().b[8][0]++;
+      // Find and update transaction
+      const transaction =
+      /* istanbul ignore next */
+      (cov_e0mddrxvt().s[54]++, await PaymentService_1.paymentService.getTransactionByOrderId(orderId));
+      /* istanbul ignore next */
+      cov_e0mddrxvt().s[55]++;
+      if (transaction) {
+        /* istanbul ignore next */
+        cov_e0mddrxvt().b[9][0]++;
+        cov_e0mddrxvt().s[56]++;
+        transaction.status = 'failed';
+        /* istanbul ignore next */
+        cov_e0mddrxvt().s[57]++;
+        await transaction.save();
+        /* istanbul ignore next */
+        cov_e0mddrxvt().s[58]++;
+        logger_1.logger.info('PayPal payment denied', {
+          userId: transaction.userId,
+          amount: transaction.amount,
+          orderId
+        });
+      } else
+      /* istanbul ignore next */
+      {
+        cov_e0mddrxvt().b[9][1]++;
+      }
+    } else
+    /* istanbul ignore next */
+    {
+      cov_e0mddrxvt().b[8][1]++;
+    }
+  } catch (error) {
+    /* istanbul ignore next */
+    cov_e0mddrxvt().s[59]++;
+    logger_1.logger.error('Error handling PayPal payment denial:', error);
+  }
+}
+/* istanbul ignore next */
+cov_e0mddrxvt().s[60]++;
+exports.default = router;

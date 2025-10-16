@@ -1,0 +1,553 @@
+97fb8dee92938d892141e560c777c1bf
+"use strict";
+
+/* istanbul ignore next */
+function cov_15561cqjt() {
+  var path = "D:\\halobuzz by cursor\\backend\\src\\cron\\throneExpiry.ts";
+  var hash = "6ed6752964bb553a39e1b0591d178dc785eb5c37";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "D:\\halobuzz by cursor\\backend\\src\\cron\\throneExpiry.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 2,
+          column: 0
+        },
+        end: {
+          line: 2,
+          column: 62
+        }
+      },
+      "1": {
+        start: {
+          line: 3,
+          column: 0
+        },
+        end: {
+          line: 3,
+          column: 42
+        }
+      },
+      "2": {
+        start: {
+          line: 4,
+          column: 17
+        },
+        end: {
+          line: 4,
+          column: 44
+        }
+      },
+      "3": {
+        start: {
+          line: 5,
+          column: 17
+        },
+        end: {
+          line: 5,
+          column: 44
+        }
+      },
+      "4": {
+        start: {
+          line: 7,
+          column: 4
+        },
+        end: {
+          line: 39,
+          column: 5
+        }
+      },
+      "5": {
+        start: {
+          line: 8,
+          column: 8
+        },
+        end: {
+          line: 8,
+          column: 65
+        }
+      },
+      "6": {
+        start: {
+          line: 10,
+          column: 31
+        },
+        end: {
+          line: 10,
+          column: 110
+        }
+      },
+      "7": {
+        start: {
+          line: 11,
+          column: 8
+        },
+        end: {
+          line: 14,
+          column: 9
+        }
+      },
+      "8": {
+        start: {
+          line: 12,
+          column: 12
+        },
+        end: {
+          line: 12,
+          column: 61
+        }
+      },
+      "9": {
+        start: {
+          line: 13,
+          column: 12
+        },
+        end: {
+          line: 13,
+          column: 19
+        }
+      },
+      "10": {
+        start: {
+          line: 15,
+          column: 8
+        },
+        end: {
+          line: 15,
+          column: 79
+        }
+      },
+      "11": {
+        start: {
+          line: 16,
+          column: 29
+        },
+        end: {
+          line: 16,
+          column: 30
+        }
+      },
+      "12": {
+        start: {
+          line: 17,
+          column: 25
+        },
+        end: {
+          line: 17,
+          column: 26
+        }
+      },
+      "13": {
+        start: {
+          line: 18,
+          column: 8
+        },
+        end: {
+          line: 33,
+          column: 9
+        }
+      },
+      "14": {
+        start: {
+          line: 19,
+          column: 12
+        },
+        end: {
+          line: 32,
+          column: 13
+        }
+      },
+      "15": {
+        start: {
+          line: 21,
+          column: 16
+        },
+        end: {
+          line: 21,
+          column: 40
+        }
+      },
+      "16": {
+        start: {
+          line: 22,
+          column: 16
+        },
+        end: {
+          line: 22,
+          column: 36
+        }
+      },
+      "17": {
+        start: {
+          line: 25,
+          column: 16
+        },
+        end: {
+          line: 25,
+          column: 52
+        }
+      },
+      "18": {
+        start: {
+          line: 26,
+          column: 16
+        },
+        end: {
+          line: 26,
+          column: 33
+        }
+      },
+      "19": {
+        start: {
+          line: 27,
+          column: 16
+        },
+        end: {
+          line: 27,
+          column: 81
+        }
+      },
+      "20": {
+        start: {
+          line: 30,
+          column: 16
+        },
+        end: {
+          line: 30,
+          column: 29
+        }
+      },
+      "21": {
+        start: {
+          line: 31,
+          column: 16
+        },
+        end: {
+          line: 31,
+          column: 96
+        }
+      },
+      "22": {
+        start: {
+          line: 34,
+          column: 8
+        },
+        end: {
+          line: 34,
+          column: 111
+        }
+      },
+      "23": {
+        start: {
+          line: 37,
+          column: 8
+        },
+        end: {
+          line: 37,
+          column: 66
+        }
+      },
+      "24": {
+        start: {
+          line: 38,
+          column: 8
+        },
+        end: {
+          line: 38,
+          column: 20
+        }
+      },
+      "25": {
+        start: {
+          line: 42,
+          column: 4
+        },
+        end: {
+          line: 56,
+          column: 5
+        }
+      },
+      "26": {
+        start: {
+          line: 45,
+          column: 8
+        },
+        end: {
+          line: 45,
+          column: 124
+        }
+      },
+      "27": {
+        start: {
+          line: 55,
+          column: 8
+        },
+        end: {
+          line: 55,
+          column: 75
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "throneExpiryJob",
+        decl: {
+          start: {
+            line: 6,
+            column: 15
+          },
+          end: {
+            line: 6,
+            column: 30
+          }
+        },
+        loc: {
+          start: {
+            line: 6,
+            column: 33
+          },
+          end: {
+            line: 40,
+            column: 1
+          }
+        },
+        line: 6
+      },
+      "1": {
+        name: "broadcastThroneExpiry",
+        decl: {
+          start: {
+            line: 41,
+            column: 15
+          },
+          end: {
+            line: 41,
+            column: 36
+          }
+        },
+        loc: {
+          start: {
+            line: 41,
+            column: 45
+          },
+          end: {
+            line: 57,
+            column: 1
+          }
+        },
+        line: 41
+      }
+    },
+    branchMap: {
+      "0": {
+        loc: {
+          start: {
+            line: 11,
+            column: 8
+          },
+          end: {
+            line: 14,
+            column: 9
+          }
+        },
+        type: "if",
+        locations: [{
+          start: {
+            line: 11,
+            column: 8
+          },
+          end: {
+            line: 14,
+            column: 9
+          }
+        }, {
+          start: {
+            line: undefined,
+            column: undefined
+          },
+          end: {
+            line: undefined,
+            column: undefined
+          }
+        }],
+        line: 11
+      }
+    },
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0,
+      "9": 0,
+      "10": 0,
+      "11": 0,
+      "12": 0,
+      "13": 0,
+      "14": 0,
+      "15": 0,
+      "16": 0,
+      "17": 0,
+      "18": 0,
+      "19": 0,
+      "20": 0,
+      "21": 0,
+      "22": 0,
+      "23": 0,
+      "24": 0,
+      "25": 0,
+      "26": 0,
+      "27": 0
+    },
+    f: {
+      "0": 0,
+      "1": 0
+    },
+    b: {
+      "0": [0, 0]
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "6ed6752964bb553a39e1b0591d178dc785eb5c37"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_15561cqjt = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_15561cqjt();
+cov_15561cqjt().s[0]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+/* istanbul ignore next */
+cov_15561cqjt().s[1]++;
+exports.throneExpiryJob = throneExpiryJob;
+const Throne_1 =
+/* istanbul ignore next */
+(cov_15561cqjt().s[2]++, require("../models/Throne"));
+const logger_1 =
+/* istanbul ignore next */
+(cov_15561cqjt().s[3]++, require("../config/logger"));
+async function throneExpiryJob() {
+  /* istanbul ignore next */
+  cov_15561cqjt().f[0]++;
+  cov_15561cqjt().s[4]++;
+  try {
+    /* istanbul ignore next */
+    cov_15561cqjt().s[5]++;
+    logger_1.logger.info('Starting throne expiry check job');
+    // Find expired thrones
+    const expiredThrones =
+    /* istanbul ignore next */
+    (cov_15561cqjt().s[6]++, await Throne_1.Throne.find({
+      isActive: true,
+      expiresAt: {
+        $lte: new Date()
+      }
+    }));
+    /* istanbul ignore next */
+    cov_15561cqjt().s[7]++;
+    if (expiredThrones.length === 0) {
+      /* istanbul ignore next */
+      cov_15561cqjt().b[0][0]++;
+      cov_15561cqjt().s[8]++;
+      logger_1.logger.info('No expired thrones found');
+      /* istanbul ignore next */
+      cov_15561cqjt().s[9]++;
+      return;
+    } else
+    /* istanbul ignore next */
+    {
+      cov_15561cqjt().b[0][1]++;
+    }
+    cov_15561cqjt().s[10]++;
+    logger_1.logger.info(`Found ${expiredThrones.length} expired thrones`);
+    let processedCount =
+    /* istanbul ignore next */
+    (cov_15561cqjt().s[11]++, 0);
+    let errorCount =
+    /* istanbul ignore next */
+    (cov_15561cqjt().s[12]++, 0);
+    /* istanbul ignore next */
+    cov_15561cqjt().s[13]++;
+    for (const throne of expiredThrones) {
+      /* istanbul ignore next */
+      cov_15561cqjt().s[14]++;
+      try {
+        /* istanbul ignore next */
+        cov_15561cqjt().s[15]++;
+        // Mark throne as inactive
+        throne.isActive = false;
+        /* istanbul ignore next */
+        cov_15561cqjt().s[16]++;
+        await throne.save();
+        // TODO: Broadcast throne expiry event via Socket.IO
+        // This would notify all connected clients about the throne expiry
+        /* istanbul ignore next */
+        cov_15561cqjt().s[17]++;
+        await broadcastThroneExpiry(throne);
+        /* istanbul ignore next */
+        cov_15561cqjt().s[18]++;
+        processedCount++;
+        /* istanbul ignore next */
+        cov_15561cqjt().s[19]++;
+        logger_1.logger.info(`Throne ${throne._id} expired and cleared`);
+      } catch (error) {
+        /* istanbul ignore next */
+        cov_15561cqjt().s[20]++;
+        errorCount++;
+        /* istanbul ignore next */
+        cov_15561cqjt().s[21]++;
+        logger_1.logger.error(`Failed to process expired throne ${throne._id}:`, error);
+      }
+    }
+    /* istanbul ignore next */
+    cov_15561cqjt().s[22]++;
+    logger_1.logger.info(`Throne expiry job completed: ${processedCount} processed, ${errorCount} errors`);
+  } catch (error) {
+    /* istanbul ignore next */
+    cov_15561cqjt().s[23]++;
+    logger_1.logger.error('Throne expiry job failed:', error);
+    /* istanbul ignore next */
+    cov_15561cqjt().s[24]++;
+    throw error;
+  }
+}
+async function broadcastThroneExpiry(throne) {
+  /* istanbul ignore next */
+  cov_15561cqjt().f[1]++;
+  cov_15561cqjt().s[25]++;
+  try {
+    /* istanbul ignore next */
+    cov_15561cqjt().s[26]++;
+    // This would be implemented with Socket.IO to broadcast to all connected clients
+    // For now, we'll just log the event
+    logger_1.logger.info(`Broadcasting throne expiry for stream ${throne.streamId}: ${throne.username} throne expired`);
+    // TODO: Implement Socket.IO broadcast
+    // io.to(`stream:${throne.streamId}`).emit('throne:expired', {
+    //   throneId: throne._id,
+    //   streamId: throne.streamId,
+    //   username: throne.username,
+    //   totalCoins: throne.totalCoins
+    // });
+  } catch (error) {
+    /* istanbul ignore next */
+    cov_15561cqjt().s[27]++;
+    logger_1.logger.error('Failed to broadcast throne expiry:', error);
+  }
+}

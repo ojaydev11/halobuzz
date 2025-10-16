@@ -263,7 +263,7 @@ export class AIGameOrchestrationService extends EventEmitter {
       }
 
       // Calculate skill level based on win rate and consistency
-      let skillLevel = Math.min(100, Math.max(1, (winRate * 100) + (transactions.length / 10)));
+      const skillLevel = Math.min(100, Math.max(1, (winRate * 100) + (transactions.length / 10)));
 
       // Calculate risk tolerance based on stake patterns
       const stakeVariance = this.calculateVariance(stakes.map(t => t.amount));

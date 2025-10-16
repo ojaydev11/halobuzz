@@ -1,0 +1,635 @@
+dba54af87a1d42041f0a97f464202f6c
+"use strict";
+
+/* istanbul ignore next */
+function cov_1g4q5lxm0y() {
+  var path = "D:\\halobuzz by cursor\\backend\\src\\services\\emailTemplates.ts";
+  var hash = "e0b8a86f4bed39fa68367656c549b19db9f45926";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "D:\\halobuzz by cursor\\backend\\src\\services\\emailTemplates.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 2,
+          column: 0
+        },
+        end: {
+          line: 2,
+          column: 62
+        }
+      },
+      "1": {
+        start: {
+          line: 3,
+          column: 0
+        },
+        end: {
+          line: 3,
+          column: 32
+        }
+      },
+      "2": {
+        start: {
+          line: 6,
+          column: 8
+        },
+        end: {
+          line: 100,
+          column: 10
+        }
+      },
+      "3": {
+        start: {
+          line: 103,
+          column: 8
+        },
+        end: {
+          line: 172,
+          column: 10
+        }
+      },
+      "4": {
+        start: {
+          line: 175,
+          column: 26
+        },
+        end: {
+          line: 197,
+          column: 9
+        }
+      },
+      "5": {
+        start: {
+          line: 198,
+          column: 25
+        },
+        end: {
+          line: 198,
+          column: 40
+        }
+      },
+      "6": {
+        start: {
+          line: 199,
+          column: 8
+        },
+        end: {
+          line: 199,
+          column: 60
+        }
+      },
+      "7": {
+        start: {
+          line: 202,
+          column: 8
+        },
+        end: {
+          line: 256,
+          column: 10
+        }
+      },
+      "8": {
+        start: {
+          line: 259,
+          column: 0
+        },
+        end: {
+          line: 259,
+          column: 40
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "(anonymous_0)",
+        decl: {
+          start: {
+            line: 5,
+            column: 4
+          },
+          end: {
+            line: 5,
+            column: 5
+          }
+        },
+        loc: {
+          start: {
+            line: 5,
+            column: 55
+          },
+          end: {
+            line: 101,
+            column: 5
+          }
+        },
+        line: 5
+      },
+      "1": {
+        name: "(anonymous_1)",
+        decl: {
+          start: {
+            line: 102,
+            column: 4
+          },
+          end: {
+            line: 102,
+            column: 5
+          }
+        },
+        loc: {
+          start: {
+            line: 102,
+            column: 51
+          },
+          end: {
+            line: 173,
+            column: 5
+          }
+        },
+        line: 102
+      },
+      "2": {
+        name: "(anonymous_2)",
+        decl: {
+          start: {
+            line: 174,
+            column: 4
+          },
+          end: {
+            line: 174,
+            column: 5
+          }
+        },
+        loc: {
+          start: {
+            line: 174,
+            column: 46
+          },
+          end: {
+            line: 200,
+            column: 5
+          }
+        },
+        line: 174
+      },
+      "3": {
+        name: "(anonymous_3)",
+        decl: {
+          start: {
+            line: 201,
+            column: 4
+          },
+          end: {
+            line: 201,
+            column: 5
+          }
+        },
+        loc: {
+          start: {
+            line: 201,
+            column: 54
+          },
+          end: {
+            line: 257,
+            column: 5
+          }
+        },
+        line: 201
+      }
+    },
+    branchMap: {
+      "0": {
+        loc: {
+          start: {
+            line: 59,
+            column: 16
+          },
+          end: {
+            line: 62,
+            column: 20
+          }
+        },
+        type: "cond-expr",
+        locations: [{
+          start: {
+            line: 59,
+            column: 35
+          },
+          end: {
+            line: 62,
+            column: 15
+          }
+        }, {
+          start: {
+            line: 62,
+            column: 18
+          },
+          end: {
+            line: 62,
+            column: 20
+          }
+        }],
+        line: 59
+      },
+      "1": {
+        loc: {
+          start: {
+            line: 91,
+            column: 10
+          },
+          end: {
+            line: 91,
+            column: 105
+          }
+        },
+        type: "cond-expr",
+        locations: [{
+          start: {
+            line: 91,
+            column: 29
+          },
+          end: {
+            line: 91,
+            column: 100
+          }
+        }, {
+          start: {
+            line: 91,
+            column: 103
+          },
+          end: {
+            line: 91,
+            column: 105
+          }
+        }],
+        line: 91
+      },
+      "2": {
+        loc: {
+          start: {
+            line: 136,
+            column: 16
+          },
+          end: {
+            line: 136,
+            column: 122
+          }
+        },
+        type: "cond-expr",
+        locations: [{
+          start: {
+            line: 136,
+            column: 36
+          },
+          end: {
+            line: 136,
+            column: 117
+          }
+        }, {
+          start: {
+            line: 136,
+            column: 120
+          },
+          end: {
+            line: 136,
+            column: 122
+          }
+        }],
+        line: 136
+      }
+    },
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0
+    },
+    f: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0
+    },
+    b: {
+      "0": [0, 0],
+      "1": [0, 0],
+      "2": [0, 0]
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "e0b8a86f4bed39fa68367656c549b19db9f45926"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_1g4q5lxm0y = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_1g4q5lxm0y();
+cov_1g4q5lxm0y().s[0]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+/* istanbul ignore next */
+cov_1g4q5lxm0y().s[1]++;
+exports.EmailTemplates = void 0;
+class EmailTemplates {
+  static getWelcomeEmail(username, verificationLink) {
+    /* istanbul ignore next */
+    cov_1g4q5lxm0y().f[0]++;
+    cov_1g4q5lxm0y().s[2]++;
+    return {
+      subject: 'Welcome to HaloBuzz! 🎉',
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Welcome to HaloBuzz</title>
+          <style>
+            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; }
+            .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; }
+            .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 20px; text-align: center; }
+            .header h1 { color: white; margin: 0; font-size: 28px; font-weight: 300; }
+            .content { padding: 40px 20px; }
+            .content h2 { color: #333; margin-bottom: 20px; }
+            .content p { color: #666; line-height: 1.6; margin-bottom: 20px; }
+            .cta-button { display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; margin: 20px 0; }
+            .features { display: flex; flex-wrap: wrap; margin: 30px 0; }
+            .feature { flex: 1; min-width: 200px; text-align: center; padding: 20px; }
+            .feature-icon { font-size: 48px; margin-bottom: 15px; }
+            .footer { background-color: #f8f9fa; padding: 30px 20px; text-align: center; color: #666; }
+            .social-links { margin: 20px 0; }
+            .social-links a { color: #667eea; text-decoration: none; margin: 0 10px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>🎉 Welcome to HaloBuzz!</h1>
+            </div>
+            <div class="content">
+              <h2>Hey ${username}!</h2>
+              <p>Welcome to the most exciting live streaming platform! We're thrilled to have you join our amazing community of creators and viewers.</p>
+              
+              <div class="features">
+                <div class="feature">
+                  <div class="feature-icon">📱</div>
+                  <h3>Live Streaming</h3>
+                  <p>Go live instantly and connect with your audience in real-time</p>
+                </div>
+                <div class="feature">
+                  <div class="feature-icon">🎁</div>
+                  <h3>Virtual Gifts</h3>
+                  <p>Receive and send virtual gifts to support your favorite creators</p>
+                </div>
+                <div class="feature">
+                  <div class="feature-icon">👑</div>
+                  <h3>OG Levels</h3>
+                  <p>Level up your status and unlock exclusive features</p>
+                </div>
+              </div>
+
+              ${verificationLink ?
+      /* istanbul ignore next */
+      (cov_1g4q5lxm0y().b[0][0]++, `
+                <p>To get started, please verify your email address:</p>
+                <a href="${verificationLink}" class="cta-button">Verify Email Address</a>
+              `) :
+      /* istanbul ignore next */
+      (cov_1g4q5lxm0y().b[0][1]++, '')}
+
+              <p>Ready to start your journey? Download our mobile app and begin streaming today!</p>
+              <a href="#" class="cta-button">Download Mobile App</a>
+            </div>
+            <div class="footer">
+              <p>Thanks for joining HaloBuzz!</p>
+              <div class="social-links">
+                <a href="#">Twitter</a> | <a href="#">Instagram</a> | <a href="#">Discord</a>
+              </div>
+              <p style="font-size: 12px; margin-top: 20px;">
+                This email was sent to you because you created an account on HaloBuzz.<br>
+                If you didn't create this account, please ignore this email.
+              </p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
+      text: `
+        Welcome to HaloBuzz, ${username}!
+        
+        We're thrilled to have you join our amazing community of creators and viewers.
+        
+        Here's what you can do on HaloBuzz:
+        - Go live instantly and connect with your audience in real-time
+        - Receive and send virtual gifts to support your favorite creators
+        - Level up your status and unlock exclusive features
+        
+        ${verificationLink ?
+      /* istanbul ignore next */
+      (cov_1g4q5lxm0y().b[1][0]++, `To get started, please verify your email address: ${verificationLink}`) :
+      /* istanbul ignore next */
+      (cov_1g4q5lxm0y().b[1][1]++, '')}
+        
+        Ready to start your journey? Download our mobile app and begin streaming today!
+        
+        Thanks for joining HaloBuzz!
+        
+        This email was sent to you because you created an account on HaloBuzz.
+        If you didn't create this account, please ignore this email.
+      `
+    };
+  }
+  static getPromotionalEmail(username, campaign) {
+    /* istanbul ignore next */
+    cov_1g4q5lxm0y().f[1]++;
+    cov_1g4q5lxm0y().s[3]++;
+    return {
+      subject: `🔥 ${campaign.title} - HaloBuzz`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>${campaign.title}</title>
+          <style>
+            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; }
+            .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; }
+            .header { background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%); padding: 40px 20px; text-align: center; }
+            .header h1 { color: white; margin: 0; font-size: 28px; font-weight: 300; }
+            .content { padding: 40px 20px; }
+            .content h2 { color: #333; margin-bottom: 20px; }
+            .content p { color: #666; line-height: 1.6; margin-bottom: 20px; }
+            .cta-button { display: inline-block; background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; margin: 20px 0; }
+            .campaign-image { width: 100%; max-width: 500px; height: auto; border-radius: 10px; margin: 20px 0; }
+            .footer { background-color: #f8f9fa; padding: 30px 20px; text-align: center; color: #666; }
+            .social-links { margin: 20px 0; }
+            .social-links a { color: #ff6b6b; text-decoration: none; margin: 0 10px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>🔥 ${campaign.title}</h1>
+            </div>
+            <div class="content">
+              <h2>Hey ${username}!</h2>
+              <p>${campaign.description}</p>
+              
+              ${campaign.imageUrl ?
+      /* istanbul ignore next */
+      (cov_1g4q5lxm0y().b[2][0]++, `<img src="${campaign.imageUrl}" alt="${campaign.title}" class="campaign-image">`) :
+      /* istanbul ignore next */
+      (cov_1g4q5lxm0y().b[2][1]++, '')}
+              
+              <p>Don't miss out on this amazing opportunity!</p>
+              <a href="${campaign.ctaLink}" class="cta-button">${campaign.ctaText}</a>
+              
+              <p>Best regards,<br>The HaloBuzz Team</p>
+            </div>
+            <div class="footer">
+              <div class="social-links">
+                <a href="#">Twitter</a> | <a href="#">Instagram</a> | <a href="#">Discord</a>
+              </div>
+              <p style="font-size: 12px; margin-top: 20px;">
+                You're receiving this email because you're a valued member of HaloBuzz.<br>
+                <a href="#">Unsubscribe</a> | <a href="#">Update Preferences</a>
+              </p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
+      text: `
+        ${campaign.title} - HaloBuzz
+        
+        Hey ${username}!
+        
+        ${campaign.description}
+        
+        Don't miss out on this amazing opportunity!
+        ${campaign.ctaText}: ${campaign.ctaLink}
+        
+        Best regards,
+        The HaloBuzz Team
+        
+        You're receiving this email because you're a valued member of HaloBuzz.
+        Unsubscribe: [link]
+      `
+    };
+  }
+  static getEngagementEmail(username, type) {
+    /* istanbul ignore next */
+    cov_1g4q5lxm0y().f[2]++;
+    const templates =
+    /* istanbul ignore next */
+    (cov_1g4q5lxm0y().s[4]++, {
+      inactive: {
+        subject: 'We miss you on HaloBuzz! 😢',
+        title: 'Come back and stream with us!',
+        description: 'It\'s been a while since we\'ve seen you on HaloBuzz. Your community is waiting for you!',
+        ctaText: 'Start Streaming Now',
+        ctaLink: '#'
+      },
+      new_features: {
+        subject: 'New features are here! 🚀',
+        title: 'Check out what\'s new',
+        description: 'We\'ve added amazing new features that will take your streaming to the next level!',
+        ctaText: 'Explore New Features',
+        ctaLink: '#'
+      },
+      milestone: {
+        subject: 'Congratulations on your achievement! 🎉',
+        title: 'You\'re doing amazing!',
+        description: 'You\'ve reached a new milestone! Keep up the great work and continue growing your community.',
+        ctaText: 'View Your Progress',
+        ctaLink: '#'
+      }
+    });
+    const template =
+    /* istanbul ignore next */
+    (cov_1g4q5lxm0y().s[5]++, templates[type]);
+    /* istanbul ignore next */
+    cov_1g4q5lxm0y().s[6]++;
+    return this.getPromotionalEmail(username, template);
+  }
+  static getPasswordResetEmail(username, resetLink) {
+    /* istanbul ignore next */
+    cov_1g4q5lxm0y().f[3]++;
+    cov_1g4q5lxm0y().s[7]++;
+    return {
+      subject: 'Reset your HaloBuzz password',
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Password Reset</title>
+          <style>
+            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; }
+            .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; }
+            .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 20px; text-align: center; }
+            .header h1 { color: white; margin: 0; font-size: 28px; font-weight: 300; }
+            .content { padding: 40px 20px; }
+            .content h2 { color: #333; margin-bottom: 20px; }
+            .content p { color: #666; line-height: 1.6; margin-bottom: 20px; }
+            .cta-button { display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; margin: 20px 0; }
+            .footer { background-color: #f8f9fa; padding: 30px 20px; text-align: center; color: #666; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>🔐 Password Reset</h1>
+            </div>
+            <div class="content">
+              <h2>Hey ${username}!</h2>
+              <p>We received a request to reset your password. Click the button below to create a new password:</p>
+              <a href="${resetLink}" class="cta-button">Reset Password</a>
+              <p>If you didn't request this password reset, please ignore this email. Your password will remain unchanged.</p>
+              <p>This link will expire in 1 hour for security reasons.</p>
+            </div>
+            <div class="footer">
+              <p>Thanks,<br>The HaloBuzz Team</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
+      text: `
+        Password Reset - HaloBuzz
+        
+        Hey ${username}!
+        
+        We received a request to reset your password. Click the link below to create a new password:
+        ${resetLink}
+        
+        If you didn't request this password reset, please ignore this email. Your password will remain unchanged.
+        This link will expire in 1 hour for security reasons.
+        
+        Thanks,
+        The HaloBuzz Team
+      `
+    };
+  }
+}
+/* istanbul ignore next */
+cov_1g4q5lxm0y().s[8]++;
+exports.EmailTemplates = EmailTemplates;

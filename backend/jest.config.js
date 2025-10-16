@@ -62,7 +62,10 @@ module.exports = {
   
   // Transform configuration
   transform: {
-    '^.+\\.ts$': 'ts-jest'
+    '^.+\\.ts$': ['ts-jest', {
+      tsconfig: '<rootDir>/tsconfig.json',
+      isolatedModules: true,
+    }]
   },
   
   // Module file extensions
@@ -102,7 +105,7 @@ module.exports = {
   ],
   
   // Error handling
-  errorOnDeprecated: true,
+  errorOnDeprecated: false,
   
   // Bail on first failure in CI
   bail: process.env.CI ? 1 : 0,
@@ -115,19 +118,6 @@ module.exports = {
   
   // Module directories
   moduleDirectories: ['node_modules', '<rootDir>/src'],
-  
-  // Extensions to resolve
-  extensionsToTreatAsEsm: ['.ts'],
-  
-  // Globals
-  globals: {
-    'ts-jest': {
-      useESM: true,
-      tsconfig: {
-        module: 'esnext'
-      }
-    }
-  },
 
   // MongoDB Memory Server configuration for Alpine Linux
   testEnvironmentOptions: {

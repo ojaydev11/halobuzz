@@ -160,7 +160,7 @@ router.post('/recharge', [
     }
 
     // Create transaction record
-    let transaction = await paymentService.createTransaction(
+    const transaction = await paymentService.createTransaction(
       userId,
       amount,
       coins,

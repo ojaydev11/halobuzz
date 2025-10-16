@@ -1,0 +1,535 @@
+15de38d8785e43c7c05501f69f71c474
+"use strict";
+
+/* istanbul ignore next */
+function cov_4jfnd6ljz() {
+  var path = "D:\\halobuzz by cursor\\backend\\src\\cron\\exchangeRates.ts";
+  var hash = "cd296eb589f90635935aba00e8405d810978f0be";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "D:\\halobuzz by cursor\\backend\\src\\cron\\exchangeRates.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 2,
+          column: 22
+        },
+        end: {
+          line: 4,
+          column: 1
+        }
+      },
+      "1": {
+        start: {
+          line: 3,
+          column: 4
+        },
+        end: {
+          line: 3,
+          column: 62
+        }
+      },
+      "2": {
+        start: {
+          line: 5,
+          column: 0
+        },
+        end: {
+          line: 5,
+          column: 62
+        }
+      },
+      "3": {
+        start: {
+          line: 6,
+          column: 0
+        },
+        end: {
+          line: 6,
+          column: 60
+        }
+      },
+      "4": {
+        start: {
+          line: 7,
+          column: 0
+        },
+        end: {
+          line: 7,
+          column: 58
+        }
+      },
+      "5": {
+        start: {
+          line: 8,
+          column: 20
+        },
+        end: {
+          line: 8,
+          column: 57
+        }
+      },
+      "6": {
+        start: {
+          line: 9,
+          column: 33
+        },
+        end: {
+          line: 9,
+          column: 78
+        }
+      },
+      "7": {
+        start: {
+          line: 10,
+          column: 17
+        },
+        end: {
+          line: 10,
+          column: 44
+        }
+      },
+      "8": {
+        start: {
+          line: 12,
+          column: 30
+        },
+        end: {
+          line: 24,
+          column: 2
+        }
+      },
+      "9": {
+        start: {
+          line: 13,
+          column: 4
+        },
+        end: {
+          line: 20,
+          column: 5
+        }
+      },
+      "10": {
+        start: {
+          line: 14,
+          column: 8
+        },
+        end: {
+          line: 14,
+          column: 72
+        }
+      },
+      "11": {
+        start: {
+          line: 15,
+          column: 8
+        },
+        end: {
+          line: 15,
+          column: 84
+        }
+      },
+      "12": {
+        start: {
+          line: 16,
+          column: 8
+        },
+        end: {
+          line: 16,
+          column: 73
+        }
+      },
+      "13": {
+        start: {
+          line: 19,
+          column: 8
+        },
+        end: {
+          line: 19,
+          column: 79
+        }
+      },
+      "14": {
+        start: {
+          line: 26,
+          column: 4
+        },
+        end: {
+          line: 26,
+          column: 34
+        }
+      },
+      "15": {
+        start: {
+          line: 27,
+          column: 4
+        },
+        end: {
+          line: 27,
+          column: 66
+        }
+      },
+      "16": {
+        start: {
+          line: 30,
+          column: 4
+        },
+        end: {
+          line: 30,
+          column: 33
+        }
+      },
+      "17": {
+        start: {
+          line: 31,
+          column: 4
+        },
+        end: {
+          line: 31,
+          column: 66
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "(anonymous_0)",
+        decl: {
+          start: {
+            line: 2,
+            column: 56
+          },
+          end: {
+            line: 2,
+            column: 57
+          }
+        },
+        loc: {
+          start: {
+            line: 2,
+            column: 71
+          },
+          end: {
+            line: 4,
+            column: 1
+          }
+        },
+        line: 2
+      },
+      "1": {
+        name: "(anonymous_1)",
+        decl: {
+          start: {
+            line: 12,
+            column: 74
+          },
+          end: {
+            line: 12,
+            column: 75
+          }
+        },
+        loc: {
+          start: {
+            line: 12,
+            column: 86
+          },
+          end: {
+            line: 21,
+            column: 1
+          }
+        },
+        line: 12
+      },
+      "2": {
+        name: "startExchangeRateUpdates",
+        decl: {
+          start: {
+            line: 25,
+            column: 9
+          },
+          end: {
+            line: 25,
+            column: 33
+          }
+        },
+        loc: {
+          start: {
+            line: 25,
+            column: 36
+          },
+          end: {
+            line: 28,
+            column: 1
+          }
+        },
+        line: 25
+      },
+      "3": {
+        name: "stopExchangeRateUpdates",
+        decl: {
+          start: {
+            line: 29,
+            column: 9
+          },
+          end: {
+            line: 29,
+            column: 32
+          }
+        },
+        loc: {
+          start: {
+            line: 29,
+            column: 35
+          },
+          end: {
+            line: 32,
+            column: 1
+          }
+        },
+        line: 29
+      }
+    },
+    branchMap: {
+      "0": {
+        loc: {
+          start: {
+            line: 2,
+            column: 22
+          },
+          end: {
+            line: 4,
+            column: 1
+          }
+        },
+        type: "binary-expr",
+        locations: [{
+          start: {
+            line: 2,
+            column: 23
+          },
+          end: {
+            line: 2,
+            column: 27
+          }
+        }, {
+          start: {
+            line: 2,
+            column: 31
+          },
+          end: {
+            line: 2,
+            column: 51
+          }
+        }, {
+          start: {
+            line: 2,
+            column: 56
+          },
+          end: {
+            line: 4,
+            column: 1
+          }
+        }],
+        line: 2
+      },
+      "1": {
+        loc: {
+          start: {
+            line: 3,
+            column: 11
+          },
+          end: {
+            line: 3,
+            column: 61
+          }
+        },
+        type: "cond-expr",
+        locations: [{
+          start: {
+            line: 3,
+            column: 37
+          },
+          end: {
+            line: 3,
+            column: 40
+          }
+        }, {
+          start: {
+            line: 3,
+            column: 43
+          },
+          end: {
+            line: 3,
+            column: 61
+          }
+        }],
+        line: 3
+      },
+      "2": {
+        loc: {
+          start: {
+            line: 3,
+            column: 12
+          },
+          end: {
+            line: 3,
+            column: 33
+          }
+        },
+        type: "binary-expr",
+        locations: [{
+          start: {
+            line: 3,
+            column: 12
+          },
+          end: {
+            line: 3,
+            column: 15
+          }
+        }, {
+          start: {
+            line: 3,
+            column: 19
+          },
+          end: {
+            line: 3,
+            column: 33
+          }
+        }],
+        line: 3
+      }
+    },
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0,
+      "9": 0,
+      "10": 0,
+      "11": 0,
+      "12": 0,
+      "13": 0,
+      "14": 0,
+      "15": 0,
+      "16": 0,
+      "17": 0
+    },
+    f: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0
+    },
+    b: {
+      "0": [0, 0, 0],
+      "1": [0, 0],
+      "2": [0, 0]
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "cd296eb589f90635935aba00e8405d810978f0be"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_4jfnd6ljz = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_4jfnd6ljz();
+var __importDefault =
+/* istanbul ignore next */
+(cov_4jfnd6ljz().s[0]++,
+/* istanbul ignore next */
+(cov_4jfnd6ljz().b[0][0]++, this) &&
+/* istanbul ignore next */
+(cov_4jfnd6ljz().b[0][1]++, this.__importDefault) ||
+/* istanbul ignore next */
+(cov_4jfnd6ljz().b[0][2]++, function (mod) {
+  /* istanbul ignore next */
+  cov_4jfnd6ljz().f[0]++;
+  cov_4jfnd6ljz().s[1]++;
+  return /* istanbul ignore next */(cov_4jfnd6ljz().b[2][0]++, mod) &&
+  /* istanbul ignore next */
+  (cov_4jfnd6ljz().b[2][1]++, mod.__esModule) ?
+  /* istanbul ignore next */
+  (cov_4jfnd6ljz().b[1][0]++, mod) :
+  /* istanbul ignore next */
+  (cov_4jfnd6ljz().b[1][1]++, {
+    "default": mod
+  });
+}));
+/* istanbul ignore next */
+cov_4jfnd6ljz().s[2]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+/* istanbul ignore next */
+cov_4jfnd6ljz().s[3]++;
+exports.startExchangeRateUpdates = startExchangeRateUpdates;
+/* istanbul ignore next */
+cov_4jfnd6ljz().s[4]++;
+exports.stopExchangeRateUpdates = stopExchangeRateUpdates;
+const node_cron_1 =
+/* istanbul ignore next */
+(cov_4jfnd6ljz().s[5]++, __importDefault(require("node-cron")));
+const GlobalExpansionService_1 =
+/* istanbul ignore next */
+(cov_4jfnd6ljz().s[6]++, require("../services/GlobalExpansionService"));
+const logger_1 =
+/* istanbul ignore next */
+(cov_4jfnd6ljz().s[7]++, require("../config/logger"));
+// Update exchange rates every 6 hours
+const exchangeRateUpdateJob =
+/* istanbul ignore next */
+(cov_4jfnd6ljz().s[8]++, node_cron_1.default.schedule('0 */6 * * *', async () => {
+  /* istanbul ignore next */
+  cov_4jfnd6ljz().f[1]++;
+  cov_4jfnd6ljz().s[9]++;
+  try {
+    /* istanbul ignore next */
+    cov_4jfnd6ljz().s[10]++;
+    logger_1.logger.info('Starting scheduled exchange rate update');
+    /* istanbul ignore next */
+    cov_4jfnd6ljz().s[11]++;
+    await GlobalExpansionService_1.globalExpansionService.updateExchangeRates();
+    /* istanbul ignore next */
+    cov_4jfnd6ljz().s[12]++;
+    logger_1.logger.info('Scheduled exchange rate update completed');
+  } catch (error) {
+    /* istanbul ignore next */
+    cov_4jfnd6ljz().s[13]++;
+    logger_1.logger.error('Scheduled exchange rate update failed:', error);
+  }
+}, {
+  scheduled: false,
+  timezone: 'UTC'
+}));
+function startExchangeRateUpdates() {
+  /* istanbul ignore next */
+  cov_4jfnd6ljz().f[2]++;
+  cov_4jfnd6ljz().s[14]++;
+  exchangeRateUpdateJob.start();
+  /* istanbul ignore next */
+  cov_4jfnd6ljz().s[15]++;
+  logger_1.logger.info('Exchange rate update cron job started');
+}
+function stopExchangeRateUpdates() {
+  /* istanbul ignore next */
+  cov_4jfnd6ljz().f[3]++;
+  cov_4jfnd6ljz().s[16]++;
+  exchangeRateUpdateJob.stop();
+  /* istanbul ignore next */
+  cov_4jfnd6ljz().s[17]++;
+  logger_1.logger.info('Exchange rate update cron job stopped');
+}

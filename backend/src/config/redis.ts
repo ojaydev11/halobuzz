@@ -236,7 +236,7 @@ export const invalidateCacheByTags = async (tags: string[]): Promise<void> => {
 export const warmCache = async (key: string, fetchFunction: () => Promise<any>, ttl: number = 3600): Promise<any> => {
   try {
     // Try to get from cache first
-    let cached = await getCache(key);
+    const cached = await getCache(key);
     if (cached) {
       return cached;
     }

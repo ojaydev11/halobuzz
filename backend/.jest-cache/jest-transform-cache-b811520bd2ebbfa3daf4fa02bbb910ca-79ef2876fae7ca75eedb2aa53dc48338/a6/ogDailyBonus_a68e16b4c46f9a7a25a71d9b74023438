@@ -1,0 +1,848 @@
+9c2bb12c734f81e143c2c2e42e10457f
+"use strict";
+
+/* istanbul ignore next */
+function cov_1tdt5ho4g1() {
+  var path = "D:\\halobuzz by cursor\\backend\\src\\cron\\ogDailyBonus.ts";
+  var hash = "9c6d693eb99aca59a2316372094a81e22de98655";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "D:\\halobuzz by cursor\\backend\\src\\cron\\ogDailyBonus.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 2,
+          column: 0
+        },
+        end: {
+          line: 2,
+          column: 62
+        }
+      },
+      "1": {
+        start: {
+          line: 3,
+          column: 0
+        },
+        end: {
+          line: 3,
+          column: 42
+        }
+      },
+      "2": {
+        start: {
+          line: 4,
+          column: 15
+        },
+        end: {
+          line: 4,
+          column: 40
+        }
+      },
+      "3": {
+        start: {
+          line: 5,
+          column: 17
+        },
+        end: {
+          line: 5,
+          column: 44
+        }
+      },
+      "4": {
+        start: {
+          line: 6,
+          column: 22
+        },
+        end: {
+          line: 6,
+          column: 54
+        }
+      },
+      "5": {
+        start: {
+          line: 7,
+          column: 17
+        },
+        end: {
+          line: 7,
+          column: 44
+        }
+      },
+      "6": {
+        start: {
+          line: 9,
+          column: 4
+        },
+        end: {
+          line: 83,
+          column: 5
+        }
+      },
+      "7": {
+        start: {
+          line: 10,
+          column: 8
+        },
+        end: {
+          line: 10,
+          column: 67
+        }
+      },
+      "8": {
+        start: {
+          line: 12,
+          column: 30
+        },
+        end: {
+          line: 15,
+          column: 10
+        }
+      },
+      "9": {
+        start: {
+          line: 16,
+          column: 8
+        },
+        end: {
+          line: 16,
+          column: 78
+        }
+      },
+      "10": {
+        start: {
+          line: 17,
+          column: 29
+        },
+        end: {
+          line: 17,
+          column: 30
+        }
+      },
+      "11": {
+        start: {
+          line: 18,
+          column: 27
+        },
+        end: {
+          line: 18,
+          column: 28
+        }
+      },
+      "12": {
+        start: {
+          line: 19,
+          column: 25
+        },
+        end: {
+          line: 19,
+          column: 26
+        }
+      },
+      "13": {
+        start: {
+          line: 20,
+          column: 8
+        },
+        end: {
+          line: 77,
+          column: 9
+        }
+      },
+      "14": {
+        start: {
+          line: 21,
+          column: 12
+        },
+        end: {
+          line: 76,
+          column: 13
+        }
+      },
+      "15": {
+        start: {
+          line: 23,
+          column: 31
+        },
+        end: {
+          line: 23,
+          column: 100
+        }
+      },
+      "16": {
+        start: {
+          line: 24,
+          column: 16
+        },
+        end: {
+          line: 27,
+          column: 17
+        }
+      },
+      "17": {
+        start: {
+          line: 25,
+          column: 20
+        },
+        end: {
+          line: 25,
+          column: 99
+        }
+      },
+      "18": {
+        start: {
+          line: 26,
+          column: 20
+        },
+        end: {
+          line: 26,
+          column: 29
+        }
+      },
+      "19": {
+        start: {
+          line: 29,
+          column: 35
+        },
+        end: {
+          line: 29,
+          column: 52
+        }
+      },
+      "20": {
+        start: {
+          line: 30,
+          column: 37
+        },
+        end: {
+          line: 30,
+          column: 52
+        }
+      },
+      "21": {
+        start: {
+          line: 31,
+          column: 35
+        },
+        end: {
+          line: 31,
+          column: 78
+        }
+      },
+      "22": {
+        start: {
+          line: 32,
+          column: 16
+        },
+        end: {
+          line: 35,
+          column: 17
+        }
+      },
+      "23": {
+        start: {
+          line: 33,
+          column: 20
+        },
+        end: {
+          line: 33,
+          column: 87
+        }
+      },
+      "24": {
+        start: {
+          line: 34,
+          column: 20
+        },
+        end: {
+          line: 34,
+          column: 29
+        }
+      },
+      "25": {
+        start: {
+          line: 37,
+          column: 30
+        },
+        end: {
+          line: 37,
+          column: 40
+        }
+      },
+      "26": {
+        start: {
+          line: 38,
+          column: 16
+        },
+        end: {
+          line: 38,
+          column: 43
+        }
+      },
+      "27": {
+        start: {
+          line: 39,
+          column: 33
+        },
+        end: {
+          line: 39,
+          column: 48
+        }
+      },
+      "28": {
+        start: {
+          line: 40,
+          column: 16
+        },
+        end: {
+          line: 40,
+          column: 57
+        }
+      },
+      "29": {
+        start: {
+          line: 41,
+          column: 38
+        },
+        end: {
+          line: 45,
+          column: 18
+        }
+      },
+      "30": {
+        start: {
+          line: 46,
+          column: 16
+        },
+        end: {
+          line: 49,
+          column: 17
+        }
+      },
+      "31": {
+        start: {
+          line: 47,
+          column: 20
+        },
+        end: {
+          line: 47,
+          column: 96
+        }
+      },
+      "32": {
+        start: {
+          line: 48,
+          column: 20
+        },
+        end: {
+          line: 48,
+          column: 29
+        }
+      },
+      "33": {
+        start: {
+          line: 51,
+          column: 16
+        },
+        end: {
+          line: 53,
+          column: 19
+        }
+      },
+      "34": {
+        start: {
+          line: 55,
+          column: 36
+        },
+        end: {
+          line: 67,
+          column: 18
+        }
+      },
+      "35": {
+        start: {
+          line: 68,
+          column: 16
+        },
+        end: {
+          line: 68,
+          column: 41
+        }
+      },
+      "36": {
+        start: {
+          line: 69,
+          column: 16
+        },
+        end: {
+          line: 69,
+          column: 45
+        }
+      },
+      "37": {
+        start: {
+          line: 70,
+          column: 16
+        },
+        end: {
+          line: 70,
+          column: 31
+        }
+      },
+      "38": {
+        start: {
+          line: 71,
+          column: 16
+        },
+        end: {
+          line: 71,
+          column: 124
+        }
+      },
+      "39": {
+        start: {
+          line: 74,
+          column: 16
+        },
+        end: {
+          line: 74,
+          column: 29
+        }
+      },
+      "40": {
+        start: {
+          line: 75,
+          column: 16
+        },
+        end: {
+          line: 75,
+          column: 100
+        }
+      },
+      "41": {
+        start: {
+          line: 78,
+          column: 8
+        },
+        end: {
+          line: 78,
+          column: 148
+        }
+      },
+      "42": {
+        start: {
+          line: 81,
+          column: 8
+        },
+        end: {
+          line: 81,
+          column: 67
+        }
+      },
+      "43": {
+        start: {
+          line: 82,
+          column: 8
+        },
+        end: {
+          line: 82,
+          column: 20
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "ogDailyBonusJob",
+        decl: {
+          start: {
+            line: 8,
+            column: 15
+          },
+          end: {
+            line: 8,
+            column: 30
+          }
+        },
+        loc: {
+          start: {
+            line: 8,
+            column: 33
+          },
+          end: {
+            line: 84,
+            column: 1
+          }
+        },
+        line: 8
+      }
+    },
+    branchMap: {
+      "0": {
+        loc: {
+          start: {
+            line: 24,
+            column: 16
+          },
+          end: {
+            line: 27,
+            column: 17
+          }
+        },
+        type: "if",
+        locations: [{
+          start: {
+            line: 24,
+            column: 16
+          },
+          end: {
+            line: 27,
+            column: 17
+          }
+        }, {
+          start: {
+            line: undefined,
+            column: undefined
+          },
+          end: {
+            line: undefined,
+            column: undefined
+          }
+        }],
+        line: 24
+      },
+      "1": {
+        loc: {
+          start: {
+            line: 32,
+            column: 16
+          },
+          end: {
+            line: 35,
+            column: 17
+          }
+        },
+        type: "if",
+        locations: [{
+          start: {
+            line: 32,
+            column: 16
+          },
+          end: {
+            line: 35,
+            column: 17
+          }
+        }, {
+          start: {
+            line: undefined,
+            column: undefined
+          },
+          end: {
+            line: undefined,
+            column: undefined
+          }
+        }],
+        line: 32
+      },
+      "2": {
+        loc: {
+          start: {
+            line: 46,
+            column: 16
+          },
+          end: {
+            line: 49,
+            column: 17
+          }
+        },
+        type: "if",
+        locations: [{
+          start: {
+            line: 46,
+            column: 16
+          },
+          end: {
+            line: 49,
+            column: 17
+          }
+        }, {
+          start: {
+            line: undefined,
+            column: undefined
+          },
+          end: {
+            line: undefined,
+            column: undefined
+          }
+        }],
+        line: 46
+      }
+    },
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0,
+      "9": 0,
+      "10": 0,
+      "11": 0,
+      "12": 0,
+      "13": 0,
+      "14": 0,
+      "15": 0,
+      "16": 0,
+      "17": 0,
+      "18": 0,
+      "19": 0,
+      "20": 0,
+      "21": 0,
+      "22": 0,
+      "23": 0,
+      "24": 0,
+      "25": 0,
+      "26": 0,
+      "27": 0,
+      "28": 0,
+      "29": 0,
+      "30": 0,
+      "31": 0,
+      "32": 0,
+      "33": 0,
+      "34": 0,
+      "35": 0,
+      "36": 0,
+      "37": 0,
+      "38": 0,
+      "39": 0,
+      "40": 0,
+      "41": 0,
+      "42": 0,
+      "43": 0
+    },
+    f: {
+      "0": 0
+    },
+    b: {
+      "0": [0, 0],
+      "1": [0, 0],
+      "2": [0, 0]
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "9c6d693eb99aca59a2316372094a81e22de98655"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_1tdt5ho4g1 = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_1tdt5ho4g1();
+cov_1tdt5ho4g1().s[0]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+/* istanbul ignore next */
+cov_1tdt5ho4g1().s[1]++;
+exports.ogDailyBonusJob = ogDailyBonusJob;
+const User_1 =
+/* istanbul ignore next */
+(cov_1tdt5ho4g1().s[2]++, require("../models/User"));
+const OGTier_1 =
+/* istanbul ignore next */
+(cov_1tdt5ho4g1().s[3]++, require("../models/OGTier"));
+const Transaction_1 =
+/* istanbul ignore next */
+(cov_1tdt5ho4g1().s[4]++, require("../models/Transaction"));
+const logger_1 =
+/* istanbul ignore next */
+(cov_1tdt5ho4g1().s[5]++, require("../config/logger"));
+async function ogDailyBonusJob() {
+  /* istanbul ignore next */
+  cov_1tdt5ho4g1().f[0]++;
+  cov_1tdt5ho4g1().s[6]++;
+  try {
+    /* istanbul ignore next */
+    cov_1tdt5ho4g1().s[7]++;
+    logger_1.logger.info('Starting OG daily bonus payout job');
+    // Get all active OG users
+    const activeOGUsers =
+    /* istanbul ignore next */
+    (cov_1tdt5ho4g1().s[8]++, await User_1.User.find({
+      ogLevel: {
+        $gt: 0
+      },
+      ogExpiresAt: {
+        $gt: new Date()
+      }
+    }));
+    /* istanbul ignore next */
+    cov_1tdt5ho4g1().s[9]++;
+    logger_1.logger.info(`Found ${activeOGUsers.length} active OG users`);
+    let totalBonusPaid =
+    /* istanbul ignore next */
+    (cov_1tdt5ho4g1().s[10]++, 0);
+    let successCount =
+    /* istanbul ignore next */
+    (cov_1tdt5ho4g1().s[11]++, 0);
+    let errorCount =
+    /* istanbul ignore next */
+    (cov_1tdt5ho4g1().s[12]++, 0);
+    /* istanbul ignore next */
+    cov_1tdt5ho4g1().s[13]++;
+    for (const user of activeOGUsers) {
+      /* istanbul ignore next */
+      cov_1tdt5ho4g1().s[14]++;
+      try {
+        // Get OG tier details
+        const ogTier =
+        /* istanbul ignore next */
+        (cov_1tdt5ho4g1().s[15]++, await OGTier_1.OGTier.findOne({
+          tier: user.ogLevel,
+          isActive: true
+        }));
+        /* istanbul ignore next */
+        cov_1tdt5ho4g1().s[16]++;
+        if (!ogTier) {
+          /* istanbul ignore next */
+          cov_1tdt5ho4g1().b[0][0]++;
+          cov_1tdt5ho4g1().s[17]++;
+          logger_1.logger.warn(`OG tier ${user.ogLevel} not found for user ${user._id}`);
+          /* istanbul ignore next */
+          cov_1tdt5ho4g1().s[18]++;
+          continue;
+        } else
+        /* istanbul ignore next */
+        {
+          cov_1tdt5ho4g1().b[0][1]++;
+        }
+        // Compute dailyBonus = floor(priceCoins * 0.6 / durationDays)
+        const priceCoins =
+        /* istanbul ignore next */
+        (cov_1tdt5ho4g1().s[19]++, ogTier.priceCoins);
+        const durationDays =
+        /* istanbul ignore next */
+        (cov_1tdt5ho4g1().s[20]++, ogTier.duration);
+        const dailyBonus =
+        /* istanbul ignore next */
+        (cov_1tdt5ho4g1().s[21]++, Math.floor(priceCoins * 0.6 / durationDays));
+        /* istanbul ignore next */
+        cov_1tdt5ho4g1().s[22]++;
+        if (dailyBonus <= 0) {
+          /* istanbul ignore next */
+          cov_1tdt5ho4g1().b[1][0]++;
+          cov_1tdt5ho4g1().s[23]++;
+          logger_1.logger.info(`No daily bonus for OG tier ${user.ogLevel}`);
+          /* istanbul ignore next */
+          cov_1tdt5ho4g1().s[24]++;
+          continue;
+        } else
+        /* istanbul ignore next */
+        {
+          cov_1tdt5ho4g1().b[1][1]++;
+        }
+        // Check if user already received bonus today (idempotency per day)
+        const today =
+        /* istanbul ignore next */
+        (cov_1tdt5ho4g1().s[25]++, new Date());
+        /* istanbul ignore next */
+        cov_1tdt5ho4g1().s[26]++;
+        today.setHours(0, 0, 0, 0);
+        const tomorrow =
+        /* istanbul ignore next */
+        (cov_1tdt5ho4g1().s[27]++, new Date(today));
+        /* istanbul ignore next */
+        cov_1tdt5ho4g1().s[28]++;
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const existingBonus =
+        /* istanbul ignore next */
+        (cov_1tdt5ho4g1().s[29]++, await Transaction_1.Transaction.findOne({
+          userId: user._id,
+          type: 'og_bonus',
+          createdAt: {
+            $gte: today,
+            $lt: tomorrow
+          }
+        }));
+        /* istanbul ignore next */
+        cov_1tdt5ho4g1().s[30]++;
+        if (existingBonus) {
+          /* istanbul ignore next */
+          cov_1tdt5ho4g1().b[2][0]++;
+          cov_1tdt5ho4g1().s[31]++;
+          logger_1.logger.info(`User ${user._id} already received daily bonus today`);
+          /* istanbul ignore next */
+          cov_1tdt5ho4g1().s[32]++;
+          continue;
+        } else
+        /* istanbul ignore next */
+        {
+          cov_1tdt5ho4g1().b[2][1]++;
+        }
+        // Credit bonus to user's bonus balance ONLY
+        cov_1tdt5ho4g1().s[33]++;
+        await User_1.User.findByIdAndUpdate(user._id, {
+          $inc: {
+            'coins.bonusBalance': dailyBonus
+          }
+        });
+        // Create transaction record for audit
+        const transaction =
+        /* istanbul ignore next */
+        (cov_1tdt5ho4g1().s[34]++, new Transaction_1.Transaction({
+          userId: user._id,
+          type: 'og_bonus',
+          amount: dailyBonus,
+          currency: 'coins',
+          status: 'completed',
+          description: `OG Tier ${user.ogLevel} daily bonus`,
+          metadata: {
+            ogTier: user.ogLevel,
+            bonusType: 'daily'
+          },
+          netAmount: dailyBonus
+        }));
+        /* istanbul ignore next */
+        cov_1tdt5ho4g1().s[35]++;
+        await transaction.save();
+        /* istanbul ignore next */
+        cov_1tdt5ho4g1().s[36]++;
+        totalBonusPaid += dailyBonus;
+        /* istanbul ignore next */
+        cov_1tdt5ho4g1().s[37]++;
+        successCount++;
+        /* istanbul ignore next */
+        cov_1tdt5ho4g1().s[38]++;
+        logger_1.logger.info(`Daily bonus paid to user ${user._id}: ${dailyBonus} coins (OG Tier ${user.ogLevel})`);
+      } catch (error) {
+        /* istanbul ignore next */
+        cov_1tdt5ho4g1().s[39]++;
+        errorCount++;
+        /* istanbul ignore next */
+        cov_1tdt5ho4g1().s[40]++;
+        logger_1.logger.error(`Failed to process daily bonus for user ${user._id}:`, error);
+      }
+    }
+    /* istanbul ignore next */
+    cov_1tdt5ho4g1().s[41]++;
+    logger_1.logger.info(`OG daily bonus job completed: ${successCount} successful, ${errorCount} errors, total paid: ${totalBonusPaid} coins`);
+  } catch (error) {
+    /* istanbul ignore next */
+    cov_1tdt5ho4g1().s[42]++;
+    logger_1.logger.error('OG daily bonus job failed:', error);
+    /* istanbul ignore next */
+    cov_1tdt5ho4g1().s[43]++;
+    throw error;
+  }
+}

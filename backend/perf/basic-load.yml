@@ -1,0 +1,128 @@
+# Basic Load Test Configuration
+# Tests normal load conditions with realistic user behavior
+
+config:
+  target: '{{ $processEnvironment.API_BASE_URL }}'
+  phases:
+    - duration: 60
+      arrivalRate: 10
+      name: "Warm up"
+    - duration: 300
+      arrivalRate: 50
+      name: "Normal load"
+    - duration: 60
+      arrivalRate: 10
+      name: "Cool down"
+  defaults:
+    headers:
+      Content-Type: 'application/json'
+  plugins:
+    metrics-by-endpoint:
+      useOnlyRequestNames: true
+
+scenarios:
+  - name: "User Registration and Login Flow"
+    weight: 30
+    flow:
+      - post:
+          url: "/api/v1/auth-enhanced/register"
+          json:
+            username: "loadtest{{ $randomString() }}"
+            email: "loadtest{{ $randomString() }}@example.com"
+            password: "TestPassword123!"
+            country: "NP"
+            language: "en"
+          capture:
+            - json: "$.data.token"
+              as: "accessToken"
+            - json: "$.data.refreshToken"
+              as: "refreshToken"
+            - json: "$.data.sessionId"
+              as: "sessionId"
+      - get:
+          url: "/api/v1/auth-enhanced/sessions"
+          headers:
+            Authorization: "Bearer {{ accessToken }}"
+      - post:
+          url: "/api/v1/auth-enhanced/logout"
+          headers:
+            Authorization: "Bearer {{ accessToken }}"
+
+  - name: "API Health and Monitoring"
+    weight: 20
+    flow:
+      - get:
+          url: "/healthz"
+      - get:
+          url: "/api/v1/monitoring/health"
+      - get:
+          url: "/api/v1/monitoring/system/metrics"
+
+  - name: "User Profile Operations"
+    weight: 25
+    flow:
+      - post:
+          url: "/api/v1/auth-enhanced/login"
+          json:
+            identifier: "testuser@example.com"
+            password: "TestPassword123!"
+          capture:
+            - json: "$.data.token"
+              as: "accessToken"
+      - get:
+          url: "/api/v1/users/me"
+          headers:
+            Authorization: "Bearer {{ accessToken }}"
+      - put:
+          url: "/api/v1/users/profile"
+          headers:
+            Authorization: "Bearer {{ accessToken }}"
+          json:
+            country: "NP"
+            language: "en"
+
+  - name: "Gaming Operations"
+    weight: 15
+    flow:
+      - post:
+          url: "/api/v1/auth-enhanced/login"
+          json:
+            identifier: "testuser@example.com"
+            password: "TestPassword123!"
+          capture:
+            - json: "$.data.token"
+              as: "accessToken"
+      - get:
+          url: "/api/v1/games"
+          headers:
+            Authorization: "Bearer {{ accessToken }}"
+      - get:
+          url: "/api/v1/games-enhanced/available"
+          headers:
+            Authorization: "Bearer {{ accessToken }}"
+      - post:
+          url: "/api/v1/games-enhanced/join"
+          headers:
+            Authorization: "Bearer {{ accessToken }}"
+          json:
+            gameId: "battle-royale-1"
+
+  - name: "Streaming Operations"
+    weight: 10
+    flow:
+      - post:
+          url: "/api/v1/auth-enhanced/login"
+          json:
+            identifier: "testuser@example.com"
+            password: "TestPassword123!"
+          capture:
+            - json: "$.data.token"
+              as: "accessToken"
+      - get:
+          url: "/api/v1/streams"
+          headers:
+            Authorization: "Bearer {{ accessToken }}"
+      - get:
+          url: "/api/v1/streams/live"
+          headers:
+            Authorization: "Bearer {{ accessToken }}"

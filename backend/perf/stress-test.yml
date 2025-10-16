@@ -1,0 +1,126 @@
+# Stress Test Configuration
+# Tests high load conditions to find breaking points
+
+config:
+  target: '{{ $processEnvironment.API_BASE_URL }}'
+  phases:
+    - duration: 30
+      arrivalRate: 10
+      name: "Warm up"
+    - duration: 60
+      arrivalRate: 100
+      name: "High load"
+    - duration: 30
+      arrivalRate: 200
+      name: "Peak load"
+    - duration: 60
+      arrivalRate: 100
+      name: "Sustained load"
+    - duration: 30
+      arrivalRate: 10
+      name: "Cool down"
+  defaults:
+    headers:
+      Content-Type: 'application/json'
+  plugins:
+    metrics-by-endpoint:
+      useOnlyRequestNames: true
+
+scenarios:
+  - name: "High Frequency Authentication"
+    weight: 40
+    flow:
+      - loop:
+          - post:
+              url: "/api/v1/auth-enhanced/login"
+              json:
+                identifier: "testuser@example.com"
+                password: "TestPassword123!"
+              capture:
+                - json: "$.data.token"
+                  as: "accessToken"
+          - get:
+              url: "/api/v1/users/me"
+              headers:
+                Authorization: "Bearer {{ accessToken }}"
+          - post:
+              url: "/api/v1/auth-enhanced/logout"
+              headers:
+                Authorization: "Bearer {{ accessToken }}"
+        count: 3
+
+  - name: "Concurrent Game Sessions"
+    weight: 30
+    flow:
+      - post:
+          url: "/api/v1/auth-enhanced/login"
+          json:
+            identifier: "testuser@example.com"
+            password: "TestPassword123!"
+          capture:
+            - json: "$.data.token"
+              as: "accessToken"
+      - loop:
+          - post:
+              url: "/api/v1/games-enhanced/join"
+              headers:
+                Authorization: "Bearer {{ accessToken }}"
+              json:
+                gameId: "battle-royale-1"
+          - get:
+              url: "/api/v1/games-enhanced/session/status"
+              headers:
+                Authorization: "Bearer {{ accessToken }}"
+          - post:
+              url: "/api/v1/games-enhanced/leave"
+              headers:
+                Authorization: "Bearer {{ accessToken }}"
+        count: 5
+
+  - name: "Rapid API Calls"
+    weight: 20
+    flow:
+      - post:
+          url: "/api/v1/auth-enhanced/login"
+          json:
+            identifier: "testuser@example.com"
+            password: "TestPassword123!"
+          capture:
+            - json: "$.data.token"
+              as: "accessToken"
+      - loop:
+          - get:
+              url: "/api/v1/monitoring/health"
+          - get:
+              url: "/api/v1/monitoring/system/metrics"
+          - get:
+              url: "/api/v1/streams/live"
+              headers:
+                Authorization: "Bearer {{ accessToken }}"
+        count: 10
+
+  - name: "Database Intensive Operations"
+    weight: 10
+    flow:
+      - post:
+          url: "/api/v1/auth-enhanced/login"
+          json:
+            identifier: "testuser@example.com"
+            password: "TestPassword123!"
+          capture:
+            - json: "$.data.token"
+              as: "accessToken"
+      - loop:
+          - get:
+              url: "/api/v1/users/me"
+              headers:
+                Authorization: "Bearer {{ accessToken }}"
+          - get:
+              url: "/api/v1/games"
+              headers:
+                Authorization: "Bearer {{ accessToken }}"
+          - get:
+              url: "/api/v1/streams"
+              headers:
+                Authorization: "Bearer {{ accessToken }}"
+        count: 8

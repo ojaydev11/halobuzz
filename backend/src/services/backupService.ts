@@ -256,7 +256,7 @@ export class BackupService {
 
   private async waitForRedisSave(): Promise<void> {
     const redisClient = getRedisClient();
-    let lastSave = await redisClient.lastSave();
+    const lastSave = await redisClient.lastSave();
     
     // Wait up to 30 seconds for background save to complete
     for (let i = 0; i < 30; i++) {

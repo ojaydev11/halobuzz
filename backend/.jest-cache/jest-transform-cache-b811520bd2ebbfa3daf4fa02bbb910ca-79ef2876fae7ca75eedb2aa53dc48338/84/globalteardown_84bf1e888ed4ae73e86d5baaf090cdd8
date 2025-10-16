@@ -1,0 +1,46 @@
+3707a3e4b0cb363c36ab4a61f572b92c
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.default = globalTeardown;
+const mongoose_1 = __importDefault(require("mongoose"));
+const logger_1 = require("../config/logger");
+async function globalTeardown() {
+    try {
+        logger_1.logger.info('Starting global test teardown...');
+        // Close database connection
+        if (mongoose_1.default.connection.readyState !== 0) {
+            await mongoose_1.default.connection.close();
+            logger_1.logger.info('Database connection closed');
+        }
+        // Clean up any remaining resources
+        await cleanupTestResources();
+        logger_1.logger.info('Global test teardown completed');
+    }
+    catch (error) {
+        logger_1.logger.error('Global test teardown failed:', error);
+        throw error;
+    }
+}
+async function cleanupTestResources() {
+    try {
+        // Clear any cached data
+        if (global.gc) {
+            global.gc();
+        }
+        // Clear any timers
+        if (global.clearTimeout) {
+            // Clear all timeouts
+            const highestTimeoutId = setTimeout(() => { }, 0);
+            for (let i = 0; i < highestTimeoutId; i++) {
+                clearTimeout(i);
+            }
+        }
+        logger_1.logger.info('Test resources cleaned up');
+    }
+    catch (error) {
+        logger_1.logger.error('Failed to cleanup test resources:', error);
+    }
+}

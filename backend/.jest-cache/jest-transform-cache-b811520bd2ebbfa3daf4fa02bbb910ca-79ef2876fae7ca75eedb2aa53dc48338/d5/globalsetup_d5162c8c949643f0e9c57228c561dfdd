@@ -1,0 +1,53 @@
+1b8e42b20e2f1f244bca1b2fa28d3966
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.default = globalSetup;
+const mongodb_memory_server_1 = require("mongodb-memory-server");
+const mongoose_1 = __importDefault(require("mongoose"));
+const logger_1 = require("../config/logger");
+let mongoServer;
+async function globalSetup() {
+    try {
+        logger_1.logger.info('Starting global test setup...');
+        // Start in-memory MongoDB server
+        mongoServer = await mongodb_memory_server_1.MongoMemoryServer.create({
+            instance: {
+                dbName: 'halobuzz_test'
+            }
+        });
+        const mongoUri = mongoServer.getUri();
+        process.env.MONGODB_URI = mongoUri;
+        logger_1.logger.info(`Test MongoDB server started at: ${mongoUri}`);
+        // Connect to test database
+        await mongoose_1.default.connect(mongoUri);
+        logger_1.logger.info('Connected to test database');
+        // Create test collections and indexes
+        await createTestIndexes();
+        logger_1.logger.info('Global test setup completed');
+    }
+    catch (error) {
+        logger_1.logger.error('Global test setup failed:', error);
+        throw error;
+    }
+}
+async function createTestIndexes() {
+    try {
+        const db = mongoose_1.default.connection.db;
+        // Create indexes for User collection
+        await db.collection('users').createIndex({ email: 1 }, { unique: true });
+        await db.collection('users').createIndex({ username: 1 }, { unique: true });
+        // Create indexes for Transaction collection
+        await db.collection('transactions').createIndex({ userId: 1 });
+        await db.collection('transactions').createIndex({ transactionId: 1 }, { unique: true });
+        // Create indexes for Game collection
+        await db.collection('games').createIndex({ code: 1 }, { unique: true });
+        logger_1.logger.info('Test indexes created');
+    }
+    catch (error) {
+        logger_1.logger.error('Failed to create test indexes:', error);
+        throw error;
+    }
+}

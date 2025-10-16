@@ -407,7 +407,7 @@ export class AdvancedGiftEconomyService extends EventEmitter {
 
     // Check combo bonuses
     let comboBonus = 1.0;
-    let comboEffects: any[] = [];
+    const comboEffects: any[] = [];
     const achievements: string[] = [];
 
     if (context.isCombo && context.comboGifts) {
@@ -855,7 +855,7 @@ export class AdvancedGiftEconomyService extends EventEmitter {
     const mutualGifts = interactions.filter(i => i.userId === recipientId).length;
     const totalValue = interactions.reduce((sum, i) => sum + i.amount, 0);
 
-    let strength = Math.min(1.0, (
+    const strength = Math.min(1.0, (
       (recentInteractions.length * 0.3) +
       (mutualGifts > 0 ? 0.4 : 0) +
       (Math.log(totalValue + 1) * 0.1)

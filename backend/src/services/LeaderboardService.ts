@@ -268,7 +268,7 @@ export class LeaderboardService {
   }): Promise<void> {
     try {
       // Update global leaderboard
-      let leaderboard = this.globalLeaderboards.get(gameCode) || [];
+      const leaderboard = this.globalLeaderboards.get(gameCode) || [];
       let playerEntry = leaderboard.find(entry => entry.playerId === playerId);
 
       if (!playerEntry) {

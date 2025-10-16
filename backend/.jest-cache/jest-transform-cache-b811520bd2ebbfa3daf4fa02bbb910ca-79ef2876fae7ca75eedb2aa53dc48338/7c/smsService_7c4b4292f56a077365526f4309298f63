@@ -1,0 +1,838 @@
+5b2e54e216bb330121ff1e925e2ffb6b
+"use strict";
+
+/* istanbul ignore next */
+function cov_djsd6e9cp() {
+  var path = "D:\\halobuzz by cursor\\backend\\src\\services\\smsService.ts";
+  var hash = "36edf13985058a1be225279bb3a01f561f84070f";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "D:\\halobuzz by cursor\\backend\\src\\services\\smsService.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 2,
+          column: 0
+        },
+        end: {
+          line: 2,
+          column: 62
+        }
+      },
+      "1": {
+        start: {
+          line: 3,
+          column: 0
+        },
+        end: {
+          line: 3,
+          column: 28
+        }
+      },
+      "2": {
+        start: {
+          line: 4,
+          column: 17
+        },
+        end: {
+          line: 4,
+          column: 44
+        }
+      },
+      "3": {
+        start: {
+          line: 8,
+          column: 8
+        },
+        end: {
+          line: 10,
+          column: 9
+        }
+      },
+      "4": {
+        start: {
+          line: 9,
+          column: 12
+        },
+        end: {
+          line: 9,
+          column: 51
+        }
+      },
+      "5": {
+        start: {
+          line: 11,
+          column: 8
+        },
+        end: {
+          line: 11,
+          column: 35
+        }
+      },
+      "6": {
+        start: {
+          line: 14,
+          column: 8
+        },
+        end: {
+          line: 51,
+          column: 9
+        }
+      },
+      "7": {
+        start: {
+          line: 15,
+          column: 12
+        },
+        end: {
+          line: 15,
+          column: 68
+        }
+      },
+      "8": {
+        start: {
+          line: 17,
+          column: 37
+        },
+        end: {
+          line: 17,
+          column: 67
+        }
+      },
+      "9": {
+        start: {
+          line: 18,
+          column: 36
+        },
+        end: {
+          line: 18,
+          column: 65
+        }
+      },
+      "10": {
+        start: {
+          line: 19,
+          column: 38
+        },
+        end: {
+          line: 19,
+          column: 69
+        }
+      },
+      "11": {
+        start: {
+          line: 20,
+          column: 12
+        },
+        end: {
+          line: 23,
+          column: 13
+        }
+      },
+      "12": {
+        start: {
+          line: 21,
+          column: 16
+        },
+        end: {
+          line: 21,
+          column: 90
+        }
+      },
+      "13": {
+        start: {
+          line: 22,
+          column: 16
+        },
+        end: {
+          line: 22,
+          column: 49
+        }
+      },
+      "14": {
+        start: {
+          line: 24,
+          column: 29
+        },
+        end: {
+          line: 35,
+          column: 14
+        }
+      },
+      "15": {
+        start: {
+          line: 36,
+          column: 12
+        },
+        end: {
+          line: 39,
+          column: 13
+        }
+      },
+      "16": {
+        start: {
+          line: 37,
+          column: 34
+        },
+        end: {
+          line: 37,
+          column: 55
+        }
+      },
+      "17": {
+        start: {
+          line: 38,
+          column: 16
+        },
+        end: {
+          line: 38,
+          column: 87
+        }
+      },
+      "18": {
+        start: {
+          line: 40,
+          column: 27
+        },
+        end: {
+          line: 40,
+          column: 48
+        }
+      },
+      "19": {
+        start: {
+          line: 41,
+          column: 12
+        },
+        end: {
+          line: 45,
+          column: 15
+        }
+      },
+      "20": {
+        start: {
+          line: 46,
+          column: 12
+        },
+        end: {
+          line: 46,
+          column: 24
+        }
+      },
+      "21": {
+        start: {
+          line: 49,
+          column: 12
+        },
+        end: {
+          line: 49,
+          column: 76
+        }
+      },
+      "22": {
+        start: {
+          line: 50,
+          column: 12
+        },
+        end: {
+          line: 50,
+          column: 45
+        }
+      },
+      "23": {
+        start: {
+          line: 55,
+          column: 8
+        },
+        end: {
+          line: 59,
+          column: 11
+        }
+      },
+      "24": {
+        start: {
+          line: 62,
+          column: 8
+        },
+        end: {
+          line: 62,
+          column: 20
+        }
+      },
+      "25": {
+        start: {
+          line: 65,
+          column: 8
+        },
+        end: {
+          line: 68,
+          column: 11
+        }
+      },
+      "26": {
+        start: {
+          line: 71,
+          column: 8
+        },
+        end: {
+          line: 74,
+          column: 11
+        }
+      },
+      "27": {
+        start: {
+          line: 77,
+          column: 24
+        },
+        end: {
+          line: 77,
+          column: 48
+        }
+      },
+      "28": {
+        start: {
+          line: 78,
+          column: 8
+        },
+        end: {
+          line: 78,
+          column: 56
+        }
+      },
+      "29": {
+        start: {
+          line: 81,
+          column: 0
+        },
+        end: {
+          line: 81,
+          column: 32
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "(anonymous_0)",
+        decl: {
+          start: {
+            line: 7,
+            column: 4
+          },
+          end: {
+            line: 7,
+            column: 5
+          }
+        },
+        loc: {
+          start: {
+            line: 7,
+            column: 25
+          },
+          end: {
+            line: 12,
+            column: 5
+          }
+        },
+        line: 7
+      },
+      "1": {
+        name: "(anonymous_1)",
+        decl: {
+          start: {
+            line: 13,
+            column: 4
+          },
+          end: {
+            line: 13,
+            column: 5
+          }
+        },
+        loc: {
+          start: {
+            line: 13,
+            column: 27
+          },
+          end: {
+            line: 52,
+            column: 5
+          }
+        },
+        line: 13
+      },
+      "2": {
+        name: "(anonymous_2)",
+        decl: {
+          start: {
+            line: 53,
+            column: 4
+          },
+          end: {
+            line: 53,
+            column: 5
+          }
+        },
+        loc: {
+          start: {
+            line: 53,
+            column: 25
+          },
+          end: {
+            line: 63,
+            column: 5
+          }
+        },
+        line: 53
+      },
+      "3": {
+        name: "(anonymous_3)",
+        decl: {
+          start: {
+            line: 64,
+            column: 4
+          },
+          end: {
+            line: 64,
+            column: 5
+          }
+        },
+        loc: {
+          start: {
+            line: 64,
+            column: 43
+          },
+          end: {
+            line: 69,
+            column: 5
+          }
+        },
+        line: 64
+      },
+      "4": {
+        name: "(anonymous_4)",
+        decl: {
+          start: {
+            line: 70,
+            column: 4
+          },
+          end: {
+            line: 70,
+            column: 5
+          }
+        },
+        loc: {
+          start: {
+            line: 70,
+            column: 44
+          },
+          end: {
+            line: 75,
+            column: 5
+          }
+        },
+        line: 70
+      },
+      "5": {
+        name: "(anonymous_5)",
+        decl: {
+          start: {
+            line: 76,
+            column: 4
+          },
+          end: {
+            line: 76,
+            column: 5
+          }
+        },
+        loc: {
+          start: {
+            line: 76,
+            column: 51
+          },
+          end: {
+            line: 79,
+            column: 5
+          }
+        },
+        line: 76
+      }
+    },
+    branchMap: {
+      "0": {
+        loc: {
+          start: {
+            line: 8,
+            column: 8
+          },
+          end: {
+            line: 10,
+            column: 9
+          }
+        },
+        type: "if",
+        locations: [{
+          start: {
+            line: 8,
+            column: 8
+          },
+          end: {
+            line: 10,
+            column: 9
+          }
+        }, {
+          start: {
+            line: undefined,
+            column: undefined
+          },
+          end: {
+            line: undefined,
+            column: undefined
+          }
+        }],
+        line: 8
+      },
+      "1": {
+        loc: {
+          start: {
+            line: 20,
+            column: 12
+          },
+          end: {
+            line: 23,
+            column: 13
+          }
+        },
+        type: "if",
+        locations: [{
+          start: {
+            line: 20,
+            column: 12
+          },
+          end: {
+            line: 23,
+            column: 13
+          }
+        }, {
+          start: {
+            line: undefined,
+            column: undefined
+          },
+          end: {
+            line: undefined,
+            column: undefined
+          }
+        }],
+        line: 20
+      },
+      "2": {
+        loc: {
+          start: {
+            line: 20,
+            column: 16
+          },
+          end: {
+            line: 20,
+            column: 75
+          }
+        },
+        type: "binary-expr",
+        locations: [{
+          start: {
+            line: 20,
+            column: 16
+          },
+          end: {
+            line: 20,
+            column: 33
+          }
+        }, {
+          start: {
+            line: 20,
+            column: 37
+          },
+          end: {
+            line: 20,
+            column: 53
+          }
+        }, {
+          start: {
+            line: 20,
+            column: 57
+          },
+          end: {
+            line: 20,
+            column: 75
+          }
+        }],
+        line: 20
+      },
+      "3": {
+        loc: {
+          start: {
+            line: 36,
+            column: 12
+          },
+          end: {
+            line: 39,
+            column: 13
+          }
+        },
+        type: "if",
+        locations: [{
+          start: {
+            line: 36,
+            column: 12
+          },
+          end: {
+            line: 39,
+            column: 13
+          }
+        }, {
+          start: {
+            line: undefined,
+            column: undefined
+          },
+          end: {
+            line: undefined,
+            column: undefined
+          }
+        }],
+        line: 36
+      }
+    },
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0,
+      "9": 0,
+      "10": 0,
+      "11": 0,
+      "12": 0,
+      "13": 0,
+      "14": 0,
+      "15": 0,
+      "16": 0,
+      "17": 0,
+      "18": 0,
+      "19": 0,
+      "20": 0,
+      "21": 0,
+      "22": 0,
+      "23": 0,
+      "24": 0,
+      "25": 0,
+      "26": 0,
+      "27": 0,
+      "28": 0,
+      "29": 0
+    },
+    f: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0
+    },
+    b: {
+      "0": [0, 0],
+      "1": [0, 0],
+      "2": [0, 0, 0],
+      "3": [0, 0]
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "36edf13985058a1be225279bb3a01f561f84070f"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_djsd6e9cp = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_djsd6e9cp();
+cov_djsd6e9cp().s[0]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+/* istanbul ignore next */
+cov_djsd6e9cp().s[1]++;
+exports.SMSService = void 0;
+const logger_1 =
+/* istanbul ignore next */
+(cov_djsd6e9cp().s[2]++, require("../config/logger"));
+class SMSService {
+  static instance;
+  static getInstance() {
+    /* istanbul ignore next */
+    cov_djsd6e9cp().f[0]++;
+    cov_djsd6e9cp().s[3]++;
+    if (!SMSService.instance) {
+      /* istanbul ignore next */
+      cov_djsd6e9cp().b[0][0]++;
+      cov_djsd6e9cp().s[4]++;
+      SMSService.instance = new SMSService();
+    } else
+    /* istanbul ignore next */
+    {
+      cov_djsd6e9cp().b[0][1]++;
+    }
+    cov_djsd6e9cp().s[5]++;
+    return SMSService.instance;
+  }
+  async sendSMS(options) {
+    /* istanbul ignore next */
+    cov_djsd6e9cp().f[1]++;
+    cov_djsd6e9cp().s[6]++;
+    try {
+      /* istanbul ignore next */
+      cov_djsd6e9cp().s[7]++;
+      logger_1.logger.info('Sending SMS', {
+        to: options.to
+      });
+      // Use Twilio for SMS delivery
+      const twilioAccountSid =
+      /* istanbul ignore next */
+      (cov_djsd6e9cp().s[8]++, process.env.TWILIO_ACCOUNT_SID);
+      const twilioAuthToken =
+      /* istanbul ignore next */
+      (cov_djsd6e9cp().s[9]++, process.env.TWILIO_AUTH_TOKEN);
+      const twilioPhoneNumber =
+      /* istanbul ignore next */
+      (cov_djsd6e9cp().s[10]++, process.env.TWILIO_PHONE_NUMBER);
+      /* istanbul ignore next */
+      cov_djsd6e9cp().s[11]++;
+      if (
+      /* istanbul ignore next */
+      (cov_djsd6e9cp().b[2][0]++, !twilioAccountSid) ||
+      /* istanbul ignore next */
+      (cov_djsd6e9cp().b[2][1]++, !twilioAuthToken) ||
+      /* istanbul ignore next */
+      (cov_djsd6e9cp().b[2][2]++, !twilioPhoneNumber)) {
+        /* istanbul ignore next */
+        cov_djsd6e9cp().b[1][0]++;
+        cov_djsd6e9cp().s[12]++;
+        logger_1.logger.warn('Twilio credentials not configured, using fallback');
+        /* istanbul ignore next */
+        cov_djsd6e9cp().s[13]++;
+        return this.fallbackSMS(options);
+      } else
+      /* istanbul ignore next */
+      {
+        cov_djsd6e9cp().b[1][1]++;
+      }
+      const response =
+      /* istanbul ignore next */
+      (cov_djsd6e9cp().s[14]++, await fetch(`https://api.twilio.com/2010-04-01/Accounts/${twilioAccountSid}/Messages.json`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Basic ${Buffer.from(`${twilioAccountSid}:${twilioAuthToken}`).toString('base64')}`,
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: new URLSearchParams({
+          From: twilioPhoneNumber,
+          To: options.to,
+          Body: options.message
+        })
+      }));
+      /* istanbul ignore next */
+      cov_djsd6e9cp().s[15]++;
+      if (!response.ok) {
+        /* istanbul ignore next */
+        cov_djsd6e9cp().b[3][0]++;
+        const errorText =
+        /* istanbul ignore next */
+        (cov_djsd6e9cp().s[16]++, await response.text());
+        /* istanbul ignore next */
+        cov_djsd6e9cp().s[17]++;
+        throw new Error(`Twilio API error: ${response.status} - ${errorText}`);
+      } else
+      /* istanbul ignore next */
+      {
+        cov_djsd6e9cp().b[3][1]++;
+      }
+      const result =
+      /* istanbul ignore next */
+      (cov_djsd6e9cp().s[18]++, await response.json());
+      /* istanbul ignore next */
+      cov_djsd6e9cp().s[19]++;
+      logger_1.logger.info('SMS sent successfully', {
+        to: options.to,
+        sid: result.sid,
+        status: result.status
+      });
+      /* istanbul ignore next */
+      cov_djsd6e9cp().s[20]++;
+      return true;
+    } catch (error) {
+      /* istanbul ignore next */
+      cov_djsd6e9cp().s[21]++;
+      logger_1.logger.error('Failed to send SMS', {
+        error,
+        options
+      });
+      /* istanbul ignore next */
+      cov_djsd6e9cp().s[22]++;
+      return this.fallbackSMS(options);
+    }
+  }
+  fallbackSMS(options) {
+    /* istanbul ignore next */
+    cov_djsd6e9cp().f[2]++;
+    cov_djsd6e9cp().s[23]++;
+    // Log SMS for development/testing purposes
+    logger_1.logger.info('FALLBACK SMS LOGGED', {
+      to: options.to,
+      message: options.message,
+      timestamp: new Date().toISOString()
+    });
+    // In production, you might want to queue this for retry
+    // or use an alternative SMS service
+    /* istanbul ignore next */
+    cov_djsd6e9cp().s[24]++;
+    return true;
+  }
+  async sendVerificationSMS(phone, code) {
+    /* istanbul ignore next */
+    cov_djsd6e9cp().f[3]++;
+    cov_djsd6e9cp().s[25]++;
+    return this.sendSMS({
+      to: phone,
+      message: `Your HaloBuzz verification code is: ${code}`
+    });
+  }
+  async sendPasswordResetSMS(phone, code) {
+    /* istanbul ignore next */
+    cov_djsd6e9cp().f[4]++;
+    cov_djsd6e9cp().s[26]++;
+    return this.sendSMS({
+      to: phone,
+      message: `Your HaloBuzz password reset code is: ${code}`
+    });
+  }
+  static async sendVerificationCode(phone, code) {
+    /* istanbul ignore next */
+    cov_djsd6e9cp().f[5]++;
+    const service =
+    /* istanbul ignore next */
+    (cov_djsd6e9cp().s[27]++, SMSService.getInstance());
+    /* istanbul ignore next */
+    cov_djsd6e9cp().s[28]++;
+    return service.sendVerificationSMS(phone, code);
+  }
+}
+/* istanbul ignore next */
+cov_djsd6e9cp().s[29]++;
+exports.SMSService = SMSService;

@@ -1,0 +1,51 @@
+799e8616f85c42467a793ed996a09463
+"use strict";
+
+/* istanbul ignore next */
+function cov_24f8ye1zli() {
+  var path = "D:\\halobuzz by cursor\\backend\\src\\types\\game.ts";
+  var hash = "336a1fe04b617916bb5478e86002d52fca7d1f7f";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "D:\\halobuzz by cursor\\backend\\src\\types\\game.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 2,
+          column: 0
+        },
+        end: {
+          line: 2,
+          column: 62
+        }
+      }
+    },
+    fnMap: {},
+    branchMap: {},
+    s: {
+      "0": 0
+    },
+    f: {},
+    b: {},
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "336a1fe04b617916bb5478e86002d52fca7d1f7f"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_24f8ye1zli = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_24f8ye1zli();
+cov_24f8ye1zli().s[0]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});

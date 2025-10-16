@@ -198,7 +198,7 @@ export class ReputationService {
       const factors = await this.calculateTrustFactors(userId, summary);
 
       // Calculate trust score (0-100)
-      let trustScore = Math.max(0, Math.min(100, totalReputation / 10));
+      const trustScore = Math.max(0, Math.min(100, totalReputation / 10));
 
       // Apply trust level
       let trustLevel = 'low';

@@ -1,0 +1,32 @@
+23091c9dd704550d26177870f0917f4e
+/* istanbul ignore next */
+function cov_1s8ljzmvw5() {
+  var path = "D:\\halobuzz by cursor\\backend\\src\\services\\emailScheduler.ts";
+  var hash = "2e889e527438908064ffb4bc67cfcda3cfc2c1de";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "D:\\halobuzz by cursor\\backend\\src\\services\\emailScheduler.ts",
+    statementMap: {},
+    fnMap: {},
+    branchMap: {},
+    s: {},
+    f: {},
+    b: {},
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "2e889e527438908064ffb4bc67cfcda3cfc2c1de"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_1s8ljzmvw5 = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_1s8ljzmvw5();

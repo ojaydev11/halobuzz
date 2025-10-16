@@ -562,7 +562,7 @@ export class GamificationAddictionEngine extends EventEmitter {
     };
 
     // Store pressure mechanic
-    let userPressureMechanics = this.socialPressure.get(userId) || [];
+    const userPressureMechanics = this.socialPressure.get(userId) || [];
     userPressureMechanics.push(pressureMechanic);
     this.socialPressure.set(userId, userPressureMechanics);
 

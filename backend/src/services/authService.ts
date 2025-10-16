@@ -441,7 +441,7 @@ export class AuthService {
    * Generate unique username
    */
   private static async generateUniqueUsername(baseUsername: string): Promise<string> {
-    let username = baseUsername.replace(/[^a-zA-Z0-9_]/g, '').toLowerCase();
+    const username = baseUsername.replace(/[^a-zA-Z0-9_]/g, '').toLowerCase();
     let counter = 1;
     let finalUsername = username;
 

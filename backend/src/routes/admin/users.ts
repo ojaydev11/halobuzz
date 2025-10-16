@@ -367,4 +367,278 @@ router.put('/:id/role', requireAuth, requireScope(['admin:write']), async (req, 
   }
 });
 
+/**
+ * GET /api/v1/admin/users/:id/export
+ * Export all user data for GDPR compliance
+ * Requires: admin:read scope
+ */
+router.get('/:id/export', requireAuth, requireScope(['admin:read']), async (req, res) => {
+  try {
+    const userId = req.params.id;
+    
+    // Get user data
+    const user = await User.findById(userId).lean();
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Import required models for data collection
+    const { Gift } = await import('../../models/Gift');
+    const { Transaction } = await import('../../models/Transaction');
+    const { LiveStream } = await import('../../models/LiveStream');
+    const { GameSession } = await import('../../models/GameSession');
+    const { AuditLog } = await import('../../models/AuditLog');
+    const { ReputationEvent } = await import('../../models/ReputationEvent');
+
+    // Collect all user-related data
+    const [gifts, transactions, streams, gameSessions, auditLogs, reputationEvents] = await Promise.all([
+      Gift.find({ $or: [{ senderId: userId }, { recipientId: userId }] }).lean(),
+      Transaction.find({ userId }).lean(),
+      LiveStream.find({ userId }).lean(),
+      GameSession.find({ userId }).lean(),
+      AuditLog.find({ $or: [{ admin: userId }, { resourceId: userId }] }).lean(),
+      ReputationEvent.find({ userId }).lean(),
+    ]);
+
+    // Create GDPR-compliant export package
+    const exportData = {
+      exportInfo: {
+        exportedAt: new Date().toISOString(),
+        exportedBy: req.user!.userId,
+        userId: userId,
+        dataRetentionPolicy: 'Data exported as per GDPR Article 20 (Right to data portability)',
+        version: '1.0'
+      },
+      personalData: {
+        profile: {
+          username: user.username,
+          displayName: user.displayName,
+          email: user.email,
+          phone: user.phone,
+          avatar: user.avatar,
+          bio: user.bio,
+          dateOfBirth: user.dateOfBirth,
+          gender: user.gender,
+          country: user.country,
+          language: user.language,
+          createdAt: user.createdAt,
+          updatedAt: user.updatedAt,
+          lastActiveAt: user.lastActiveAt,
+        },
+        preferences: user.preferences,
+        trust: user.trust,
+        karma: user.karma,
+        coins: user.coins,
+        socialLogin: user.socialLogin,
+      },
+      activityData: {
+        gifts: {
+          sent: gifts.filter(g => g.senderId === userId),
+          received: gifts.filter(g => g.recipientId === userId),
+          totalSent: gifts.filter(g => g.senderId === userId).length,
+          totalReceived: gifts.filter(g => g.recipientId === userId).length,
+        },
+        transactions: transactions,
+        streams: streams,
+        gameSessions: gameSessions,
+        reputationEvents: reputationEvents,
+      },
+      systemData: {
+        auditLogs: auditLogs,
+        accountStatus: {
+          isVerified: user.isVerified,
+          isBanned: user.isBanned,
+          banReason: user.banReason,
+          banExpiresAt: user.banExpiresAt,
+          kycStatus: user.kycStatus,
+          ageVerified: user.ageVerified,
+        },
+        statistics: {
+          followers: user.followers,
+          following: user.following,
+          totalLikes: user.totalLikes,
+          totalViews: user.totalViews,
+          ogLevel: user.ogLevel,
+        }
+      }
+    };
+
+    // Set appropriate headers for file download
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', `attachment; filename="user-data-export-${userId}-${Date.now()}.json"`);
+    
+    res.json(exportData);
+  } catch (error) {
+    console.error('Admin export user data error:', error);
+    res.status(500).json({
+      error: 'Failed to export user data',
+      message: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+/**
+ * DELETE /api/v1/admin/users/:id/delete
+ * Permanently delete user and anonymize all related data (GDPR Article 17 - Right to erasure)
+ * Requires: admin:write scope
+ */
+router.delete('/:id/delete', requireAuth, requireScope(['admin:write']), async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const { reason, confirmDeletion } = req.body;
+
+    if (!confirmDeletion) {
+      return res.status(400).json({ 
+        error: 'Deletion confirmation required',
+        message: 'You must confirm the deletion by setting confirmDeletion to true'
+      });
+    }
+
+    if (!reason) {
+      return res.status(400).json({ error: 'Deletion reason is required for audit purposes' });
+    }
+
+    // Get user data before deletion
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Import required models
+    const { Gift } = await import('../../models/Gift');
+    const { Transaction } = await import('../../models/Transaction');
+    const { LiveStream } = await import('../../models/LiveStream');
+    const { GameSession } = await import('../../models/GameSession');
+    const { AuditLog } = await import('../../models/AuditLog');
+    const { ReputationEvent } = await import('../../models/ReputationEvent');
+    const { Message } = await import('../../models/Message');
+
+    // Start transaction for data consistency
+    const session = await User.db.startSession();
+    
+    try {
+      await session.withTransaction(async () => {
+        // 1. Anonymize gifts (replace usernames with "Deleted User")
+        await Gift.updateMany(
+          { $or: [{ senderId: userId }, { recipientId: userId }] },
+          { 
+            $set: { 
+              senderUsername: 'Deleted User',
+              recipientUsername: 'Deleted User',
+              anonymizedAt: new Date(),
+              anonymizedBy: req.user!.userId
+            }
+          },
+          { session }
+        );
+
+        // 2. Anonymize transactions
+        await Transaction.updateMany(
+          { userId },
+          { 
+            $set: { 
+              anonymizedAt: new Date(),
+              anonymizedBy: req.user!.userId
+            }
+          },
+          { session }
+        );
+
+        // 3. Anonymize live streams
+        await LiveStream.updateMany(
+          { userId },
+          { 
+            $set: { 
+              title: 'Stream by Deleted User',
+              description: 'This stream was created by a user who has deleted their account.',
+              anonymizedAt: new Date(),
+              anonymizedBy: req.user!.userId
+            }
+          },
+          { session }
+        );
+
+        // 4. Anonymize game sessions
+        await GameSession.updateMany(
+          { userId },
+          { 
+            $set: { 
+              anonymizedAt: new Date(),
+              anonymizedBy: req.user!.userId
+            }
+          },
+          { session }
+        );
+
+        // 5. Anonymize messages
+        await Message.updateMany(
+          { $or: [{ senderId: userId }, { recipientId: userId }] },
+          { 
+            $set: { 
+              content: '[Message deleted]',
+              anonymizedAt: new Date(),
+              anonymizedBy: req.user!.userId
+            }
+          },
+          { session }
+        );
+
+        // 6. Delete reputation events (these are personal)
+        await ReputationEvent.deleteMany({ userId }, { session });
+
+        // 7. Create audit log for deletion
+        await AuditLog.create([{
+          admin: req.user!.userId,
+          action: 'user.gdpr.delete',
+          resource: 'user',
+          resourceId: userId,
+          details: { 
+            reason, 
+            originalUsername: user.username,
+            originalEmail: user.email,
+            anonymizedAt: new Date()
+          },
+          ip: req.ip,
+          userAgent: req.get('user-agent'),
+        }], { session });
+
+        // 8. Finally, delete the user document
+        await User.findByIdAndDelete(userId, { session });
+      });
+
+      res.json({
+        message: 'User data successfully deleted and anonymized',
+        details: {
+          userId: userId,
+          originalUsername: user.username,
+          deletedAt: new Date().toISOString(),
+          deletedBy: req.user!.userId,
+          reason: reason,
+          anonymizedRecords: {
+            gifts: 'Anonymized',
+            transactions: 'Anonymized', 
+            streams: 'Anonymized',
+            gameSessions: 'Anonymized',
+            messages: 'Anonymized',
+            reputationEvents: 'Deleted'
+          }
+        }
+      });
+
+    } catch (transactionError) {
+      console.error('Transaction error during user deletion:', transactionError);
+      throw transactionError;
+    } finally {
+      await session.endSession();
+    }
+
+  } catch (error) {
+    console.error('Admin delete user error:', error);
+    res.status(500).json({
+      error: 'Failed to delete user data',
+      message: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
 export default router;

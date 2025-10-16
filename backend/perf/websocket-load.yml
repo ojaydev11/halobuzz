@@ -1,0 +1,179 @@
+# WebSocket Load Test Configuration
+# Tests real-time WebSocket connections and message throughput
+
+config:
+  target: '{{ $processEnvironment.API_BASE_URL }}'
+  phases:
+    - duration: 30
+      arrivalRate: 5
+      name: "Warm up"
+    - duration: 120
+      arrivalRate: 20
+      name: "Normal WebSocket load"
+    - duration: 60
+      arrivalRate: 50
+      name: "High WebSocket load"
+    - duration: 30
+      arrivalRate: 5
+      name: "Cool down"
+  defaults:
+    headers:
+      Content-Type: 'application/json'
+  plugins:
+    metrics-by-endpoint:
+      useOnlyRequestNames: true
+
+scenarios:
+  - name: "WebSocket Connection and Messaging"
+    weight: 50
+    flow:
+      # First authenticate to get token
+      - post:
+          url: "/api/v1/auth-enhanced/login"
+          json:
+            identifier: "testuser@example.com"
+            password: "TestPassword123!"
+          capture:
+            - json: "$.data.token"
+              as: "accessToken"
+      # Connect to WebSocket
+      - websocket:
+          url: "/socket.io/"
+          headers:
+            Authorization: "Bearer {{ accessToken }}"
+          beforeRequest: "setWebSocketAuth"
+          afterResponse: "handleWebSocketConnection"
+      # Send multiple messages
+      - loop:
+          - websocket:
+              url: "/socket.io/"
+              message:
+                type: "join_room"
+                data:
+                  room: "test-room-{{ $randomString() }}"
+          - websocket:
+              url: "/socket.io/"
+              message:
+                type: "send_message"
+                data:
+                  message: "Load test message {{ $randomString() }}"
+                  room: "test-room"
+          - websocket:
+              url: "/socket.io/"
+              message:
+                type: "heartbeat"
+                data:
+                  timestamp: "{{ $timestamp }}"
+        count: 20
+      # Disconnect
+      - websocket:
+          url: "/socket.io/"
+          message:
+            type: "disconnect"
+
+  - name: "Game WebSocket Operations"
+    weight: 30
+    flow:
+      - post:
+          url: "/api/v1/auth-enhanced/login"
+          json:
+            identifier: "testuser@example.com"
+            password: "TestPassword123!"
+          capture:
+            - json: "$.data.token"
+              as: "accessToken"
+      - websocket:
+          url: "/socket.io/"
+          headers:
+            Authorization: "Bearer {{ accessToken }}"
+      - loop:
+          - websocket:
+              url: "/socket.io/"
+              message:
+                type: "join_game"
+                data:
+                  gameId: "battle-royale-1"
+                  sessionId: "{{ $randomString() }}"
+          - websocket:
+              url: "/socket.io/"
+              message:
+                type: "game_action"
+                data:
+                  action: "move"
+                  position:
+                    x: "{{ $randomInt(0, 100) }}"
+                    y: "{{ $randomInt(0, 100) }}"
+          - websocket:
+              url: "/socket.io/"
+              message:
+                type: "game_action"
+                data:
+                  action: "shoot"
+                  target: "{{ $randomString() }}"
+        count: 15
+      - websocket:
+          url: "/socket.io/"
+          message:
+            type: "leave_game"
+
+  - name: "Stream WebSocket Operations"
+    weight: 20
+    flow:
+      - post:
+          url: "/api/v1/auth-enhanced/login"
+          json:
+            identifier: "testuser@example.com"
+            password: "TestPassword123!"
+          capture:
+            - json: "$.data.token"
+              as: "accessToken"
+      - websocket:
+          url: "/socket.io/"
+          headers:
+            Authorization: "Bearer {{ accessToken }}"
+      - loop:
+          - websocket:
+              url: "/socket.io/"
+              message:
+                type: "stream_join"
+                data:
+                  streamId: "test-stream-{{ $randomString() }}"
+          - websocket:
+              url: "/socket.io/"
+              message:
+                type: "send_gift"
+                data:
+                  giftId: "gift-{{ $randomString() }}"
+                  recipientId: "{{ $randomString() }}"
+                  amount: "{{ $randomInt(1, 100) }}"
+          - websocket:
+              url: "/socket.io/"
+              message:
+                type: "typing_start"
+                data:
+                  room: "stream-room"
+        count: 10
+      - websocket:
+          url: "/socket.io/"
+          message:
+            type: "stream_leave"
+
+functions:
+  setWebSocketAuth: |
+    function(requestParams, context, ee, next) {
+      // Set WebSocket authentication headers
+      requestParams.headers = requestParams.headers || {};
+      requestParams.headers['Authorization'] = `Bearer ${context.vars.accessToken}`;
+      return next();
+    }
+
+  handleWebSocketConnection: |
+    function(requestParams, response, context, ee, next) {
+      // Handle WebSocket connection response
+      if (response.statusCode === 101) {
+        console.log('WebSocket connected successfully');
+      } else {
+        console.log('WebSocket connection failed:', response.statusCode);
+      }
+      return next();
+    }

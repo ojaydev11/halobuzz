@@ -41,16 +41,16 @@ import healthRoutes from './routes/health';
 import { setupSocketIO, setupRedisAdapter } from '@/config/socket';
 import { setupLogger } from '@/config/logger';
 import { validateSecrets } from '@/config/secrets';
+import { validateRequiredEnv } from '@/config/requiredEnv';
 import { featureFlags } from '@/config/flags';
 
 // Import realtime layer
 import { createRealtime } from '@/realtime/socket';
 import { setIo } from '@/realtime/emitters';
 
-// Import middleware
-import { errorHandler } from '@/middleware/errorHandler';
-import { requestLogger } from '@/middleware/requestLogger';
-import { authMiddleware } from '@/middleware/auth';
+// Import enhanced authentication
+import { enhancedAuthMiddleware } from '@/middleware/sessionManager';
+import { setupSocketAuthentication } from '@/middleware/socketAuth';
 import { metricsMiddleware } from '@/middleware/metrics';
 import { 
   securityMonitoringMiddleware, 
@@ -60,19 +60,22 @@ import {
   suspiciousPatternDetectionMiddleware,
   fileUploadMonitoringMiddleware
 } from '@/middleware/securityMonitoring';
-import {
-  requestId,
-  trustProxy,
-  httpsOnly,
-  globalLimiter,
-  authLimiter,
-  loginSlowDown,
-  paymentLimiter,
-  socialLimiter,
-  deviceFingerprint,
-  securityHeaders,
-  sanitizeInput
-} from '@/middleware/security';
+// Import enhanced middleware
+import { 
+  globalLimiter, 
+  authLimiter, 
+  loginLimiter, 
+  paymentLimiter, 
+  socialLimiter, 
+  gamingLimiter, 
+  adminLimiter 
+} from '@/middleware/enhancedRateLimiting';
+import { 
+  sanitizeInput, 
+  validateObjectId, 
+  validateEmail, 
+  validateUrl 
+} from '@/middleware/enhancedInputValidation';
 import {
   enhancedAuthMiddleware,
   securityHeaders as enhancedSecurityHeaders,
@@ -88,8 +91,10 @@ import {
 
 // Import routes
 import authRoutes from '@/routes/auth';
+import authEnhancedRoutes from '@/routes/auth-enhanced';
 import usersRoutes from '@/routes/users';
 import walletRoutes from '@/routes/wallet';
+import docsRoutes from '@/routes/docs';
 // import coinsRoutes from '@/routes/coins'; // TEMPORARILY DISABLED - not implemented yet
 // import payoutsRoutes from '@/routes/payouts'; // TEMPORARILY DISABLED - type errors
 import webhooksRoutes from '@/routes/webhooks';
@@ -142,6 +147,11 @@ import subtitlesRoutes from '@/routes/subtitles';
 
 // Advanced Engine routes
 import aiPersonalizationRoutes from '@/routes/ai-personalization';
+import fileUploadRoutes from '@/routes/fileUpload';
+import verificationRoutes from '@/routes/verification';
+import adminMFARoutes from '@/routes/admin-mfa';
+import observabilityRoutes from '@/routes/observability';
+import legalComplianceRoutes from '@/routes/legalCompliance';
 import advancedGiftsRoutes from '@/routes/advanced-gifts';
 import fortressSecurityRoutes from '@/routes/fortress-security';
 import gamificationRoutes from '@/routes/gamification';
@@ -171,8 +181,9 @@ import commerceRoutes from '@/routes/commerce';
 // import culturalRoutes from '@/routes/cultural';
 // import wellbeingRoutes from '@/routes/wellbeing';
 
-// Validate critical secrets
+// Validate critical secrets and environment
 validateSecrets();
+validateRequiredEnv();
 
 const app = express();
 
@@ -180,12 +191,18 @@ const app = express();
 app.set('trust proxy', 1);
 const server = createServer(app);
 
-// Create Socket.IO instance for existing functionality
+// Create Socket.IO instance with production-hardened CORS
 const io = new Server(server, {
   cors: {
     origin: process.env.CORS_ORIGIN?.split(',') || ['http://localhost:3000'],
-    credentials: true
-  }
+    credentials: true,
+    methods: ['GET', 'POST']
+  },
+  // Production security settings
+  allowEIO3: false, // Disable Engine.IO v3 compatibility
+  transports: ['websocket', 'polling'], // Allow both transports
+  pingTimeout: process.env.NODE_ENV === 'production' ? 60000 : 30000,
+  pingInterval: process.env.NODE_ENV === 'production' ? 25000 : 10000
 });
 
 // Create new realtime layer for live channels
@@ -222,12 +239,17 @@ app.use(helmet({
   referrerPolicy: { policy: "no-referrer" }
 }));
 
-// Enhanced CORS configuration
+// Enhanced CORS configuration with production hardening
 app.use(cors({
   origin: (origin, callback) => {
     const allowedOrigins = process.env.CORS_ORIGIN?.split(',') || ['http://localhost:3000'];
     
-    // Allow requests with no origin (mobile apps, Postman, etc.)
+    // In production, reject requests with no origin (except mobile apps)
+    if (process.env.NODE_ENV === 'production' && !origin) {
+      return callback(new Error('Origin header required in production'), false);
+    }
+    
+    // Allow requests with no origin in development (mobile apps, Postman, etc.)
     if (!origin) {
       return callback(null, true);
     }
@@ -238,14 +260,19 @@ app.use(cors({
     }
     
     // Log blocked origins for security monitoring
-    logger.warn(`CORS blocked origin: ${origin}`);
-    return callback(new Error('Not allowed by CORS'));
+    logger.warn(`CORS blocked origin: ${origin}`, {
+      origin,
+      allowedOrigins,
+      userAgent: (req as any).get('User-Agent'),
+      ip: (req as any).ip
+    });
+    return callback(new Error('Not allowed by CORS'), false);
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-CSRF-Token', 'X-TOTP-Token', 'X-Device-ID'],
   exposedHeaders: ['X-Request-ID'],
-  maxAge: 86400 // 24 hours
+  maxAge: process.env.NODE_ENV === 'production' ? 86400 : 0 // 24 hours in production, no cache in dev
 }));
 
 // Global rate limiting
@@ -317,6 +344,9 @@ app.get(`/api/${apiVersion}/monitoring/health`, (req, res) => {
   });
 });
 
+// API documentation (no auth required)
+app.use('/docs', docsRoutes);
+
 // Enhanced health check routes
 app.use('/api/v1', healthRoutes);
 
@@ -346,7 +376,8 @@ app.use(async (req, res, next) => {
 
 // API routes with enhanced security
 logger.info(`Mounting auth routes at /api/${apiVersion}/auth`);
-app.use(`/api/${apiVersion}/auth`, authLimiter, loginSlowDown, authRoutes);
+app.use(`/api/${apiVersion}/auth`, authLimiter, loginLimiter, authRoutes);
+app.use(`/api/${apiVersion}/auth-enhanced`, authLimiter, loginLimiter, authEnhancedRoutes);
 app.use(`/api/${apiVersion}/users`, authMiddleware, csrfProtection, usersRoutes);
 app.use(`/api/${apiVersion}/wallet`, authMiddleware, paymentLimiter, csrfProtection, walletRoutes);
 // app.use(`/api/${apiVersion}/coins`, authMiddleware, coinsRoutes); // TEMPORARILY DISABLED - not implemented yet
@@ -364,17 +395,22 @@ app.use(`/api/${apiVersion}/reels`, authMiddleware, reelsRoutes);
 app.use(`/api/${apiVersion}/search`, searchRoutes);
 app.use(`/api/${apiVersion}/global-expansion`, globalExpansionRoutes);
 app.use(`/api/${apiVersion}/creator-economy`, authMiddleware, creatorEconomyRoutes);
-app.use(`/api/${apiVersion}/games`, authMiddleware, gamesRoutes);
+app.use(`/api/${apiVersion}/games`, authMiddleware, gamingLimiter, gamesRoutes);
 app.use(`/api/${apiVersion}/games/v2`, gamesRoutesV2); // New enhanced games with staking
-app.use(`/api/${apiVersion}/games-enhanced`, gamesEnhancedRoutes); // Enhanced games with coins system
-app.use(`/api/${apiVersion}/advanced-games`, advancedGamesRoutes); // Advanced multiplayer games
+app.use(`/api/${apiVersion}/games-enhanced`, gamingLimiter, gamesEnhancedRoutes); // Enhanced games with coins system
+app.use(`/api/${apiVersion}/advanced-games`, gamingLimiter, advancedGamesRoutes); // Advanced multiplayer games
 // TEMPORARILY DISABLED: LeaderboardService causes infinite loop
 // app.use(`/api/${apiVersion}/leaderboards`, leaderboardRoutes); // Global leaderboards and tournaments
 app.use(`/api/${apiVersion}/social`, socialRoutes); // Social features - friends, guilds, chat
 app.use(`/api/${apiVersion}/monetization`, monetizationRoutes); // Monetization - IAP, battle pass, rewards
 app.use(`/api/${apiVersion}/config`, authMiddleware, configRoutes);
 app.use(`/api/${apiVersion}/kyc`, authMiddleware, kycRoutes);
-app.use(`/api/${apiVersion}/admin`, authMiddleware, requireAdmin, adminRoutes);
+app.use(`/api/${apiVersion}/upload`, authMiddleware, uploadLimiter, fileUploadRoutes);
+app.use(`/api/${apiVersion}/verify`, passwordResetLimiter, verificationRoutes);
+app.use(`/api/${apiVersion}/admin`, authMiddleware, adminLimiter, requireAdmin, adminRoutes);
+app.use(`/api/${apiVersion}/admin/mfa`, authMiddleware, adminMFARoutes);
+app.use(`/api/${apiVersion}/monitoring`, observabilityRoutes);
+app.use(`/api/${apiVersion}/legal`, authMiddleware, legalComplianceRoutes);
 // app.use(`/api/${apiVersion}/monitoring`, monitoringRoutes); // TEMPORARILY DISABLED
 app.use(`/api/${apiVersion}/security`, securityRoutes);
 // app.use(`/api/${apiVersion}/mfa`, mfaRoutes); // TEMPORARILY DISABLED - type errors
@@ -564,7 +600,11 @@ const startServer = async () => {
     try {
       setupSocketIO(io);
       await setupRedisAdapter(io);
-      logger.info('Socket.IO configured with Redis adapter');
+      
+      // Setup enhanced Socket.IO authentication with revocation support
+      const socketAuthManager = setupSocketAuthentication(io);
+      
+      logger.info('Socket.IO configured with Redis adapter and enhanced authentication');
     } catch (error) {
       logger.warn('Socket.IO Redis adapter setup failed:', error instanceof Error ? error.message : String(error));
       logger.warn('Continuing with basic Socket.IO setup');
@@ -620,6 +660,34 @@ const startServer = async () => {
     } catch (error) {
       logger.warn('Gaming services initialization failed:', error instanceof Error ? error.message : String(error));
       logger.warn('Continuing with limited gaming features');
+    }
+
+    // Initialize real-time services
+    try {
+      const { changeStreamService } = await import('@/services/ChangeStreamService');
+      const { realtimeNotificationService } = await import('@/services/RealtimeNotificationService');
+
+      // Initialize change stream service
+      await changeStreamService.initialize();
+      logger.info('Change stream service initialized successfully');
+
+      // Initialize real-time notification service with Socket.IO
+      await realtimeNotificationService.initialize(liveIo);
+      logger.info('Real-time notification service initialized successfully');
+
+      // Setup graceful shutdown
+      const gracefulShutdown = async () => {
+        logger.info('Gracefully shutting down real-time services...');
+        await changeStreamService.shutdown();
+        process.exit(0);
+      };
+
+      process.on('SIGTERM', gracefulShutdown);
+      process.on('SIGINT', gracefulShutdown);
+
+    } catch (error) {
+      logger.warn('Real-time services initialization failed:', error instanceof Error ? error.message : String(error));
+      logger.warn('Continuing without real-time features');
     }
 
     // Start server

@@ -360,7 +360,7 @@ router.post('/transfer', securityMiddleware.validateToken, async (req: Request, 
     }
     
     // Get sender balance
-    let senderBalance = userBalances.get(userId);
+    const senderBalance = userBalances.get(userId);
     if (!senderBalance) {
       return res.status(400).json({
         success: false,

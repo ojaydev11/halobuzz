@@ -1,0 +1,219 @@
+name: Performance Testing
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+  schedule:
+    - cron: '0 3 * * 0' # Weekly on Sunday at 3 AM
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  load-testing:
+    name: Load Testing
+    runs-on: ubuntu-latest
+    
+    services:
+      mongodb:
+        image: mongo:7
+        env:
+          MONGO_INITDB_ROOT_USERNAME: test
+          MONGO_INITDB_ROOT_PASSWORD: test
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.adminCommand(\"ping\")'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: 'backend/package-lock.json'
+
+    - name: Install dependencies
+      run: |
+        cd backend
+        npm ci
+
+    - name: Install Artillery
+      run: |
+        npm install -g artillery@latest
+
+    - name: Build application
+      run: |
+        cd backend
+        npm run build
+
+    - name: Start application
+      run: |
+        cd backend
+        npm start &
+        sleep 15
+      env:
+        NODE_ENV: test
+        MONGODB_URI: mongodb://test:test@localhost:27017/test?authSource=admin
+        REDIS_URL: redis://localhost:6379
+        JWT_SECRET: test-jwt-secret-minimum-64-characters-long-for-testing-only
+        JWT_REFRESH_SECRET: test-refresh-secret-minimum-64-characters-long-for-testing-only
+        PORT: 3000
+
+    - name: Seed test data
+      run: |
+        cd backend
+        npm run seed:comprehensive
+      env:
+        NODE_ENV: test
+        MONGODB_URI: mongodb://test:test@localhost:27017/test?authSource=admin
+        REDIS_URL: redis://localhost:6379
+        JWT_SECRET: test-jwt-secret-minimum-64-characters-long-for-testing-only
+        JWT_REFRESH_SECRET: test-refresh-secret-minimum-64-characters-long-for-testing-only
+
+    - name: Run basic load test
+      run: |
+        artillery run perf/basic-load.yml --output basic-load-report.json
+      env:
+        API_BASE_URL: http://localhost:3000
+
+    - name: Run stress test
+      run: |
+        artillery run perf/stress-test.yml --output stress-test-report.json
+      env:
+        API_BASE_URL: http://localhost:3000
+
+    - name: Run WebSocket load test
+      run: |
+        artillery run perf/websocket-load.yml --output websocket-load-report.json
+      env:
+        API_BASE_URL: http://localhost:3000
+
+    - name: Upload performance reports
+      uses: actions/upload-artifact@v4
+      with:
+        name: performance-reports
+        path: |
+          basic-load-report.json
+          stress-test-report.json
+          websocket-load-report.json
+        retention-days: 30
+
+    - name: Stop application
+      run: pkill -f "node dist/index.js" || true
+
+  performance-budget:
+    name: Performance Budget Check
+    runs-on: ubuntu-latest
+    needs: load-testing
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Download performance reports
+      uses: actions/download-artifact@v4
+      with:
+        name: performance-reports
+
+    - name: Check performance thresholds
+      run: |
+        # Check basic load test results
+        BASIC_ERROR_RATE=$(jq -r '.aggregate.rate' basic-load-report.json | grep -o '[0-9]\+\.[0-9]\+' | head -1)
+        BASIC_P95=$(jq -r '.aggregate.latency.p95' basic-load-report.json)
+        
+        echo "Basic Load Test Results:"
+        echo "Error Rate: $BASIC_ERROR_RATE%"
+        echo "P95 Latency: ${BASIC_P95}ms"
+        
+        # Check thresholds
+        if (( $(echo "$BASIC_ERROR_RATE > 1" | bc -l) )); then
+          echo "❌ Error rate exceeds 1% threshold"
+          exit 1
+        fi
+        
+        if (( $(echo "$BASIC_P95 > 300" | bc -l) )); then
+          echo "❌ P95 latency exceeds 300ms threshold"
+          exit 1
+        fi
+        
+        echo "✅ Basic load test passed thresholds"
+
+    - name: Comment PR with performance results
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          
+          // Read performance reports
+          const basicReport = JSON.parse(fs.readFileSync('basic-load-report.json', 'utf8'));
+          const stressReport = JSON.parse(fs.readFileSync('stress-test-report.json', 'utf8'));
+          const wsReport = JSON.parse(fs.readFileSync('websocket-load-report.json', 'utf8'));
+          
+          // Extract key metrics
+          const basicMetrics = {
+            errorRate: basicReport.aggregate.rate,
+            p95Latency: basicReport.aggregate.latency.p95,
+            rps: basicReport.aggregate.rps
+          };
+          
+          const stressMetrics = {
+            errorRate: stressReport.aggregate.rate,
+            p95Latency: stressReport.aggregate.latency.p95,
+            rps: stressReport.aggregate.rps
+          };
+          
+          const wsMetrics = {
+            errorRate: wsReport.aggregate.rate,
+            p95Latency: wsReport.aggregate.latency.p95,
+            rps: wsReport.aggregate.rps
+          };
+          
+          // Create comment
+          const comment = `## 🚀 Performance Test Results
+          
+          ### Basic Load Test
+          - **Error Rate**: ${basicMetrics.errorRate}%
+          - **P95 Latency**: ${basicMetrics.p95Latency}ms
+          - **Requests/sec**: ${basicMetrics.rps}
+          
+          ### Stress Test
+          - **Error Rate**: ${stressMetrics.errorRate}%
+          - **P95 Latency**: ${stressMetrics.p95Latency}ms
+          - **Requests/sec**: ${stressMetrics.rps}
+          
+          ### WebSocket Load Test
+          - **Error Rate**: ${wsMetrics.errorRate}%
+          - **P95 Latency**: ${wsMetrics.p95Latency}ms
+          - **Requests/sec**: ${wsMetrics.rps}
+          
+          ### Thresholds
+          - ✅ Error Rate < 1%
+          - ✅ P95 Latency < 300ms (REST), < 150ms (WebSocket)
+          - ✅ Requests/sec > 100`;
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: comment
+          });

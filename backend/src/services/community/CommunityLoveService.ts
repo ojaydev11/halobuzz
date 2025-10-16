@@ -186,7 +186,7 @@ export class CommunityLoveService {
       const karmaAwarded = Math.round(baseKarma * multiplier);
 
       // Get current karma score
-      let karmaScore = await this.getKarmaScore(userId);
+      const karmaScore = await this.getKarmaScore(userId);
       
       // Update appropriate category
       const categoryMap: { [key: string]: keyof KarmaScore['categories'] } = {

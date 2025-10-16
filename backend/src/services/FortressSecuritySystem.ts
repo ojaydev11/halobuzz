@@ -818,7 +818,7 @@ export class FortressSecuritySystem extends EventEmitter {
 
   private calculateRiskProfile(transactions: any[], baselines: any): UserSecurityProfile['riskProfile'] {
     let fraudRisk = 0;
-    let abuseRisk = 0;
+    const abuseRisk = 0;
     let accountTakeoverRisk = 0;
 
     // Analyze transaction patterns for fraud indicators
@@ -850,8 +850,8 @@ export class FortressSecuritySystem extends EventEmitter {
   private calculateTrustScore(userId: string, transactions: any[], wallet: any): UserSecurityProfile['trustScore'] {
     let identityScore = 50; // Base score
     let behaviorScore = 60; // Base score
-    let networkScore = 70; // Base score
-    let socialScore = 50; // Base score
+    const networkScore = 70; // Base score
+    const socialScore = 50; // Base score
     let financialScore = 60; // Base score
 
     // Identity verification factors

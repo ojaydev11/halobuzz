@@ -1,0 +1,5596 @@
+44671478fbdd29d05081c66c3c31d373
+"use strict";
+
+/* istanbul ignore next */
+function cov_ntwee9aeg() {
+  var path = "D:\\halobuzz by cursor\\backend\\src\\services\\nft\\NFTMarketplaceService.ts";
+  var hash = "a39612dd104c315419fcc428c524a96656c731cb";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "D:\\halobuzz by cursor\\backend\\src\\services\\nft\\NFTMarketplaceService.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 2,
+          column: 22
+        },
+        end: {
+          line: 4,
+          column: 1
+        }
+      },
+      "1": {
+        start: {
+          line: 3,
+          column: 4
+        },
+        end: {
+          line: 3,
+          column: 62
+        }
+      },
+      "2": {
+        start: {
+          line: 5,
+          column: 0
+        },
+        end: {
+          line: 5,
+          column: 62
+        }
+      },
+      "3": {
+        start: {
+          line: 6,
+          column: 0
+        },
+        end: {
+          line: 6,
+          column: 39
+        }
+      },
+      "4": {
+        start: {
+          line: 7,
+          column: 17
+        },
+        end: {
+          line: 7,
+          column: 63
+        }
+      },
+      "5": {
+        start: {
+          line: 8,
+          column: 19
+        },
+        end: {
+          line: 8,
+          column: 55
+        }
+      },
+      "6": {
+        start: {
+          line: 9,
+          column: 17
+        },
+        end: {
+          line: 9,
+          column: 51
+        }
+      },
+      "7": {
+        start: {
+          line: 10,
+          column: 22
+        },
+        end: {
+          line: 10,
+          column: 57
+        }
+      },
+      "8": {
+        start: {
+          line: 12,
+          column: 18
+        },
+        end: {
+          line: 66,
+          column: 2
+        }
+      },
+      "9": {
+        start: {
+          line: 68,
+          column: 26
+        },
+        end: {
+          line: 84,
+          column: 2
+        }
+      },
+      "10": {
+        start: {
+          line: 86,
+          column: 22
+        },
+        end: {
+          line: 104,
+          column: 2
+        }
+      },
+      "11": {
+        start: {
+          line: 105,
+          column: 17
+        },
+        end: {
+          line: 105,
+          column: 59
+        }
+      },
+      "12": {
+        start: {
+          line: 107,
+          column: 21
+        },
+        end: {
+          line: 107,
+          column: 71
+        }
+      },
+      "13": {
+        start: {
+          line: 110,
+          column: 21
+        },
+        end: {
+          line: 110,
+          column: 30
+        }
+      },
+      "14": {
+        start: {
+          line: 112,
+          column: 8
+        },
+        end: {
+          line: 112,
+          column: 43
+        }
+      },
+      "15": {
+        start: {
+          line: 113,
+          column: 8
+        },
+        end: {
+          line: 113,
+          column: 67
+        }
+      },
+      "16": {
+        start: {
+          line: 116,
+          column: 8
+        },
+        end: {
+          line: 118,
+          column: 9
+        }
+      },
+      "17": {
+        start: {
+          line: 117,
+          column: 12
+        },
+        end: {
+          line: 117,
+          column: 73
+        }
+      },
+      "18": {
+        start: {
+          line: 119,
+          column: 8
+        },
+        end: {
+          line: 119,
+          column: 46
+        }
+      },
+      "19": {
+        start: {
+          line: 125,
+          column: 8
+        },
+        end: {
+          line: 196,
+          column: 9
+        }
+      },
+      "20": {
+        start: {
+          line: 127,
+          column: 26
+        },
+        end: {
+          line: 127,
+          column: 46
+        }
+      },
+      "21": {
+        start: {
+          line: 129,
+          column: 32
+        },
+        end: {
+          line: 129,
+          column: 66
+        }
+      },
+      "22": {
+        start: {
+          line: 131,
+          column: 27
+        },
+        end: {
+          line: 131,
+          column: 72
+        }
+      },
+      "23": {
+        start: {
+          line: 133,
+          column: 28
+        },
+        end: {
+          line: 172,
+          column: 13
+        }
+      },
+      "24": {
+        start: {
+          line: 173,
+          column: 24
+        },
+        end: {
+          line: 173,
+          column: 45
+        }
+      },
+      "25": {
+        start: {
+          line: 174,
+          column: 12
+        },
+        end: {
+          line: 174,
+          column: 29
+        }
+      },
+      "26": {
+        start: {
+          line: 176,
+          column: 12
+        },
+        end: {
+          line: 184,
+          column: 15
+        }
+      },
+      "27": {
+        start: {
+          line: 185,
+          column: 12
+        },
+        end: {
+          line: 190,
+          column: 15
+        }
+      },
+      "28": {
+        start: {
+          line: 191,
+          column: 12
+        },
+        end: {
+          line: 191,
+          column: 45
+        }
+      },
+      "29": {
+        start: {
+          line: 194,
+          column: 12
+        },
+        end: {
+          line: 194,
+          column: 72
+        }
+      },
+      "30": {
+        start: {
+          line: 195,
+          column: 12
+        },
+        end: {
+          line: 195,
+          column: 24
+        }
+      },
+      "31": {
+        start: {
+          line: 202,
+          column: 8
+        },
+        end: {
+          line: 258,
+          column: 9
+        }
+      },
+      "32": {
+        start: {
+          line: 203,
+          column: 24
+        },
+        end: {
+          line: 203,
+          column: 61
+        }
+      },
+      "33": {
+        start: {
+          line: 204,
+          column: 12
+        },
+        end: {
+          line: 206,
+          column: 13
+        }
+      },
+      "34": {
+        start: {
+          line: 205,
+          column: 16
+        },
+        end: {
+          line: 205,
+          column: 58
+        }
+      },
+      "35": {
+        start: {
+          line: 207,
+          column: 12
+        },
+        end: {
+          line: 209,
+          column: 13
+        }
+      },
+      "36": {
+        start: {
+          line: 208,
+          column: 16
+        },
+        end: {
+          line: 208,
+          column: 78
+        }
+      },
+      "37": {
+        start: {
+          line: 210,
+          column: 29
+        },
+        end: {
+          line: 210,
+          column: 55
+        }
+      },
+      "38": {
+        start: {
+          line: 211,
+          column: 34
+        },
+        end: {
+          line: 211,
+          column: 58
+        }
+      },
+      "39": {
+        start: {
+          line: 213,
+          column: 32
+        },
+        end: {
+          line: 213,
+          column: 53
+        }
+      },
+      "40": {
+        start: {
+          line: 214,
+          column: 35
+        },
+        end: {
+          line: 214,
+          column: 88
+        }
+      },
+      "41": {
+        start: {
+          line: 215,
+          column: 33
+        },
+        end: {
+          line: 215,
+          column: 77
+        }
+      },
+      "42": {
+        start: {
+          line: 217,
+          column: 32
+        },
+        end: {
+          line: 228,
+          column: 14
+        }
+      },
+      "43": {
+        start: {
+          line: 230,
+          column: 12
+        },
+        end: {
+          line: 230,
+          column: 88
+        }
+      },
+      "44": {
+        start: {
+          line: 231,
+          column: 12
+        },
+        end: {
+          line: 236,
+          column: 15
+        }
+      },
+      "45": {
+        start: {
+          line: 237,
+          column: 12
+        },
+        end: {
+          line: 237,
+          column: 32
+        }
+      },
+      "46": {
+        start: {
+          line: 238,
+          column: 12
+        },
+        end: {
+          line: 238,
+          column: 52
+        }
+      },
+      "47": {
+        start: {
+          line: 239,
+          column: 12
+        },
+        end: {
+          line: 239,
+          column: 29
+        }
+      },
+      "48": {
+        start: {
+          line: 241,
+          column: 12
+        },
+        end: {
+          line: 241,
+          column: 92
+        }
+      },
+      "49": {
+        start: {
+          line: 243,
+          column: 12
+        },
+        end: {
+          line: 243,
+          column: 45
+        }
+      },
+      "50": {
+        start: {
+          line: 244,
+          column: 12
+        },
+        end: {
+          line: 244,
+          column: 37
+        }
+      },
+      "51": {
+        start: {
+          line: 245,
+          column: 12
+        },
+        end: {
+          line: 252,
+          column: 15
+        }
+      },
+      "52": {
+        start: {
+          line: 253,
+          column: 12
+        },
+        end: {
+          line: 253,
+          column: 54
+        }
+      },
+      "53": {
+        start: {
+          line: 256,
+          column: 12
+        },
+        end: {
+          line: 256,
+          column: 67
+        }
+      },
+      "54": {
+        start: {
+          line: 257,
+          column: 12
+        },
+        end: {
+          line: 257,
+          column: 24
+        }
+      },
+      "55": {
+        start: {
+          line: 264,
+          column: 8
+        },
+        end: {
+          line: 285,
+          column: 9
+        }
+      },
+      "56": {
+        start: {
+          line: 266,
+          column: 12
+        },
+        end: {
+          line: 274,
+          column: 15
+        }
+      },
+      "57": {
+        start: {
+          line: 276,
+          column: 12
+        },
+        end: {
+          line: 280,
+          column: 15
+        }
+      },
+      "58": {
+        start: {
+          line: 283,
+          column: 12
+        },
+        end: {
+          line: 283,
+          column: 75
+        }
+      },
+      "59": {
+        start: {
+          line: 284,
+          column: 12
+        },
+        end: {
+          line: 284,
+          column: 24
+        }
+      },
+      "60": {
+        start: {
+          line: 291,
+          column: 8
+        },
+        end: {
+          line: 353,
+          column: 9
+        }
+      },
+      "61": {
+        start: {
+          line: 292,
+          column: 30
+        },
+        end: {
+          line: 292,
+          column: 61
+        }
+      },
+      "62": {
+        start: {
+          line: 293,
+          column: 29
+        },
+        end: {
+          line: 293,
+          column: 68
+        }
+      },
+      "63": {
+        start: {
+          line: 294,
+          column: 32
+        },
+        end: {
+          line: 294,
+          column: 96
+        }
+      },
+      "64": {
+        start: {
+          line: 294,
+          column: 62
+        },
+        end: {
+          line: 294,
+          column: 92
+        }
+      },
+      "65": {
+        start: {
+          line: 295,
+          column: 31
+        },
+        end: {
+          line: 295,
+          column: 46
+        }
+      },
+      "66": {
+        start: {
+          line: 296,
+          column: 33
+        },
+        end: {
+          line: 296,
+          column: 78
+        }
+      },
+      "67": {
+        start: {
+          line: 298,
+          column: 33
+        },
+        end: {
+          line: 310,
+          column: 14
+        }
+      },
+      "68": {
+        start: {
+          line: 311,
+          column: 32
+        },
+        end: {
+          line: 320,
+          column: 15
+        }
+      },
+      "69": {
+        start: {
+          line: 312,
+          column: 29
+        },
+        end: {
+          line: 312,
+          column: 86
+        }
+      },
+      "70": {
+        start: {
+          line: 313,
+          column: 16
+        },
+        end: {
+          line: 319,
+          column: 18
+        }
+      },
+      "71": {
+        start: {
+          line: 322,
+          column: 40
+        },
+        end: {
+          line: 330,
+          column: 13
+        }
+      },
+      "72": {
+        start: {
+          line: 332,
+          column: 33
+        },
+        end: {
+          line: 332,
+          column: 63
+        }
+      },
+      "73": {
+        start: {
+          line: 333,
+          column: 26
+        },
+        end: {
+          line: 341,
+          column: 13
+        }
+      },
+      "74": {
+        start: {
+          line: 342,
+          column: 12
+        },
+        end: {
+          line: 347,
+          column: 15
+        }
+      },
+      "75": {
+        start: {
+          line: 348,
+          column: 12
+        },
+        end: {
+          line: 348,
+          column: 25
+        }
+      },
+      "76": {
+        start: {
+          line: 351,
+          column: 12
+        },
+        end: {
+          line: 351,
+          column: 78
+        }
+      },
+      "77": {
+        start: {
+          line: 352,
+          column: 12
+        },
+        end: {
+          line: 352,
+          column: 24
+        }
+      },
+      "78": {
+        start: {
+          line: 359,
+          column: 8
+        },
+        end: {
+          line: 405,
+          column: 9
+        }
+      },
+      "79": {
+        start: {
+          line: 360,
+          column: 24
+        },
+        end: {
+          line: 360,
+          column: 61
+        }
+      },
+      "80": {
+        start: {
+          line: 361,
+          column: 12
+        },
+        end: {
+          line: 363,
+          column: 13
+        }
+      },
+      "81": {
+        start: {
+          line: 362,
+          column: 16
+        },
+        end: {
+          line: 362,
+          column: 58
+        }
+      },
+      "82": {
+        start: {
+          line: 364,
+          column: 12
+        },
+        end: {
+          line: 366,
+          column: 13
+        }
+      },
+      "83": {
+        start: {
+          line: 365,
+          column: 16
+        },
+        end: {
+          line: 365,
+          column: 77
+        }
+      },
+      "84": {
+        start: {
+          line: 367,
+          column: 28
+        },
+        end: {
+          line: 367,
+          column: 81
+        }
+      },
+      "85": {
+        start: {
+          line: 368,
+          column: 32
+        },
+        end: {
+          line: 375,
+          column: 13
+        }
+      },
+      "86": {
+        start: {
+          line: 376,
+          column: 28
+        },
+        end: {
+          line: 376,
+          column: 57
+        }
+      },
+      "87": {
+        start: {
+          line: 377,
+          column: 12
+        },
+        end: {
+          line: 377,
+          column: 33
+        }
+      },
+      "88": {
+        start: {
+          line: 379,
+          column: 12
+        },
+        end: {
+          line: 379,
+          column: 35
+        }
+      },
+      "89": {
+        start: {
+          line: 380,
+          column: 12
+        },
+        end: {
+          line: 380,
+          column: 50
+        }
+      },
+      "90": {
+        start: {
+          line: 381,
+          column: 12
+        },
+        end: {
+          line: 381,
+          column: 49
+        }
+      },
+      "91": {
+        start: {
+          line: 382,
+          column: 12
+        },
+        end: {
+          line: 382,
+          column: 52
+        }
+      },
+      "92": {
+        start: {
+          line: 383,
+          column: 12
+        },
+        end: {
+          line: 383,
+          column: 29
+        }
+      },
+      "93": {
+        start: {
+          line: 384,
+          column: 32
+        },
+        end: {
+          line: 391,
+          column: 13
+        }
+      },
+      "94": {
+        start: {
+          line: 392,
+          column: 12
+        },
+        end: {
+          line: 392,
+          column: 56
+        }
+      },
+      "95": {
+        start: {
+          line: 393,
+          column: 12
+        },
+        end: {
+          line: 399,
+          column: 15
+        }
+      },
+      "96": {
+        start: {
+          line: 400,
+          column: 12
+        },
+        end: {
+          line: 400,
+          column: 31
+        }
+      },
+      "97": {
+        start: {
+          line: 403,
+          column: 12
+        },
+        end: {
+          line: 403,
+          column: 69
+        }
+      },
+      "98": {
+        start: {
+          line: 404,
+          column: 12
+        },
+        end: {
+          line: 404,
+          column: 24
+        }
+      },
+      "99": {
+        start: {
+          line: 411,
+          column: 8
+        },
+        end: {
+          line: 458,
+          column: 9
+        }
+      },
+      "100": {
+        start: {
+          line: 412,
+          column: 28
+        },
+        end: {
+          line: 412,
+          column: 99
+        }
+      },
+      "101": {
+        start: {
+          line: 413,
+          column: 12
+        },
+        end: {
+          line: 415,
+          column: 13
+        }
+      },
+      "102": {
+        start: {
+          line: 414,
+          column: 16
+        },
+        end: {
+          line: 414,
+          column: 70
+        }
+      },
+      "103": {
+        start: {
+          line: 416,
+          column: 12
+        },
+        end: {
+          line: 418,
+          column: 13
+        }
+      },
+      "104": {
+        start: {
+          line: 417,
+          column: 16
+        },
+        end: {
+          line: 417,
+          column: 74
+        }
+      },
+      "105": {
+        start: {
+          line: 419,
+          column: 12
+        },
+        end: {
+          line: 421,
+          column: 13
+        }
+      },
+      "106": {
+        start: {
+          line: 420,
+          column: 16
+        },
+        end: {
+          line: 420,
+          column: 70
+        }
+      },
+      "107": {
+        start: {
+          line: 422,
+          column: 31
+        },
+        end: {
+          line: 422,
+          column: 79
+        }
+      },
+      "108": {
+        start: {
+          line: 423,
+          column: 12
+        },
+        end: {
+          line: 425,
+          column: 13
+        }
+      },
+      "109": {
+        start: {
+          line: 424,
+          column: 16
+        },
+        end: {
+          line: 424,
+          column: 95
+        }
+      },
+      "110": {
+        start: {
+          line: 427,
+          column: 12
+        },
+        end: {
+          line: 431,
+          column: 15
+        }
+      },
+      "111": {
+        start: {
+          line: 433,
+          column: 12
+        },
+        end: {
+          line: 437,
+          column: 14
+        }
+      },
+      "112": {
+        start: {
+          line: 438,
+          column: 12
+        },
+        end: {
+          line: 438,
+          column: 33
+        }
+      },
+      "113": {
+        start: {
+          line: 440,
+          column: 24
+        },
+        end: {
+          line: 440,
+          column: 61
+        }
+      },
+      "114": {
+        start: {
+          line: 441,
+          column: 12
+        },
+        end: {
+          line: 446,
+          column: 13
+        }
+      },
+      "115": {
+        start: {
+          line: 442,
+          column: 16
+        },
+        end: {
+          line: 442,
+          column: 50
+        }
+      },
+      "116": {
+        start: {
+          line: 443,
+          column: 16
+        },
+        end: {
+          line: 443,
+          column: 40
+        }
+      },
+      "117": {
+        start: {
+          line: 444,
+          column: 16
+        },
+        end: {
+          line: 444,
+          column: 56
+        }
+      },
+      "118": {
+        start: {
+          line: 445,
+          column: 16
+        },
+        end: {
+          line: 445,
+          column: 33
+        }
+      },
+      "119": {
+        start: {
+          line: 447,
+          column: 12
+        },
+        end: {
+          line: 452,
+          column: 15
+        }
+      },
+      "120": {
+        start: {
+          line: 453,
+          column: 12
+        },
+        end: {
+          line: 453,
+          column: 24
+        }
+      },
+      "121": {
+        start: {
+          line: 456,
+          column: 12
+        },
+        end: {
+          line: 456,
+          column: 64
+        }
+      },
+      "122": {
+        start: {
+          line: 457,
+          column: 12
+        },
+        end: {
+          line: 457,
+          column: 24
+        }
+      },
+      "123": {
+        start: {
+          line: 464,
+          column: 8
+        },
+        end: {
+          line: 474,
+          column: 9
+        }
+      },
+      "124": {
+        start: {
+          line: 465,
+          column: 24
+        },
+        end: {
+          line: 465,
+          column: 61
+        }
+      },
+      "125": {
+        start: {
+          line: 466,
+          column: 12
+        },
+        end: {
+          line: 468,
+          column: 13
+        }
+      },
+      "126": {
+        start: {
+          line: 467,
+          column: 16
+        },
+        end: {
+          line: 467,
+          column: 28
+        }
+      },
+      "127": {
+        start: {
+          line: 469,
+          column: 12
+        },
+        end: {
+          line: 469,
+          column: 45
+        }
+      },
+      "128": {
+        start: {
+          line: 472,
+          column: 12
+        },
+        end: {
+          line: 472,
+          column: 72
+        }
+      },
+      "129": {
+        start: {
+          line: 473,
+          column: 12
+        },
+        end: {
+          line: 473,
+          column: 24
+        }
+      },
+      "130": {
+        start: {
+          line: 480,
+          column: 8
+        },
+        end: {
+          line: 502,
+          column: 9
+        }
+      },
+      "131": {
+        start: {
+          line: 481,
+          column: 24
+        },
+        end: {
+          line: 481,
+          column: 61
+        }
+      },
+      "132": {
+        start: {
+          line: 482,
+          column: 12
+        },
+        end: {
+          line: 484,
+          column: 13
+        }
+      },
+      "133": {
+        start: {
+          line: 483,
+          column: 16
+        },
+        end: {
+          line: 483,
+          column: 58
+        }
+      },
+      "134": {
+        start: {
+          line: 485,
+          column: 12
+        },
+        end: {
+          line: 487,
+          column: 13
+        }
+      },
+      "135": {
+        start: {
+          line: 486,
+          column: 16
+        },
+        end: {
+          line: 486,
+          column: 98
+        }
+      },
+      "136": {
+        start: {
+          line: 488,
+          column: 12
+        },
+        end: {
+          line: 488,
+          column: 34
+        }
+      },
+      "137": {
+        start: {
+          line: 489,
+          column: 12
+        },
+        end: {
+          line: 489,
+          column: 45
+        }
+      },
+      "138": {
+        start: {
+          line: 490,
+          column: 12
+        },
+        end: {
+          line: 490,
+          column: 52
+        }
+      },
+      "139": {
+        start: {
+          line: 491,
+          column: 12
+        },
+        end: {
+          line: 491,
+          column: 29
+        }
+      },
+      "140": {
+        start: {
+          line: 492,
+          column: 12
+        },
+        end: {
+          line: 496,
+          column: 15
+        }
+      },
+      "141": {
+        start: {
+          line: 497,
+          column: 12
+        },
+        end: {
+          line: 497,
+          column: 24
+        }
+      },
+      "142": {
+        start: {
+          line: 500,
+          column: 12
+        },
+        end: {
+          line: 500,
+          column: 64
+        }
+      },
+      "143": {
+        start: {
+          line: 501,
+          column: 12
+        },
+        end: {
+          line: 501,
+          column: 24
+        }
+      },
+      "144": {
+        start: {
+          line: 506,
+          column: 8
+        },
+        end: {
+          line: 506,
+          column: 86
+        }
+      },
+      "145": {
+        start: {
+          line: 509,
+          column: 30
+        },
+        end: {
+          line: 509,
+          column: 53
+        }
+      },
+      "146": {
+        start: {
+          line: 510,
+          column: 8
+        },
+        end: {
+          line: 510,
+          column: 89
+        }
+      },
+      "147": {
+        start: {
+          line: 514,
+          column: 30
+        },
+        end: {
+          line: 519,
+          column: 9
+        }
+      },
+      "148": {
+        start: {
+          line: 520,
+          column: 28
+        },
+        end: {
+          line: 520,
+          column: 101
+        }
+      },
+      "149": {
+        start: {
+          line: 520,
+          column: 81
+        },
+        end: {
+          line: 520,
+          column: 93
+        }
+      },
+      "150": {
+        start: {
+          line: 521,
+          column: 8
+        },
+        end: {
+          line: 522,
+          column: 31
+        }
+      },
+      "151": {
+        start: {
+          line: 522,
+          column: 12
+        },
+        end: {
+          line: 522,
+          column: 31
+        }
+      },
+      "152": {
+        start: {
+          line: 523,
+          column: 8
+        },
+        end: {
+          line: 524,
+          column: 26
+        }
+      },
+      "153": {
+        start: {
+          line: 524,
+          column: 12
+        },
+        end: {
+          line: 524,
+          column: 26
+        }
+      },
+      "154": {
+        start: {
+          line: 525,
+          column: 8
+        },
+        end: {
+          line: 526,
+          column: 26
+        }
+      },
+      "155": {
+        start: {
+          line: 526,
+          column: 12
+        },
+        end: {
+          line: 526,
+          column: 26
+        }
+      },
+      "156": {
+        start: {
+          line: 527,
+          column: 8
+        },
+        end: {
+          line: 527,
+          column: 24
+        }
+      },
+      "157": {
+        start: {
+          line: 530,
+          column: 30
+        },
+        end: {
+          line: 530,
+          column: 99
+        }
+      },
+      "158": {
+        start: {
+          line: 531,
+          column: 28
+        },
+        end: {
+          line: 534,
+          column: 10
+        }
+      },
+      "159": {
+        start: {
+          line: 535,
+          column: 8
+        },
+        end: {
+          line: 535,
+          column: 33
+        }
+      },
+      "160": {
+        start: {
+          line: 536,
+          column: 8
+        },
+        end: {
+          line: 536,
+          column: 27
+        }
+      },
+      "161": {
+        start: {
+          line: 540,
+          column: 24
+        },
+        end: {
+          line: 540,
+          column: 26
+        }
+      },
+      "162": {
+        start: {
+          line: 541,
+          column: 20
+        },
+        end: {
+          line: 541,
+          column: 30
+        }
+      },
+      "163": {
+        start: {
+          line: 542,
+          column: 8
+        },
+        end: {
+          line: 550,
+          column: 9
+        }
+      },
+      "164": {
+        start: {
+          line: 542,
+          column: 21
+        },
+        end: {
+          line: 542,
+          column: 29
+        }
+      },
+      "165": {
+        start: {
+          line: 543,
+          column: 25
+        },
+        end: {
+          line: 543,
+          column: 74
+        }
+      },
+      "166": {
+        start: {
+          line: 544,
+          column: 12
+        },
+        end: {
+          line: 549,
+          column: 15
+        }
+      },
+      "167": {
+        start: {
+          line: 551,
+          column: 8
+        },
+        end: {
+          line: 551,
+          column: 23
+        }
+      },
+      "168": {
+        start: {
+          line: 554,
+          column: 20
+        },
+        end: {
+          line: 554,
+          column: 57
+        }
+      },
+      "169": {
+        start: {
+          line: 555,
+          column: 8
+        },
+        end: {
+          line: 555,
+          column: 45
+        }
+      },
+      "170": {
+        start: {
+          line: 558,
+          column: 8
+        },
+        end: {
+          line: 571,
+          column: 10
+        }
+      },
+      "171": {
+        start: {
+          line: 574,
+          column: 8
+        },
+        end: {
+          line: 589,
+          column: 10
+        }
+      },
+      "172": {
+        start: {
+          line: 593,
+          column: 8
+        },
+        end: {
+          line: 607,
+          column: 18
+        }
+      },
+      "173": {
+        start: {
+          line: 594,
+          column: 12
+        },
+        end: {
+          line: 606,
+          column: 13
+        }
+      },
+      "174": {
+        start: {
+          line: 595,
+          column: 28
+        },
+        end: {
+          line: 595,
+          column: 38
+        }
+      },
+      "175": {
+        start: {
+          line: 596,
+          column: 40
+        },
+        end: {
+          line: 599,
+          column: 18
+        }
+      },
+      "176": {
+        start: {
+          line: 600,
+          column: 16
+        },
+        end: {
+          line: 602,
+          column: 17
+        }
+      },
+      "177": {
+        start: {
+          line: 601,
+          column: 20
+        },
+        end: {
+          line: 601,
+          column: 68
+        }
+      },
+      "178": {
+        start: {
+          line: 605,
+          column: 16
+        },
+        end: {
+          line: 605,
+          column: 76
+        }
+      },
+      "179": {
+        start: {
+          line: 610,
+          column: 8
+        },
+        end: {
+          line: 639,
+          column: 9
+        }
+      },
+      "180": {
+        start: {
+          line: 611,
+          column: 28
+        },
+        end: {
+          line: 611,
+          column: 65
+        }
+      },
+      "181": {
+        start: {
+          line: 612,
+          column: 12
+        },
+        end: {
+          line: 613,
+          column: 23
+        }
+      },
+      "182": {
+        start: {
+          line: 613,
+          column: 16
+        },
+        end: {
+          line: 613,
+          column: 23
+        }
+      },
+      "183": {
+        start: {
+          line: 614,
+          column: 24
+        },
+        end: {
+          line: 614,
+          column: 54
+        }
+      },
+      "184": {
+        start: {
+          line: 615,
+          column: 12
+        },
+        end: {
+          line: 616,
+          column: 23
+        }
+      },
+      "185": {
+        start: {
+          line: 616,
+          column: 16
+        },
+        end: {
+          line: 616,
+          column: 23
+        }
+      },
+      "186": {
+        start: {
+          line: 617,
+          column: 12
+        },
+        end: {
+          line: 628,
+          column: 13
+        }
+      },
+      "187": {
+        start: {
+          line: 619,
+          column: 16
+        },
+        end: {
+          line: 619,
+          column: 87
+        }
+      },
+      "188": {
+        start: {
+          line: 620,
+          column: 16
+        },
+        end: {
+          line: 620,
+          column: 41
+        }
+      },
+      "189": {
+        start: {
+          line: 624,
+          column: 16
+        },
+        end: {
+          line: 624,
+          column: 38
+        }
+      },
+      "190": {
+        start: {
+          line: 625,
+          column: 16
+        },
+        end: {
+          line: 625,
+          column: 68
+        }
+      },
+      "191": {
+        start: {
+          line: 626,
+          column: 16
+        },
+        end: {
+          line: 626,
+          column: 33
+        }
+      },
+      "192": {
+        start: {
+          line: 627,
+          column: 16
+        },
+        end: {
+          line: 627,
+          column: 41
+        }
+      },
+      "193": {
+        start: {
+          line: 629,
+          column: 12
+        },
+        end: {
+          line: 629,
+          column: 33
+        }
+      },
+      "194": {
+        start: {
+          line: 630,
+          column: 12
+        },
+        end: {
+          line: 630,
+          column: 47
+        }
+      },
+      "195": {
+        start: {
+          line: 631,
+          column: 12
+        },
+        end: {
+          line: 635,
+          column: 15
+        }
+      },
+      "196": {
+        start: {
+          line: 638,
+          column: 12
+        },
+        end: {
+          line: 638,
+          column: 67
+        }
+      },
+      "197": {
+        start: {
+          line: 642,
+          column: 0
+        },
+        end: {
+          line: 642,
+          column: 54
+        }
+      },
+      "198": {
+        start: {
+          line: 643,
+          column: 0
+        },
+        end: {
+          line: 643,
+          column: 40
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "(anonymous_0)",
+        decl: {
+          start: {
+            line: 2,
+            column: 56
+          },
+          end: {
+            line: 2,
+            column: 57
+          }
+        },
+        loc: {
+          start: {
+            line: 2,
+            column: 71
+          },
+          end: {
+            line: 4,
+            column: 1
+          }
+        },
+        line: 2
+      },
+      "1": {
+        name: "(anonymous_1)",
+        decl: {
+          start: {
+            line: 111,
+            column: 4
+          },
+          end: {
+            line: 111,
+            column: 5
+          }
+        },
+        loc: {
+          start: {
+            line: 111,
+            column: 18
+          },
+          end: {
+            line: 114,
+            column: 5
+          }
+        },
+        line: 111
+      },
+      "2": {
+        name: "(anonymous_2)",
+        decl: {
+          start: {
+            line: 115,
+            column: 4
+          },
+          end: {
+            line: 115,
+            column: 5
+          }
+        },
+        loc: {
+          start: {
+            line: 115,
+            column: 25
+          },
+          end: {
+            line: 120,
+            column: 5
+          }
+        },
+        line: 115
+      },
+      "3": {
+        name: "(anonymous_3)",
+        decl: {
+          start: {
+            line: 124,
+            column: 4
+          },
+          end: {
+            line: 124,
+            column: 5
+          }
+        },
+        loc: {
+          start: {
+            line: 124,
+            column: 55
+          },
+          end: {
+            line: 197,
+            column: 5
+          }
+        },
+        line: 124
+      },
+      "4": {
+        name: "(anonymous_4)",
+        decl: {
+          start: {
+            line: 201,
+            column: 4
+          },
+          end: {
+            line: 201,
+            column: 5
+          }
+        },
+        loc: {
+          start: {
+            line: 201,
+            column: 38
+          },
+          end: {
+            line: 259,
+            column: 5
+          }
+        },
+        line: 201
+      },
+      "5": {
+        name: "(anonymous_5)",
+        decl: {
+          start: {
+            line: 263,
+            column: 4
+          },
+          end: {
+            line: 263,
+            column: 5
+          }
+        },
+        loc: {
+          start: {
+            line: 263,
+            column: 60
+          },
+          end: {
+            line: 286,
+            column: 5
+          }
+        },
+        line: 263
+      },
+      "6": {
+        name: "(anonymous_6)",
+        decl: {
+          start: {
+            line: 290,
+            column: 4
+          },
+          end: {
+            line: 290,
+            column: 5
+          }
+        },
+        loc: {
+          start: {
+            line: 290,
+            column: 35
+          },
+          end: {
+            line: 354,
+            column: 5
+          }
+        },
+        line: 290
+      },
+      "7": {
+        name: "(anonymous_7)",
+        decl: {
+          start: {
+            line: 294,
+            column: 48
+          },
+          end: {
+            line: 294,
+            column: 49
+          }
+        },
+        loc: {
+          start: {
+            line: 294,
+            column: 62
+          },
+          end: {
+            line: 294,
+            column: 92
+          }
+        },
+        line: 294
+      },
+      "8": {
+        name: "(anonymous_8)",
+        decl: {
+          start: {
+            line: 311,
+            column: 67
+          },
+          end: {
+            line: 311,
+            column: 68
+          }
+        },
+        loc: {
+          start: {
+            line: 311,
+            column: 83
+          },
+          end: {
+            line: 320,
+            column: 13
+          }
+        },
+        line: 311
+      },
+      "9": {
+        name: "(anonymous_9)",
+        decl: {
+          start: {
+            line: 358,
+            column: 4
+          },
+          end: {
+            line: 358,
+            column: 5
+          }
+        },
+        loc: {
+          start: {
+            line: 358,
+            column: 72
+          },
+          end: {
+            line: 406,
+            column: 5
+          }
+        },
+        line: 358
+      },
+      "10": {
+        name: "(anonymous_10)",
+        decl: {
+          start: {
+            line: 410,
+            column: 4
+          },
+          end: {
+            line: 410,
+            column: 5
+          }
+        },
+        loc: {
+          start: {
+            line: 410,
+            column: 44
+          },
+          end: {
+            line: 459,
+            column: 5
+          }
+        },
+        line: 410
+      },
+      "11": {
+        name: "(anonymous_11)",
+        decl: {
+          start: {
+            line: 463,
+            column: 4
+          },
+          end: {
+            line: 463,
+            column: 5
+          }
+        },
+        loc: {
+          start: {
+            line: 463,
+            column: 31
+          },
+          end: {
+            line: 475,
+            column: 5
+          }
+        },
+        line: 463
+      },
+      "12": {
+        name: "(anonymous_12)",
+        decl: {
+          start: {
+            line: 479,
+            column: 4
+          },
+          end: {
+            line: 479,
+            column: 5
+          }
+        },
+        loc: {
+          start: {
+            line: 479,
+            column: 32
+          },
+          end: {
+            line: 503,
+            column: 5
+          }
+        },
+        line: 479
+      },
+      "13": {
+        name: "(anonymous_13)",
+        decl: {
+          start: {
+            line: 505,
+            column: 4
+          },
+          end: {
+            line: 505,
+            column: 5
+          }
+        },
+        loc: {
+          start: {
+            line: 505,
+            column: 20
+          },
+          end: {
+            line: 507,
+            column: 5
+          }
+        },
+        line: 505
+      },
+      "14": {
+        name: "(anonymous_14)",
+        decl: {
+          start: {
+            line: 508,
+            column: 4
+          },
+          end: {
+            line: 508,
+            column: 5
+          }
+        },
+        loc: {
+          start: {
+            line: 508,
+            column: 34
+          },
+          end: {
+            line: 511,
+            column: 5
+          }
+        },
+        line: 508
+      },
+      "15": {
+        name: "(anonymous_15)",
+        decl: {
+          start: {
+            line: 512,
+            column: 4
+          },
+          end: {
+            line: 512,
+            column: 5
+          }
+        },
+        loc: {
+          start: {
+            line: 512,
+            column: 45
+          },
+          end: {
+            line: 528,
+            column: 5
+          }
+        },
+        line: 512
+      },
+      "16": {
+        name: "(anonymous_16)",
+        decl: {
+          start: {
+            line: 520,
+            column: 64
+          },
+          end: {
+            line: 520,
+            column: 65
+          }
+        },
+        loc: {
+          start: {
+            line: 520,
+            column: 81
+          },
+          end: {
+            line: 520,
+            column: 93
+          }
+        },
+        line: 520
+      },
+      "17": {
+        name: "(anonymous_17)",
+        decl: {
+          start: {
+            line: 529,
+            column: 4
+          },
+          end: {
+            line: 529,
+            column: 5
+          }
+        },
+        loc: {
+          start: {
+            line: 529,
+            column: 45
+          },
+          end: {
+            line: 537,
+            column: 5
+          }
+        },
+        line: 529
+      },
+      "18": {
+        name: "(anonymous_18)",
+        decl: {
+          start: {
+            line: 538,
+            column: 4
+          },
+          end: {
+            line: 538,
+            column: 5
+          }
+        },
+        loc: {
+          start: {
+            line: 538,
+            column: 32
+          },
+          end: {
+            line: 552,
+            column: 5
+          }
+        },
+        line: 538
+      },
+      "19": {
+        name: "(anonymous_19)",
+        decl: {
+          start: {
+            line: 553,
+            column: 4
+          },
+          end: {
+            line: 553,
+            column: 5
+          }
+        },
+        loc: {
+          start: {
+            line: 553,
+            column: 32
+          },
+          end: {
+            line: 556,
+            column: 5
+          }
+        },
+        line: 553
+      },
+      "20": {
+        name: "(anonymous_20)",
+        decl: {
+          start: {
+            line: 557,
+            column: 4
+          },
+          end: {
+            line: 557,
+            column: 5
+          }
+        },
+        loc: {
+          start: {
+            line: 557,
+            column: 25
+          },
+          end: {
+            line: 572,
+            column: 5
+          }
+        },
+        line: 557
+      },
+      "21": {
+        name: "(anonymous_21)",
+        decl: {
+          start: {
+            line: 573,
+            column: 4
+          },
+          end: {
+            line: 573,
+            column: 5
+          }
+        },
+        loc: {
+          start: {
+            line: 573,
+            column: 34
+          },
+          end: {
+            line: 590,
+            column: 5
+          }
+        },
+        line: 573
+      },
+      "22": {
+        name: "(anonymous_22)",
+        decl: {
+          start: {
+            line: 591,
+            column: 4
+          },
+          end: {
+            line: 591,
+            column: 5
+          }
+        },
+        loc: {
+          start: {
+            line: 591,
+            column: 34
+          },
+          end: {
+            line: 608,
+            column: 5
+          }
+        },
+        line: 591
+      },
+      "23": {
+        name: "(anonymous_23)",
+        decl: {
+          start: {
+            line: 593,
+            column: 20
+          },
+          end: {
+            line: 593,
+            column: 21
+          }
+        },
+        loc: {
+          start: {
+            line: 593,
+            column: 32
+          },
+          end: {
+            line: 607,
+            column: 9
+          }
+        },
+        line: 593
+      },
+      "24": {
+        name: "(anonymous_24)",
+        decl: {
+          start: {
+            line: 609,
+            column: 4
+          },
+          end: {
+            line: 609,
+            column: 5
+          }
+        },
+        loc: {
+          start: {
+            line: 609,
+            column: 28
+          },
+          end: {
+            line: 640,
+            column: 5
+          }
+        },
+        line: 609
+      }
+    },
+    branchMap: {
+      "0": {
+        loc: {
+          start: {
+            line: 2,
+            column: 22
+          },
+          end: {
+            line: 4,
+            column: 1
+          }
+        },
+        type: "binary-expr",
+        locations: [{
+          start: {
+            line: 2,
+            column: 23
+          },
+          end: {
+            line: 2,
+            column: 27
+          }
+        }, {
+          start: {
+            line: 2,
+            column: 31
+          },
+          end: {
+            line: 2,
+            column: 51
+          }
+        }, {
+          start: {
+            line: 2,
+            column: 56
+          },
+          end: {
+            line: 4,
+            column: 1
+          }
+        }],
+        line: 2
+      },
+      "1": {
+        loc: {
+          start: {
+            line: 3,
+            column: 11
+          },
+          end: {
+            line: 3,
+            column: 61
+          }
+        },
+        type: "cond-expr",
+        locations: [{
+          start: {
+            line: 3,
+            column: 37
+          },
+          end: {
+            line: 3,
+            column: 40
+          }
+        }, {
+          start: {
+            line: 3,
+            column: 43
+          },
+          end: {
+            line: 3,
+            column: 61
+          }
+        }],
+        line: 3
+      },
+      "2": {
+        loc: {
+          start: {
+            line: 3,
+            column: 12
+          },
+          end: {
+            line: 3,
+            column: 33
+          }
+        },
+        type: "binary-expr",
+        locations: [{
+          start: {
+            line: 3,
+            column: 12
+          },
+          end: {
+            line: 3,
+            column: 15
+          }
+        }, {
+          start: {
+            line: 3,
+            column: 19
+          },
+          end: {
+            line: 3,
+            column: 33
+          }
+        }],
+        line: 3
+      },
+      "3": {
+        loc: {
+          start: {
+            line: 116,
+            column: 8
+          },
+          end: {
+            line: 118,
+            column: 9
+          }
+        },
+        type: "if",
+        locations: [{
+          start: {
+            line: 116,
+            column: 8
+          },
+          end: {
+            line: 118,
+            column: 9
+          }
+        }, {
+          start: {
+            line: undefined,
+            column: undefined
+          },
+          end: {
+            line: undefined,
+            column: undefined
+          }
+        }],
+        line: 116
+      },
+      "4": {
+        loc: {
+          start: {
+            line: 140,
+            column: 32
+          },
+          end: {
+            line: 140,
+            column: 57
+          }
+        },
+        type: "binary-expr",
+        locations: [{
+          start: {
+            line: 140,
+            column: 32
+          },
+          end: {
+            line: 140,
+            column: 51
+          }
+        }, {
+          start: {
+            line: 140,
+            column: 55
+          },
+          end: {
+            line: 140,
+            column: 57
+          }
+        }],
+        line: 140
+      },
+      "5": {
+        loc: {
+          start: {
+            line: 142,
+            column: 30
+          },
+          end: {
+            line: 142,
+            column: 67
+          }
+        },
+        type: "binary-expr",
+        locations: [{
+          start: {
+            line: 142,
+            column: 30
+          },
+          end: {
+            line: 142,
+            column: 46
+          }
+        }, {
+          start: {
+            line: 142,
+            column: 50
+          },
+          end: {
+            line: 142,
+            column: 67
+          }
+        }],
+        line: 142
+      },
+      "6": {
+        loc: {
+          start: {
+            line: 145,
+            column: 32
+          },
+          end: {
+            line: 145,
+            column: 57
+          }
+        },
+        type: "binary-expr",
+        locations: [{
+          start: {
+            line: 145,
+            column: 32
+          },
+          end: {
+            line: 145,
+            column: 51
+          }
+        }, {
+          start: {
+            line: 145,
+            column: 55
+          },
+          end: {
+            line: 145,
+            column: 57
+          }
+        }],
+        line: 145
+      },
+      "7": {
+        loc: {
+          start: {
+            line: 148,
+            column: 34
+          },
+          end: {
+            line: 148,
+            column: 60
+          }
+        },
+        type: "binary-expr",
+        locations: [{
+          start: {
+            line: 148,
+            column: 34
+          },
+          end: {
+            line: 148,
+            column: 55
+          }
+        }, {
+          start: {
+            line: 148,
+            column: 59
+          },
+          end: {
+            line: 148,
+            column: 60
+          }
+        }],
+        line: 148
+      },
+      "8": {
+        loc: {
+          start: {
+            line: 149,
+            column: 34
+          },
+          end: {
+            line: 149,
+            column: 60
+          }
+        },
+        type: "binary-expr",
+        locations: [{
+          start: {
+            line: 149,
+            column: 34
+          },
+          end: {
+            line: 149,
+            column: 55
+          }
+        }, {
+          start: {
+            line: 149,
+            column: 59
+          },
+          end: {
+            line: 149,
+            column: 60
+          }
+        }],
+        line: 149
+      },
+      "9": {
+        loc: {
+          start: {
+            line: 150,
+            column: 39
+          },
+          end: {
+            line: 150,
+            column: 71
+          }
+        },
+        type: "binary-expr",
+        locations: [{
+          start: {
+            line: 150,
+            column: 39
+          },
+          end: {
+            line: 150,
+            column: 65
+          }
+        }, {
+          start: {
+            line: 150,
+            column: 69
+          },
+          end: {
+            line: 150,
+            column: 71
+          }
+        }],
+        line: 150
+      },
+      "10": {
+        loc: {
+          start: {
+            line: 151,
+            column: 30
+          },
+          end: {
+            line: 151,
+            column: 66
+          }
+        },
+        type: "binary-expr",
+        locations: [{
+          start: {
+            line: 151,
+            column: 30
+          },
+          end: {
+            line: 151,
+            column: 47
+          }
+        }, {
+          start: {
+            line: 151,
+            column: 51
+          },
+          end: {
+            line: 151,
+            column: 66
+          }
+        }],
+        line: 151
+      },
+      "11": {
+        loc: {
+          start: {
+            line: 161,
+            column: 35
+          },
+          end: {
+            line: 161,
+            column: 61
+          }
+        },
+        type: "binary-expr",
+        locations: [{
+          start: {
+            line: 161,
+            column: 35
+          },
+          end: {
+            line: 161,
+            column: 56
+          }
+        }, {
+          start: {
+            line: 161,
+            column: 60
+          },
+          end: {
+            line: 161,
+            column: 61
+          }
+        }],
+        line: 161
+      },
+      "12": {
+        loc: {
+          start: {
+            line: 181,
+            column: 26
+          },
+          end: {
+            line: 181,
+            column: 62
+          }
+        },
+        type: "binary-expr",
+        locations: [{
+          start: {
+            line: 181,
+            column: 26
+          },
+          end: {
+            line: 181,
+            column: 43
+          }
+        }, {
+          start: {
+            line: 181,
+            column: 47
+          },
+          end: {
+            line: 181,
+            column: 62
+          }
+        }],
+        line: 181
+      },
+      "13": {
+        loc: {
+          start: {
+            line: 204,
+            column: 12
+          },
+          end: {
+            line: 206,
+            column: 13
+          }
+        },
+        type: "if",
+        locations: [{
+          start: {
+            line: 204,
+            column: 12
+          },
+          end: {
+            line: 206,
+            column: 13
+          }
+        }, {
+          start: {
+            line: undefined,
+            column: undefined
+          },
+          end: {
+            line: undefined,
+            column: undefined
+          }
+        }],
+        line: 204
+      },
+      "14": {
+        loc: {
+          start: {
+            line: 207,
+            column: 12
+          },
+          end: {
+            line: 209,
+            column: 13
+          }
+        },
+        type: "if",
+        locations: [{
+          start: {
+            line: 207,
+            column: 12
+          },
+          end: {
+            line: 209,
+            column: 13
+          }
+        }, {
+          start: {
+            line: undefined,
+            column: undefined
+          },
+          end: {
+            line: undefined,
+            column: undefined
+          }
+        }],
+        line: 207
+      },
+      "15": {
+        loc: {
+          start: {
+            line: 207,
+            column: 16
+          },
+          end: {
+            line: 207,
+            column: 67
+          }
+        },
+        type: "binary-expr",
+        locations: [{
+          start: {
+            line: 207,
+            column: 16
+          },
+          end: {
+            line: 207,
+            column: 39
+          }
+        }, {
+          start: {
+            line: 207,
+            column: 43
+          },
+          end: {
+            line: 207,
+            column: 67
+          }
+        }],
+        line: 207
+      },
+      "16": {
+        loc: {
+          start: {
+            line: 296,
+            column: 33
+          },
+          end: {
+            line: 296,
+            column: 78
+          }
+        },
+        type: "cond-expr",
+        locations: [{
+          start: {
+            line: 296,
+            column: 50
+          },
+          end: {
+            line: 296,
+            column: 74
+          }
+        }, {
+          start: {
+            line: 296,
+            column: 77
+          },
+          end: {
+            line: 296,
+            column: 78
+          }
+        }],
+        line: 296
+      },
+      "17": {
+        loc: {
+          start: {
+            line: 315,
+            column: 30
+          },
+          end: {
+            line: 315,
+            column: 57
+          }
+        },
+        type: "binary-expr",
+        locations: [{
+          start: {
+            line: 315,
+            column: 30
+          },
+          end: {
+            line: 315,
+            column: 44
+          }
+        }, {
+          start: {
+            line: 315,
+            column: 48
+          },
+          end: {
+            line: 315,
+            column: 57
+          }
+        }],
+        line: 315
+      },
+      "18": {
+        loc: {
+          start: {
+            line: 361,
+            column: 12
+          },
+          end: {
+            line: 363,
+            column: 13
+          }
+        },
+        type: "if",
+        locations: [{
+          start: {
+            line: 361,
+            column: 12
+          },
+          end: {
+            line: 363,
+            column: 13
+          }
+        }, {
+          start: {
+            line: undefined,
+            column: undefined
+          },
+          end: {
+            line: undefined,
+            column: undefined
+          }
+        }],
+        line: 361
+      },
+      "19": {
+        loc: {
+          start: {
+            line: 364,
+            column: 12
+          },
+          end: {
+            line: 366,
+            column: 13
+          }
+        },
+        type: "if",
+        locations: [{
+          start: {
+            line: 364,
+            column: 12
+          },
+          end: {
+            line: 366,
+            column: 13
+          }
+        }, {
+          start: {
+            line: undefined,
+            column: undefined
+          },
+          end: {
+            line: undefined,
+            column: undefined
+          }
+        }],
+        line: 364
+      },
+      "20": {
+        loc: {
+          start: {
+            line: 413,
+            column: 12
+          },
+          end: {
+            line: 415,
+            column: 13
+          }
+        },
+        type: "if",
+        locations: [{
+          start: {
+            line: 413,
+            column: 12
+          },
+          end: {
+            line: 415,
+            column: 13
+          }
+        }, {
+          start: {
+            line: undefined,
+            column: undefined
+          },
+          end: {
+            line: undefined,
+            column: undefined
+          }
+        }],
+        line: 413
+      },
+      "21": {
+        loc: {
+          start: {
+            line: 416,
+            column: 12
+          },
+          end: {
+            line: 418,
+            column: 13
+          }
+        },
+        type: "if",
+        locations: [{
+          start: {
+            line: 416,
+            column: 12
+          },
+          end: {
+            line: 418,
+            column: 13
+          }
+        }, {
+          start: {
+            line: undefined,
+            column: undefined
+          },
+          end: {
+            line: undefined,
+            column: undefined
+          }
+        }],
+        line: 416
+      },
+      "22": {
+        loc: {
+          start: {
+            line: 419,
+            column: 12
+          },
+          end: {
+            line: 421,
+            column: 13
+          }
+        },
+        type: "if",
+        locations: [{
+          start: {
+            line: 419,
+            column: 12
+          },
+          end: {
+            line: 421,
+            column: 13
+          }
+        }, {
+          start: {
+            line: undefined,
+            column: undefined
+          },
+          end: {
+            line: undefined,
+            column: undefined
+          }
+        }],
+        line: 419
+      },
+      "23": {
+        loc: {
+          start: {
+            line: 422,
+            column: 31
+          },
+          end: {
+            line: 422,
+            column: 79
+          }
+        },
+        type: "binary-expr",
+        locations: [{
+          start: {
+            line: 422,
+            column: 31
+          },
+          end: {
+            line: 422,
+            column: 57
+          }
+        }, {
+          start: {
+            line: 422,
+            column: 61
+          },
+          end: {
+            line: 422,
+            column: 79
+          }
+        }],
+        line: 422
+      },
+      "24": {
+        loc: {
+          start: {
+            line: 423,
+            column: 12
+          },
+          end: {
+            line: 425,
+            column: 13
+          }
+        },
+        type: "if",
+        locations: [{
+          start: {
+            line: 423,
+            column: 12
+          },
+          end: {
+            line: 425,
+            column: 13
+          }
+        }, {
+          start: {
+            line: undefined,
+            column: undefined
+          },
+          end: {
+            line: undefined,
+            column: undefined
+          }
+        }],
+        line: 423
+      },
+      "25": {
+        loc: {
+          start: {
+            line: 441,
+            column: 12
+          },
+          end: {
+            line: 446,
+            column: 13
+          }
+        },
+        type: "if",
+        locations: [{
+          start: {
+            line: 441,
+            column: 12
+          },
+          end: {
+            line: 446,
+            column: 13
+          }
+        }, {
+          start: {
+            line: undefined,
+            column: undefined
+          },
+          end: {
+            line: undefined,
+            column: undefined
+          }
+        }],
+        line: 441
+      },
+      "26": {
+        loc: {
+          start: {
+            line: 466,
+            column: 12
+          },
+          end: {
+            line: 468,
+            column: 13
+          }
+        },
+        type: "if",
+        locations: [{
+          start: {
+            line: 466,
+            column: 12
+          },
+          end: {
+            line: 468,
+            column: 13
+          }
+        }, {
+          start: {
+            line: undefined,
+            column: undefined
+          },
+          end: {
+            line: undefined,
+            column: undefined
+          }
+        }],
+        line: 466
+      },
+      "27": {
+        loc: {
+          start: {
+            line: 482,
+            column: 12
+          },
+          end: {
+            line: 484,
+            column: 13
+          }
+        },
+        type: "if",
+        locations: [{
+          start: {
+            line: 482,
+            column: 12
+          },
+          end: {
+            line: 484,
+            column: 13
+          }
+        }, {
+          start: {
+            line: undefined,
+            column: undefined
+          },
+          end: {
+            line: undefined,
+            column: undefined
+          }
+        }],
+        line: 482
+      },
+      "28": {
+        loc: {
+          start: {
+            line: 485,
+            column: 12
+          },
+          end: {
+            line: 487,
+            column: 13
+          }
+        },
+        type: "if",
+        locations: [{
+          start: {
+            line: 485,
+            column: 12
+          },
+          end: {
+            line: 487,
+            column: 13
+          }
+        }, {
+          start: {
+            line: undefined,
+            column: undefined
+          },
+          end: {
+            line: undefined,
+            column: undefined
+          }
+        }],
+        line: 485
+      },
+      "29": {
+        loc: {
+          start: {
+            line: 485,
+            column: 16
+          },
+          end: {
+            line: 485,
+            column: 68
+          }
+        },
+        type: "binary-expr",
+        locations: [{
+          start: {
+            line: 485,
+            column: 16
+          },
+          end: {
+            line: 485,
+            column: 39
+          }
+        }, {
+          start: {
+            line: 485,
+            column: 43
+          },
+          end: {
+            line: 485,
+            column: 68
+          }
+        }],
+        line: 485
+      },
+      "30": {
+        loc: {
+          start: {
+            line: 521,
+            column: 8
+          },
+          end: {
+            line: 522,
+            column: 31
+          }
+        },
+        type: "if",
+        locations: [{
+          start: {
+            line: 521,
+            column: 8
+          },
+          end: {
+            line: 522,
+            column: 31
+          }
+        }, {
+          start: {
+            line: undefined,
+            column: undefined
+          },
+          end: {
+            line: undefined,
+            column: undefined
+          }
+        }],
+        line: 521
+      },
+      "31": {
+        loc: {
+          start: {
+            line: 523,
+            column: 8
+          },
+          end: {
+            line: 524,
+            column: 26
+          }
+        },
+        type: "if",
+        locations: [{
+          start: {
+            line: 523,
+            column: 8
+          },
+          end: {
+            line: 524,
+            column: 26
+          }
+        }, {
+          start: {
+            line: undefined,
+            column: undefined
+          },
+          end: {
+            line: undefined,
+            column: undefined
+          }
+        }],
+        line: 523
+      },
+      "32": {
+        loc: {
+          start: {
+            line: 525,
+            column: 8
+          },
+          end: {
+            line: 526,
+            column: 26
+          }
+        },
+        type: "if",
+        locations: [{
+          start: {
+            line: 525,
+            column: 8
+          },
+          end: {
+            line: 526,
+            column: 26
+          }
+        }, {
+          start: {
+            line: undefined,
+            column: undefined
+          },
+          end: {
+            line: undefined,
+            column: undefined
+          }
+        }],
+        line: 525
+      },
+      "33": {
+        loc: {
+          start: {
+            line: 555,
+            column: 15
+          },
+          end: {
+            line: 555,
+            column: 44
+          }
+        },
+        type: "binary-expr",
+        locations: [{
+          start: {
+            line: 555,
+            column: 15
+          },
+          end: {
+            line: 555,
+            column: 35
+          }
+        }, {
+          start: {
+            line: 555,
+            column: 39
+          },
+          end: {
+            line: 555,
+            column: 44
+          }
+        }],
+        line: 555
+      },
+      "34": {
+        loc: {
+          start: {
+            line: 612,
+            column: 12
+          },
+          end: {
+            line: 613,
+            column: 23
+          }
+        },
+        type: "if",
+        locations: [{
+          start: {
+            line: 612,
+            column: 12
+          },
+          end: {
+            line: 613,
+            column: 23
+          }
+        }, {
+          start: {
+            line: undefined,
+            column: undefined
+          },
+          end: {
+            line: undefined,
+            column: undefined
+          }
+        }],
+        line: 612
+      },
+      "35": {
+        loc: {
+          start: {
+            line: 615,
+            column: 12
+          },
+          end: {
+            line: 616,
+            column: 23
+          }
+        },
+        type: "if",
+        locations: [{
+          start: {
+            line: 615,
+            column: 12
+          },
+          end: {
+            line: 616,
+            column: 23
+          }
+        }, {
+          start: {
+            line: undefined,
+            column: undefined
+          },
+          end: {
+            line: undefined,
+            column: undefined
+          }
+        }],
+        line: 615
+      },
+      "36": {
+        loc: {
+          start: {
+            line: 617,
+            column: 12
+          },
+          end: {
+            line: 628,
+            column: 13
+          }
+        },
+        type: "if",
+        locations: [{
+          start: {
+            line: 617,
+            column: 12
+          },
+          end: {
+            line: 628,
+            column: 13
+          }
+        }, {
+          start: {
+            line: 622,
+            column: 17
+          },
+          end: {
+            line: 628,
+            column: 13
+          }
+        }],
+        line: 617
+      },
+      "37": {
+        loc: {
+          start: {
+            line: 617,
+            column: 16
+          },
+          end: {
+            line: 617,
+            column: 87
+          }
+        },
+        type: "binary-expr",
+        locations: [{
+          start: {
+            line: 617,
+            column: 16
+          },
+          end: {
+            line: 617,
+            column: 34
+          }
+        }, {
+          start: {
+            line: 617,
+            column: 38
+          },
+          end: {
+            line: 617,
+            column: 87
+          }
+        }],
+        line: 617
+      }
+    },
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0,
+      "9": 0,
+      "10": 0,
+      "11": 0,
+      "12": 0,
+      "13": 0,
+      "14": 0,
+      "15": 0,
+      "16": 0,
+      "17": 0,
+      "18": 0,
+      "19": 0,
+      "20": 0,
+      "21": 0,
+      "22": 0,
+      "23": 0,
+      "24": 0,
+      "25": 0,
+      "26": 0,
+      "27": 0,
+      "28": 0,
+      "29": 0,
+      "30": 0,
+      "31": 0,
+      "32": 0,
+      "33": 0,
+      "34": 0,
+      "35": 0,
+      "36": 0,
+      "37": 0,
+      "38": 0,
+      "39": 0,
+      "40": 0,
+      "41": 0,
+      "42": 0,
+      "43": 0,
+      "44": 0,
+      "45": 0,
+      "46": 0,
+      "47": 0,
+      "48": 0,
+      "49": 0,
+      "50": 0,
+      "51": 0,
+      "52": 0,
+      "53": 0,
+      "54": 0,
+      "55": 0,
+      "56": 0,
+      "57": 0,
+      "58": 0,
+      "59": 0,
+      "60": 0,
+      "61": 0,
+      "62": 0,
+      "63": 0,
+      "64": 0,
+      "65": 0,
+      "66": 0,
+      "67": 0,
+      "68": 0,
+      "69": 0,
+      "70": 0,
+      "71": 0,
+      "72": 0,
+      "73": 0,
+      "74": 0,
+      "75": 0,
+      "76": 0,
+      "77": 0,
+      "78": 0,
+      "79": 0,
+      "80": 0,
+      "81": 0,
+      "82": 0,
+      "83": 0,
+      "84": 0,
+      "85": 0,
+      "86": 0,
+      "87": 0,
+      "88": 0,
+      "89": 0,
+      "90": 0,
+      "91": 0,
+      "92": 0,
+      "93": 0,
+      "94": 0,
+      "95": 0,
+      "96": 0,
+      "97": 0,
+      "98": 0,
+      "99": 0,
+      "100": 0,
+      "101": 0,
+      "102": 0,
+      "103": 0,
+      "104": 0,
+      "105": 0,
+      "106": 0,
+      "107": 0,
+      "108": 0,
+      "109": 0,
+      "110": 0,
+      "111": 0,
+      "112": 0,
+      "113": 0,
+      "114": 0,
+      "115": 0,
+      "116": 0,
+      "117": 0,
+      "118": 0,
+      "119": 0,
+      "120": 0,
+      "121": 0,
+      "122": 0,
+      "123": 0,
+      "124": 0,
+      "125": 0,
+      "126": 0,
+      "127": 0,
+      "128": 0,
+      "129": 0,
+      "130": 0,
+      "131": 0,
+      "132": 0,
+      "133": 0,
+      "134": 0,
+      "135": 0,
+      "136": 0,
+      "137": 0,
+      "138": 0,
+      "139": 0,
+      "140": 0,
+      "141": 0,
+      "142": 0,
+      "143": 0,
+      "144": 0,
+      "145": 0,
+      "146": 0,
+      "147": 0,
+      "148": 0,
+      "149": 0,
+      "150": 0,
+      "151": 0,
+      "152": 0,
+      "153": 0,
+      "154": 0,
+      "155": 0,
+      "156": 0,
+      "157": 0,
+      "158": 0,
+      "159": 0,
+      "160": 0,
+      "161": 0,
+      "162": 0,
+      "163": 0,
+      "164": 0,
+      "165": 0,
+      "166": 0,
+      "167": 0,
+      "168": 0,
+      "169": 0,
+      "170": 0,
+      "171": 0,
+      "172": 0,
+      "173": 0,
+      "174": 0,
+      "175": 0,
+      "176": 0,
+      "177": 0,
+      "178": 0,
+      "179": 0,
+      "180": 0,
+      "181": 0,
+      "182": 0,
+      "183": 0,
+      "184": 0,
+      "185": 0,
+      "186": 0,
+      "187": 0,
+      "188": 0,
+      "189": 0,
+      "190": 0,
+      "191": 0,
+      "192": 0,
+      "193": 0,
+      "194": 0,
+      "195": 0,
+      "196": 0,
+      "197": 0,
+      "198": 0
+    },
+    f: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0,
+      "9": 0,
+      "10": 0,
+      "11": 0,
+      "12": 0,
+      "13": 0,
+      "14": 0,
+      "15": 0,
+      "16": 0,
+      "17": 0,
+      "18": 0,
+      "19": 0,
+      "20": 0,
+      "21": 0,
+      "22": 0,
+      "23": 0,
+      "24": 0
+    },
+    b: {
+      "0": [0, 0, 0],
+      "1": [0, 0],
+      "2": [0, 0],
+      "3": [0, 0],
+      "4": [0, 0],
+      "5": [0, 0],
+      "6": [0, 0],
+      "7": [0, 0],
+      "8": [0, 0],
+      "9": [0, 0],
+      "10": [0, 0],
+      "11": [0, 0],
+      "12": [0, 0],
+      "13": [0, 0],
+      "14": [0, 0],
+      "15": [0, 0],
+      "16": [0, 0],
+      "17": [0, 0],
+      "18": [0, 0],
+      "19": [0, 0],
+      "20": [0, 0],
+      "21": [0, 0],
+      "22": [0, 0],
+      "23": [0, 0],
+      "24": [0, 0],
+      "25": [0, 0],
+      "26": [0, 0],
+      "27": [0, 0],
+      "28": [0, 0],
+      "29": [0, 0],
+      "30": [0, 0],
+      "31": [0, 0],
+      "32": [0, 0],
+      "33": [0, 0],
+      "34": [0, 0],
+      "35": [0, 0],
+      "36": [0, 0],
+      "37": [0, 0]
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "a39612dd104c315419fcc428c524a96656c731cb"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_ntwee9aeg = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_ntwee9aeg();
+var __importDefault =
+/* istanbul ignore next */
+(cov_ntwee9aeg().s[0]++,
+/* istanbul ignore next */
+(cov_ntwee9aeg().b[0][0]++, this) &&
+/* istanbul ignore next */
+(cov_ntwee9aeg().b[0][1]++, this.__importDefault) ||
+/* istanbul ignore next */
+(cov_ntwee9aeg().b[0][2]++, function (mod) {
+  /* istanbul ignore next */
+  cov_ntwee9aeg().f[0]++;
+  cov_ntwee9aeg().s[1]++;
+  return /* istanbul ignore next */(cov_ntwee9aeg().b[2][0]++, mod) &&
+  /* istanbul ignore next */
+  (cov_ntwee9aeg().b[2][1]++, mod.__esModule) ?
+  /* istanbul ignore next */
+  (cov_ntwee9aeg().b[1][0]++, mod) :
+  /* istanbul ignore next */
+  (cov_ntwee9aeg().b[1][1]++, {
+    "default": mod
+  });
+}));
+/* istanbul ignore next */
+cov_ntwee9aeg().s[2]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+/* istanbul ignore next */
+cov_ntwee9aeg().s[3]++;
+exports.NFTMarketplaceService = void 0;
+const logger_1 =
+/* istanbul ignore next */
+(cov_ntwee9aeg().s[4]++, __importDefault(require("../../utils/logger")));
+const mongoose_1 =
+/* istanbul ignore next */
+(cov_ntwee9aeg().s[5]++, __importDefault(require("mongoose")));
+const crypto_1 =
+/* istanbul ignore next */
+(cov_ntwee9aeg().s[6]++, __importDefault(require("crypto")));
+const Transaction_1 =
+/* istanbul ignore next */
+(cov_ntwee9aeg().s[7]++, require("../../models/Transaction"));
+// NFT Schema
+const nftSchema =
+/* istanbul ignore next */
+(cov_ntwee9aeg().s[8]++, new mongoose_1.default.Schema({
+  id: {
+    type: String,
+    required: true,
+    unique: true
+  },
+  creatorId: {
+    type: mongoose_1.default.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  contentHash: {
+    type: String,
+    required: true
+  },
+  metadata: {
+    title: {
+      type: String,
+      required: true
+    },
+    description: {
+      type: String,
+      required: true
+    },
+    properties: {
+      type: mongoose_1.default.Schema.Types.Mixed
+    },
+    unlockableContent: {
+      type: String
+    },
+    imageUrl: {
+      type: String,
+      required: true
+    },
+    animationUrl: {
+      type: String
+    },
+    externalUrl: {
+      type: String
+    },
+    attributes: [{
+      trait_type: {
+        type: String,
+        required: true
+      },
+      value: {
+        type: mongoose_1.default.Schema.Types.Mixed,
+        required: true
+      },
+      display_type: {
+        type: String
+      }
+    }]
+  },
+  pricing: {
+    initialPrice: {
+      type: Number,
+      required: true
+    },
+    currentPrice: {
+      type: Number,
+      required: true
+    },
+    royaltyPercentage: {
+      type: Number,
+      default: 10
+    },
+    currency: {
+      type: String,
+      enum: ['ETH', 'MATIC', 'HALOBUZZ_COIN', 'USDC'],
+      required: true
+    },
+    auctionEndTime: {
+      type: Date
+    },
+    reservePrice: {
+      type: Number
+    }
+  },
+  rarity: {
+    type: String,
+    enum: ['common', 'rare', 'epic', 'legendary'],
+    required: true
+  },
+  status: {
+    type: String,
+    enum: ['draft', 'minted', 'listed', 'sold', 'auction', 'delisted'],
+    default: 'draft'
+  },
+  blockchain: {
+    contractAddress: {
+      type: String
+    },
+    tokenId: {
+      type: String
+    },
+    transactionHash: {
+      type: String
+    },
+    blockNumber: {
+      type: Number
+    },
+    gasUsed: {
+      type: Number
+    }
+  },
+  ownership: {
+    currentOwner: {
+      type: mongoose_1.default.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true
+    },
+    ownershipHistory: [{
+      owner: {
+        type: mongoose_1.default.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+      },
+      timestamp: {
+        type: Date,
+        required: true
+      },
+      transactionHash: {
+        type: String,
+        required: true
+      },
+      price: {
+        type: Number
+      }
+    }]
+  },
+  analytics: {
+    views: {
+      type: Number,
+      default: 0
+    },
+    likes: {
+      type: Number,
+      default: 0
+    },
+    shares: {
+      type: Number,
+      default: 0
+    },
+    bids: {
+      type: Number,
+      default: 0
+    },
+    watchers: {
+      type: Number,
+      default: 0
+    },
+    lastActivity: {
+      type: Date,
+      default: Date.now
+    }
+  }
+}, {
+  timestamps: true
+}));
+// Transaction Schema
+const transactionSchema =
+/* istanbul ignore next */
+(cov_ntwee9aeg().s[9]++, new mongoose_1.default.Schema({
+  id: {
+    type: String,
+    required: true,
+    unique: true
+  },
+  type: {
+    type: String,
+    enum: ['mint', 'sale', 'transfer', 'auction_bid', 'royalty'],
+    required: true
+  },
+  nftId: {
+    type: mongoose_1.default.Schema.Types.ObjectId,
+    ref: 'NFT',
+    required: true
+  },
+  fromUserId: {
+    type: mongoose_1.default.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  toUserId: {
+    type: mongoose_1.default.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  amount: {
+    type: Number,
+    required: true
+  },
+  currency: {
+    type: String,
+    required: true
+  },
+  transactionHash: {
+    type: String
+  },
+  status: {
+    type: String,
+    enum: ['pending', 'confirmed', 'failed'],
+    default: 'pending'
+  },
+  gasFee: {
+    type: Number
+  },
+  platformFee: {
+    type: Number
+  },
+  creatorRoyalty: {
+    type: Number
+  },
+  metadata: {
+    type: mongoose_1.default.Schema.Types.Mixed
+  }
+}, {
+  timestamps: true
+}));
+// Auction Schema
+const auctionSchema =
+/* istanbul ignore next */
+(cov_ntwee9aeg().s[10]++, new mongoose_1.default.Schema({
+  nftId: {
+    type: mongoose_1.default.Schema.Types.ObjectId,
+    ref: 'NFT',
+    required: true,
+    unique: true
+  },
+  startPrice: {
+    type: Number,
+    required: true
+  },
+  reservePrice: {
+    type: Number,
+    required: true
+  },
+  endTime: {
+    type: Date,
+    required: true
+  },
+  currentBid: {
+    amount: {
+      type: Number
+    },
+    bidderId: {
+      type: mongoose_1.default.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    timestamp: {
+      type: Date
+    }
+  },
+  bidHistory: [{
+    amount: {
+      type: Number,
+      required: true
+    },
+    bidderId: {
+      type: mongoose_1.default.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true
+    },
+    timestamp: {
+      type: Date,
+      required: true
+    }
+  }],
+  status: {
+    type: String,
+    enum: ['active', 'ended', 'cancelled'],
+    default: 'active'
+  }
+}, {
+  timestamps: true
+}));
+const NFTModel =
+/* istanbul ignore next */
+(cov_ntwee9aeg().s[11]++, mongoose_1.default.model('NFT', nftSchema));
+// Using imported Transaction model instead of creating duplicate
+const AuctionModel =
+/* istanbul ignore next */
+(cov_ntwee9aeg().s[12]++, mongoose_1.default.model('Auction', auctionSchema));
+class NFTMarketplaceService {
+  static instance;
+  activeAuctions =
+  /* istanbul ignore next */
+  (cov_ntwee9aeg().s[13]++, new Map());
+  constructor() {
+    /* istanbul ignore next */
+    cov_ntwee9aeg().f[1]++;
+    cov_ntwee9aeg().s[14]++;
+    this.initializeAuctionMonitoring();
+    /* istanbul ignore next */
+    cov_ntwee9aeg().s[15]++;
+    logger_1.default.info('NFTMarketplaceService initialized');
+  }
+  static getInstance() {
+    /* istanbul ignore next */
+    cov_ntwee9aeg().f[2]++;
+    cov_ntwee9aeg().s[16]++;
+    if (!NFTMarketplaceService.instance) {
+      /* istanbul ignore next */
+      cov_ntwee9aeg().b[3][0]++;
+      cov_ntwee9aeg().s[17]++;
+      NFTMarketplaceService.instance = new NFTMarketplaceService();
+    } else
+    /* istanbul ignore next */
+    {
+      cov_ntwee9aeg().b[3][1]++;
+    }
+    cov_ntwee9aeg().s[18]++;
+    return NFTMarketplaceService.instance;
+  }
+  /**
+   * Mint NFTs from creator content
+   */
+  async mintCreatorNFT(creatorId, content, metadata) {
+    /* istanbul ignore next */
+    cov_ntwee9aeg().f[3]++;
+    cov_ntwee9aeg().s[19]++;
+    try {
+      // Generate unique NFT ID
+      const nftId =
+      /* istanbul ignore next */
+      (cov_ntwee9aeg().s[20]++, this.generateNFTId());
+      // Calculate content hash
+      const contentHash =
+      /* istanbul ignore next */
+      (cov_ntwee9aeg().s[21]++, this.calculateContentHash(content));
+      // Determine rarity based on content analysis
+      const rarity =
+      /* istanbul ignore next */
+      (cov_ntwee9aeg().s[22]++, await this.determineRarity(content, metadata));
+      // Create NFT document
+      const nftData =
+      /* istanbul ignore next */
+      (cov_ntwee9aeg().s[23]++, {
+        id: nftId,
+        creatorId,
+        contentHash,
+        metadata: {
+          title: metadata.title,
+          description: metadata.description,
+          properties:
+          /* istanbul ignore next */
+          (cov_ntwee9aeg().b[4][0]++, metadata.properties) ||
+          /* istanbul ignore next */
+          (cov_ntwee9aeg().b[4][1]++, {}),
+          unlockableContent: metadata.unlockableContent,
+          imageUrl:
+          /* istanbul ignore next */
+          (cov_ntwee9aeg().b[5][0]++, content.imageUrl) ||
+          /* istanbul ignore next */
+          (cov_ntwee9aeg().b[5][1]++, content.thumbnail),
+          animationUrl: content.animationUrl,
+          externalUrl: content.externalUrl,
+          attributes:
+          /* istanbul ignore next */
+          (cov_ntwee9aeg().b[6][0]++, metadata.attributes) ||
+          /* istanbul ignore next */
+          (cov_ntwee9aeg().b[6][1]++, [])
+        },
+        pricing: {
+          initialPrice:
+          /* istanbul ignore next */
+          (cov_ntwee9aeg().b[7][0]++, metadata.initialPrice) ||
+          /* istanbul ignore next */
+          (cov_ntwee9aeg().b[7][1]++, 0),
+          currentPrice:
+          /* istanbul ignore next */
+          (cov_ntwee9aeg().b[8][0]++, metadata.initialPrice) ||
+          /* istanbul ignore next */
+          (cov_ntwee9aeg().b[8][1]++, 0),
+          royaltyPercentage:
+          /* istanbul ignore next */
+          (cov_ntwee9aeg().b[9][0]++, metadata.royaltyPercentage) ||
+          /* istanbul ignore next */
+          (cov_ntwee9aeg().b[9][1]++, 10),
+          currency:
+          /* istanbul ignore next */
+          (cov_ntwee9aeg().b[10][0]++, metadata.currency) ||
+          /* istanbul ignore next */
+          (cov_ntwee9aeg().b[10][1]++, 'HALOBUZZ_COIN')
+        },
+        rarity,
+        status: 'draft',
+        ownership: {
+          currentOwner: creatorId,
+          ownershipHistory: [{
+            owner: creatorId,
+            timestamp: new Date(),
+            transactionHash: 'mint',
+            price:
+            /* istanbul ignore next */
+            (cov_ntwee9aeg().b[11][0]++, metadata.initialPrice) ||
+            /* istanbul ignore next */
+            (cov_ntwee9aeg().b[11][1]++, 0)
+          }]
+        },
+        analytics: {
+          views: 0,
+          likes: 0,
+          shares: 0,
+          bids: 0,
+          watchers: 0,
+          lastActivity: new Date()
+        }
+      });
+      const nft =
+      /* istanbul ignore next */
+      (cov_ntwee9aeg().s[24]++, new NFTModel(nftData));
+      /* istanbul ignore next */
+      cov_ntwee9aeg().s[25]++;
+      await nft.save();
+      // Create mint transaction
+      /* istanbul ignore next */
+      cov_ntwee9aeg().s[26]++;
+      await this.createTransaction({
+        type: 'mint',
+        nftId: nft._id,
+        toUserId: creatorId,
+        amount: 0,
+        currency:
+        /* istanbul ignore next */
+        (cov_ntwee9aeg().b[12][0]++, metadata.currency) ||
+        /* istanbul ignore next */
+        (cov_ntwee9aeg().b[12][1]++, 'HALOBUZZ_COIN'),
+        status: 'confirmed',
+        metadata: {
+          contentHash,
+          rarity
+        }
+      });
+      /* istanbul ignore next */
+      cov_ntwee9aeg().s[27]++;
+      logger_1.default.info('NFT minted successfully', {
+        nftId,
+        creatorId,
+        rarity,
+        initialPrice: metadata.initialPrice
+      });
+      /* istanbul ignore next */
+      cov_ntwee9aeg().s[28]++;
+      return this.mapToCreatorNFT(nft);
+    } catch (error) {
+      /* istanbul ignore next */
+      cov_ntwee9aeg().s[29]++;
+      logger_1.default.error('Error minting creator NFT:', error);
+      /* istanbul ignore next */
+      cov_ntwee9aeg().s[30]++;
+      throw error;
+    }
+  }
+  /**
+   * Handle NFT purchases and transfers
+   */
+  async purchaseNFT(nftId, buyerId) {
+    /* istanbul ignore next */
+    cov_ntwee9aeg().f[4]++;
+    cov_ntwee9aeg().s[31]++;
+    try {
+      const nft =
+      /* istanbul ignore next */
+      (cov_ntwee9aeg().s[32]++, await NFTModel.findOne({
+        id: nftId
+      }));
+      /* istanbul ignore next */
+      cov_ntwee9aeg().s[33]++;
+      if (!nft) {
+        /* istanbul ignore next */
+        cov_ntwee9aeg().b[13][0]++;
+        cov_ntwee9aeg().s[34]++;
+        throw new Error(`NFT ${nftId} not found`);
+      } else
+      /* istanbul ignore next */
+      {
+        cov_ntwee9aeg().b[13][1]++;
+      }
+      cov_ntwee9aeg().s[35]++;
+      if (
+      /* istanbul ignore next */
+      (cov_ntwee9aeg().b[15][0]++, nft.status !== 'listed') &&
+      /* istanbul ignore next */
+      (cov_ntwee9aeg().b[15][1]++, nft.status !== 'auction')) {
+        /* istanbul ignore next */
+        cov_ntwee9aeg().b[14][0]++;
+        cov_ntwee9aeg().s[36]++;
+        throw new Error(`NFT ${nftId} is not available for purchase`);
+      } else
+      /* istanbul ignore next */
+      {
+        cov_ntwee9aeg().b[14][1]++;
+      }
+      const sellerId =
+      /* istanbul ignore next */
+      (cov_ntwee9aeg().s[37]++, nft.ownership.currentOwner);
+      const purchasePrice =
+      /* istanbul ignore next */
+      (cov_ntwee9aeg().s[38]++, nft.pricing.currentPrice);
+      // Calculate fees
+      const platformFee =
+      /* istanbul ignore next */
+      (cov_ntwee9aeg().s[39]++, purchasePrice * 0.025); // 2.5% platform fee
+      const creatorRoyalty =
+      /* istanbul ignore next */
+      (cov_ntwee9aeg().s[40]++, purchasePrice * (nft.pricing.royaltyPercentage / 100));
+      const sellerAmount =
+      /* istanbul ignore next */
+      (cov_ntwee9aeg().s[41]++, purchasePrice - platformFee - creatorRoyalty);
+      // Create purchase transaction
+      const transaction =
+      /* istanbul ignore next */
+      (cov_ntwee9aeg().s[42]++, await this.createTransaction({
+        type: 'sale',
+        nftId: nft._id,
+        fromUserId: sellerId,
+        toUserId: buyerId,
+        amount: purchasePrice,
+        currency: nft.pricing.currency,
+        status: 'pending',
+        platformFee,
+        creatorRoyalty,
+        metadata: {
+          sellerAmount
+        }
+      }));
+      // Update NFT ownership
+      /* istanbul ignore next */
+      cov_ntwee9aeg().s[43]++;
+      nft.ownership.currentOwner = new mongoose_1.default.Types.ObjectId(buyerId);
+      /* istanbul ignore next */
+      cov_ntwee9aeg().s[44]++;
+      nft.ownership.ownershipHistory.push({
+        owner: buyerId,
+        timestamp: new Date(),
+        transactionHash: transaction.id,
+        price: purchasePrice
+      });
+      /* istanbul ignore next */
+      cov_ntwee9aeg().s[45]++;
+      nft.status = 'sold';
+      /* istanbul ignore next */
+      cov_ntwee9aeg().s[46]++;
+      nft.analytics.lastActivity = new Date();
+      /* istanbul ignore next */
+      cov_ntwee9aeg().s[47]++;
+      await nft.save();
+      // Distribute royalties
+      /* istanbul ignore next */
+      cov_ntwee9aeg().s[48]++;
+      await this.distributeRoyalties(nftId, creatorRoyalty, nft.creatorId.toString());
+      // Update transaction status
+      /* istanbul ignore next */
+      cov_ntwee9aeg().s[49]++;
+      transaction.status = 'confirmed';
+      /* istanbul ignore next */
+      cov_ntwee9aeg().s[50]++;
+      await transaction.save();
+      /* istanbul ignore next */
+      cov_ntwee9aeg().s[51]++;
+      logger_1.default.info('NFT purchased successfully', {
+        nftId,
+        buyerId,
+        sellerId,
+        purchasePrice,
+        platformFee,
+        creatorRoyalty
+      });
+      /* istanbul ignore next */
+      cov_ntwee9aeg().s[52]++;
+      return this.mapToTransaction(transaction);
+    } catch (error) {
+      /* istanbul ignore next */
+      cov_ntwee9aeg().s[53]++;
+      logger_1.default.error('Error purchasing NFT:', error);
+      /* istanbul ignore next */
+      cov_ntwee9aeg().s[54]++;
+      throw error;
+    }
+  }
+  /**
+   * Creator royalty distribution
+   */
+  async distributeRoyalties(nftId, saleAmount, creatorId) {
+    /* istanbul ignore next */
+    cov_ntwee9aeg().f[5]++;
+    cov_ntwee9aeg().s[55]++;
+    try {
+      /* istanbul ignore next */
+      cov_ntwee9aeg().s[56]++;
+      // Create royalty transaction
+      await this.createTransaction({
+        type: 'royalty',
+        nftId,
+        toUserId: creatorId,
+        amount: saleAmount,
+        currency: 'HALOBUZZ_COIN',
+        status: 'confirmed',
+        metadata: {
+          nftId,
+          saleAmount
+        }
+      });
+      // Update creator's earnings (would integrate with wallet service)
+      /* istanbul ignore next */
+      cov_ntwee9aeg().s[57]++;
+      logger_1.default.info('Royalties distributed', {
+        nftId,
+        creatorId,
+        royaltyAmount: saleAmount
+      });
+    } catch (error) {
+      /* istanbul ignore next */
+      cov_ntwee9aeg().s[58]++;
+      logger_1.default.error('Error distributing royalties:', error);
+      /* istanbul ignore next */
+      cov_ntwee9aeg().s[59]++;
+      throw error;
+    }
+  }
+  /**
+   * NFT marketplace analytics
+   */
+  async getNFTMarketplaceStats() {
+    /* istanbul ignore next */
+    cov_ntwee9aeg().f[6]++;
+    cov_ntwee9aeg().s[60]++;
+    try {
+      const totalNFTs =
+      /* istanbul ignore next */
+      (cov_ntwee9aeg().s[61]++, await NFTModel.countDocuments());
+      const soldNFTs =
+      /* istanbul ignore next */
+      (cov_ntwee9aeg().s[62]++, await NFTModel.find({
+        status: 'sold'
+      }));
+      const totalVolume =
+      /* istanbul ignore next */
+      (cov_ntwee9aeg().s[63]++, soldNFTs.reduce((sum, nft) => {
+        /* istanbul ignore next */
+        cov_ntwee9aeg().f[7]++;
+        cov_ntwee9aeg().s[64]++;
+        return sum + nft.pricing.currentPrice;
+      }, 0));
+      const totalSales =
+      /* istanbul ignore next */
+      (cov_ntwee9aeg().s[65]++, soldNFTs.length);
+      const averagePrice =
+      /* istanbul ignore next */
+      (cov_ntwee9aeg().s[66]++, totalSales > 0 ?
+      /* istanbul ignore next */
+      (cov_ntwee9aeg().b[16][0]++, totalVolume / totalSales) :
+      /* istanbul ignore next */
+      (cov_ntwee9aeg().b[16][1]++, 0));
+      // Get top creators
+      const creatorStats =
+      /* istanbul ignore next */
+      (cov_ntwee9aeg().s[67]++, await NFTModel.aggregate([{
+        $match: {
+          status: 'sold'
+        }
+      }, {
+        $group: {
+          _id: '$creatorId',
+          totalSales: {
+            $sum: 1
+          },
+          totalVolume: {
+            $sum: '$pricing.currentPrice'
+          },
+          nftCount: {
+            $sum: 1
+          }
+        }
+      }, {
+        $sort: {
+          totalVolume: -1
+        }
+      }, {
+        $limit: 10
+      }]));
+      const topCreators =
+      /* istanbul ignore next */
+      (cov_ntwee9aeg().s[68]++, await Promise.all(creatorStats.map(async stat => {
+        /* istanbul ignore next */
+        cov_ntwee9aeg().f[8]++;
+        const user =
+        /* istanbul ignore next */
+        (cov_ntwee9aeg().s[69]++, await mongoose_1.default.model('User').findById(stat._id));
+        /* istanbul ignore next */
+        cov_ntwee9aeg().s[70]++;
+        return {
+          creatorId: stat._id,
+          username:
+          /* istanbul ignore next */
+          (cov_ntwee9aeg().b[17][0]++, user?.username) ||
+          /* istanbul ignore next */
+          (cov_ntwee9aeg().b[17][1]++, 'Unknown'),
+          totalSales: stat.totalSales,
+          totalVolume: stat.totalVolume,
+          nftCount: stat.nftCount
+        };
+      })));
+      // Get trending collections (mock implementation)
+      const trendingCollections =
+      /* istanbul ignore next */
+      (cov_ntwee9aeg().s[71]++, [{
+        collectionId: 'collection_1',
+        name: 'Digital Art Collection',
+        volume24h: 50000,
+        sales24h: 25,
+        floorPrice: 2000
+      }]);
+      // Get price history (last 30 days)
+      const priceHistory =
+      /* istanbul ignore next */
+      (cov_ntwee9aeg().s[72]++, await this.getPriceHistory(30));
+      const stats =
+      /* istanbul ignore next */
+      (cov_ntwee9aeg().s[73]++, {
+        totalNFTs,
+        totalVolume,
+        totalSales,
+        averagePrice,
+        topCreators,
+        trendingCollections,
+        priceHistory
+      });
+      /* istanbul ignore next */
+      cov_ntwee9aeg().s[74]++;
+      logger_1.default.info('Marketplace stats generated', {
+        totalNFTs,
+        totalVolume,
+        totalSales,
+        averagePrice
+      });
+      /* istanbul ignore next */
+      cov_ntwee9aeg().s[75]++;
+      return stats;
+    } catch (error) {
+      /* istanbul ignore next */
+      cov_ntwee9aeg().s[76]++;
+      logger_1.default.error('Error getting marketplace stats:', error);
+      /* istanbul ignore next */
+      cov_ntwee9aeg().s[77]++;
+      throw error;
+    }
+  }
+  /**
+   * Create auction for NFT
+   */
+  async createAuction(nftId, startPrice, reservePrice, durationHours) {
+    /* istanbul ignore next */
+    cov_ntwee9aeg().f[9]++;
+    cov_ntwee9aeg().s[78]++;
+    try {
+      const nft =
+      /* istanbul ignore next */
+      (cov_ntwee9aeg().s[79]++, await NFTModel.findOne({
+        id: nftId
+      }));
+      /* istanbul ignore next */
+      cov_ntwee9aeg().s[80]++;
+      if (!nft) {
+        /* istanbul ignore next */
+        cov_ntwee9aeg().b[18][0]++;
+        cov_ntwee9aeg().s[81]++;
+        throw new Error(`NFT ${nftId} not found`);
+      } else
+      /* istanbul ignore next */
+      {
+        cov_ntwee9aeg().b[18][1]++;
+      }
+      cov_ntwee9aeg().s[82]++;
+      if (nft.status !== 'listed') {
+        /* istanbul ignore next */
+        cov_ntwee9aeg().b[19][0]++;
+        cov_ntwee9aeg().s[83]++;
+        throw new Error(`NFT ${nftId} is not available for auction`);
+      } else
+      /* istanbul ignore next */
+      {
+        cov_ntwee9aeg().b[19][1]++;
+      }
+      const endTime =
+      /* istanbul ignore next */
+      (cov_ntwee9aeg().s[84]++, new Date(Date.now() + durationHours * 60 * 60 * 1000));
+      const auctionData =
+      /* istanbul ignore next */
+      (cov_ntwee9aeg().s[85]++, {
+        nftId: nft._id,
+        startPrice,
+        reservePrice,
+        endTime,
+        bidHistory: [],
+        status: 'active'
+      });
+      const auction =
+      /* istanbul ignore next */
+      (cov_ntwee9aeg().s[86]++, new AuctionModel(auctionData));
+      /* istanbul ignore next */
+      cov_ntwee9aeg().s[87]++;
+      await auction.save();
+      // Update NFT status
+      /* istanbul ignore next */
+      cov_ntwee9aeg().s[88]++;
+      nft.status = 'auction';
+      /* istanbul ignore next */
+      cov_ntwee9aeg().s[89]++;
+      nft.pricing.currentPrice = startPrice;
+      /* istanbul ignore next */
+      cov_ntwee9aeg().s[90]++;
+      nft.pricing.auctionEndTime = endTime;
+      /* istanbul ignore next */
+      cov_ntwee9aeg().s[91]++;
+      nft.pricing.reservePrice = reservePrice;
+      /* istanbul ignore next */
+      cov_ntwee9aeg().s[92]++;
+      await nft.save();
+      const auctionInfo =
+      /* istanbul ignore next */
+      (cov_ntwee9aeg().s[93]++, {
+        nftId,
+        startPrice,
+        reservePrice,
+        endTime,
+        bidHistory: [],
+        status: 'active'
+      });
+      /* istanbul ignore next */
+      cov_ntwee9aeg().s[94]++;
+      this.activeAuctions.set(nftId, auctionInfo);
+      /* istanbul ignore next */
+      cov_ntwee9aeg().s[95]++;
+      logger_1.default.info('Auction created', {
+        nftId,
+        startPrice,
+        reservePrice,
+        endTime,
+        durationHours
+      });
+      /* istanbul ignore next */
+      cov_ntwee9aeg().s[96]++;
+      return auctionInfo;
+    } catch (error) {
+      /* istanbul ignore next */
+      cov_ntwee9aeg().s[97]++;
+      logger_1.default.error('Error creating auction:', error);
+      /* istanbul ignore next */
+      cov_ntwee9aeg().s[98]++;
+      throw error;
+    }
+  }
+  /**
+   * Place bid on auction
+   */
+  async placeBid(nftId, bidderId, amount) {
+    /* istanbul ignore next */
+    cov_ntwee9aeg().f[10]++;
+    cov_ntwee9aeg().s[99]++;
+    try {
+      const auction =
+      /* istanbul ignore next */
+      (cov_ntwee9aeg().s[100]++, await AuctionModel.findOne({
+        nftId: await this.getNFTObjectId(nftId)
+      }));
+      /* istanbul ignore next */
+      cov_ntwee9aeg().s[101]++;
+      if (!auction) {
+        /* istanbul ignore next */
+        cov_ntwee9aeg().b[20][0]++;
+        cov_ntwee9aeg().s[102]++;
+        throw new Error(`Auction for NFT ${nftId} not found`);
+      } else
+      /* istanbul ignore next */
+      {
+        cov_ntwee9aeg().b[20][1]++;
+      }
+      cov_ntwee9aeg().s[103]++;
+      if (auction.status !== 'active') {
+        /* istanbul ignore next */
+        cov_ntwee9aeg().b[21][0]++;
+        cov_ntwee9aeg().s[104]++;
+        throw new Error(`Auction for NFT ${nftId} is not active`);
+      } else
+      /* istanbul ignore next */
+      {
+        cov_ntwee9aeg().b[21][1]++;
+      }
+      cov_ntwee9aeg().s[105]++;
+      if (new Date() > auction.endTime) {
+        /* istanbul ignore next */
+        cov_ntwee9aeg().b[22][0]++;
+        cov_ntwee9aeg().s[106]++;
+        throw new Error(`Auction for NFT ${nftId} has ended`);
+      } else
+      /* istanbul ignore next */
+      {
+        cov_ntwee9aeg().b[22][1]++;
+      }
+      const currentBid =
+      /* istanbul ignore next */
+      (cov_ntwee9aeg().s[107]++,
+      /* istanbul ignore next */
+      (cov_ntwee9aeg().b[23][0]++, auction.currentBid?.amount) ||
+      /* istanbul ignore next */
+      (cov_ntwee9aeg().b[23][1]++, auction.startPrice));
+      /* istanbul ignore next */
+      cov_ntwee9aeg().s[108]++;
+      if (amount <= currentBid) {
+        /* istanbul ignore next */
+        cov_ntwee9aeg().b[24][0]++;
+        cov_ntwee9aeg().s[109]++;
+        throw new Error(`Bid amount must be higher than current bid of ${currentBid}`);
+      } else
+      /* istanbul ignore next */
+      {
+        cov_ntwee9aeg().b[24][1]++;
+      }
+      // Add bid to history
+      cov_ntwee9aeg().s[110]++;
+      auction.bidHistory.push({
+        amount,
+        bidderId,
+        timestamp: new Date()
+      });
+      // Update current bid
+      /* istanbul ignore next */
+      cov_ntwee9aeg().s[111]++;
+      auction.currentBid = {
+        amount,
+        bidderId: new mongoose_1.default.Types.ObjectId(bidderId),
+        timestamp: new Date()
+      };
+      /* istanbul ignore next */
+      cov_ntwee9aeg().s[112]++;
+      await auction.save();
+      // Update NFT current price
+      const nft =
+      /* istanbul ignore next */
+      (cov_ntwee9aeg().s[113]++, await NFTModel.findOne({
+        id: nftId
+      }));
+      /* istanbul ignore next */
+      cov_ntwee9aeg().s[114]++;
+      if (nft) {
+        /* istanbul ignore next */
+        cov_ntwee9aeg().b[25][0]++;
+        cov_ntwee9aeg().s[115]++;
+        nft.pricing.currentPrice = amount;
+        /* istanbul ignore next */
+        cov_ntwee9aeg().s[116]++;
+        nft.analytics.bids += 1;
+        /* istanbul ignore next */
+        cov_ntwee9aeg().s[117]++;
+        nft.analytics.lastActivity = new Date();
+        /* istanbul ignore next */
+        cov_ntwee9aeg().s[118]++;
+        await nft.save();
+      } else
+      /* istanbul ignore next */
+      {
+        cov_ntwee9aeg().b[25][1]++;
+      }
+      cov_ntwee9aeg().s[119]++;
+      logger_1.default.info('Bid placed successfully', {
+        nftId,
+        bidderId,
+        amount,
+        currentBid: amount
+      });
+      /* istanbul ignore next */
+      cov_ntwee9aeg().s[120]++;
+      return true;
+    } catch (error) {
+      /* istanbul ignore next */
+      cov_ntwee9aeg().s[121]++;
+      logger_1.default.error('Error placing bid:', error);
+      /* istanbul ignore next */
+      cov_ntwee9aeg().s[122]++;
+      throw error;
+    }
+  }
+  /**
+   * Get NFT details
+   */
+  async getNFTDetails(nftId) {
+    /* istanbul ignore next */
+    cov_ntwee9aeg().f[11]++;
+    cov_ntwee9aeg().s[123]++;
+    try {
+      const nft =
+      /* istanbul ignore next */
+      (cov_ntwee9aeg().s[124]++, await NFTModel.findOne({
+        id: nftId
+      }));
+      /* istanbul ignore next */
+      cov_ntwee9aeg().s[125]++;
+      if (!nft) {
+        /* istanbul ignore next */
+        cov_ntwee9aeg().b[26][0]++;
+        cov_ntwee9aeg().s[126]++;
+        return null;
+      } else
+      /* istanbul ignore next */
+      {
+        cov_ntwee9aeg().b[26][1]++;
+      }
+      cov_ntwee9aeg().s[127]++;
+      return this.mapToCreatorNFT(nft);
+    } catch (error) {
+      /* istanbul ignore next */
+      cov_ntwee9aeg().s[128]++;
+      logger_1.default.error('Error getting NFT details:', error);
+      /* istanbul ignore next */
+      cov_ntwee9aeg().s[129]++;
+      throw error;
+    }
+  }
+  /**
+   * List NFT for sale
+   */
+  async listNFT(nftId, price) {
+    /* istanbul ignore next */
+    cov_ntwee9aeg().f[12]++;
+    cov_ntwee9aeg().s[130]++;
+    try {
+      const nft =
+      /* istanbul ignore next */
+      (cov_ntwee9aeg().s[131]++, await NFTModel.findOne({
+        id: nftId
+      }));
+      /* istanbul ignore next */
+      cov_ntwee9aeg().s[132]++;
+      if (!nft) {
+        /* istanbul ignore next */
+        cov_ntwee9aeg().b[27][0]++;
+        cov_ntwee9aeg().s[133]++;
+        throw new Error(`NFT ${nftId} not found`);
+      } else
+      /* istanbul ignore next */
+      {
+        cov_ntwee9aeg().b[27][1]++;
+      }
+      cov_ntwee9aeg().s[134]++;
+      if (
+      /* istanbul ignore next */
+      (cov_ntwee9aeg().b[29][0]++, nft.status !== 'minted') &&
+      /* istanbul ignore next */
+      (cov_ntwee9aeg().b[29][1]++, nft.status !== 'delisted')) {
+        /* istanbul ignore next */
+        cov_ntwee9aeg().b[28][0]++;
+        cov_ntwee9aeg().s[135]++;
+        throw new Error(`NFT ${nftId} cannot be listed in current status: ${nft.status}`);
+      } else
+      /* istanbul ignore next */
+      {
+        cov_ntwee9aeg().b[28][1]++;
+      }
+      cov_ntwee9aeg().s[136]++;
+      nft.status = 'listed';
+      /* istanbul ignore next */
+      cov_ntwee9aeg().s[137]++;
+      nft.pricing.currentPrice = price;
+      /* istanbul ignore next */
+      cov_ntwee9aeg().s[138]++;
+      nft.analytics.lastActivity = new Date();
+      /* istanbul ignore next */
+      cov_ntwee9aeg().s[139]++;
+      await nft.save();
+      /* istanbul ignore next */
+      cov_ntwee9aeg().s[140]++;
+      logger_1.default.info('NFT listed for sale', {
+        nftId,
+        price,
+        owner: nft.ownership.currentOwner
+      });
+      /* istanbul ignore next */
+      cov_ntwee9aeg().s[141]++;
+      return true;
+    } catch (error) {
+      /* istanbul ignore next */
+      cov_ntwee9aeg().s[142]++;
+      logger_1.default.error('Error listing NFT:', error);
+      /* istanbul ignore next */
+      cov_ntwee9aeg().s[143]++;
+      throw error;
+    }
+  }
+  // Private helper methods
+  generateNFTId() {
+    /* istanbul ignore next */
+    cov_ntwee9aeg().f[13]++;
+    cov_ntwee9aeg().s[144]++;
+    return `nft_${Date.now()}_${crypto_1.default.randomBytes(8).toString('hex')}`;
+  }
+  calculateContentHash(content) {
+    /* istanbul ignore next */
+    cov_ntwee9aeg().f[14]++;
+    const contentString =
+    /* istanbul ignore next */
+    (cov_ntwee9aeg().s[145]++, JSON.stringify(content));
+    /* istanbul ignore next */
+    cov_ntwee9aeg().s[146]++;
+    return crypto_1.default.createHash('sha256').update(contentString).digest('hex');
+  }
+  async determineRarity(content, metadata) {
+    /* istanbul ignore next */
+    cov_ntwee9aeg().f[15]++;
+    // Mock rarity determination - in real implementation, use AI analysis
+    const rarityFactors =
+    /* istanbul ignore next */
+    (cov_ntwee9aeg().s[147]++, {
+      contentQuality: Math.random(),
+      uniqueness: Math.random(),
+      creatorPopularity: Math.random(),
+      metadataCompleteness: Object.keys(metadata).length / 10
+    });
+    const rarityScore =
+    /* istanbul ignore next */
+    (cov_ntwee9aeg().s[148]++, Object.values(rarityFactors).reduce((sum, factor) => {
+      /* istanbul ignore next */
+      cov_ntwee9aeg().f[16]++;
+      cov_ntwee9aeg().s[149]++;
+      return sum + factor;
+    }, 0) / 4);
+    /* istanbul ignore next */
+    cov_ntwee9aeg().s[150]++;
+    if (rarityScore >= 0.9) {
+      /* istanbul ignore next */
+      cov_ntwee9aeg().b[30][0]++;
+      cov_ntwee9aeg().s[151]++;
+      return 'legendary';
+    } else
+    /* istanbul ignore next */
+    {
+      cov_ntwee9aeg().b[30][1]++;
+    }
+    cov_ntwee9aeg().s[152]++;
+    if (rarityScore >= 0.7) {
+      /* istanbul ignore next */
+      cov_ntwee9aeg().b[31][0]++;
+      cov_ntwee9aeg().s[153]++;
+      return 'epic';
+    } else
+    /* istanbul ignore next */
+    {
+      cov_ntwee9aeg().b[31][1]++;
+    }
+    cov_ntwee9aeg().s[154]++;
+    if (rarityScore >= 0.4) {
+      /* istanbul ignore next */
+      cov_ntwee9aeg().b[32][0]++;
+      cov_ntwee9aeg().s[155]++;
+      return 'rare';
+    } else
+    /* istanbul ignore next */
+    {
+      cov_ntwee9aeg().b[32][1]++;
+    }
+    cov_ntwee9aeg().s[156]++;
+    return 'common';
+  }
+  async createTransaction(transactionData) {
+    /* istanbul ignore next */
+    cov_ntwee9aeg().f[17]++;
+    const transactionId =
+    /* istanbul ignore next */
+    (cov_ntwee9aeg().s[157]++, `tx_${Date.now()}_${crypto_1.default.randomBytes(8).toString('hex')}`);
+    const transaction =
+    /* istanbul ignore next */
+    (cov_ntwee9aeg().s[158]++, new Transaction_1.Transaction({
+      id: transactionId,
+      ...transactionData
+    }));
+    /* istanbul ignore next */
+    cov_ntwee9aeg().s[159]++;
+    await transaction.save();
+    /* istanbul ignore next */
+    cov_ntwee9aeg().s[160]++;
+    return transaction;
+  }
+  async getPriceHistory(days) {
+    /* istanbul ignore next */
+    cov_ntwee9aeg().f[18]++;
+    // Mock price history - in real implementation, query actual transaction data
+    const history =
+    /* istanbul ignore next */
+    (cov_ntwee9aeg().s[161]++, []);
+    const now =
+    /* istanbul ignore next */
+    (cov_ntwee9aeg().s[162]++, new Date());
+    /* istanbul ignore next */
+    cov_ntwee9aeg().s[163]++;
+    for (let i =
+    /* istanbul ignore next */
+    (cov_ntwee9aeg().s[164]++, days - 1); i >= 0; i--) {
+      const date =
+      /* istanbul ignore next */
+      (cov_ntwee9aeg().s[165]++, new Date(now.getTime() - i * 24 * 60 * 60 * 1000));
+      /* istanbul ignore next */
+      cov_ntwee9aeg().s[166]++;
+      history.push({
+        date: date.toISOString().split('T')[0],
+        averagePrice: 1000 + Math.random() * 2000,
+        volume: Math.random() * 100000,
+        sales: Math.floor(Math.random() * 50)
+      });
+    }
+    /* istanbul ignore next */
+    cov_ntwee9aeg().s[167]++;
+    return history;
+  }
+  async getNFTObjectId(nftId) {
+    /* istanbul ignore next */
+    cov_ntwee9aeg().f[19]++;
+    const nft =
+    /* istanbul ignore next */
+    (cov_ntwee9aeg().s[168]++, await NFTModel.findOne({
+      id: nftId
+    }));
+    /* istanbul ignore next */
+    cov_ntwee9aeg().s[169]++;
+    return /* istanbul ignore next */(cov_ntwee9aeg().b[33][0]++, nft?._id?.toString()) ||
+    /* istanbul ignore next */
+    (cov_ntwee9aeg().b[33][1]++, nftId);
+  }
+  mapToCreatorNFT(nft) {
+    /* istanbul ignore next */
+    cov_ntwee9aeg().f[20]++;
+    cov_ntwee9aeg().s[170]++;
+    return {
+      id: nft.id,
+      creatorId: nft.creatorId,
+      contentHash: nft.contentHash,
+      metadata: nft.metadata,
+      pricing: nft.pricing,
+      rarity: nft.rarity,
+      status: nft.status,
+      blockchain: nft.blockchain,
+      ownership: nft.ownership,
+      analytics: nft.analytics,
+      createdAt: nft.createdAt,
+      updatedAt: nft.updatedAt
+    };
+  }
+  mapToTransaction(transaction) {
+    /* istanbul ignore next */
+    cov_ntwee9aeg().f[21]++;
+    cov_ntwee9aeg().s[171]++;
+    return {
+      id: transaction.id,
+      type: transaction.type,
+      nftId: transaction.nftId,
+      fromUserId: transaction.fromUserId,
+      toUserId: transaction.toUserId,
+      amount: transaction.amount,
+      currency: transaction.currency,
+      transactionHash: transaction.transactionHash,
+      status: transaction.status,
+      gasFee: transaction.gasFee,
+      platformFee: transaction.platformFee,
+      creatorRoyalty: transaction.creatorRoyalty,
+      metadata: transaction.metadata,
+      createdAt: transaction.createdAt
+    };
+  }
+  initializeAuctionMonitoring() {
+    /* istanbul ignore next */
+    cov_ntwee9aeg().f[22]++;
+    cov_ntwee9aeg().s[172]++;
+    // Monitor active auctions every minute
+    setInterval(async () => {
+      /* istanbul ignore next */
+      cov_ntwee9aeg().f[23]++;
+      cov_ntwee9aeg().s[173]++;
+      try {
+        const now =
+        /* istanbul ignore next */
+        (cov_ntwee9aeg().s[174]++, new Date());
+        const expiredAuctions =
+        /* istanbul ignore next */
+        (cov_ntwee9aeg().s[175]++, await AuctionModel.find({
+          status: 'active',
+          endTime: {
+            $lte: now
+          }
+        }));
+        /* istanbul ignore next */
+        cov_ntwee9aeg().s[176]++;
+        for (const auction of expiredAuctions) {
+          /* istanbul ignore next */
+          cov_ntwee9aeg().s[177]++;
+          await this.endAuction(auction.nftId.toString());
+        }
+      } catch (error) {
+        /* istanbul ignore next */
+        cov_ntwee9aeg().s[178]++;
+        logger_1.default.error('Error monitoring auctions:', error);
+      }
+    }, 60000); // Check every minute
+  }
+  async endAuction(nftId) {
+    /* istanbul ignore next */
+    cov_ntwee9aeg().f[24]++;
+    cov_ntwee9aeg().s[179]++;
+    try {
+      const auction =
+      /* istanbul ignore next */
+      (cov_ntwee9aeg().s[180]++, await AuctionModel.findOne({
+        nftId
+      }));
+      /* istanbul ignore next */
+      cov_ntwee9aeg().s[181]++;
+      if (!auction) {
+        /* istanbul ignore next */
+        cov_ntwee9aeg().b[34][0]++;
+        cov_ntwee9aeg().s[182]++;
+        return;
+      } else
+      /* istanbul ignore next */
+      {
+        cov_ntwee9aeg().b[34][1]++;
+      }
+      const nft =
+      /* istanbul ignore next */
+      (cov_ntwee9aeg().s[183]++, await NFTModel.findById(nftId));
+      /* istanbul ignore next */
+      cov_ntwee9aeg().s[184]++;
+      if (!nft) {
+        /* istanbul ignore next */
+        cov_ntwee9aeg().b[35][0]++;
+        cov_ntwee9aeg().s[185]++;
+        return;
+      } else
+      /* istanbul ignore next */
+      {
+        cov_ntwee9aeg().b[35][1]++;
+      }
+      cov_ntwee9aeg().s[186]++;
+      if (
+      /* istanbul ignore next */
+      (cov_ntwee9aeg().b[37][0]++, auction.currentBid) &&
+      /* istanbul ignore next */
+      (cov_ntwee9aeg().b[37][1]++, auction.currentBid.amount >= auction.reservePrice)) {
+        /* istanbul ignore next */
+        cov_ntwee9aeg().b[36][0]++;
+        cov_ntwee9aeg().s[187]++;
+        // Auction successful - transfer to highest bidder
+        await this.purchaseNFT(nft.id, auction.currentBid.bidderId.toString());
+        /* istanbul ignore next */
+        cov_ntwee9aeg().s[188]++;
+        auction.status = 'ended';
+      } else {
+        /* istanbul ignore next */
+        cov_ntwee9aeg().b[36][1]++;
+        cov_ntwee9aeg().s[189]++;
+        // Auction failed - return to owner
+        nft.status = 'listed';
+        /* istanbul ignore next */
+        cov_ntwee9aeg().s[190]++;
+        nft.pricing.currentPrice = nft.pricing.initialPrice;
+        /* istanbul ignore next */
+        cov_ntwee9aeg().s[191]++;
+        await nft.save();
+        /* istanbul ignore next */
+        cov_ntwee9aeg().s[192]++;
+        auction.status = 'ended';
+      }
+      /* istanbul ignore next */
+      cov_ntwee9aeg().s[193]++;
+      await auction.save();
+      /* istanbul ignore next */
+      cov_ntwee9aeg().s[194]++;
+      this.activeAuctions.delete(nft.id);
+      /* istanbul ignore next */
+      cov_ntwee9aeg().s[195]++;
+      logger_1.default.info('Auction ended', {
+        nftId: nft.id,
+        status: auction.status,
+        finalBid: auction.currentBid?.amount
+      });
+    } catch (error) {
+      /* istanbul ignore next */
+      cov_ntwee9aeg().s[196]++;
+      logger_1.default.error('Error ending auction:', error);
+    }
+  }
+}
+/* istanbul ignore next */
+cov_ntwee9aeg().s[197]++;
+exports.NFTMarketplaceService = NFTMarketplaceService;
+/* istanbul ignore next */
+cov_ntwee9aeg().s[198]++;
+exports.default = NFTMarketplaceService;

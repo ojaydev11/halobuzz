@@ -1,0 +1,385 @@
+686f43e468e292130a84453b6c098551
+"use strict";
+
+/* istanbul ignore next */
+function cov_2f9oqh7nja() {
+  var path = "D:\\halobuzz by cursor\\backend\\src\\middleware\\requestLogger.ts";
+  var hash = "ae521fa47e8dfb673b995a2c46d035ade7d5f6f3";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "D:\\halobuzz by cursor\\backend\\src\\middleware\\requestLogger.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 2,
+          column: 0
+        },
+        end: {
+          line: 2,
+          column: 62
+        }
+      },
+      "1": {
+        start: {
+          line: 3,
+          column: 0
+        },
+        end: {
+          line: 3,
+          column: 31
+        }
+      },
+      "2": {
+        start: {
+          line: 4,
+          column: 17
+        },
+        end: {
+          line: 4,
+          column: 43
+        }
+      },
+      "3": {
+        start: {
+          line: 5,
+          column: 15
+        },
+        end: {
+          line: 5,
+          column: 42
+        }
+      },
+      "4": {
+        start: {
+          line: 6,
+          column: 22
+        },
+        end: {
+          line: 32,
+          column: 1
+        }
+      },
+      "5": {
+        start: {
+          line: 7,
+          column: 18
+        },
+        end: {
+          line: 7,
+          column: 28
+        }
+      },
+      "6": {
+        start: {
+          line: 9,
+          column: 4
+        },
+        end: {
+          line: 15,
+          column: 7
+        }
+      },
+      "7": {
+        start: {
+          line: 17,
+          column: 24
+        },
+        end: {
+          line: 17,
+          column: 31
+        }
+      },
+      "8": {
+        start: {
+          line: 18,
+          column: 4
+        },
+        end: {
+          line: 30,
+          column: 6
+        }
+      },
+      "9": {
+        start: {
+          line: 19,
+          column: 25
+        },
+        end: {
+          line: 19,
+          column: 43
+        }
+      },
+      "10": {
+        start: {
+          line: 21,
+          column: 8
+        },
+        end: {
+          line: 27,
+          column: 11
+        }
+      },
+      "11": {
+        start: {
+          line: 29,
+          column: 8
+        },
+        end: {
+          line: 29,
+          column: 48
+        }
+      },
+      "12": {
+        start: {
+          line: 31,
+          column: 4
+        },
+        end: {
+          line: 31,
+          column: 11
+        }
+      },
+      "13": {
+        start: {
+          line: 33,
+          column: 0
+        },
+        end: {
+          line: 33,
+          column: 38
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "(anonymous_0)",
+        decl: {
+          start: {
+            line: 6,
+            column: 22
+          },
+          end: {
+            line: 6,
+            column: 23
+          }
+        },
+        loc: {
+          start: {
+            line: 6,
+            column: 42
+          },
+          end: {
+            line: 32,
+            column: 1
+          }
+        },
+        line: 6
+      },
+      "1": {
+        name: "(anonymous_1)",
+        decl: {
+          start: {
+            line: 18,
+            column: 14
+          },
+          end: {
+            line: 18,
+            column: 15
+          }
+        },
+        loc: {
+          start: {
+            line: 18,
+            column: 41
+          },
+          end: {
+            line: 30,
+            column: 5
+          }
+        },
+        line: 18
+      }
+    },
+    branchMap: {
+      "0": {
+        loc: {
+          start: {
+            line: 14,
+            column: 16
+          },
+          end: {
+            line: 14,
+            column: 47
+          }
+        },
+        type: "binary-expr",
+        locations: [{
+          start: {
+            line: 14,
+            column: 16
+          },
+          end: {
+            line: 14,
+            column: 32
+          }
+        }, {
+          start: {
+            line: 14,
+            column: 36
+          },
+          end: {
+            line: 14,
+            column: 47
+          }
+        }],
+        line: 14
+      },
+      "1": {
+        loc: {
+          start: {
+            line: 26,
+            column: 20
+          },
+          end: {
+            line: 26,
+            column: 51
+          }
+        },
+        type: "binary-expr",
+        locations: [{
+          start: {
+            line: 26,
+            column: 20
+          },
+          end: {
+            line: 26,
+            column: 36
+          }
+        }, {
+          start: {
+            line: 26,
+            column: 40
+          },
+          end: {
+            line: 26,
+            column: 51
+          }
+        }],
+        line: 26
+      }
+    },
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0,
+      "9": 0,
+      "10": 0,
+      "11": 0,
+      "12": 0,
+      "13": 0
+    },
+    f: {
+      "0": 0,
+      "1": 0
+    },
+    b: {
+      "0": [0, 0],
+      "1": [0, 0]
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "ae521fa47e8dfb673b995a2c46d035ade7d5f6f3"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_2f9oqh7nja = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_2f9oqh7nja();
+cov_2f9oqh7nja().s[0]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+/* istanbul ignore next */
+cov_2f9oqh7nja().s[1]++;
+exports.requestLogger = void 0;
+const logger_1 =
+/* istanbul ignore next */
+(cov_2f9oqh7nja().s[2]++, require("@/config/logger"));
+const logger =
+/* istanbul ignore next */
+(cov_2f9oqh7nja().s[3]++, (0, logger_1.setupLogger)());
+/* istanbul ignore next */
+cov_2f9oqh7nja().s[4]++;
+const requestLogger = (req, res, next) => {
+  /* istanbul ignore next */
+  cov_2f9oqh7nja().f[0]++;
+  const start =
+  /* istanbul ignore next */
+  (cov_2f9oqh7nja().s[5]++, Date.now());
+  // Log request
+  /* istanbul ignore next */
+  cov_2f9oqh7nja().s[6]++;
+  logger.info('Incoming request', {
+    method: req.method,
+    url: req.originalUrl,
+    ip: req.ip,
+    userAgent: req.get('User-Agent'),
+    userId:
+    /* istanbul ignore next */
+    (cov_2f9oqh7nja().b[0][0]++, req.user?.userId) ||
+    /* istanbul ignore next */
+    (cov_2f9oqh7nja().b[0][1]++, 'anonymous')
+  });
+  // Override res.end to log response
+  const originalEnd =
+  /* istanbul ignore next */
+  (cov_2f9oqh7nja().s[7]++, res.end);
+  /* istanbul ignore next */
+  cov_2f9oqh7nja().s[8]++;
+  res.end = function (chunk, encoding) {
+    /* istanbul ignore next */
+    cov_2f9oqh7nja().f[1]++;
+    const duration =
+    /* istanbul ignore next */
+    (cov_2f9oqh7nja().s[9]++, Date.now() - start);
+    // Log response
+    /* istanbul ignore next */
+    cov_2f9oqh7nja().s[10]++;
+    logger.info('Response sent', {
+      method: req.method,
+      url: req.originalUrl,
+      statusCode: res.statusCode,
+      duration: `${duration}ms`,
+      userId:
+      /* istanbul ignore next */
+      (cov_2f9oqh7nja().b[1][0]++, req.user?.userId) ||
+      /* istanbul ignore next */
+      (cov_2f9oqh7nja().b[1][1]++, 'anonymous')
+    });
+    // Call original end
+    /* istanbul ignore next */
+    cov_2f9oqh7nja().s[11]++;
+    originalEnd.call(this, chunk, encoding);
+  };
+  /* istanbul ignore next */
+  cov_2f9oqh7nja().s[12]++;
+  next();
+};
+/* istanbul ignore next */
+cov_2f9oqh7nja().s[13]++;
+exports.requestLogger = requestLogger;

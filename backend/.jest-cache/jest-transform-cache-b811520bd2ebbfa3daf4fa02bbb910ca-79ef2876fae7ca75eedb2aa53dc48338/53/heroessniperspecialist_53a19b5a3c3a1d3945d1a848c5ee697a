@@ -1,0 +1,958 @@
+be82945b31c1a6a4548a33d29dd0e658
+"use strict";
+
+// Complete SNIPER and SPECIALIST heroes (8 remaining heroes)
+// Brings total to 20 heroes for world-class roster
+/* istanbul ignore next */
+function cov_qh8yto6st() {
+  var path = "D:\\halobuzz by cursor\\backend\\src\\data\\heroes-sniper-specialist.ts";
+  var hash = "227afc97e1b63d8a5b86e8771f1e36e696142958";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "D:\\halobuzz by cursor\\backend\\src\\data\\heroes-sniper-specialist.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 4,
+          column: 0
+        },
+        end: {
+          line: 4,
+          column: 62
+        }
+      },
+      "1": {
+        start: {
+          line: 5,
+          column: 0
+        },
+        end: {
+          line: 5,
+          column: 90
+        }
+      },
+      "2": {
+        start: {
+          line: 6,
+          column: 0
+        },
+        end: {
+          line: 6,
+          column: 36
+        }
+      },
+      "3": {
+        start: {
+          line: 10,
+          column: 0
+        },
+        end: {
+          line: 416,
+          column: 2
+        }
+      },
+      "4": {
+        start: {
+          line: 420,
+          column: 0
+        },
+        end: {
+          line: 830,
+          column: 2
+        }
+      },
+      "5": {
+        start: {
+          line: 832,
+          column: 0
+        },
+        end: {
+          line: 835,
+          column: 2
+        }
+      },
+      "6": {
+        start: {
+          line: 838,
+          column: 27
+        },
+        end: {
+          line: 838,
+          column: 46
+        }
+      },
+      "7": {
+        start: {
+          line: 839,
+          column: 4
+        },
+        end: {
+          line: 839,
+          column: 60
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "getAllHeroes",
+        decl: {
+          start: {
+            line: 836,
+            column: 9
+          },
+          end: {
+            line: 836,
+            column: 21
+          }
+        },
+        loc: {
+          start: {
+            line: 836,
+            column: 24
+          },
+          end: {
+            line: 840,
+            column: 1
+          }
+        },
+        line: 836
+      }
+    },
+    branchMap: {},
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0
+    },
+    f: {
+      "0": 0
+    },
+    b: {},
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "227afc97e1b63d8a5b86e8771f1e36e696142958"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_qh8yto6st = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_qh8yto6st();
+cov_qh8yto6st().s[0]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+/* istanbul ignore next */
+cov_qh8yto6st().s[1]++;
+exports.ALL_REMAINING_HEROES = exports.SPECIALIST_HEROES = exports.SNIPER_HEROES = void 0;
+/* istanbul ignore next */
+cov_qh8yto6st().s[2]++;
+exports.getAllHeroes = getAllHeroes;
+// ============================================================================
+// SNIPER HEROES (Long-range precision, high damage, low survivability)
+// ============================================================================
+/* istanbul ignore next */
+cov_qh8yto6st().s[3]++;
+exports.SNIPER_HEROES = [{
+  id: 'nova-sniper',
+  name: 'Nova',
+  title: 'The Ghost Operative',
+  role: 'sniper',
+  difficulty: 'hard',
+  lore: 'Elite covert operative with unmatched precision. Nova eliminates targets from extreme range before they know what hit them.',
+  baseStats: {
+    health: 650,
+    shield: 150,
+    energy: 110,
+    speed: 320,
+    damage: 150,
+    armor: 12,
+    magicResist: 15,
+    range: 800,
+    attackSpeed: 0.7
+  },
+  scalingFactors: {
+    healthPerLevel: 55,
+    shieldPerLevel: 8,
+    damagePerLevel: 15,
+    armorPerLevel: 1.5
+  },
+  passive: {
+    id: 'perfect-aim',
+    name: 'Perfect Aim',
+    type: 'passive',
+    cooldown: 0,
+    energyCost: 0,
+    range: 0,
+    castTime: 0,
+    maxLevel: 1,
+    description: 'Standing still for 2 seconds grants Perfect Aim: next shot deals 50% bonus damage and reveals target for 4 seconds. Headshots reset cooldowns by 2 seconds.'
+  },
+  abilities: [{
+    id: 'sniper-shot',
+    name: 'Precision Shot',
+    type: 'basic',
+    cooldown: 2000,
+    energyCost: 20,
+    range: 1000,
+    damage: 200,
+    projectileSpeed: 2000,
+    castTime: 800,
+    maxLevel: 5,
+    description: 'Fire a powerful sniper shot. Deals bonus damage based on distance (up to 100% at max range). Headshots deal double damage.',
+    scalingType: 'AD',
+    scalingFactor: 2.0
+  }, {
+    id: 'cloak',
+    name: 'Stealth Cloak',
+    type: 'active',
+    cooldown: 20000,
+    energyCost: 50,
+    range: 0,
+    duration: 8000,
+    castTime: 0,
+    maxLevel: 5,
+    description: 'Become invisible for 8 seconds. Gain 40% movement speed. First attack from stealth deals 80% bonus damage.',
+    scalingType: 'AD',
+    scalingFactor: 0.8
+  }, {
+    id: 'trip-mine',
+    name: 'Proximity Mine',
+    type: 'active',
+    cooldown: 25000,
+    energyCost: 40,
+    range: 600,
+    damage: 180,
+    aoeRadius: 300,
+    duration: 45000,
+    castTime: 500,
+    maxLevel: 5,
+    description: 'Place a proximity mine that explodes when enemies get close, dealing damage and slowing by 60% for 3 seconds. Lasts 45 seconds. Max 3 mines.',
+    scalingType: 'AD',
+    scalingFactor: 1.0
+  }, {
+    id: 'tactical-nuke',
+    name: 'Tactical Nuke',
+    type: 'ultimate',
+    cooldown: 120000,
+    energyCost: 100,
+    range: 1500,
+    damage: 600,
+    aoeRadius: 500,
+    castTime: 3000,
+    maxLevel: 3,
+    description: 'Call in a tactical nuke at target location. After 3 second delay, deals massive damage and leaves radiation zone that damages enemies over 5 seconds.',
+    scalingType: 'AD',
+    scalingFactor: 3.0
+  }],
+  strengths: ['Extreme range', 'One-shot potential', 'Stealth', 'Zone control with mines'],
+  weaknesses: ['Very squishy', 'Immobile while shooting', 'Vulnerable in close range'],
+  counters: ['arbiter-thel', 'emile-spartan', 'phantom-specialist'],
+  counteredBy: ['brute-hulk', 'hunter-titan']
+}, {
+  id: 'jackal-marksman',
+  name: 'Jackal Sniper',
+  title: 'The Elite Shot',
+  role: 'sniper',
+  difficulty: 'medium',
+  lore: 'Jackal mercenary with deadly accuracy. Uses energy shield and precision weapons to dominate long-range duels.',
+  baseStats: {
+    health: 700,
+    shield: 250,
+    energy: 100,
+    speed: 330,
+    damage: 130,
+    armor: 15,
+    magicResist: 20,
+    range: 700,
+    attackSpeed: 0.9
+  },
+  scalingFactors: {
+    healthPerLevel: 60,
+    shieldPerLevel: 15,
+    damagePerLevel: 13,
+    armorPerLevel: 2.0
+  },
+  passive: {
+    id: 'shield-mastery',
+    name: 'Point Defense Gauntlet',
+    type: 'passive',
+    cooldown: 15000,
+    energyCost: 0,
+    range: 0,
+    castTime: 0,
+    maxLevel: 1,
+    description: 'Hold shield that blocks frontal damage. When shield breaks, gain 50% attack speed for 4 seconds (15s cooldown).'
+  },
+  abilities: [{
+    id: 'beam-rifle',
+    name: 'Beam Rifle',
+    type: 'basic',
+    cooldown: 1500,
+    energyCost: 15,
+    range: 750,
+    damage: 140,
+    projectileSpeed: 2500,
+    castTime: 400,
+    maxLevel: 5,
+    description: 'Fire instant beam that pierces shields. Consecutive hits on same target deal 20% more damage (stacks 3×).',
+    scalingType: 'AD',
+    scalingFactor: 1.5
+  }, {
+    id: 'shield-boost',
+    name: 'Shield Overcharge',
+    type: 'active',
+    cooldown: 12000,
+    energyCost: 40,
+    range: 0,
+    healAmount: 200,
+    duration: 3000,
+    castTime: 0,
+    maxLevel: 5,
+    description: 'Overcharge shields, restoring 200 shield and gaining 30% damage reduction for 3 seconds.',
+    scalingType: 'AP',
+    scalingFactor: 0.5
+  }, {
+    id: 'quick-reposition',
+    name: 'Tactical Roll',
+    type: 'active',
+    cooldown: 10000,
+    energyCost: 30,
+    range: 400,
+    duration: 1000,
+    castTime: 0,
+    maxLevel: 5,
+    description: 'Roll in target direction, gaining 60% movement speed for 1 second and reloading weapon instantly.',
+    scalingType: 'hybrid',
+    scalingFactor: 0
+  }, {
+    id: 'focus-rifle',
+    name: 'Focus Beam',
+    type: 'ultimate',
+    cooldown: 90000,
+    energyCost: 120,
+    range: 1200,
+    damage: 100,
+    duration: 4000,
+    castTime: 0,
+    maxLevel: 3,
+    description: 'Channel devastating focus beam for 4 seconds, dealing damage per second. Beam follows crosshair and slows targets by 40%.',
+    scalingType: 'AD',
+    scalingFactor: 0.4
+  }],
+  strengths: ['Shield sustain', 'Consistent damage', 'Mobility', 'Dueling'],
+  weaknesses: ['Lower burst than Nova', 'Channeled ultimate', 'Shield has cooldown'],
+  counters: ['cortana-ai', 'sgt-johnson'],
+  counteredBy: ['arbiter-thel', 'phantom-specialist']
+}, {
+  id: 'linda-058',
+  name: 'Linda-058',
+  title: 'The Lone Wolf Sniper',
+  role: 'sniper',
+  difficulty: 'expert',
+  lore: 'Legendary Spartan sniper with supernatural aim. Linda never misses and can take down entire squads solo.',
+  baseStats: {
+    health: 680,
+    shield: 200,
+    energy: 120,
+    speed: 340,
+    damage: 160,
+    armor: 14,
+    magicResist: 18,
+    range: 900,
+    attackSpeed: 0.6
+  },
+  scalingFactors: {
+    healthPerLevel: 58,
+    shieldPerLevel: 12,
+    damagePerLevel: 16,
+    armorPerLevel: 1.8
+  },
+  passive: {
+    id: 'never-miss',
+    name: 'Legendary Aim',
+    type: 'passive',
+    cooldown: 0,
+    energyCost: 0,
+    range: 0,
+    castTime: 0,
+    maxLevel: 1,
+    description: 'Every 4th shot is guaranteed critical hit (300% damage). Killing an enemy resets shot counter and grants 1 second of Perfect Aim.'
+  },
+  abilities: [{
+    id: 'nornfang-sniper',
+    name: 'Nornfang Shot',
+    type: 'basic',
+    cooldown: 2500,
+    energyCost: 25,
+    range: 1000,
+    damage: 220,
+    projectileSpeed: 2200,
+    castTime: 1000,
+    maxLevel: 5,
+    description: 'Fire legendary Nornfang rifle. Deals increasing damage based on target\'s missing health (up to 100% bonus at 20% HP).',
+    scalingType: 'AD',
+    scalingFactor: 2.2
+  }, {
+    id: 'grappling-hook',
+    name: 'Grappling Hook',
+    type: 'active',
+    cooldown: 14000,
+    energyCost: 35,
+    range: 800,
+    duration: 500,
+    castTime: 0,
+    maxLevel: 5,
+    description: 'Fire grappling hook to quickly reposition. Can grapple to terrain or enemies (damages and stuns enemies for 0.5s).',
+    scalingType: 'AD',
+    scalingFactor: 0.4
+  }, {
+    id: 'spotter-drone',
+    name: 'Recon Drone',
+    type: 'active',
+    cooldown: 30000,
+    energyCost: 50,
+    range: 1200,
+    duration: 10000,
+    castTime: 500,
+    maxLevel: 5,
+    description: 'Deploy drone that reveals area for 10 seconds. Enemies in vision take 15% more damage from Linda.',
+    scalingType: 'hybrid',
+    scalingFactor: 0
+  }, {
+    id: 'deadeye',
+    name: 'Deadeye Mode',
+    type: 'ultimate',
+    cooldown: 100000,
+    energyCost: 100,
+    range: 0,
+    damage: 300,
+    duration: 8000,
+    castTime: 0,
+    maxLevel: 3,
+    description: 'Enter Deadeye mode for 8 seconds. Gain unlimited range, 50% faster fire rate, and all shots are guaranteed critical hits. Can move while shooting.',
+    scalingType: 'AD',
+    scalingFactor: 3.0
+  }],
+  strengths: ['Guaranteed crits', 'Execute potential', 'Mobility with grapple', 'Vision control'],
+  weaknesses: ['Very squishy', 'High skill ceiling', 'Long cooldowns'],
+  counters: ['slow tanks', 'low mobility heroes'],
+  counteredBy: ['arbiter-thel', 'phantom-specialist', 'nova-sniper']
+}, {
+  id: 'odst-recon',
+  name: 'ODST Romeo',
+  title: 'The Sharpshooter',
+  role: 'sniper',
+  difficulty: 'easy',
+  lore: 'Orbital Drop Shock Trooper specialized in reconnaissance. Romeo provides vision and picks off targets from safety.',
+  baseStats: {
+    health: 720,
+    shield: 180,
+    energy: 100,
+    speed: 325,
+    damage: 125,
+    armor: 18,
+    magicResist: 16,
+    range: 650,
+    attackSpeed: 1.0
+  },
+  scalingFactors: {
+    healthPerLevel: 65,
+    shieldPerLevel: 10,
+    damagePerLevel: 12,
+    armorPerLevel: 2.2
+  },
+  passive: {
+    id: 'spotter',
+    name: 'Spotter Training',
+    type: 'passive',
+    cooldown: 0,
+    energyCost: 0,
+    range: 1000,
+    castTime: 0,
+    maxLevel: 1,
+    description: 'Revealed enemies take 10% more damage from all sources. Basic attacks against revealed enemies restore 15 energy.'
+  },
+  abilities: [{
+    id: 'battle-rifle',
+    name: 'Battle Rifle Burst',
+    type: 'basic',
+    cooldown: 1200,
+    energyCost: 12,
+    range: 700,
+    damage: 110,
+    projectileSpeed: 1500,
+    castTime: 300,
+    maxLevel: 5,
+    description: 'Fire 3-round burst. Landing all 3 shots on same target deals 30% bonus damage and marks target for 3 seconds.',
+    scalingType: 'AD',
+    scalingFactor: 1.2
+  }, {
+    id: 'flare',
+    name: 'Recon Flare',
+    type: 'active',
+    cooldown: 15000,
+    energyCost: 40,
+    range: 800,
+    duration: 8000,
+    aoeRadius: 600,
+    castTime: 400,
+    maxLevel: 5,
+    description: 'Launch flare that reveals area for 8 seconds. Enemies in area are slowed by 25%.',
+    scalingType: 'hybrid',
+    scalingFactor: 0
+  }, {
+    id: 'supply-drop',
+    name: 'Supply Drop',
+    type: 'active',
+    cooldown: 35000,
+    energyCost: 60,
+    range: 700,
+    healAmount: 150,
+    duration: 10000,
+    castTime: 800,
+    maxLevel: 5,
+    description: 'Call supply drop that grants 150 shield to all allies in area and provides ammo (reduces cooldowns by 20%).',
+    scalingType: 'AP',
+    scalingFactor: 0.6
+  }, {
+    id: 'orbital-drop',
+    name: 'Orbital Drop',
+    type: 'ultimate',
+    cooldown: 110000,
+    energyCost: 80,
+    range: 1000,
+    damage: 400,
+    aoeRadius: 400,
+    castTime: 2000,
+    maxLevel: 3,
+    description: 'Call in ODST pod at target location. After 2 seconds, Romeo drops in, dealing damage on landing and gaining 300 temporary shield for 6 seconds.',
+    scalingType: 'AD',
+    scalingFactor: 2.0
+  }],
+  strengths: ['Team utility', 'Vision control', 'Shield sustain', 'Reposition with ultimate'],
+  weaknesses: ['Lower damage than other snipers', 'Requires team coordination', 'Ultimate telegraphed'],
+  counters: ['stealth heroes'],
+  counteredBy: ['arbiter-thel', 'phantom-specialist']
+}];
+// ============================================================================
+// SPECIALIST HEROES (Unique mechanics, mages, utility)
+// ============================================================================
+/* istanbul ignore next */
+cov_qh8yto6st().s[4]++;
+exports.SPECIALIST_HEROES = [{
+  id: 'prophet-mage',
+  name: 'Prophet of Truth',
+  title: 'The Hierarch',
+  role: 'specialist',
+  difficulty: 'hard',
+  lore: 'Powerful Covenant leader wielding ancient Forerunner magic. Prophet controls battles with devastating energy attacks.',
+  baseStats: {
+    health: 750,
+    shield: 300,
+    energy: 200,
+    speed: 290,
+    damage: 90,
+    armor: 18,
+    magicResist: 35,
+    range: 600,
+    attackSpeed: 1.1
+  },
+  scalingFactors: {
+    healthPerLevel: 70,
+    shieldPerLevel: 18,
+    damagePerLevel: 9,
+    armorPerLevel: 2.5
+  },
+  passive: {
+    id: 'forerunner-power',
+    name: 'Forerunner Blessing',
+    type: 'passive',
+    cooldown: 0,
+    energyCost: 0,
+    range: 0,
+    castTime: 0,
+    maxLevel: 1,
+    description: 'Abilities cost 10% less energy. Every 3rd ability cast grants Prophet 20% movement speed for 2 seconds and restores 30 energy.'
+  },
+  abilities: [{
+    id: 'energy-bolt',
+    name: 'Forerunner Bolt',
+    type: 'basic',
+    cooldown: 1000,
+    energyCost: 18,
+    range: 650,
+    damage: 95,
+    projectileSpeed: 1200,
+    castTime: 250,
+    maxLevel: 5,
+    description: 'Fire energy bolt that explodes on hit, dealing damage in small area. Hitting marked targets detonates mark for bonus damage.',
+    scalingType: 'AP',
+    scalingFactor: 0.8
+  }, {
+    id: 'gravity-well',
+    name: 'Gravity Lift',
+    type: 'active',
+    cooldown: 16000,
+    energyCost: 60,
+    range: 700,
+    damage: 120,
+    duration: 3000,
+    aoeRadius: 350,
+    castTime: 500,
+    maxLevel: 5,
+    description: 'Create gravity well for 3 seconds. Enemies are pulled to center and take damage per second. At end, enemies are launched upward and stunned on landing.',
+    scalingType: 'AP',
+    scalingFactor: 0.6
+  }, {
+    id: 'shield-barrier',
+    name: 'Energy Barrier',
+    type: 'active',
+    cooldown: 18000,
+    energyCost: 50,
+    range: 500,
+    healAmount: 250,
+    duration: 4000,
+    castTime: 300,
+    maxLevel: 5,
+    description: 'Create barrier wall that blocks all projectiles for 4 seconds. Allies behind barrier gain shield over time.',
+    scalingType: 'AP',
+    scalingFactor: 1.0
+  }, {
+    id: 'forerunner-storm',
+    name: 'Forerunner Wrath',
+    type: 'ultimate',
+    cooldown: 95000,
+    energyCost: 150,
+    range: 800,
+    damage: 500,
+    duration: 5000,
+    aoeRadius: 600,
+    castTime: 1000,
+    maxLevel: 3,
+    description: 'Channel Forerunner power for 5 seconds, creating storm that damages enemies per second. Prophet can move slowly during channel. Enemies in storm have abilities silenced.',
+    scalingType: 'AP',
+    scalingFactor: 2.5
+  }],
+  strengths: ['High ability power', 'Zone control', 'Crowd control', 'Team utility with barrier'],
+  weaknesses: ['Low mobility', 'Vulnerable during ultimate', 'Energy dependent'],
+  counters: ['arbiter-thel', 'spartan-117'],
+  counteredBy: ['nova-sniper', 'linda-058']
+}, {
+  id: 'phantom-specialist',
+  name: 'Phantom Pilot',
+  title: 'The Sky Terror',
+  role: 'specialist',
+  difficulty: 'expert',
+  lore: 'Elite Phantom dropship pilot who brings aerial superiority. Phantom provides air support and battlefield control.',
+  baseStats: {
+    health: 800,
+    shield: 250,
+    energy: 140,
+    speed: 350,
+    damage: 100,
+    armor: 22,
+    magicResist: 20,
+    range: 550,
+    attackSpeed: 1.0
+  },
+  scalingFactors: {
+    healthPerLevel: 75,
+    shieldPerLevel: 15,
+    damagePerLevel: 10,
+    armorPerLevel: 2.8
+  },
+  passive: {
+    id: 'aerial-advantage',
+    name: 'Aerial Superiority',
+    type: 'passive',
+    cooldown: 0,
+    energyCost: 0,
+    range: 0,
+    castTime: 0,
+    maxLevel: 1,
+    description: 'Can briefly hover (no terrain collision for 2s after abilities). Deal 15% more damage to enemies below you. Take 20% less damage from ground-based attacks.'
+  },
+  abilities: [{
+    id: 'plasma-turret',
+    name: 'Plasma Turret',
+    type: 'basic',
+    cooldown: 800,
+    energyCost: 15,
+    range: 600,
+    damage: 85,
+    projectileSpeed: 1400,
+    castTime: 150,
+    maxLevel: 5,
+    description: 'Fire plasma burst. Every 5th shot fires a charged blast dealing 200% damage.',
+    scalingType: 'AD',
+    scalingFactor: 0.9
+  }, {
+    id: 'boost-jets',
+    name: 'Boost Jets',
+    type: 'active',
+    cooldown: 10000,
+    energyCost: 40,
+    range: 0,
+    duration: 3000,
+    castTime: 0,
+    maxLevel: 5,
+    description: 'Activate boost jets, gaining 70% movement speed and hovering for 3 seconds. Can pass over terrain. Next attack deals 60% bonus damage.',
+    scalingType: 'AD',
+    scalingFactor: 0.6
+  }, {
+    id: 'deploy-troops',
+    name: 'Troop Deployment',
+    type: 'active',
+    cooldown: 40000,
+    energyCost: 80,
+    range: 600,
+    damage: 100,
+    duration: 20000,
+    castTime: 1000,
+    maxLevel: 5,
+    description: 'Deploy 3 Elite soldiers that fight for 20 seconds. Elites have 600 HP and deal 60 damage per attack.',
+    scalingType: 'AD',
+    scalingFactor: 0.5
+  }, {
+    id: 'bombing-run',
+    name: 'Bombing Run',
+    type: 'ultimate',
+    cooldown: 100000,
+    energyCost: 120,
+    range: 1200,
+    damage: 450,
+    aoeRadius: 400,
+    castTime: 2000,
+    maxLevel: 3,
+    description: 'Call in bombing run along target line. After 2 seconds, 5 bombs drop in sequence, each dealing damage and knocking up enemies.',
+    scalingType: 'AD',
+    scalingFactor: 2.0
+  }],
+  strengths: ['Aerial mobility', 'Troop control', 'Zone denial', 'Terrain advantage'],
+  weaknesses: ['Complex positioning', 'Vulnerable during deploy', 'Predictable ultimate'],
+  counters: ['ground-based melee'],
+  counteredBy: ['nova-sniper', 'linda-058', 'prophet-mage']
+}, {
+  id: 'monitor-343',
+  name: '343 Guilty Spark',
+  title: 'The Monitor',
+  role: 'specialist',
+  difficulty: 'medium',
+  lore: 'Ancient Forerunner AI construct. Monitor provides utility, healing, and battlefield manipulation with laser precision.',
+  baseStats: {
+    health: 600,
+    shield: 400,
+    energy: 180,
+    speed: 350,
+    damage: 75,
+    armor: 10,
+    magicResist: 40,
+    range: 500,
+    attackSpeed: 1.3
+  },
+  scalingFactors: {
+    healthPerLevel: 50,
+    shieldPerLevel: 25,
+    damagePerLevel: 7,
+    armorPerLevel: 1.2
+  },
+  passive: {
+    id: 'hovering',
+    name: 'Floating Construct',
+    type: 'passive',
+    cooldown: 0,
+    energyCost: 0,
+    range: 0,
+    castTime: 0,
+    maxLevel: 1,
+    description: 'Constantly hovers (ignores terrain). Regenerate 2% max shield per second. Cannot be slowed or rooted.'
+  },
+  abilities: [{
+    id: 'laser-beam',
+    name: 'Sentinel Beam',
+    type: 'basic',
+    cooldown: 0,
+    energyCost: 10,
+    range: 550,
+    damage: 60,
+    castTime: 0,
+    maxLevel: 5,
+    description: 'Continuous laser beam. Damage increases the longer it stays on target (up to 3× damage after 3 seconds).',
+    scalingType: 'AP',
+    scalingFactor: 0.5
+  }, {
+    id: 'repair-beam',
+    name: 'Repair Protocol',
+    type: 'active',
+    cooldown: 8000,
+    energyCost: 45,
+    range: 600,
+    healAmount: 150,
+    duration: 3000,
+    castTime: 200,
+    maxLevel: 5,
+    description: 'Heal target ally over 3 seconds. If target is structure (tower/minion), heal is doubled.',
+    scalingType: 'AP',
+    scalingFactor: 0.8
+  }, {
+    id: 'teleport',
+    name: 'Phase Shift',
+    type: 'active',
+    cooldown: 20000,
+    energyCost: 60,
+    range: 700,
+    duration: 1000,
+    castTime: 500,
+    maxLevel: 5,
+    description: 'Become invulnerable and teleport to target location after 0.5 seconds. Can be cancelled.',
+    scalingType: 'hybrid',
+    scalingFactor: 0
+  }, {
+    id: 'containment',
+    name: 'Containment Field',
+    type: 'ultimate',
+    cooldown: 110000,
+    energyCost: 100,
+    range: 700,
+    damage: 300,
+    duration: 6000,
+    aoeRadius: 500,
+    castTime: 1000,
+    maxLevel: 3,
+    description: 'Create containment field for 6 seconds. Enemies cannot leave area and are slowed by 40%. After 6s, field explodes dealing damage.',
+    scalingType: 'AP',
+    scalingFactor: 1.5
+  }],
+  strengths: ['High utility', 'Cannot be CC\'d', 'Sustain with shield regen', 'Escape with teleport'],
+  weaknesses: ['Low HP', 'Low burst damage', 'Requires good positioning'],
+  counters: ['high HP targets'],
+  counteredBy: ['burst damage', 'nova-sniper']
+}, {
+  id: 'gravemind',
+  name: 'Gravemind',
+  title: 'The Flood Intelligence',
+  role: 'specialist',
+  difficulty: 'expert',
+  lore: 'Ancient parasite intelligence. Gravemind corrupts, infects, and converts enemies into Flood minions.',
+  baseStats: {
+    health: 900,
+    shield: 100,
+    energy: 150,
+    speed: 300,
+    damage: 80,
+    armor: 25,
+    magicResist: 30,
+    range: 450,
+    attackSpeed: 1.0
+  },
+  scalingFactors: {
+    healthPerLevel: 85,
+    shieldPerLevel: 5,
+    damagePerLevel: 8,
+    armorPerLevel: 3.0
+  },
+  passive: {
+    id: 'corruption',
+    name: 'Flood Infection',
+    type: 'passive',
+    cooldown: 0,
+    energyCost: 0,
+    range: 400,
+    castTime: 0,
+    maxLevel: 1,
+    description: 'Enemies killed by Gravemind spawn Infection Forms (100 HP, 30 damage) that fight for 15 seconds. Max 6 forms. Forms explode on death, dealing 50 damage in small area.'
+  },
+  abilities: [{
+    id: 'tentacle-strike',
+    name: 'Tentacle Lash',
+    type: 'basic',
+    cooldown: 1500,
+    energyCost: 18,
+    range: 500,
+    damage: 90,
+    aoeRadius: 150,
+    castTime: 300,
+    maxLevel: 5,
+    description: 'Lash out with tentacles, damaging and applying Infection (takes 20 damage per second for 3 seconds).',
+    scalingType: 'AP',
+    scalingFactor: 0.7
+  }, {
+    id: 'infect',
+    name: 'Infect Host',
+    type: 'active',
+    cooldown: 22000,
+    energyCost: 70,
+    range: 600,
+    damage: 150,
+    duration: 8000,
+    castTime: 500,
+    maxLevel: 5,
+    description: 'Infect target enemy, dealing damage over 8 seconds. If target dies while infected, instantly spawn 2 Combat Forms (400 HP, 80 damage).',
+    scalingType: 'AP',
+    scalingFactor: 1.0
+  }, {
+    id: 'regenerate',
+    name: 'Flood Regeneration',
+    type: 'active',
+    cooldown: 16000,
+    energyCost: 50,
+    range: 0,
+    healAmount: 300,
+    duration: 5000,
+    castTime: 0,
+    maxLevel: 5,
+    description: 'Regenerate 300 HP over 5 seconds. Each Infection Form alive increases healing by 20%.',
+    scalingType: 'AP',
+    scalingFactor: 1.2
+  }, {
+    id: 'flood-outbreak',
+    name: 'Outbreak',
+    type: 'ultimate',
+    cooldown: 120000,
+    energyCost: 150,
+    range: 800,
+    damage: 400,
+    duration: 10000,
+    aoeRadius: 700,
+    castTime: 1500,
+    maxLevel: 3,
+    description: 'Create Flood outbreak zone for 10 seconds. All enemies in zone take damage per second and have 30% reduced healing. Gravemind spawns Infection Forms every 2 seconds.',
+    scalingType: 'AP',
+    scalingFactor: 2.0
+  }],
+  strengths: ['Minion army', 'Sustain', 'Zone control', 'Scales with kills'],
+  weaknesses: ['Slow', 'Vulnerable to burst', 'Needs setup time'],
+  counters: ['team fights', 'extended battles'],
+  counteredBy: ['burst damage', 'AOE clear', 'kiting']
+}];
+// Export combined roster
+/* istanbul ignore next */
+cov_qh8yto6st().s[5]++;
+exports.ALL_REMAINING_HEROES = [...exports.SNIPER_HEROES, ...exports.SPECIALIST_HEROES];
+function getAllHeroes() {
+  /* istanbul ignore next */
+  cov_qh8yto6st().f[0]++;
+  // Import from main heroes file
+  const {
+    ALL_HEROES
+  } =
+  /* istanbul ignore next */
+  (cov_qh8yto6st().s[6]++, require('./heroes'));
+  /* istanbul ignore next */
+  cov_qh8yto6st().s[7]++;
+  return [...ALL_HEROES, ...exports.ALL_REMAINING_HEROES];
+}

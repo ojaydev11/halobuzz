@@ -272,7 +272,7 @@ export class AIOpponentService extends EventEmitter {
     const actions = ['move', 'attack', 'defend', 'use_item', 'hide'];
 
     // Consider AI traits
-    let actionWeights: { [key: string]: number } = {
+    const actionWeights: { [key: string]: number } = {
       move: 30 + personality.traits.aggression * 0.3,
       attack: 20 + personality.traits.aggression * 0.5,
       defend: 15 + personality.traits.patience * 0.4,

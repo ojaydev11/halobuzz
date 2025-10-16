@@ -121,7 +121,7 @@ router.get('/festivals', async (req, res) => {
   try {
     const { country } = req.query;
 
-    let query: any = {
+    const query: any = {
       startDate: { $lte: new Date() },
       endDate: { $gte: new Date() },
       isActive: true

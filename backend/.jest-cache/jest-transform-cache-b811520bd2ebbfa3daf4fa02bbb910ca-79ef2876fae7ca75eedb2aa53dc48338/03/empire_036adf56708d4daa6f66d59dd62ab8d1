@@ -1,0 +1,168 @@
+c688d02fa59ba32f26748fb8eee7612d
+"use strict";
+
+/* istanbul ignore next */
+function cov_1tcl55zqnr() {
+  var path = "D:\\halobuzz by cursor\\backend\\src\\routes\\empire.ts";
+  var hash = "cfa9f2b7ebc0d7f954e7f405f67f8925f9784fc1";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "D:\\halobuzz by cursor\\backend\\src\\routes\\empire.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 2,
+          column: 0
+        },
+        end: {
+          line: 2,
+          column: 62
+        }
+      },
+      "1": {
+        start: {
+          line: 3,
+          column: 18
+        },
+        end: {
+          line: 3,
+          column: 36
+        }
+      },
+      "2": {
+        start: {
+          line: 4,
+          column: 15
+        },
+        end: {
+          line: 4,
+          column: 43
+        }
+      },
+      "3": {
+        start: {
+          line: 5,
+          column: 15
+        },
+        end: {
+          line: 5,
+          column: 38
+        }
+      },
+      "4": {
+        start: {
+          line: 7,
+          column: 0
+        },
+        end: {
+          line: 12,
+          column: 3
+        }
+      },
+      "5": {
+        start: {
+          line: 8,
+          column: 4
+        },
+        end: {
+          line: 11,
+          column: 7
+        }
+      },
+      "6": {
+        start: {
+          line: 13,
+          column: 0
+        },
+        end: {
+          line: 13,
+          column: 25
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "(anonymous_0)",
+        decl: {
+          start: {
+            line: 7,
+            column: 39
+          },
+          end: {
+            line: 7,
+            column: 40
+          }
+        },
+        loc: {
+          start: {
+            line: 7,
+            column: 53
+          },
+          end: {
+            line: 12,
+            column: 1
+          }
+        },
+        line: 7
+      }
+    },
+    branchMap: {},
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0
+    },
+    f: {
+      "0": 0
+    },
+    b: {},
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "cfa9f2b7ebc0d7f954e7f405f67f8925f9784fc1"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_1tcl55zqnr = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_1tcl55zqnr();
+cov_1tcl55zqnr().s[0]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+const express_1 =
+/* istanbul ignore next */
+(cov_1tcl55zqnr().s[1]++, require("express"));
+const auth_1 =
+/* istanbul ignore next */
+(cov_1tcl55zqnr().s[2]++, require("@/middleware/auth"));
+const router =
+/* istanbul ignore next */
+(cov_1tcl55zqnr().s[3]++, (0, express_1.Router)());
+// STUB: Empire Dashboard temporarily disabled for deployment
+/* istanbul ignore next */
+cov_1tcl55zqnr().s[4]++;
+router.all('*', auth_1.authMiddleware, (req, res) => {
+  /* istanbul ignore next */
+  cov_1tcl55zqnr().f[0]++;
+  cov_1tcl55zqnr().s[5]++;
+  res.status(501).json({
+    success: false,
+    error: 'Empire Dashboard features are temporarily unavailable'
+  });
+});
+/* istanbul ignore next */
+cov_1tcl55zqnr().s[6]++;
+exports.default = router;
